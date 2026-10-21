@@ -556,6 +556,25 @@
   .od-drt{position:relative;height:8px;border-radius:4px;background:color-mix(in srgb, var(--muted) 14%, transparent)} .od-drt i{position:absolute;top:0;bottom:0;border-radius:4px}
   .od-drt i.pos{background:var(--good)} .od-drt i.neg{background:var(--bad)}
   .od-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;font-size:12.5px;color:var(--ink-2)}
+  .od-badge{display:inline-block;margin-left:8px;font:700 10.5px var(--font-ui);padding:2px 7px;border-radius:999px;vertical-align:6px;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--ink-2);letter-spacing:.02em}
+  .od-chart{margin:4px 0 12px} .od-spark{width:100%;height:54px;display:block} .od-chs{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px}
+  .od-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px} @media (max-width:640px){.od-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .od-t{padding:11px 12px;border-radius:16px;border:1px solid var(--glass-line);background:var(--glass-2);min-width:0}
+  .od-t.on{background:var(--accent-soft);border-color:color-mix(in srgb, var(--lime) 55%, transparent)}
+  .od-tl{font-size:11.5px;color:var(--muted)} .od-tv{font:800 26px var(--font-display);letter-spacing:-.02em;color:var(--ink);margin:1px 0 6px;font-variant-numeric:tabular-nums}
+  .od-t .od-bar{height:6px} .od-t .od-bar b{height:14px;top:-4px}
+  .od-ts{font-size:11px;color:var(--ink-2);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .od-ts+.od-ts{margin-top:2px;color:var(--muted)}
+  .od-base{background:color-mix(in srgb, var(--s1) 14%, transparent);color:var(--s1)} .od-thin{background:color-mix(in srgb, var(--muted) 16%, transparent);color:var(--muted)}
+  .od-foot .pill.on{background:var(--lime);color:var(--lime-ink)}
+  .od-cmp:not(:empty){margin-top:18px;padding-top:14px;border-top:1px solid var(--glass-line)}
+  .od-cmph{display:flex;align-items:baseline;gap:10px;margin-bottom:8px} .od-cmph b{font:700 16px var(--font-display);color:var(--ink)} .od-cmph .muted{font-size:12px;color:var(--muted)} .od-cmph .linkbtn{margin-left:auto}
+  .od-cmpw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .od-cmpt{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+  .od-cmpt th,.od-cmpt td{padding:8px 8px;border-bottom:1px solid var(--glass-line);text-align:right;white-space:nowrap}
+  .od-cmpt tbody th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;position:sticky;left:0;background:var(--surface);z-index:1}
+  .od-cmpt thead th{vertical-align:bottom} .od-cmpn{border:0;background:none;font:800 15px var(--font-display);color:var(--ink);cursor:pointer;padding:0}
+  .od-cmpx{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;margin-left:2px} .od-cmps svg{width:90px;height:26px}
+  .od-cmpt td.od-best{color:var(--good);font-weight:700}
   .mv-link{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px;cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
@@ -634,10 +653,11 @@
 
   <div class="panel od-panel" id="od-panel">
     <div class="panel-title">Odds checker</div>
-    <p class="note">How often S&amp;P 500 stocks that looked like this one at the close ended up higher, from our backtests (fit on 2017-20, judged on 2021-26).</p>
-    <div class="tl-row od-row"><div class="tl-in"><input id="od-input" placeholder="Ticker or company, e.g. NVDA" autocomplete="off" autocapitalize="characters" spellcheck="false"><div id="od-sugg" class="tl-sugg" hidden></div></div><button id="od-go">Check odds</button></div>
+    <p class="note">Any stock or ETF on NASDAQ, NYSE or NYSE American: how often stocks like it ended up higher (S&amp;P 500 backtests, fit on 2017-20, judged on 2021-26) and how this stock itself usually behaved. Type several tickers separated by commas to compare.</p>
+    <div class="tl-row od-row"><div class="tl-in"><input id="od-input" placeholder="Any US ticker, or compare: AAPL, TSLA, PLTR" autocomplete="off" autocapitalize="characters" spellcheck="false"><div id="od-sugg" class="tl-sugg" hidden></div></div><button id="od-go">Check odds</button></div>
     <div id="od-sig" class="od-sig"></div>
     <div id="od-body"></div>
+    <div id="od-cmp" class="od-cmp"></div>
   </div>
 
   <details class="panel fold" id="mv-fold">
@@ -657,7 +677,7 @@
       <label class="mv-all"><input type="checkbox" id="mv-all"> include warrants, units and sub-$1</label>
       <div id="mv-age" class="mv-age"></div>
       <div id="mv-body"><p class="note">Loading…</p></div>
-      <p class="note">US stocks only (Alpaca screener; EU/UK listings are not covered). <b>1-week odds</b>: how often S&amp;P 500 stocks with a day move like this were higher 5 trading days later (2016-26, point-in-time members; any stock: 54%). Big up-days of 5-20% faded slightly (about 49-50% up, average −0.2% to −0.8%); over a month they did fine. Small caps and SPAC paper in this list behave differently, so treat it as information, not a buy list. Tap an underlined S&amp;P 500 ticker for its full odds.</p>
+      <p class="note">US stocks only (Alpaca screener; EU/UK listings are not covered). <b>1-week odds</b>: how often S&amp;P 500 stocks with a day move like this were higher 5 trading days later (2016-26, point-in-time members; any stock: 54%). Big up-days of 5-20% faded slightly (about 49-50% up, average −0.2% to −0.8%); over a month they did fine. Small caps and SPAC paper in this list behave differently, so treat it as information, not a buy list. Tap any row for its full odds.</p>
     </div>
   </details>
 
@@ -4630,7 +4650,7 @@ function mvRender() {
   const odds = r => { if (base == null || r.pct == null) return ''; const b = odBucket(5, r.pct / 100); if (!b) return ''; const d = b.up - base;
     return `<span class="mv-chip ${d < -0.02 ? 'mv-c-dn' : d > 0.02 ? 'mv-c-up' : ''}" title="${b.n.toLocaleString()} S&P 500 days with a move from ${(b.lo * 100).toFixed(0)}% to ${(b.hi * 100).toFixed(0)}%: avg ${(b.ret * 100).toFixed(2)}% a week later (any stock ${(base * 100).toFixed(0)}%)">1w odds ${(b.up * 100).toFixed(0)}%</span>`; };
   const name = n => (n || '').replace(/\s+(Class [A-Z]|Common Stock|Ordinary Shares?|American Depositary Shares?|Inc\.?|Corporation|Corp\.?|Holdings?|Limited|Ltd\.?|plc)\b.*$/i, '').replace(/[,\s]+$/, '').trim() || n || ''; const nice = n => typeof tlTitle === 'function' ? tlTitle(name(n)) : name(n);
-  const rows = list.map((r, i) => { const isNew = before.size && !before.has(r.symbol), link = spx.has(r.symbol);
+  const rows = list.map((r, i) => { const isNew = before.size && !before.has(r.symbol), link = true;   // any US ticker opens in the odds checker
     const right2 = MV.tab === 'actives' ? (r.volume != null ? (r.volume / 1e6).toFixed(1) + 'M vol' : '') : (r.change == null ? '' : (r.change >= 0 ? '+' : '−') + '$' + fmtP(Math.abs(r.change)));
     return `<div class="mv-row${isNew ? ' mv-new' : ''}${link ? ' mv-link' : ''}"${link ? ` data-od="${esc(r.symbol)}" role="button" tabindex="0" title="Check the backtested odds"` : ''}>
       <span class="mv-rk">${i + 1}</span>
@@ -4655,23 +4675,49 @@ function mvInit() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) mvLoad(); });
 }
 
-// ---------------- Odds checker (Bible 6.66): how often did S&P 500 stocks that looked like this one today end up higher? ----------------
-// Tables from odds/odds.py (public.live_odds, newest row): a price-pattern logistic model FIT ON 2017-20 and judged on 2021-26 (we show the 2021-26
-// hit rate of the stock's decile, not the raw model number), one-day-move buckets, and the R18L26 swing signal's forward record. Today's features
-// come from live_profile (the ticker lookup's snapshot) as percentiles across the S&P 500, the same way the model was trained.
-// Honest by design: the pattern model has NO reliable edge out of sample (AUC ~0.50); only the R18L26 signal held up in both halves.
-const OD = {odds: null, busy: false, ticker: null};
+// ---------------- Odds checker + compare (Bible 6.66-6.67): how often did stocks that looked like this one end up higher? ----------------
+// Any US-listed stock or ETF (NASDAQ, NYSE, NYSE American, Arca). Evidence, each labelled honestly:
+//  - S&P 500 backtests (public.live_odds, odds/odds.py): price-pattern model FIT ON 2017-20, judged on 2021-26 (no reliable edge, AUC ~0.51);
+//    the R18L26 and R18P12 swing signals (edge in both halves); one-day-move buckets; sector base rates. Signals and sector need S&P 500 membership.
+//  - The stock's OWN 10-year record (ticker-odds Edge Function, Alpaca daily bars): how often it was higher 1 week / 2 weeks / 1 month / 3 months
+//    later, in up- and down-markets, over the last 3 years and after days with a move like today's. A base rate for that stock, not a forecast.
+// Non-S&P stocks are scored with the S&P-trained pattern model against today's S&P 500 cross-section (approximate; not used for ETFs or
+// illiquid / sub-$5 stocks, where only the own record is shown).
+const OD = {odds: null, busy: false, ticker: null, own: {}, cmp: []};
+const OD_H = [[5, '1 week'], [10, '2 weeks'], [21, '1 month'], [63, '3 months']];
 const OD_F = {ret_1d: ['f', 'ret_1d'], ret_5d: ['f', 'ret_5d'], mom1m: ['f', 'mom1m'], mom6_1: ['f', 'mom6_1'], mom12_1: ['f', 'mom12_1'], dist_52w_high: ['f', 'dist_52w_high'],
               vol20: ['f', 'vol20'], max21: ['f', 'max21'], ibs: ['g', 'ibs'], ret120: ['p', 'ret_rank120'], sector60: ['p', 'rank_in_sector60']};
 const OD_LAB = {ret_1d: 'Today', ret_5d: 'Last week', mom1m: 'Last month', mom6_1: '6-month trend', mom12_1: '12-month trend', dist_52w_high: 'Near 52-week high',
                 vol20: 'Volatility', max21: 'Biggest recent jump', ibs: 'Closed near the high', ret120: '120-day strength', sector60: 'Strength in its sector'};
 const odP = (x, d = 0) => x == null || !isFinite(x) ? '–' : (x * 100).toFixed(d) + '%';
+const odS = (x, d = 1) => x == null || !isFinite(x) ? '–' : (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(d) + '%';
 async function odLoad() {
   if (OD.odds || OD.busy) return; OD.busy = true;
   try { const r = await sb('live_odds?select=built_at,data_through,data&order=id.desc&limit=1'); OD.odds = r[0]?.data || null; } catch (e) { OD.err = e.message; }
   OD.busy = false;
 }
-function odPct() {                                   // today's cross-sectional percentile of every model feature (cached per snapshot)
+// ---- the stock's own record (any US ticker), cached 10 minutes ----
+async function odOwn(syms) {
+  const now = Date.now(), need = syms.filter(s => !(OD.own[s] && now - OD.own[s].at < 6e5));
+  if (need.length) {
+    const token = await getToken(); if (!token) throw new Error('Not signed in');
+    const r = await fetch(`${SB_URL}/functions/v1/ticker-odds`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({symbols: need})});
+    const j = await r.json().catch(() => ({ok: false, error: `HTTP ${r.status}`})); if (!j.ok) throw new Error(j.error || `HTTP ${r.status}`);
+    for (const [s, v] of Object.entries(j.results || {})) OD.own[s] = {at: now, ...v, spyUp: j.spy_above_200d};
+  }
+  return Object.fromEntries(syms.map(s => [s, OD.own[s]]));
+}
+// ---- today's percentiles across the S&P 500 (members from live_profile; anyone else is placed into the same distributions) ----
+function odDist() {
+  if (OD.dist && OD.distAsof === TL.asof) return OD.dist;
+  const D = {}; const get = (r, src, f) => src === 'g' || src === 'p' ? (r.sig || {})[f] : (r.f || {})[f];
+  for (const [k, [src, f]] of Object.entries(OD_F)) D[k] = TL.prof.map(r => get(r, src, f)).filter(v => v != null && isFinite(v)).sort((a, b) => a - b);
+  D.ret120raw = TL.prof.map(r => (r.f || {}).mom6m).filter(v => v != null && isFinite(v)).sort((a, b) => a - b);   // 126-day return stands in for 120
+  OD.distAsof = TL.asof; return OD.dist = D;
+}
+function odRank(arr, v) { if (!arr.length || v == null || !isFinite(v)) return NaN; let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < v) lo = m + 1; else hi = m; }
+  let e = lo; while (e < arr.length && arr[e] === v) e++; return Math.max(1, (lo + e + 1) / 2) / arr.length; }
+function odPct() {
   if (OD.pct && OD.pctAsof === TL.asof) return OD.pct;
   const rows = TL.prof.map(r => ({ticker: r.ticker, ...(r.f || {}), ...Object.fromEntries(Object.entries(r.sig || {}).map(([k, v]) => ['g_' + k, v]))}));
   const out = Object.fromEntries(rows.map(r => [r.ticker, {}]));
@@ -4681,91 +4727,178 @@ function odPct() {                                   // today's cross-sectional 
   }
   OD.pctAsof = TL.asof; return OD.pct = out;
 }
+function odPctOther(f) {                              // a non-member's features placed into today's S&P 500 distributions; sector strength unknown -> middle
+  const D = odDist(), x = {};
+  for (const k of Object.keys(OD_F)) x[k] = k === 'sector60' ? 0.5 : k === 'ret120' ? odRank(D.ret120raw, f.ret120) : odRank(D[k], f[k]);
+  return x;
+}
 function odModel(name, x, spyUp) {
-  const M = OD.odds.models[name]; let z = M.w[0], j = 1;
+  const M = OD.odds.models[name]; if (!M) return null; let z = M.w[0], j = 1;
   for (const k of OD.odds.feats) { const v = (isFinite(x[k]) ? x[k] : 0.5) - 0.5; z += M.w[j++] * v + M.w[j++] * (v * v - 1 / 12); }
   if (M.mkt) z += M.w[j] * ((spyUp ? 1 : 0) - 0.5);
   const p = 1 / (1 + Math.exp(-z)); const dec = M.edges.filter(e => e < p).length;
   return {p, dec: dec + 1, hit: M.cal[dec].hit_test, base: M.base_test, auc: M.auc_test, n: M.cal[dec].n_test, ret: M.cal[dec].ret_test};
 }
 function odBucket(h, r1) { const B = OD.odds.daymove[String(h)] || []; return B.find(b => r1 >= b.lo && r1 < b.hi) || null; }
-function odGauge(lab, p, base, edge, sub) {
-  const w = Math.max(2, Math.min(98, p * 100)), bw = base * 100, diff = (p - base) * 100;
-  return `<div class="od-g"><div class="od-gl">${lab}</div><div class="od-gv">${odP(p)}</div>
-    <div class="od-bar"><i style="width:${w}%" class="${edge ? 'on' : ''}"></i><b style="left:${bw}%" title="all S&amp;P 500 stocks"></b></div>
-    <div class="od-gs">${Math.abs(diff) < 1 ? 'same as' : diff > 0 ? `${diff.toFixed(1)} pts above` : `${(-diff).toFixed(1)} pts below`} the ${odP(base)} of any S&amp;P 500 stock${sub ? ' · ' + sub : ''}</div></div>`;
+
+// ---- one stock: everything we know, per horizon ----
+function odAnalyse(sym, own) {
+  const p = TL.prof.find(r => r.ticker === sym), O = OD.odds, member = !!p, g = p?.sig || {}, f = p ? p.f || {} : (own?.f || {});
+  const name = p?.name || own?.asset?.name || '', etf = !p && !!own?.asset?.etf;
+  const thin = !p && own?.f && ((own.f.price != null && own.f.price < 5) || (own.f.dollar_vol20 != null && own.f.dollar_vol20 < 2e7));
+  const modelOk = O && !etf && !thin && (member || (own?.f && own.f.mom12_1 != null));
+  const spyUp = member ? !!g.spy_above_200d : !!(own?.spyUp ?? TL.prof[0]?.sig?.spy_above_200d);
+  const x = !O ? null : member ? odPct()[sym] || {} : own?.f ? odPctOther(own.f) : null;
+  const sigs = member ? [['R18L26', !!g.R18L26, O.r18l26], ['R18P12', !!g.R18P12, O.r18p12]] : [];
+  const H = OD_H.map(([h, lab]) => {
+    const M = modelOk && x ? odModel('up_' + h, x, spyUp) : null, Mb = modelOk && x ? odModel('beat_' + h, x, false) : null;
+    const on = sigs.find(([, a, R]) => a && R[String(h)]); const R = on ? on[2][String(h)] : null;
+    const ow = own?.own?.[h] || own?.own?.[String(h)] || null, regime = ow ? (spyUp ? ow.up_mkt : ow.down_mkt) : null;
+    const base = O?.models['up_' + h]?.base_test ?? null;
+    const head = R ? {v: R['2021-26'].up, src: on[0] + ' signal today', edge: true, base: R.all_members_spy_up.up}
+      : M ? {v: M.hit, src: `pattern decile ${M.dec}/10`, edge: false, base}
+      : ow?.all ? {v: ow.all.up, src: 'its own record', edge: false, base: null} : null;
+    return {h, lab, head, M, Mb, R, sig: on?.[0], ow, regime, base, sector: member && O?.sector?.[p.sector]?.[String(h)] || null, mb: f.ret_1d != null && O ? odBucket(h, f.ret_1d) : null};
+  });
+  return {sym, p, member, g, f, name, etf, thin, modelOk, spyUp, x, H, own, sector: p?.sector || own?.asset?.exchange || '', sigs};
 }
-function odShow(ticker) {
-  const el = document.getElementById('od-body'); if (!el) return; OD.ticker = ticker;
-  const p = TL.prof.find(r => r.ticker === ticker); if (!p) { el.innerHTML = `<p class="note">${esc(ticker)} is not in today's S&amp;P 500 snapshot: the odds are only backtested on S&amp;P 500 members.</p>`; return; }
-  const O = OD.odds, g = p.sig || {}, f = p.f || {}, x = odPct()[ticker] || {}, spyUp = !!g.spy_above_200d;
-  const u5 = odModel('up_5', x, spyUp), u21 = odModel('up_21', x, spyUp), b5 = odModel('beat_5', x, false), b21 = odModel('beat_21', x, false);
-  const R = O.r18l26['5'], sig = !!g.R18L26, mb5 = isFinite(f.ret_1d) ? odBucket(5, f.ret_1d) : null, mb21 = isFinite(f.ret_1d) ? odBucket(21, f.ret_1d) : null;
-  // headline: the swing signal is the only evidence with a real out-of-sample edge; otherwise the pattern decile's 2021-26 hit rate
-  const w1 = sig ? R['2021-26'].up : u5.hit, w1sub = sig ? 'R18L26 signal today' : `pattern decile ${u5.dec}/10`;
-  const tdays = d => { let n = 0; for (let t = new Date(d + 'T12:00:00Z'); t < new Date(TL.asof + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + 1)) { const w = t.getUTCDay(); if (w && w < 6) n++; } return n; };
-  const lastSig = (TL.signals || []).find(r => r.ticker === ticker && r.strategy === 'R18L26'), ago = lastSig ? tdays(lastSig.as_of) : null;
-  const verdict = sig
-    ? `<b>Swing buy signal (R18L26) at today's close.</b> Since 2021, ${odP(R['2021-26'].up)} of these signals were higher 5 trading days later (all stocks in an up-market: ${odP(R.all_members_spy_up.up)}), with an average of ${(R['2021-26'].ret * 100).toFixed(2)}% (${R['2021-26'].n.toLocaleString()} signals). The edge held in 2016-20 too (${odP(R['2016-20'].up)}).`
-    : `<b>No backtested edge today.</b> ${esc(ticker)}'s price pattern puts it in decile ${u5.dec} of 10, and stocks in that decile were higher a week later ${odP(u5.hit)} of the time in 2021-26, about the same as any S&amp;P 500 stock (${odP(u5.base)}). Our price-pattern model did not work out of sample (AUC ${u5.auc.toFixed(2)}, 0.50 = coin flip).`;
-  const ev = [
-    ['Swing signal R18L26', sig ? 'active today' : ago != null ? `${ago} trading day${ago === 1 ? '' : 's'} ago` : 'none in the last 20 days',
-      `${odP(R['2021-26'].up)} up after 5 days · avg ${(R['2021-26'].ret * 100).toFixed(2)}% · n ${R['2021-26'].n.toLocaleString()} (2021-26)`, sig ? 'edge' : 'idle', 'Real edge: held in both halves'],
-    ['Price pattern', `decile ${u5.dec} / 10`, `${odP(u5.hit)} up after 1 week · ${odP(u21.hit)} after 1 month (2021-26)`, 'none', `No reliable edge (AUC ${u5.auc.toFixed(2)})`],
-    ['Today\'s move', isFinite(f.ret_1d) ? (f.ret_1d >= 0 ? '+' : '') + (f.ret_1d * 100).toFixed(1) + '%' : '–',
-      mb5 ? `${odP(mb5.up)} up after 1 week · avg ${(mb5.ret * 100).toFixed(2)}% · n ${mb5.n.toLocaleString()} (2016-26)` : '–', mb5 && Math.abs(mb5.up - u5.base) > 0.03 ? 'weak' : 'none',
-      mb5 && f.ret_1d >= 0.05 ? 'Big up-days tended to fade over the next week' : mb5 && f.ret_1d <= -0.05 ? 'Big down-days bounced more often than not over a month' : 'Ordinary day: no effect'],
-    ['Beat the S&P 500', '', `${odP(b5.hit)} after 1 week · ${odP(b21.hit)} after 1 month (2021-26)`, 'none', 'Base rate below 50%: most stocks lag the index'],
-  ];
-  const sc = TL.scores ? TL.scores.sc[ticker] : null, cls = sc != null ? tlClass(sc) : null;
+function odSpark(vals, w = 160, h = 40) {
+  if (!vals || vals.length < 2) return '';
+  const lo = Math.min(...vals), hi = Math.max(...vals), r = hi - lo || 1, up = vals[vals.length - 1] >= vals[0];
+  const pts = vals.map((v, i) => `${(i / (vals.length - 1) * w).toFixed(1)},${(h - 3 - (v - lo) / r * (h - 6)).toFixed(1)}`).join(' ');
+  return `<svg class="od-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,${h} ${pts} ${w},${h}" fill="${up ? 'var(--good)' : 'var(--bad)'}" fill-opacity=".10" stroke="none"/><polyline points="${pts}" fill="none" stroke="${up ? 'var(--good)' : 'var(--bad)'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function odTile(c) {
+  if (!c.head) return `<div class="od-t"><div class="od-tl">${c.lab}</div><div class="od-tv">–</div></div>`;
+  const b = c.head.base, d = b != null ? (c.head.v - b) * 100 : null;
+  return `<div class="od-t${c.head.edge ? ' on' : ''}"><div class="od-tl">${c.lab}</div><div class="od-tv">${odP(c.head.v)}</div>
+    <div class="od-bar"><i style="width:${Math.max(2, Math.min(98, c.head.v * 100))}%" class="${c.head.edge ? 'on' : ''}"></i>${b != null ? `<b style="left:${b * 100}%"></b>` : ''}</div>
+    <div class="od-ts">${d == null ? esc(c.head.src) : Math.abs(d) < 1 ? 'average' : d > 0 ? `+${d.toFixed(1)} pts` : `−${(-d).toFixed(1)} pts`}${d != null ? ` · ${esc(c.head.src)}` : ''}</div>
+    ${c.ow?.all && c.head.src !== 'its own record' ? `<div class="od-ts">own record ${odP(c.ow.all.up)}</div>` : ''}</div>`;
+}
+function odShowA(A) {
+  const el = document.getElementById('od-body'); if (!el) return; OD.ticker = A.sym;
+  const O = OD.odds, w = A.H[0], m = A.H[2], q = A.H[3], R = w.R, ownN = A.own?.own?.[5]?.all?.n;
+  const verdict = R
+    ? `<b>Swing buy signal (${w.sig}) at the last close.</b> Since 2021, ${odP(R['2021-26'].up)} of these signals were higher 5 trading days later (all stocks in an up-market: ${odP(R.all_members_spy_up.up)}), average ${odS(R['2021-26'].ret, 2)} over ${R['2021-26'].n.toLocaleString()} signals; 2016-20: ${odP(R['2016-20'].up)}.`
+    : A.modelOk && w.M
+    ? `<b>No backtested edge today.</b> ${esc(A.sym)}'s price pattern is in decile ${w.M.dec} of 10; stocks there were higher a week later ${odP(w.M.hit)} of the time in 2021-26, close to the ${odP(w.M.base)} of any S&amp;P 500 stock. The pattern model did not work out of sample (AUC ${w.M.auc.toFixed(2)}, 0.50 = coin flip).`
+    : A.own?.own ? `<b>${A.etf ? 'ETF' : A.thin ? 'Small or thinly traded stock' : 'No S&amp;P 500 backtest for this stock'}: own record only.</b> Over ${ownN ? ownN.toLocaleString() : 'its'} trading days since ${esc(A.own.first || '')}, ${esc(A.sym)} was higher a week later ${odP(w.ow?.all?.up)} of the time and a month later ${odP(m.ow?.all?.up)}. That is a base rate for this stock, not a signal.`
+    : `<b>Loading this stock's own record…</b>`;
+  const today = A.f.ret_1d;
+  const ev = [];
+  if (A.member) for (const [k, on, Rr] of A.sigs) { const r5 = Rr['5']['2021-26']; ev.push([`Swing signal ${k}`, on ? 'active today' : 'not today',
+    `${odP(r5.up)} up after 1 week · avg ${odS(r5.ret, 2)} · n ${r5.n.toLocaleString()} (2021-26)`, on ? 'edge' : 'idle', 'Real edge: held in both halves']); }
+  if (A.modelOk && w.M) ev.push(['Price pattern', `decile ${w.M.dec}/10`, A.H.map(c => `${c.lab} ${odP(c.M?.hit)}`).join(' · ') + ' (2021-26)', 'none',
+    `No reliable edge (AUC ${w.M.auc.toFixed(2)})${A.member ? '' : ' · scored against today\'s S&P 500, sector strength unknown'}`]);
+  if (w.mb) ev.push(['Today\'s move', odS(today), `S&P 500 stocks after a day like this: ${odP(w.mb.up)} up after 1 week, ${odP(m.mb?.up)} after 1 month`, Math.abs(w.mb.up - (w.base || 0.54)) > 0.03 ? 'weak' : 'none',
+    today >= 0.05 ? 'Big up-days tended to fade over the next week' : today <= -0.05 ? 'Big down-days bounced more often than not over a month' : 'Ordinary day: no effect']);
+  if (A.own?.own) { const o1 = w.ow, o3 = m.ow;
+    ev.push([`Its own record`, `since ${(A.own.first || '').slice(0, 4)}`, `${odP(o1?.all?.up)} up after 1 week · ${odP(o3?.all?.up)} after 1 month · ${odP(q.ow?.all?.up)} after 3 months`, 'base', 'Base rate for this stock: how it usually behaved']);
+    ev.push([A.spyUp ? 'In up-markets' : 'In down-markets', 'like now', `${odP(w.regime?.up)} up after 1 week · ${odP(m.regime?.up)} after 1 month (n ${(m.regime?.n || 0).toLocaleString()})`, 'base', 'SPY above / below its 200-day average']);
+    if (m.ow?.last3y) ev.push(['Last 3 years', '', `${odP(w.ow?.last3y?.up)} up after 1 week · ${odP(m.ow.last3y.up)} after 1 month`, 'base', 'Recent behaviour of this stock']);
+    if (w.ow?.like_today && w.ow.like_today.n >= 20) ev.push(['After days like today', odS(today), `${odP(w.ow.like_today.up)} up after 1 week · avg ${odS(w.ow.like_today.ret, 2)} (n ${w.ow.like_today.n})`, w.ow.like_today.n < 100 ? 'thin' : 'base', w.ow.like_today.n < 100 ? 'Few cases: treat as noise' : 'Its own history after a similar move']);
+    ev.push(['Beat the S&P 500', '', `${odP(w.ow?.beat_spy)} of weeks · ${odP(m.ow?.beat_spy)} of months (own record)`, 'base', 'Most stocks lag the index more often than not']); }
+  if (m.sector) ev.push([`Sector: ${A.p.sector}`, '', `S&P 500 ${A.p.sector}: ${odP(w.sector?.[0])} up after 1 week · ${odP(m.sector[0])} after 1 month (2021-26)`, 'base', 'Sector base rate']);
+  const TAG = {edge: 'edge', idle: 'edge · idle', weak: 'weak', none: 'no edge', base: 'base rate', thin: 'thin'};
+  const sc = A.member && TL.scores ? TL.scores.sc[A.sym] : null, cls = sc != null ? tlClass(sc) : null;
+  const inCmp = OD.cmp.includes(A.sym);
   el.innerHTML = `
-    <div class="od-head"><div><div class="od-tk">${esc(ticker)}</div><div class="od-nm">${esc(tlTitle(p.name || ''))} · ${esc(p.sector || '')}</div></div>
-      <div class="od-px">$${isFinite(f.price) ? (+f.price).toFixed(2) : '–'}<span class="${f.ret_1d >= 0 ? 'pos' : 'neg'}">${isFinite(f.ret_1d) ? (f.ret_1d >= 0 ? '+' : '') + (f.ret_1d * 100).toFixed(2) + '%' : ''}</span></div></div>
-    <div class="od-gauges">${odGauge('Higher in 1 week', w1, sig ? R.all_members_spy_up.up : u5.base, sig, w1sub)}${odGauge('Higher in 1 month', u21.hit, u21.base, false, `pattern decile ${u21.dec}/10`)}</div>
-    <div class="od-verdict ${sig ? 'on' : ''}">${verdict}</div>
-    <div class="od-ev">${ev.map(([k, v, s, t, tip]) => `<div class="od-evr"><span class="od-tag od-${t}">${t === 'edge' ? 'edge' : t === 'idle' ? 'edge · idle' : t === 'weak' ? 'weak' : 'no edge'}</span>
+    <div class="od-head"><div class="od-hl"><div class="od-tk">${esc(A.sym)}${A.member ? '<span class="od-badge">S&amp;P 500</span>' : A.etf ? '<span class="od-badge">ETF</span>' : A.own?.asset?.exchange ? `<span class="od-badge">${esc(A.own.asset.exchange)}</span>` : ''}</div>
+        <div class="od-nm">${esc(tlTitle(A.name || ''))}${A.p?.sector ? ' · ' + esc(A.p.sector) : ''}</div></div>
+      <div class="od-px">$${isFinite(A.f.price) ? (+A.f.price).toFixed(2) : '–'}<span class="${today >= 0 ? 'pos' : 'neg'}">${odS(today, 2)}</span></div></div>
+    ${A.own?.spark ? `<div class="od-chart">${odSpark(A.own.spark, 320, 54)}<div class="od-chs"><span>1 year</span><span>${odS(A.f.mom12m ?? A.own.f?.mom12m)}</span></div></div>` : ''}
+    <div class="od-tiles">${A.H.map(odTile).join('')}</div>
+    <div class="od-verdict ${R ? 'on' : ''}">${verdict}</div>
+    <div class="od-ev">${ev.map(([k, v, s, t, tip]) => `<div class="od-evr"><span class="od-tag od-${t}">${TAG[t]}</span>
       <div><div class="od-evk">${esc(k)}${v ? ` <b>${esc(v)}</b>` : ''}</div><div class="od-evs">${s}</div><div class="od-evt">${esc(tip)}</div></div></div>`).join('')}</div>
-    <details class="about"><summary>What drives the pattern score</summary>${odDrivers(x)}</details>
-    <div class="od-foot">${cls ? `Strategy fit: <b>${esc(cls.label)}</b> (voting score ${sc.toFixed(0)}, a fit with our long-term strategies, not a forecast) · ` : ''}<button class="linkbtn" id="od-full">Full strategy analysis</button></div>
-    <p class="tl-foot">Backtest on point-in-time S&amp;P 500 members, decisions at the close, data through ${esc(O.built)}; model chosen on 2017-20 only (Bible rule), every rate shown is from data the model never saw unless marked 2016-26. History, not a promise; not investment advice.</p>`;
-  document.getElementById('od-full').onclick = () => { const box = document.getElementById('tl-input'), pan = document.getElementById('tl-panel'); if (pan) pan.open = true;
-    if (box) { box.value = ticker; document.getElementById('tl-go').click(); pan.scrollIntoView({behavior: 'smooth', block: 'start'}); } };
+    ${A.modelOk && A.x ? `<details class="about"><summary>What drives the pattern score</summary>${odDrivers(A.x)}</details>` : ''}
+    <div class="od-foot"><button class="pill${inCmp ? ' on' : ''}" id="od-addcmp">${inCmp ? '✓ In compare' : '+ Compare'}</button>${cls ? `<span>Strategy fit: <b>${esc(cls.label)}</b> (score ${sc.toFixed(0)})</span>` : ''}${A.member ? '<button class="linkbtn" id="od-full">Full strategy analysis</button>' : ''}</div>
+    <p class="tl-foot">${A.member ? 'S&amp;P 500 backtest: point-in-time members, decisions at the close, data through ' + esc(O.built) + '; model chosen on 2017-20 only (Bible rule). ' : ''}Own record from Alpaca daily bars (split and dividend adjusted)${A.own?.as_of ? ' through ' + esc(A.own.as_of) : ''}. History, not a promise; not investment advice.</p>`;
+  document.getElementById('od-addcmp').onclick = () => { odCmpToggle(A.sym); odShowA(A); };
+  const full = document.getElementById('od-full'); if (full) full.onclick = () => { const box = document.getElementById('tl-input'), pan = document.getElementById('tl-panel'); if (pan) pan.open = true;
+    if (box) { box.value = A.sym; document.getElementById('tl-go').click(); pan.scrollIntoView({behavior: 'smooth', block: 'start'}); } };
 }
 function odDrivers(x) {
   const D = OD.odds.deciles, rows = OD.odds.feats.map(k => { const d = Math.min(9, Math.floor((isFinite(x[k]) ? x[k] : 0.5) * 10)); const t = D[k]['5'];
     const all = t.reduce((s, r) => s + r[0] * r[3], 0) / t.reduce((s, r) => s + r[3], 0); return {k, d, up: t[d][0], diff: t[d][0] - all}; }).sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
   const mx = Math.max(0.02, ...rows.map(r => Math.abs(r.diff)));
-  return `<p>Each signal on its own (2017-26, one week ahead): the stock's decile today and how often stocks in that decile were higher, vs the average. Small bars are the honest picture: none of these moves the odds by much.</p>
+  return `<p>Each signal on its own (S&amp;P 500 2017-26, one week ahead): the stock's decile today and how often stocks in that decile were higher. Small bars are the honest picture: none moves the odds much.</p>
     ${rows.map(r => `<div class="od-dr"><span>${esc(OD_LAB[r.k] || r.k)} <span class="muted">d${r.d + 1}</span></span><div class="od-drt"><i style="${r.diff >= 0 ? 'left:50%' : 'right:50%'};width:${Math.abs(r.diff) / mx * 50}%" class="${r.diff >= 0 ? 'pos' : 'neg'}"></i></div><b>${odP(r.up, 1)}</b></div>`).join('')}`;
 }
-function odSignals() {                                 // today's R18L26 signals: the only stocks with a backtested short-term edge right now
+// ---- compare: up to 4 tickers side by side; the best value in each row is highlighted ----
+function odCmpToggle(s) { const i = OD.cmp.indexOf(s); if (i >= 0) OD.cmp.splice(i, 1); else { OD.cmp.push(s); if (OD.cmp.length > 4) OD.cmp.shift(); } try { localStorage.setItem('finny-cmp', JSON.stringify(OD.cmp)); } catch (e) {} odCmp(); }
+async function odCmp() {
+  const el = document.getElementById('od-cmp'); if (!el) return;
+  if (!OD.cmp.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<p class="note">Loading the comparison…</p>';
+  let own = {}; try { own = await odOwn(OD.cmp); } catch (e) { own = {}; }
+  const A = OD.cmp.map(s => odAnalyse(s, own[s]));
+  const row = (lab, vals, fmt, best = 'max') => { const ok = vals.filter(v => v != null && isFinite(v)); const b = ok.length > 1 ? (best === 'max' ? Math.max(...ok) : Math.min(...ok)) : null;
+    return `<tr><th>${lab}</th>${vals.map(v => `<td class="${b != null && v === b ? 'od-best' : ''}">${fmt(v)}</td>`).join('')}</tr>`; };
+  const hv = (a, i) => a.H[i].head?.v ?? null;
+  el.innerHTML = `<div class="od-cmph"><b>Compare</b><span class="muted">${A.length} of 4 · tap a name to open it</span><button class="linkbtn" id="od-cmpclr">Clear</button></div>
+    <div class="od-cmpw"><table class="od-cmpt"><thead><tr><th></th>${A.map(a => `<th><button class="od-cmpn" data-t="${esc(a.sym)}">${esc(a.sym)}</button><button class="od-cmpx" data-x="${esc(a.sym)}" aria-label="Remove">×</button>
+        <div class="od-cmps">${a.own?.spark ? odSpark(a.own.spark, 90, 26) : ''}</div></th>`).join('')}</tr></thead><tbody>
+      ${row('Price', A.map(a => a.f.price ?? null), v => v == null ? '–' : '$' + (+v).toFixed(2), 'none')}
+      ${row('Today', A.map(a => a.f.ret_1d ?? null), v => odS(v, 2))}
+      ${OD_H.map(([, lab], i) => row(`Higher in ${lab}`, A.map(a => hv(a, i)), v => odP(v))).join('')}
+      ${row('Own record, 1 month', A.map(a => a.H[2].ow?.all?.up ?? null), v => odP(v))}
+      ${row('Own: beat SPY, 1 month', A.map(a => a.H[2].ow?.beat_spy ?? null), v => odP(v))}
+      ${row('Signals today', A.map(a => a.sigs.filter(x => x[1]).length || 0), v => v ? '● ' + v : '–')}
+      ${row('12-month return', A.map(a => a.f.mom12m ?? a.own?.f?.mom12m ?? null), v => odS(v, 0))}
+      ${row('From 52-week high', A.map(a => a.f.dist_52w_high ?? null), v => odS(v, 0))}
+      ${row('Volatility', A.map(a => a.f.vol20 ?? null), v => v == null ? '–' : (v * 100).toFixed(0) + '%', 'min')}
+      ${row('Strategy fit', A.map(a => a.member && TL.scores ? TL.scores.sc[a.sym] ?? null : null), v => v == null ? '–' : v.toFixed(0))}
+    </tbody></table></div><p class="tl-foot">Highlighted: best in the row (lowest for volatility). Odds rows use the same evidence as the single view: a swing signal when one is active, else the S&amp;P 500 pattern decile, else the stock's own record.</p>`;
+  el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => odGo(b.dataset.t));
+  el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => odCmpToggle(b.dataset.x));
+  document.getElementById('od-cmpclr').onclick = () => { OD.cmp = []; try { localStorage.removeItem('finny-cmp'); } catch (e) {} odCmp(); if (OD.ticker && OD.last) odShowA(OD.last); };
+}
+function odSignals() {                                 // today's swing signals: the only stocks with a backtested short-term edge right now
   const el = document.getElementById('od-sig'); if (!el || !TL.loaded) return;
-  const s = TL.prof.filter(r => r.sig && r.sig.R18L26).map(r => r.ticker);
-  el.innerHTML = s.length ? `<span class="od-sigl">Swing signals today</span>${s.map(t => `<button class="pill" data-t="${esc(t)}">${esc(t)}</button>`).join('')}`
-    : `<span class="od-sigl">No R18L26 swing signal at the ${esc(TL.asof)} close${TL.prof[0]?.sig?.spy_above_200d === false ? ' (SPY below its 200-day average: the rule stays out)' : ''}.</span>`;
+  const s = TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => [r.ticker, r.sig.R18L26 ? 'R18L26' : 'R18P12']);
+  el.innerHTML = s.length ? `<span class="od-sigl">Swing signals today</span>${s.map(([t, k]) => `<button class="pill" data-t="${esc(t)}" title="${k}">${esc(t)}</button>`).join('')}`
+    : `<span class="od-sigl">No swing signal at the ${esc(TL.asof)} close${TL.prof[0]?.sig?.spy_above_200d === false ? ' (SPY below its 200-day average: the rules stay out)' : ''}.</span>`;
   el.querySelectorAll('button[data-t]').forEach(b => b.onclick = () => odGo(b.dataset.t));
 }
 async function odGo(t) {
-  const el = document.getElementById('od-body'); el.innerHTML = '<p class="note">Loading today\'s snapshot and the backtested odds…</p>';
+  const el = document.getElementById('od-body'); el.innerHTML = '<p class="note">Loading…</p>';
+  const parts = String(t || '').toUpperCase().split(/[\s,;]+/).map(x => x.replace(/[^A-Z0-9.\-]/g, '')).filter(Boolean);
   await Promise.all([tlLoad(), odLoad()]);
   if (!TL.loaded || !OD.odds) { el.innerHTML = `<p class="note">Could not load the odds data${OD.err ? ': ' + esc(OD.err) : ''}.</p>`; return; }
   odSignals();
-  const hit = TL.prof.find(r => r.ticker === (t || '').toUpperCase()) || tlMatches(t || '')[0];
-  if (!hit) { el.innerHTML = `<p class="note">No S&amp;P 500 stock matches “${esc(t)}”. The odds are backtested on S&amp;P 500 members only.</p>`; return; }
-  document.getElementById('od-input').value = hit.ticker; odShow(hit.ticker);
+  if (!parts.length) { el.innerHTML = ''; return; }
+  if (parts.length > 1) { OD.cmp = [...new Set(parts)].slice(0, 4); try { localStorage.setItem('finny-cmp', JSON.stringify(OD.cmp)); } catch (e) {} }
+  // a typed company name -> S&P 500 match; anything that looks like a symbol is looked up as is (any US listing)
+  let sym = parts[0]; if (!TL.prof.some(r => r.ticker === sym) && !/^[A-Z][A-Z0-9.\-]{0,5}$/.test(sym)) { const m = tlMatches(t)[0]; if (m) sym = m.ticker; }
+  document.getElementById('od-input').value = parts.length > 1 ? OD.cmp.join(', ') : sym;
+  const member = TL.prof.some(r => r.ticker === sym);
+  if (member) { OD.last = odAnalyse(sym, null); odShowA(OD.last); }                 // S&P evidence at once, own record when it arrives
+  else el.innerHTML = `<p class="note">Fetching ${esc(sym)}'s daily history from Alpaca…</p>`;
   document.getElementById('od-panel')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  try {
+    const own = (await odOwn([sym]))[sym];
+    if (OD.ticker && OD.ticker !== sym && member) return;
+    if (own?.error && !member) { el.innerHTML = `<p class="note">${esc(sym)}: ${esc(own.error)}.</p>`; return; }
+    OD.last = odAnalyse(sym, own?.error ? null : own); odShowA(OD.last);
+  } catch (e) { if (!member) el.innerHTML = `<p class="note">Could not fetch ${esc(sym)}: ${esc(e.message)}</p>`; }
+  if (parts.length > 1 || OD.cmp.length) odCmp();
 }
 function odInit() {
   const box = document.getElementById('od-input'); if (!box || box.dataset.wired) return; box.dataset.wired = '1';
+  try { OD.cmp = JSON.parse(localStorage.getItem('finny-cmp') || '[]').slice(0, 4); } catch (e) { OD.cmp = []; }
   const sug = document.getElementById('od-sugg'); let opts = [];
   const close = () => { sug.hidden = true; sug.innerHTML = ''; opts = []; };
-  box.oninput = async () => { await tlLoad(); if (!TL.loaded) return; opts = tlMatches(box.value);
-    sug.innerHTML = opts.map((r, i) => `<div class="tl-opt" data-i="${i}"><b>${esc(r.ticker)}</b><span>${esc(tlTitle(r.name || ''))}</span></div>`).join(''); sug.hidden = !opts.length; };
-  box.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); close(); box.blur(); odGo(opts[0]?.ticker || box.value); } else if (e.key === 'Escape') close(); };
-  sug.onmousedown = e => e.preventDefault(); sug.onclick = e => { const o = e.target.closest('.tl-opt'); if (o) { const t = opts[+o.dataset.i].ticker; close(); odGo(t); } };
+  box.oninput = async () => { await tlLoad(); if (!TL.loaded) return; const q = box.value.split(',').pop().trim(); opts = tlMatches(q).slice(0, 6).map(r => ({t: r.ticker, n: tlTitle(r.name || '')}));
+    const sym = q.toUpperCase().replace(/[^A-Z0-9.\-]/g, ''); if (sym && /^[A-Z][A-Z0-9.\-]{0,5}$/.test(sym) && !opts.some(o => o.t === sym)) opts.push({t: sym, n: 'any US stock or ETF'});
+    sug.innerHTML = opts.map((r, i) => `<div class="tl-opt" data-i="${i}"><b>${esc(r.t)}</b><span>${esc(r.n)}</span></div>`).join(''); sug.hidden = !opts.length; };
+  const pick = t => { const parts = box.value.split(','); parts[parts.length - 1] = ' ' + t; return parts.join(',').trim(); };
+  box.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const v = box.value.includes(',') ? box.value : (opts[0] && !/^[A-Z0-9.\-]+$/.test(box.value.trim().toUpperCase()) ? opts[0].t : box.value); close(); box.blur(); odGo(v); } else if (e.key === 'Escape') close(); };
+  sug.onmousedown = e => e.preventDefault(); sug.onclick = e => { const o = e.target.closest('.tl-opt'); if (o) { const v = pick(opts[+o.dataset.i].t); close(); odGo(v); } };
   box.onblur = () => setTimeout(close, 150);
   document.getElementById('od-go').onclick = () => { close(); odGo(box.value); };
-  Promise.all([tlLoad(), odLoad()]).then(() => { odSignals(); if (typeof mvRender === 'function' && MV.cur) mvRender(); });
+  Promise.all([tlLoad(), odLoad()]).then(() => { odSignals(); if (typeof mvRender === 'function' && MV.cur) mvRender(); if (OD.cmp.length) odCmp(); });
 }
 
 // ---------------- Research | Live views (2026-10-21) ----------------
