@@ -557,6 +557,55 @@
   .od-drt i.pos{background:var(--good)} .od-drt i.neg{background:var(--bad)}
   .od-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;font-size:12.5px;color:var(--ink-2)}
   .mv-link{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px;cursor:pointer}
+
+  /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
+  #mv-panel .mv-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 6px}
+  .mv-seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .mv-seg button{border:0;background:transparent;color:var(--ink-2);font:600 13px var(--font-ui);padding:7px 14px;border-radius:999px;cursor:pointer}
+  .mv-seg button.on{background:var(--lime);color:var(--lime-ink)}
+  .mv-ref{width:36px;height:36px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);display:grid;place-items:center;cursor:pointer;flex:none}
+  .mv-ref svg{width:17px;height:17px} .mv-ref:active svg{transform:rotate(-90deg);transition:transform .2s}
+  #mv-panel .mv-all{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:0 0 4px} #mv-panel .mv-all input{width:14px;height:14px;accent-color:var(--accent)}
+  #mv-panel .mv-age{font-size:11.5px;margin-bottom:6px}
+  .mv-list{display:flex;flex-direction:column}
+  .mv-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--glass-line)}
+  .mv-row:last-child{border-bottom:0} .mv-row.mv-link{cursor:pointer} .mv-row.mv-link:hover{background:var(--glass)}
+  .mv-row.mv-new{background:linear-gradient(90deg,var(--accent-soft),transparent 60%)}
+  .mv-rk{font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+  .mv-id{min-width:0} .mv-sym{font:700 15px var(--font-display);color:var(--ink);display:flex;align-items:center;gap:6px}
+  .mv-row.mv-link .mv-sym{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
+  .mv-nm{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mv-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px} .mv-tags:empty{display:none}
+  .mv-chip{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--ink-2);white-space:nowrap}
+  .mv-chip.mv-c-up{color:var(--good)} .mv-chip.mv-c-dn{color:var(--bad)}
+  .mv-chip.mv-f-bad{background:color-mix(in srgb, var(--bad) 14%, transparent);border-color:transparent;color:var(--bad)}
+  .mv-chip.mv-f-warn{background:color-mix(in srgb, #d9a23a 15%, transparent);border-color:transparent;color:#c48a1f}
+  .mv-q{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .mv-pct{font:700 13.5px var(--font-ui);padding:4px 9px;border-radius:9px;min-width:62px;text-align:center;font-variant-numeric:tabular-nums}
+  .mv-pct.mv-up{color:var(--good);background:color-mix(in srgb, var(--good) 15%, transparent)} .mv-pct.mv-dn{color:var(--bad);background:color-mix(in srgb, var(--bad) 15%, transparent)}
+  .mv-px{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums} .mv-px span{color:var(--muted);margin-left:6px}
+  #mv-panel .mv-badge{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:5px;text-decoration:none}
+  .mv-hid{font-size:12px;color:var(--muted);margin:8px 0 0} .mv-hid a{color:var(--accent)}
+  .sl-box{margin-top:16px;padding-top:14px;border-top:1px solid var(--glass-line)}
+  .sl-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:6px}
+  .sl-title{font:700 16px var(--font-display);color:var(--ink)} .sl-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .sl-tot,.sl-q{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .sl-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(50px,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--glass-line)}
+  .sl-row:last-of-type{border-bottom:0} .sl-id{min-width:0} .sl-id b{font:700 14px var(--font-display);color:var(--ink)}
+  .sl-share{margin-left:6px;font-size:10.5px;font-weight:600;color:var(--muted);padding:1px 6px;border-radius:999px;border:1px solid var(--glass-line)}
+  .sl-names{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .sl-bar{position:relative;height:6px;border-radius:3px;background:color-mix(in srgb, var(--muted) 14%, transparent)}
+  .sl-bar::after{content:'';position:absolute;left:50%;top:-3px;width:1px;height:12px;background:var(--muted);opacity:.5}
+  .sl-bar i{position:absolute;top:0;bottom:0;border-radius:3px} .sl-bar i.pos{background:var(--good)} .sl-bar i.neg{background:var(--bad)}
+  .sl-pct{font:700 13.5px var(--font-ui);padding:3px 8px;border-radius:8px;font-variant-numeric:tabular-nums}
+  .sl-pct.pos{background:color-mix(in srgb, var(--good) 15%, transparent)} .sl-pct.neg{background:color-mix(in srgb, var(--bad) 15%, transparent)}
+  .sl-val{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sl-tot .sl-pct{font-size:15px} .sl-box details.about{margin-top:8px}
+  .lv-run-head{font:700 14px var(--font-display)} .lv-run-sub{display:block;font:400 12px var(--font-ui);color:var(--muted);margin-top:3px}
+  .lt-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} @media (min-width:900px){.lt-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .lt-cell{padding:11px 13px} .lt-k{font-size:11.5px} .lt-v{font:800 20px var(--font-display);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .lt-s{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lv-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px} .lv-tabs::-webkit-scrollbar{display:none} .lv-tabs .pill{flex:none}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f172a"><meta name="mobile-web-app-capable" content="yes"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
@@ -603,8 +652,9 @@
       #mv-panel tr.mv-new td{background:rgba(59,130,246,.06)}#mv-panel label{font-size:13px;color:var(--ink-2)}
     </style>
     <div id="mv-panel">
-      <div class="mv-bar"><div id="mv-tabs"><button class="pill on" data-t="gainers">Top gainers</button><button class="pill" data-t="losers">Top losers</button><button class="pill" data-t="actives">Most active</button></div>
-        <div><label><input type="checkbox" id="mv-all"> show warrants, units and sub-$1</label> <button class="pill" id="mv-refresh">Refresh</button></div></div>
+      <div class="mv-bar"><div id="mv-tabs" class="mv-seg"><button class="on" data-t="gainers">Gainers</button><button data-t="losers">Losers</button><button data-t="actives">Active</button></div>
+        <button class="mv-ref" id="mv-refresh" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      <label class="mv-all"><input type="checkbox" id="mv-all"> include warrants, units and sub-$1</label>
       <div id="mv-age" class="mv-age"></div>
       <div id="mv-body"><p class="note">Loading…</p></div>
       <p class="note">US stocks only (Alpaca screener; EU/UK listings are not covered). <b>1-week odds</b>: how often S&amp;P 500 stocks with a day move like this were higher 5 trading days later (2016-26, point-in-time members; any stock: 54%). Big up-days of 5-20% faded slightly (about 49-50% up, average −0.2% to −0.8%); over a month they did fine. Small caps and SPAC paper in this list behave differently, so treat it as information, not a buy list. Tap an underlined S&amp;P 500 ticker for its full odds.</p>
@@ -3195,11 +3245,19 @@ function renderSleeves() {
   if (S.error) return `<div class="lv-msg err">Sleeves: ${esc(S.error)}</div>`;
   const tot = S.rows.reduce((a, r) => ({inv: a.inv + r.invested, val: a.val + r.value}), {inv: 0, val: 0});
   const pct = (v, b) => b ? `${v >= b ? '+' : '−'}${Math.abs((v / b - 1) * 100).toFixed(2)}%` : '—';
-  const line = (name, r, share) => `<div class="lv-line"><span><b>${esc(name)}</b>${share != null ? ` <span class="muted">${(share * 100).toFixed(0)}%</span>` : ''}</span>
-    <span class="muted">${money(r.value)} · <span class="${r.value >= r.invested ? 'pos' : 'neg'}">${money(r.value - r.invested)} (${pct(r.value, r.invested)})</span>${r.names != null ? ` · ${r.names} names${r.top?.length ? ' (' + r.top.map(esc).join(', ') + '…)' : ''}` : ''}${r.missing?.length ? ' · ⚠ no price ' + r.missing.map(esc).join(',') : ''}</span></div>`;
-  return `<details class="lv-run" open><summary class="lv-run-head">${S.external ? 'Strategies' : 'Sleeves'} since ${S.asOf.slice(0, 16).replace('T', ' ')} UTC · priced at the last Alpaca sync (${esc(S.priced || '—')}) · ${money(tot.val)} (${pct(tot.val, tot.inv)})</summary>
-    <div class="note" style="margin:6px 0 8px">${S.external ? 'Strategies of this externally traded account, from the strategy tags in its own order ids (BLTOP5 / REBAL_BL = BL-top5, ENSEMBLEVW / REBAL_VW = Ensemble V2); untagged orders are left out. P&L = value now − net cash put into the strategy (buys − sells). Press “Sync from Alpaca” for current prices.</div><div style="display:none">' : ''}Each sleeve trades its own tagged orders, never netted; P&L = value now − (starting book at the split prices + cash it spent). The starting book is priced at the marks of the run that split the account (at 2026-10-01 09:32 ET these were the prior close, so SX25 includes that day's opening gap); the others start at their fill prices. Press “Sync from Alpaca” for current prices.</div>
-    ${S.rows.map(r => line(r.sleeve, r, r.share)).join('')}${line('All sleeves', {value: tot.val, invested: tot.inv}, null)}</details>`;
+  const day = d => d ? new Date(d.slice(0, 10) + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : '—';
+  const rows = S.rows.map(r => ({...r, ret: r.invested ? r.value / r.invested - 1 : 0}));
+  const mx = Math.max(0.01, ...rows.map(r => Math.abs(r.ret)));
+  const sign = x => (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(1) + '%';
+  const row = r => `<div class="sl-row"><div class="sl-id"><b>${esc(r.sleeve)}</b>${r.share != null ? `<span class="sl-share">${(r.share * 100).toFixed(0)}%</span>` : ''}
+      <div class="sl-names">${r.names != null ? `${r.names} names${r.top?.length ? ' · ' + r.top.map(esc).join(', ') : ''}` : ''}${r.missing?.length ? ' · ⚠ no price ' + r.missing.map(esc).join(',') : ''}</div></div>
+    <div class="sl-bar"><i class="${r.ret >= 0 ? 'pos' : 'neg'}" style="${r.ret >= 0 ? 'left' : 'right'}:50%;width:${Math.abs(r.ret) / mx * 50}%"></i></div>
+    <div class="sl-q"><span class="sl-pct ${r.ret >= 0 ? 'pos' : 'neg'}">${sign(r.ret)}</span><span class="sl-val">${money(r.value)} · ${r.value >= r.invested ? '+' : '−'}${money(Math.abs(r.value - r.invested)).replace('−', '')}</span></div></div>`;
+  const totRet = tot.inv ? tot.val / tot.inv - 1 : 0;
+  return `<div class="sl-box"><div class="sl-head"><div><div class="sl-title">${S.external ? 'Strategies' : 'Sleeves'}</div><div class="sl-sub">since ${day(S.asOf)} · priced ${day(S.priced)}</div></div>
+      <div class="sl-tot"><span class="sl-pct ${totRet >= 0 ? 'pos' : 'neg'}">${sign(totRet)}</span><span class="sl-val">${money(tot.val)}</span></div></div>
+    ${rows.map(row).join('')}
+    <details class="about"><summary>How P&amp;L is counted</summary><p>${S.external ? 'Strategies of this externally traded account, from the strategy tags in its own order ids (BLTOP5 / REBAL_BL = BL-top5, ENSEMBLEVW / REBAL_VW = Ensemble V2); untagged orders are left out. P&L = value now − net cash put into the strategy (buys − sells). Press “Sync from Alpaca” for current prices.' : `Each sleeve trades its own tagged orders, never netted; P&L = value now − (starting book at the split prices + cash it spent). The starting book is priced at the marks of the run that split the account (at 2026-10-01 09:32 ET these were the prior close, so SX25 includes that day's opening gap); the others start at their fill prices. Press “Sync from Alpaca” for current prices.`}</p></details></div>`;
 }
 
 function renderLive(msg) {
@@ -3236,7 +3294,7 @@ function renderLive(msg) {
   if (run) {
     const orders = run.orders || [], buys = orders.filter(o => o.side === 'buy'), sells = orders.filter(o => o.side === 'sell');
     const tot = s => money(s.reduce((a, o) => a + Math.abs(+o.est_value || 0), 0));
-    result = `<details class="lv-run"><summary class="lv-run-head">Last ${run.kind === 'dry_run' ? 'dry run' : 'rebalance'} · ${run.ran_at.slice(0, 16).replace('T', ' ')} UTC · ${orders.length} orders (${buys.length} buys ${tot(buys)}, ${sells.length} sells ${tot(sells)}) · ${esc(run.status)}</summary>
+    result = `<details class="lv-run"><summary class="lv-run-head">Last ${run.kind === 'dry_run' ? 'dry run' : 'rebalance'}<span class="lv-run-sub">${new Date(run.ran_at).toLocaleDateString(undefined, {day: 'numeric', month: 'short'})} · ${orders.length} orders · ${buys.length} buys ${tot(buys)} · ${sells.length} sells ${tot(sells)} · ${esc(run.status)}</span></summary>
       <div class="note" style="margin:6px 0 8px">${esc(run.message || '')}${run.account ? ` · equity ${money(run.account.equity)}` : ''}</div>
       <div class="lv-cols"><div><div class="lv-sub">Target (${(run.target || []).length})</div>${(run.target || []).map(t =>
         `<div class="lv-line"><span>${esc(t.ticker)}</span><span class="muted">${t.ey != null ? `EY ${(t.ey * 100).toFixed(1)}% · 6m ${(t.mom6 * 100).toFixed(0)}%` : `${(t.weight * 100).toFixed(1)}%${t.sleeve ? ' · ' + esc(t.sleeve.replace(/_/g, ' ')) : ''}`}</span></div>`).join('')}</div>
@@ -4567,21 +4625,21 @@ function mvRender() {
   const before = new Set(((MV.prev || {})[MV.tab] || []).map(r => r.symbol));
   const pctCls = x => x == null ? '' : x >= 0 ? 'mv-up' : 'mv-dn';
   const fmtP = x => x == null ? '–' : x >= 100 ? x.toFixed(2) : x >= 1 ? x.toFixed(2) : x.toFixed(4);
-  const head = MV.tab === 'actives' ? '<th>#</th><th>Symbol</th><th>Name</th><th>Price</th><th>Day</th><th>Volume</th><th title="How often S&P 500 stocks with a day like this were higher a week later (2016-26)">1-week odds</th><th>Flags</th>'
-                                    : '<th>#</th><th>Symbol</th><th>Name</th><th>Price</th><th>Day</th><th>Change</th><th title="How often S&P 500 stocks with a day like this were higher a week later (2016-26)">1-week odds</th><th>Flags</th>';
   const spx = new Set((typeof TL !== 'undefined' && TL.loaded ? TL.prof : []).map(x => x.ticker));
-  const odds = r => { if (typeof OD === 'undefined' || !OD.odds || r.pct == null) return '<td class="muted">–</td>'; const b = odBucket(5, r.pct / 100); if (!b) return '<td class="muted">–</td>';
-    const base = OD.odds.models.up_5.base_test, d = b.up - base;
-    return `<td class="${d < -0.02 ? 'mv-dn' : d > 0.02 ? 'mv-up' : 'muted'}" title="${b.n.toLocaleString()} S&P 500 days with a move from ${(b.lo * 100).toFixed(0)}% to ${(b.hi * 100).toFixed(0)}%: avg ${(b.ret * 100).toFixed(2)}% a week later (all stocks ${(base * 100).toFixed(0)}% up)">${(b.up * 100).toFixed(0)}%</td>`; };
-  const rows = list.map((r, i) => `<tr${before.size && !before.has(r.symbol) ? ' class="mv-new"' : ''}>
-      <td class="muted">${i + 1}</td><td><b${spx.has(r.symbol) ? ` class="mv-link" data-od="${esc(r.symbol)}" title="Check the backtested odds"` : ''}>${esc(r.symbol)}</b>${before.size && !before.has(r.symbol) ? ' <span class="mv-badge">new</span>' : ''}</td>
-      <td class="mv-name">${esc(r.name || '')}<span class="muted"> ${esc(r.exchange || '')}</span></td><td>$${fmtP(r.price)}</td>
-      <td class="${pctCls(r.pct)}">${r.pct == null ? '–' : (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%'}</td>
-      <td>${MV.tab === 'actives' ? (r.volume != null ? (r.volume / 1e6).toFixed(1) + 'M' : '–') : (r.change == null ? '–' : (r.change >= 0 ? '+' : '') + fmtP(Math.abs(r.change)))}</td>
-      ${odds(r)}<td>${mvFlags(r).map(([t, k]) => `<span class="mv-flag ${k}">${t}</span>`).join(' ')}</td></tr>`).join('');
+  const base = typeof OD !== 'undefined' && OD.odds ? OD.odds.models.up_5.base_test : null;
+  const odds = r => { if (base == null || r.pct == null) return ''; const b = odBucket(5, r.pct / 100); if (!b) return ''; const d = b.up - base;
+    return `<span class="mv-chip ${d < -0.02 ? 'mv-c-dn' : d > 0.02 ? 'mv-c-up' : ''}" title="${b.n.toLocaleString()} S&P 500 days with a move from ${(b.lo * 100).toFixed(0)}% to ${(b.hi * 100).toFixed(0)}%: avg ${(b.ret * 100).toFixed(2)}% a week later (any stock ${(base * 100).toFixed(0)}%)">1w odds ${(b.up * 100).toFixed(0)}%</span>`; };
+  const name = n => (n || '').replace(/\s+(Class [A-Z]|Common Stock|Ordinary Shares?|American Depositary Shares?|Inc\.?|Corporation|Corp\.?|Holdings?|Limited|Ltd\.?|plc)\b.*$/i, '').replace(/[,\s]+$/, '').trim() || n || ''; const nice = n => typeof tlTitle === 'function' ? tlTitle(name(n)) : name(n);
+  const rows = list.map((r, i) => { const isNew = before.size && !before.has(r.symbol), link = spx.has(r.symbol);
+    const right2 = MV.tab === 'actives' ? (r.volume != null ? (r.volume / 1e6).toFixed(1) + 'M vol' : '') : (r.change == null ? '' : (r.change >= 0 ? '+' : '−') + '$' + fmtP(Math.abs(r.change)));
+    return `<div class="mv-row${isNew ? ' mv-new' : ''}${link ? ' mv-link' : ''}"${link ? ` data-od="${esc(r.symbol)}" role="button" tabindex="0" title="Check the backtested odds"` : ''}>
+      <span class="mv-rk">${i + 1}</span>
+      <div class="mv-id"><div class="mv-sym">${esc(r.symbol)}${isNew ? '<span class="mv-badge">new</span>' : ''}</div><div class="mv-nm">${esc(nice(r.name))}</div>
+        <div class="mv-tags">${odds(r)}${mvFlags(r).map(([t, k]) => `<span class="mv-chip ${k}">${t}</span>`).join('')}</div></div>
+      <div class="mv-q"><span class="mv-pct ${pctCls(r.pct)}">${r.pct == null ? '–' : (r.pct >= 0 ? '+' : '') + r.pct.toFixed(1) + '%'}</span><div class="mv-px">$${fmtP(r.price)}<span>${right2}</span></div></div></div>`; }).join('');
   const hidden = (c[MV.tab] || []).length - list.length;
-  mvBody(`<div class="rl-scroll"><table class="pb-table mv-table"><thead><tr>${head}</tr></thead><tbody>${rows || '<tr><td colspan="8" class="note">Nothing left after the filter.</td></tr>'}</tbody></table></div>
-    ${hidden > 0 ? `<p class="note">${hidden} warrant/unit/right or sub-$1 names hidden. <a href="#" id="mv-showall">Show all</a></p>` : ''}`);
+  mvBody(`<div class="mv-list">${rows || '<p class="note">Nothing left after the filter.</p>'}</div>
+    ${hidden > 0 ? `<p class="mv-hid">${hidden} warrants, units or sub-$1 names hidden · <a href="#" id="mv-showall">show all</a></p>` : ''}`);
   document.querySelectorAll('#mv-body [data-od]').forEach(x => x.onclick = () => odGo(x.dataset.od));
   const sa = document.getElementById('mv-showall'); if (sa) sa.onclick = e => { e.preventDefault(); MV.all = true; document.getElementById('mv-all').checked = true; mvRender(); };
   mvAge();
