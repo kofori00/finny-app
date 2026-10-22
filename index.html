@@ -619,6 +619,17 @@
   .cx-tone{display:inline-block;font:700 10px var(--font-ui);text-transform:uppercase;padding:1px 6px;border-radius:6px;margin-right:6px;background:color-mix(in srgb, var(--muted) 16%, transparent);color:var(--muted)}
   .cx-tone.p{background:color-mix(in srgb, var(--good) 15%, transparent);color:var(--good)} .cx-tone.n{background:color-mix(in srgb, var(--bad) 15%, transparent);color:var(--bad)}
   .cx-gs{display:flex;flex-wrap:wrap;gap:6px} .cx-g{display:inline-flex;gap:6px;font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--glass-line);color:var(--ink-2)} .cx-g b{font-variant-numeric:tabular-nums}
+  .lv-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+  details.lv-manage{margin:8px 0 0} details.lv-manage>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font:600 13px var(--font-ui);color:var(--ink-2);padding:6px 14px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2)}
+  details.lv-manage>summary::after{content:'▾';color:var(--muted)} details.lv-manage[open]>summary::after{content:'▴'} details.lv-manage>summary::-webkit-details-marker{display:none}
+  details.lv-manage .lv-actions{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid var(--glass-line);background:var(--glass-2)}
+  .lv-hero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 6px}
+  .lv-hero>div{padding:12px 14px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line);min-width:0}
+  .lv-hero span{display:block;font-size:12px;color:var(--muted)} .lv-hero b{display:block;font:800 26px var(--font-display);letter-spacing:-.02em;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums}
+  .lv-hero b.pos{color:var(--good)} .lv-hero b.neg{color:var(--bad)} .lv-hero em{display:block;font-style:normal;font-size:12px;color:var(--ink-2);margin-top:2px}
+  .lv-chart-h{display:flex;align-items:center;gap:10px;margin:8px 0 2px} .lv-chart-h .muted{font-size:12px;color:var(--muted)} .lv-chart{min-height:220px}
+  details.lv-more{margin-top:10px;border-top:1px solid var(--glass-line);padding-top:8px} details.lv-more>summary{list-style:none;cursor:pointer;font:600 13.5px var(--font-ui);color:var(--accent);padding:6px 0}
+  details.lv-more>summary::-webkit-details-marker{display:none} details.lv-more>summary::before{content:'▸ '} details.lv-more[open]>summary::before{content:'▾ '}
   .mv-link{cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
@@ -3369,11 +3380,10 @@ function renderLive(msg) {
   el.innerHTML = `
     <div class="lv-top">${LV.accounts.length > 1 ? `<select id="lv-acc">${LV.accounts.map(a => `<option value="${a.id}"${a.id === LV.account ? ' selected' : ''}>${esc(a.label)}</option>`).join('')}</select>` : ''}
       <span class="lv-status">${short}<button type="button" class="ib" aria-label="Status details" data-tip="${esc(status.replace(/<[^>]+>/g, ''))}">i</button></span></div>
-    <div class="lv-actions">${actions}${b('lv-sync', 'Sync from Alpaca')}${b('lv-refresh', 'Update fundamentals')}</div>
+    <details class="lv-manage"><summary>Manage</summary><div class="lv-actions">${actions}${b('lv-sync', 'Sync from Alpaca')}${b('lv-refresh', 'Update fundamentals')}</div></details>
     ${msg ? `<div class="lv-msg">${msg}</div>` : ''}${LV.error ? `<div class="lv-msg err">${esc(LV.error)}</div>` : ''}
     <div id="lv-track"></div>
-    ${renderSleeves()}
-    ${result}`;
+    ${renderSleeves() || result ? `<details class="lv-more"><summary>Strategies &amp; orders</summary>${renderSleeves()}${result}</details>` : ''}`;
   const on = (id, fn) => { const x = document.getElementById(id); if (x) x.onclick = fn; };
   const act = async (label, body, confirmText) => {
     if (confirmText && !confirm(confirmText)) return;
@@ -3695,19 +3705,32 @@ function renderTrack() {
   const el = document.getElementById('lv-track'); if (!el) return;
   const dep = LT.deps[0];
   if (LT.error) { el.innerHTML = `<div class="lv-msg err">${esc(LT.error)}</div>`; return; }
-  const tabs = [['acct', 'Account'], ['chart', 'Live vs backtest'], ['guard', 'Guardrails'], ['exec', 'Execution'], ['journal', 'Journal']], t = LT.tab || 'acct';
-  const body = t === 'acct' ? acctHtml(dep) : t === 'chart' ? (dep ? trackHtml(dep) + streakHtml(dep) : '<p class="note">Starts once a strategy is deployed on this account.</p>')
+  const tabs = [['chart', 'Live vs backtest'], ['guard', 'Guardrails'], ['exec', 'Execution'], ['journal', 'Journal']], t = LT.tab && LT.tab !== 'acct' ? LT.tab : 'chart';
+  const body = t === 'chart' ? (dep ? trackHtml(dep) + streakHtml(dep) : '<p class="note">Starts once a strategy is deployed on this account.</p>')
     : t === 'guard' ? guardHtml(dep) : t === 'exec' ? execHtml() + '<div class="panel-subtitle">Concentration and liquidity</div>' + concHtml() : journalHtml();
-  el.innerHTML = stripHtml(dep) + '<div id="lv-check"></div>' +
+  el.innerHTML = heroHtml(dep) + acctHtml(dep) +
+    `<details class="lv-more" id="lv-details"${LT.detailsOpen ? ' open' : ''}><summary>Details</summary>` + stripHtml(dep) + '<div id="lv-check"></div>' +
     `<div class="lv-tabs" role="tablist">${tabs.map(([k, n]) => `<button class="pill${k === t ? ' on' : ''}" role="tab" aria-selected="${k === t}" data-tab="${k}">${n}</button>`).join('')}</div>` +
-    `<div class="lv-tabbody">${body}</div>`;
-  el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { LT.tab = b.dataset.tab; renderTrack(); });
-  if (dep && t === 'chart') trackPlot(dep);
-  if (t === 'acct') acctPlot(dep);
+    `<div class="lv-tabbody">${body}</div></details>`;
+  const det = document.getElementById('lv-details'); if (det) det.ontoggle = () => { LT.detailsOpen = det.open; if (det.open && dep && t === 'chart') trackPlot(dep); };
+  el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { LT.tab = b.dataset.tab; LT.detailsOpen = true; renderTrack(); });
+  if (dep && t === 'chart' && LT.detailsOpen) trackPlot(dep);
+  acctPlot(dep);
   wireProcess(dep);
 }
 
 // one compact row with what matters every day; details live in the tabs
+// two numbers that matter at a glance: what the account is worth, and how it did against the S&P 500 over the chosen period
+function heroHtml(dep) {
+  const s = acctSeries(dep), e = LT.equity, last = e[e.length - 1];
+  let since = '', vs = '';
+  if (s.length >= 2) { const R = acctReturns(s), L = R[R.length - 1], B = [...R].reverse().find(x => x.b != null);
+    const sg = v => (v >= 0 ? '+' : '') + pct(v); since = sg(L.a); vs = B ? `S&amp;P 500 ${sg(B.b)}` : ''; }
+  const br = breaches(liveRisk(dep), LT.limits);
+  return `<div class="lv-hero"><div><span>Value</span><b>${last ? money(last.equity) : '—'}</b></div>
+    <div><span>${(ACCT_RANGES.find(([k]) => k === (LT.acctRange || (dep ? 'since' : '3m'))) || ['', 'Return'])[1]}</span><b class="${since.startsWith('-') || since.startsWith('−') ? 'neg' : 'pos'}">${since || '—'}</b><em>${vs}</em></div></div>
+    ${br.length ? `<div class="lv-msg err">Kill-switch: ${br.join('; ')}.</div>` : ''}`;
+}
 function stripHtml(dep) {
   const e = LT.equity, last = e[e.length - 1], risk = liveRisk(dep), lim = LT.limits, br = breaches(risk, lim), ts = dep ? trackStats(dep) : null, ex = execStats();
   const cell = (k, v, sub, cls = '') => `<div class="lt-cell ${cls}"><div class="lt-k">${k}</div><div class="lt-v">${v}</div>${sub ? `<div class="lt-s">${sub}</div>` : ''}</div>`;
@@ -3826,13 +3849,7 @@ function acctHtml(dep) {
   const R = acctReturns(s), L = R[R.length - 1], lastB = [...R].reverse().find(x => x.b != null);
   const cell = (k, v, sub, cls = '') => `<div class="lt-cell ${cls}"><div class="lt-k">${k}</div><div class="lt-v">${v}</div>${sub ? `<div class="lt-s">${sub}</div>` : ''}</div>`;
   const diff = lastB ? L.a - lastB.b : null;
-  return sel + `<div class="lt-grid">
-      ${cell('Account', pct(L.a), `${s[0].date} → ${L.date}`, L.a >= 0 ? 'ok' : '')}
-      ${cell('SPY', lastB ? pct(lastB.b) : '—', lastB && lastB.date !== L.date ? `to ${lastB.date} (today's close after the evening sync)` : 'same period')}
-      ${cell('Account − SPY', diff == null ? '—' : pct(diff), `${s.length - 1} trading days`, diff == null ? '' : diff >= 0 ? 'ok' : 'warn')}
-      ${cell('Value', money(s[s.length - 1].equity), `from ${money(s[0].equity)}`)}
-    </div><div id="acct-plot" class="plot-box"></div>
-    <p class="note">Whole-account value from Alpaca's daily history, chained day by day (deposits and withdrawals excluded). Short periods are noise: judge a strategy on months, not days.</p>`;
+  return `<div class="lv-chart-h">${sel}<span class="muted">vs S&amp;P 500</span></div><div id="acct-plot" class="plot-box lv-chart"></div>`;
 }
 function acctPlot(dep) {
   const sel = document.getElementById('acct-range'); if (sel) sel.onchange = () => { LT.acctRange = sel.value; renderTrack(); };
@@ -3841,8 +3858,8 @@ function acctPlot(dep) {
   const R = acctReturns(s), x = R.map(o => o.date), muted = cv('--muted'), line = cv('--ink');
   const B = R.filter(o => o.b != null);
   const traces = [{x, y: R.map(o => o.a), mode: 'lines+markers', marker: {size: R.length > 40 ? 0 : 5}, line: {color: line, width: 2}, name: 'Account', hovertemplate: 'account %{y:.2%}<extra></extra>'},
-    {x: B.map(o => o.date), y: B.map(o => o.b), mode: 'lines', line: {color: cv('--c-spy') || muted, width: 1.5}, name: 'SPY', hovertemplate: 'SPY %{y:.2%}<extra></extra>'}];
-  Plotly.react(el, traces, plotBase({height: 300, hovermode: 'x unified', yaxis: {...plotBase().yaxis, tickformat: '.1%'}}), PLOT_CFG);
+    {x: B.map(o => o.date), y: B.map(o => o.b), mode: 'lines', line: {color: cv('--c-spy') || muted, width: 1.5}, name: 'S&P 500', hovertemplate: 'S&P 500 %{y:.2%}<extra></extra>'}];
+  Plotly.react(el, traces, plotBase({height: 240, hovermode: 'x unified', margin: {l: 44, r: 8, t: 8, b: 30}, legend: {orientation: 'h', y: 1.12, x: 0}, yaxis: {...plotBase().yaxis, tickformat: '.1%'}}), PLOT_CFG);
 }
 
 // ---- 3. execution log ----
