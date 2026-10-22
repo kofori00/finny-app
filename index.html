@@ -530,9 +530,23 @@
   .lh-light{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px} .lh-light.ok{color:var(--good);background:color-mix(in srgb, var(--good) 15%, transparent)}
   .lh-light.err{color:var(--bad);background:color-mix(in srgb, var(--bad) 15%, transparent)}
   .lh-spark{width:100%;height:34px;margin:2px 0} .lh-foot{color:var(--ink-2)}
-  .od-row{margin-top:8px} .od-row input{width:100%;box-sizing:border-box;padding:12px 16px;border-radius:14px;font-size:16px}
-  .od-row button{padding:12px 20px;border-radius:999px;border:0;background:var(--lime);color:var(--lime-ink);font:700 14px var(--font-ui);cursor:pointer;white-space:nowrap}
-  .od-row{display:flex;gap:8px} .od-row .tl-in{position:relative;flex:1;min-width:0}
+  .od-lead{font-size:13px;color:var(--muted);margin:2px 0 10px}
+  .od-search{position:relative;display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line);transition:border-color .15s,box-shadow .15s}
+  .od-search:focus-within{border-color:color-mix(in srgb, var(--lime) 70%, transparent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .od-search svg{width:18px;height:18px;color:var(--muted);flex:none}
+  #od-panel .od-search input{flex:1;min-width:0;border:0;background:transparent;box-shadow:none;outline:none;color:var(--ink);font:500 16px var(--font-ui);padding:8px 0;border-radius:0}
+  .od-search button{flex:none;padding:10px 20px;border-radius:999px;border:0;background:var(--lime);color:var(--lime-ink);font:700 14px var(--font-ui);cursor:pointer}
+  .od-search .tl-sugg{top:calc(100% + 6px)}
+  .od-sig{display:block;margin:14px 0 10px}
+  .od-board{padding:12px 14px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .od-bh{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-bottom:8px} .od-bh b{font:700 14.5px var(--font-display);color:var(--ink)} .od-bh span{font-size:11.5px;color:var(--muted)}
+  .od-empty{display:flex;flex-direction:column;gap:4px} .od-empty b{font:700 14.5px var(--font-display);color:var(--ink)} .od-empty span{font-size:12.5px;color:var(--muted)}
+  .od-cols{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px} .od-ch{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
+  .od-lr{display:grid;grid-template-columns:52px 1fr 38px;gap:8px;align-items:center;width:100%;padding:6px 2px;border:0;border-bottom:1px solid var(--glass-line);background:none;color:var(--ink);cursor:pointer;text-align:left}
+  .od-lr:last-child{border-bottom:0} .od-lr b{font:700 13.5px var(--font-ui)} .od-lr em{font-style:normal;font-size:12.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+  .od-lb{height:5px;border-radius:3px;background:color-mix(in srgb, var(--muted) 14%, transparent);overflow:hidden} .od-lb i{display:block;height:100%;border-radius:3px} .od-lb i.up{background:var(--good)} .od-lb i.dn{background:var(--bad)}
+  .od-swing{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px} .od-swing>span{font-size:12px;color:var(--muted);margin-right:4px} .od-swing em{font-style:normal;font-size:12px;color:var(--muted)}
+  .od-chip{padding:5px 12px;border-radius:999px;border:1px solid color-mix(in srgb, var(--lime) 55%, transparent);background:var(--accent-soft);color:var(--ink);font:700 12.5px var(--font-ui);cursor:pointer}
   .od-sig{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 14px} .od-sigl{font-size:12.5px;color:var(--muted);margin-right:4px}
   .od-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:6px 0 14px}
   .od-tk{font:800 30px var(--font-display);letter-spacing:-.01em;color:var(--ink)} .od-nm{font-size:13px;color:var(--muted)}
@@ -605,7 +619,7 @@
   .cx-tone{display:inline-block;font:700 10px var(--font-ui);text-transform:uppercase;padding:1px 6px;border-radius:6px;margin-right:6px;background:color-mix(in srgb, var(--muted) 16%, transparent);color:var(--muted)}
   .cx-tone.p{background:color-mix(in srgb, var(--good) 15%, transparent);color:var(--good)} .cx-tone.n{background:color-mix(in srgb, var(--bad) 15%, transparent);color:var(--bad)}
   .cx-gs{display:flex;flex-wrap:wrap;gap:6px} .cx-g{display:inline-flex;gap:6px;font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--glass-line);color:var(--ink-2)} .cx-g b{font-variant-numeric:tabular-nums}
-  .mv-link{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px;cursor:pointer}
+  .mv-link{cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
   #mv-panel .mv-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 6px}
@@ -683,8 +697,9 @@
 
   <div class="panel od-panel" id="od-panel">
     <div class="panel-title">Odds checker</div>
-    <p class="note">Today from the open (S&amp;P 500): the one horizon where our backtests found a real edge. Longer horizons: swing signals when they fire, otherwise how the stock itself usually behaved. Any NASDAQ / NYSE stock or ETF; comma-separate tickers to compare.</p>
-    <div class="tl-row od-row"><div class="tl-in"><input id="od-input" placeholder="Any US ticker, or compare: AAPL, TSLA, PLTR" autocomplete="off" autocapitalize="characters" spellcheck="false"><div id="od-sugg" class="tl-sugg" hidden></div></div><button id="od-go">Check odds</button></div>
+    <p class="od-lead">Any US stock or ETF. Separate tickers with commas to compare.</p>
+    <div class="od-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <input id="od-input" placeholder="Ticker, e.g. NVDA" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="od-go">Check</button><div id="od-sugg" class="tl-sugg" hidden></div></div>
     <div id="od-sig" class="od-sig"></div>
     <div id="od-body"></div>
     <div id="od-cmp" class="od-cmp"></div>
@@ -5005,16 +5020,22 @@ async function odCmp() {
   el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => odCmpToggle(b.dataset.x));
   document.getElementById('od-cmpclr').onclick = () => { OD.cmp = []; try { localStorage.removeItem('finny-cmp'); } catch (e) {} odCmp(); if (OD.ticker && OD.last) odShowA(OD.last); };
 }
-function odSignals() {                                 // today's swing signals: the only stocks with a backtested short-term edge right now
+function odSignals() {                                 // the two things with a tested edge right now: today's open odds and swing signals
   const el = document.getElementById('od-sig'); if (!el || !TL.loaded) return;
+  const base = OD.openMeta?.base_up ?? 0.505;
+  let html = '';
+  if (OD.open?.rows?.length) {
+    const r = OD.open.rows.slice().sort((a, b) => b.pct - a.pct), today = OD.open.as_of === odEtToday();
+    const lab = today ? 'Today' : new Date(OD.open.as_of + 'T12:00:00Z').toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'});
+    const row = x => { const d = (x.p_up - base) * 100;
+      return `<button class="od-lr" data-t="${esc(x.ticker)}"><b>${esc(x.ticker)}</b><span class="od-lb"><i class="${d >= 0 ? 'up' : 'dn'}" style="width:${Math.min(100, Math.abs(d) / 4 * 100)}%"></i></span><em class="${d >= 0 ? 'pos' : 'neg'}">${odP(x.p_up)}</em></button>`; };
+    html += `<div class="od-board"><div class="od-bh"><b>${lab} from the open</b><span>chance to close above the open · typical ${odP(base)}</span></div>
+      <div class="od-cols"><div><div class="od-ch">Best odds</div>${r.slice(0, 5).map(row).join('')}</div><div><div class="od-ch">Weakest</div>${r.slice(-5).reverse().map(row).join('')}</div></div></div>`;
+  } else html += `<div class="od-board od-empty"><b>Today from the open</b><span>Odds for every S&amp;P 500 stock appear at about 09:35 New York time on trading days.</span></div>`;
   const s = TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => [r.ticker, r.sig.R18L26 ? 'R18L26' : 'R18P12']);
-  el.innerHTML = s.length ? `<span class="od-sigl">Swing signals today</span>${s.map(([t, k]) => `<button class="pill" data-t="${esc(t)}" title="${k}">${esc(t)}</button>`).join('')}`
-    : `<span class="od-sigl">No swing signal at the ${esc(TL.asof)} close${TL.prof[0]?.sig?.spy_above_200d === false ? ' (SPY below its 200-day average: the rules stay out)' : ''}.</span>`;
-  if (OD.open?.rows?.length) {                          // today's highest and lowest open -> close odds
-    const r = OD.open.rows.slice().sort((a, b) => b.pct - a.pct), lab = OD.open.as_of === odEtToday() ? 'today' : OD.open.as_of;
-    el.innerHTML += `<div class="od-oprow"><span class="od-sigl">Open → close ${esc(lab)}: best odds</span>${r.slice(0, 6).map(x => `<button class="pill od-pup" data-t="${esc(x.ticker)}">${esc(x.ticker)} <span>${odP(x.p_up)}</span></button>`).join('')}</div>
-      <div class="od-oprow"><span class="od-sigl">weakest</span>${r.slice(-6).reverse().map(x => `<button class="pill od-pdn" data-t="${esc(x.ticker)}">${esc(x.ticker)} <span>${odP(x.p_up)}</span></button>`).join('')}</div>`;
-  } else el.innerHTML += `<div class="od-oprow"><span class="od-sigl">Open → close odds for every S&amp;P 500 stock appear after about 09:35 ET on trading days.</span></div>`;
+  html += `<div class="od-swing"><span>Swing buy signals</span>${s.length ? s.map(([t, k]) => `<button class="od-chip" data-t="${esc(t)}" title="${k}">${esc(t)}</button>`).join('')
+    : `<em>none at the ${esc(TL.asof)} close${TL.prof[0]?.sig?.spy_above_200d === false ? ' (market below its 200-day average)' : ''}</em>`}</div>`;
+  el.innerHTML = html;
   el.querySelectorAll('button[data-t]').forEach(b => b.onclick = () => odGo(b.dataset.t));
 }
 async function odGo(t) {
