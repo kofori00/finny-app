@@ -4858,7 +4858,7 @@ function odAnalyse(sym, own) {
     const base = O?.models['up_' + h]?.base_test ?? null;
     const head = R ? {v: R['2021-26'].up, src: on[0] + ' signal today', edge: true, base: R.all_members_spy_up.up}    // the only evidence with a real edge at 1-2 weeks
       : ow?.all ? {v: ow.all.up, src: 'its own record', edge: false, base: null}                                     // otherwise a base rate, not a forecast
-      : M ? {v: M.hit, src: `pattern decile ${M.dec}/10 · no edge`, edge: false, base} : null;
+      : M ? {v: M.hit, src: `price pattern (no edge)`, edge: false, base} : null;
     return {h, lab, head, M, Mb, R, sig: on?.[0], ow, regime, base, sector: member && O?.sector?.[p.sector]?.[String(h)] || null, mb: f.ret_1d != null && O ? odBucket(h, f.ret_1d) : null};
   });
   const op = member && OD.open ? OD.open.map[sym] || OD.open.map[sym.replace('-', '.')] || null : null;
@@ -4878,6 +4878,14 @@ function odTile(c) {
     <div class="od-ts">${d == null ? esc(c.head.src) : Math.abs(d) < 1 ? 'average' : d > 0 ? `+${d.toFixed(1)} pts` : `−${(-d).toFixed(1)} pts`}${d != null ? ` · ${esc(c.head.src)}` : ''}</div>
     ${c.ow?.all && c.head.src !== 'its own record' ? `<div class="od-ts">own record ${odP(c.ow.all.up)}</div>` : ''}</div>`;
 }
+// plain words instead of deciles: where the stock ranks among today's S&P 500 by the open -> close odds
+function odRankTxt(op) {
+  const n = OD.open?.rows?.length || 0, rank = n ? Math.max(1, Math.round((1 - op.pct) * n) + 1) : null, d = op.decile;
+  const band = d >= 10 ? "among today's best 10%" : d >= 9 ? "among today's best 20%" : d >= 8 ? 'above average today' : d >= 4 ? 'about average today'
+    : d >= 3 ? 'below average today' : d >= 2 ? "among today's weakest 20%" : "among today's weakest 10%";
+  return {band, rank: rank ? `#${rank} of ${n}` : ''};
+}
+const odPatTxt = (dec) => dec >= 9 ? 'scores among the top 20% of stocks' : dec >= 7 ? 'scores above average' : dec >= 5 ? 'scores about average' : dec >= 3 ? 'scores below average' : 'scores among the bottom 20%';
 const odEtToday = () => new Intl.DateTimeFormat('en-CA', {timeZone: 'America/New_York'}).format(new Date());
 function odTodayTile(A) {                                // the one horizon with a robust edge: S&P 500, from today's open to the close
   const base = OD.openMeta?.base_up ?? 0.505;
@@ -4886,7 +4894,7 @@ function odTodayTile(A) {                                // the one horizon with
   const d = (A.op.p_up - base) * 100, old = A.op.as_of !== odEtToday();
   return `<div class="od-t on"><div class="od-tl">${old ? esc(A.op.as_of.slice(5)) : 'Today'} · open → close</div><div class="od-tv">${odP(A.op.p_up)}</div>
     <div class="od-bar"><i style="width:${Math.max(2, Math.min(98, A.op.p_up * 100))}%" class="on"></i><b style="left:${base * 100}%"></b></div>
-    <div class="od-ts">chance to close above the open</div><div class="od-ts">${Math.abs(d) < 1 ? 'about normal' : d > 0 ? `${d.toFixed(1)} pts better than normal` : `${(-d).toFixed(1)} pts worse than normal`}</div></div>`;
+    <div class="od-ts">chance to close above the open</div><div class="od-ts">${esc(odRankTxt(A.op).band)}</div><div class="od-ts">${Math.abs(d) < 1 ? 'about normal' : d > 0 ? `${d.toFixed(1)} pts better than normal` : `${(-d).toFixed(1)} pts worse than normal`}</div></div>`;
 }
 // ---- seasonality (Bible 6.71): this stock's own weekday / month / turn-of-month / pre-holiday / time-of-day patterns + the S&P 500 verdicts ----
 function odEtParts() { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: 'America/New_York', weekday: 'short', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false})
@@ -4919,7 +4927,7 @@ function odSeason(A) {
 function odShowA(A) {
   const el = document.getElementById('od-body'); if (!el) return; OD.ticker = A.sym;
   const O = OD.odds, w = A.H[0], m = A.H[2], q = A.H[3], R = w.R, ownN = A.own?.own?.[5]?.all?.n;
-  const opTxt = A.op ? `<b>${A.op.as_of !== odEtToday() ? 'On ' + esc(A.op.as_of) : 'Today'} from the open: decile ${A.op.decile} of 10.</b> Stocks scored like this closed above their open ${odP(A.op.p_up)} of the time (any stock ${odP(OD.openMeta?.base_up ?? 0.505)}) and beat the day's median ${odP(A.op.p_beat)}, average ${odS(A.op.exp_ret, 3)} (walk-forward 2021-26). `
+  const opTxt = A.op ? `<b>${A.op.as_of !== odEtToday() ? 'On ' + esc(A.op.as_of) : 'Today'} from the open: ${esc(A.sym)} was ${odRankTxt(A.op).band} (${odRankTxt(A.op).rank}).</b> Stocks ranked like this closed above their open ${odP(A.op.p_up)} of the time (any stock ${odP(OD.openMeta?.base_up ?? 0.505)}) and beat the day's median ${odP(A.op.p_beat)}, average ${odS(A.op.exp_ret, 3)} (walk-forward 2021-26). `
     : A.member ? 'Today-from-the-open odds appear after about 09:35 ET. ' : '';
   const verdict0 = R
     ? `<b>Swing buy signal (${w.sig}) at the last close.</b> Since 2021, ${odP(R['2021-26'].up)} of these signals were higher 5 trading days later (all stocks in an up-market: ${odP(R.all_members_spy_up.up)}), average ${odS(R['2021-26'].ret, 2)} over ${R['2021-26'].n.toLocaleString()} signals; 2016-20: ${odP(R['2016-20'].up)}.`
@@ -4928,12 +4936,12 @@ function odShowA(A) {
   const verdict = opTxt + (R ? verdict0 : verdict0.replace('own record only.</b>', 'beyond today, own record only.</b>').replace('No S&amp;P 500 backtest for this stock', A.member ? 'No edge from 1 week to 3 months' : 'No S&amp;P 500 backtest for this stock'));
   const today = A.f.ret_1d;
   const ev = [];
-  if (A.op) ev.push([A.op.as_of === odEtToday() ? 'Today from the open' : `From the open on ${A.op.as_of}`, `decile ${A.op.decile}/10 · gap ${odS(A.op.gap, 2)}`, `${odP(A.op.p_up)} closed above the open · ${odP(A.op.p_beat)} beat the day's median · avg ${odS(A.op.exp_ret, 3)} (walk-forward 2021-26)`,
-    'edge', `Real edge: rank IC 0.039, t 5.6 over 2021-26, past year t 2.2; small (top minus bottom decile ≈ 0.12% a day before costs)`]);
+  if (A.op) ev.push([A.op.as_of === odEtToday() ? 'Today from the open' : `From the open on ${A.op.as_of}`, `${odRankTxt(A.op).band} (${odRankTxt(A.op).rank}) · opened ${odS(A.op.gap, 1)}`, `${odP(A.op.p_up)} closed above the open · ${odP(A.op.p_beat)} beat the day's median · avg ${odS(A.op.exp_ret, 3)} (walk-forward 2021-26)`,
+    'edge', `Worked in every year 2021-26 and in the past year on its own; small: the best tenth beat the weakest tenth by about 0.12% a day before costs`]);
   if (A.member) for (const [k, on, Rr] of A.sigs) { const r5 = Rr['5']['2021-26']; ev.push([`Swing signal ${k}`, on ? 'active today' : 'not today',
     `${odP(r5.up)} up after 1 week · avg ${odS(r5.ret, 2)} · n ${r5.n.toLocaleString()} (2021-26)`, on ? 'edge' : 'idle', 'Real edge: held in both halves']); }
-  if (A.modelOk && w.M) ev.push(['Price pattern (1 week-3 months)', `decile ${w.M.dec}/10`, A.H.map(c => `${c.lab} ${odP(c.M?.hit)}`).join(' · ') + ' (2021-26)', 'none',
-    `No reliable edge (AUC ${w.M.auc.toFixed(2)})${A.member ? '' : ' · scored against today\'s S&P 500, sector strength unknown'}`]);
+  if (A.modelOk && w.M) ev.push(['Price pattern (1 week-3 months)', odPatTxt(w.M.dec), A.H.map(c => `${c.lab} ${odP(c.M?.hit)}`).join(' · ') + ' (2021-26)', 'none',
+    `Did not predict on new data (as good as a coin flip)${A.member ? '' : ' · scored against today\'s S&P 500, sector strength unknown'}`]);
   if (w.mb) ev.push(['Today\'s move', odS(today), `S&P 500 stocks after a day like this: ${odP(w.mb.up)} up after 1 week, ${odP(m.mb?.up)} after 1 month`, Math.abs(w.mb.up - (w.base || 0.54)) > 0.03 ? 'weak' : 'none',
     today >= 0.05 ? 'Big up-days tended to fade over the next week' : today <= -0.05 ? 'Big down-days bounced more often than not over a month' : 'Ordinary day: no effect']);
   if (A.own?.own) { const o1 = w.ow, o3 = m.ow;
@@ -4987,7 +4995,7 @@ function odDrivers(x) {
   const D = OD.odds.deciles, rows = OD.odds.feats.map(k => { const d = Math.min(9, Math.floor((isFinite(x[k]) ? x[k] : 0.5) * 10)); const t = D[k]['5'];
     const all = t.reduce((s, r) => s + r[0] * r[3], 0) / t.reduce((s, r) => s + r[3], 0); return {k, d, up: t[d][0], diff: t[d][0] - all}; }).sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
   const mx = Math.max(0.02, ...rows.map(r => Math.abs(r.diff)));
-  return `<p>Each signal on its own (S&amp;P 500 2017-26, one week ahead): the stock's decile today and how often stocks in that decile were higher. Small bars are the honest picture: none moves the odds much.</p>
+  return `<p>Each signal on its own (S&amp;P 500 2017-26, one week ahead): where the stock ranks today (1 = lowest tenth, 10 = highest) and how often stocks ranked like that were higher. Small bars are the honest picture: none moves the odds much.</p>
     ${rows.map(r => `<div class="od-dr"><span>${esc(OD_LAB[r.k] || r.k)} <span class="muted">d${r.d + 1}</span></span><div class="od-drt"><i style="${r.diff >= 0 ? 'left:50%' : 'right:50%'};width:${Math.abs(r.diff) / mx * 50}%" class="${r.diff >= 0 ? 'pos' : 'neg'}"></i></div><b>${odP(r.up, 1)}</b></div>`).join('')}`;
 }
 // ---- compare: up to 4 tickers side by side; the best value in each row is highlighted ----
