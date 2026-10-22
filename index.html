@@ -593,6 +593,18 @@
   details.od-more>summary{cursor:pointer;list-style:none;font:600 13px var(--font-ui);color:var(--accent);padding:8px 0} details.od-more>summary::-webkit-details-marker{display:none}
   details.od-more>summary::before{content:'▸ '} details[open].od-more>summary::before{content:'▾ '}
   .od-tag{white-space:normal;line-height:1.25}
+  .cx-card{margin:14px 0 6px;padding:12px 14px;border-radius:16px;border:1px solid var(--glass-line);background:var(--glass-2)}
+  .cx-p{font-size:13px;line-height:1.55;color:var(--ink-2);margin:8px 0} .cx-p b{color:var(--ink)}
+  .cx-decs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:6px} @media (max-width:640px){.cx-decs{grid-template-columns:1fr}}
+  .cx-dec{padding:8px 10px;border-radius:12px;border:1px solid var(--glass-line)} .cx-dh{font-size:12.5px;color:var(--ink-2);margin-bottom:4px} .cx-dh b{color:var(--ink)}
+  .cx-row{display:grid;grid-template-columns:minmax(0,1.3fr) 1fr 52px;gap:6px;align-items:center;font-size:11.5px;color:var(--ink-2);padding:2px 0} .cx-row b{text-align:right;font-variant-numeric:tabular-nums}
+  .cx-tr{position:relative;height:7px;border-radius:4px;background:color-mix(in srgb, var(--muted) 14%, transparent)} .cx-tr i{position:absolute;top:0;bottom:0;border-radius:4px}
+  .cx-ev{width:100%;height:90px;display:block;margin-top:4px} .cx-zero{stroke:var(--glass-line);stroke-width:1} .cx-evl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+  .cx-t td,.cx-t th{font-size:12px} .cx-t td:first-child{text-align:left} .cx-t .muted{color:var(--muted)}
+  .cx-n{padding:8px 0;border-bottom:1px solid var(--glass-line)} .cx-nt{font-size:13px;line-height:1.4} .cx-nt a{color:var(--ink);text-decoration:none} .cx-nm{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .cx-tone{display:inline-block;font:700 10px var(--font-ui);text-transform:uppercase;padding:1px 6px;border-radius:6px;margin-right:6px;background:color-mix(in srgb, var(--muted) 16%, transparent);color:var(--muted)}
+  .cx-tone.p{background:color-mix(in srgb, var(--good) 15%, transparent);color:var(--good)} .cx-tone.n{background:color-mix(in srgb, var(--bad) 15%, transparent);color:var(--bad)}
+  .cx-gs{display:flex;flex-wrap:wrap;gap:6px} .cx-g{display:inline-flex;gap:6px;font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--glass-line);color:var(--ink-2)} .cx-g b{font-variant-numeric:tabular-nums}
   .mv-link{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px;cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
@@ -4765,6 +4777,56 @@ function odModel(name, x, spyUp) {
 }
 function odBucket(h, r1) { const B = OD.odds.daymove[String(h)] || []; return B.find(b => r1 >= b.lo && r1 < b.hi) || null; }
 
+// ---- catalysts and drivers (ticker-context Edge Function, Bible 6.72): earnings from SEC, news, OLS decomposition, global backdrop ----
+OD.ctx = {};
+async function odCtx(sym) {
+  if (OD.ctx[sym] && Date.now() - OD.ctx[sym].at < 6e5) return OD.ctx[sym];
+  const token = await getToken(); if (!token) throw new Error('Not signed in');
+  const r = await fetch(`${SB_URL}/functions/v1/ticker-context`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({symbol: sym})});
+  const j = await r.json().catch(() => ({ok: false, error: `HTTP ${r.status}`})); if (!j.ok) throw new Error(j.error || `HTTP ${r.status}`);
+  return OD.ctx[sym] = {at: Date.now(), ...j};
+}
+const odPct1 = (x, d = 1) => x == null || !isFinite(x) ? '–' : (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(d) + '%';
+function odDecomp(lab, x) {
+  if (!x) return '';
+  const parts = [['Market', x.market, 'var(--s1)'], ['Sector', x.sector, 'var(--s4)'], ['Own (stock-specific)', x.specific, 'var(--lime)'], ['Normal drift', x.alpha, 'var(--muted)']];
+  const mx = Math.max(0.002, ...parts.map(p => Math.abs(p[1])));
+  return `<div class="cx-dec"><div class="cx-dh"><b>${lab}</b> ${odPct1(x.total)}</div>${parts.map(([n, v, c]) => `<div class="cx-row"><span>${n}</span><div class="cx-tr"><i style="${v >= 0 ? 'left:50%' : 'right:50%'};width:${Math.abs(v) / mx * 50}%;background:${c}"></i></div><b class="${v >= 0 ? 'pos' : 'neg'}">${odPct1(v)}</b></div>`).join('')}</div>`;
+}
+function odCatalyst(A) {
+  const X = OD.ctx[A.sym];
+  if (!X) return `<div class="cx-card"><div class="se-top"><b>Catalysts &amp; drivers</b><span>loading earnings, news and market context…</span></div></div>`;
+  if (X.error) return `<div class="cx-card"><div class="se-top"><b>Catalysts &amp; drivers</b><span>${esc(X.error)}</span></div></div>`;
+  const E = X.earnings || [], N = X.news || [], m = X.model;
+  const rec = X.recent?.['1m'], big = (o) => Math.abs(o.t) >= 2;
+  const why = rec ? (() => { const p = [['the market', rec.market], ['its sector', rec.sector], [`${A.sym}'s own news and results`, rec.specific]].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    return `Over the last month ${A.sym} moved ${odPct1(rec.total)}. Most of that came from <b>${p[0][0]}</b> (${odPct1(p[0][1])}), then ${p[1][0]} (${odPct1(p[1][1])}) and ${p[2][0]} (${odPct1(p[2][1])}).`; })() : '';
+  const lastE = E[0];
+  const eLine = lastE ? `Last earnings: ${esc(lastE.day)} (${esc(lastE.timing)}): ${odPct1(lastE.ret)} that day, of which <b>${odPct1(lastE.specific)} was ${A.sym}'s own reaction</b>${big(lastE) ? ' — far bigger than its normal daily noise, so the release caused it' : ' — within normal daily noise'}${lastE.post2_20 != null ? `; afterwards it drifted ${odPct1(lastE.post2_20)} beyond what the market and sector explain` : ''}.` : 'No earnings releases found in SEC filings.';
+  const path = E.filter(e => e.path && e.path.length >= 21).slice(0, 8);
+  const W = 300, Hh = 90, xs = i => (i / 30) * W, cumu = p => { let s = 0; return p.map(v => s += (isFinite(v) ? v : 0)); };
+  const all = path.map(e => cumu(e.path)); const mx = Math.max(0.02, ...all.flat().map(Math.abs)); const ys = v => Hh / 2 - v / mx * (Hh / 2 - 4);
+  const svg = path.length ? `<svg class="cx-ev" viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none"><line x1="${xs(10)}" x2="${xs(10)}" y1="0" y2="${Hh}" class="cx-zero"/><line x1="0" x2="${W}" y1="${Hh / 2}" y2="${Hh / 2}" class="cx-zero"/>
+      ${all.map((c, j) => `<polyline points="${c.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${path[j].specific >= 0 ? 'var(--good)' : 'var(--bad)'}" stroke-width="${j === 0 ? 2.4 : 1.2}" opacity="${j === 0 ? 1 : 0.55}" vector-effect="non-scaling-stroke"/>`).join('')}</svg>
+      <div class="cx-evl"><span>10 days before</span><span>earnings day</span><span>20 days after</span></div>` : '';
+  const tbl = E.slice(0, 8).map(e => `<tr><td>${esc(e.day)}<span class="muted"> ${e.timing === 'after close' ? 'pm' : e.timing === 'before open' ? 'am' : ''}</span></td><td>${odPct1(e.ret)}</td><td class="muted">${odPct1(e.market + e.sector)}</td>
+      <td class="${e.specific >= 0 ? 'pos' : 'neg'}"><b>${odPct1(e.specific)}</b>${big(e) ? ' ●' : ''}</td><td class="muted">${odPct1(e.pre10)}</td><td>${e.post2_20 == null ? '…' : odPct1(e.post2_20)}</td></tr>`).join('');
+  const news = N.slice(0, 12).map(n => `<div class="cx-n"><div class="cx-nt"><span class="cx-tone ${n.tone > 0 ? 'p' : n.tone < 0 ? 'n' : ''}">${n.tone > 0 ? 'positive' : n.tone < 0 ? 'negative' : 'neutral'}</span>
+      <a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.headline)}</a></div><div class="cx-nm">${esc(new Date(n.at).toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}))} · ${esc(n.source || '')}${n.specific != null ? ` · that session ${A.sym}'s own move <b class="${n.specific >= 0 ? 'pos' : 'neg'}">${odPct1(n.specific)}</b>${Math.abs(n.t) >= 2 ? ' (unusual)' : ' (normal noise)'}${n.agrees === true ? ' · price agreed' : n.agrees === false ? ' · price disagreed' : ''}` : ''}</div></div>`).join('');
+  const unexplained = (X.big_moves || []).filter(b => !b.news);
+  const glob = (X.global || []).filter(g => g.chg != null).map(g => `<span class="cx-g"><span>${esc(g.name)}</span><b class="${g.chg >= 0 ? 'pos' : 'neg'}">${odPct1(g.chg, 2)}</b></span>`).join('');
+  return `<div class="cx-card"><div class="se-top"><b>Catalysts &amp; drivers</b><span>why ${esc(A.sym)} moved: market, sector or its own news</span></div>
+    ${why ? `<p class="cx-p">${why}</p>` : ''}<p class="cx-p">${eLine}${X.next_earnings_estimate ? ` Next earnings expected around <b>${esc(X.next_earnings_estimate)}</b> (estimated from its usual rhythm).` : ''}</p>
+    <div class="cx-decs">${odDecomp('1 day', X.recent?.['1d'])}${odDecomp('1 week', X.recent?.['1w'])}${odDecomp('1 month', X.recent?.['1m'])}</div>
+    ${E.length ? `<div class="se-h" style="margin-top:12px">Earnings reactions <span>own (stock-specific) move after removing market and sector · ● = clearly caused by the release</span></div>${svg}
+      <div class="od-cmpw"><table class="od-cmpt cx-t"><thead><tr><th>Day</th><th>Total</th><th>Market+sector</th><th>Own</th><th>10d before</th><th>20d after</th></tr></thead><tbody>${tbl}</tbody></table></div>` : ''}
+    ${news ? `<div class="se-h" style="margin-top:12px">News, last 60 days <span>tone from a finance word list · did the price react?</span></div>${news}` : '<p class="cx-p">No news items in the last 60 days.</p>'}
+    ${unexplained.length ? `<p class="cx-p"><b>Big own moves without a headline:</b> ${unexplained.map(b => `${esc(b.day)} ${odPct1(b.specific)}`).join(' · ')}.</p>` : ''}
+    ${glob ? `<div class="se-h" style="margin-top:12px">Markets today</div><div class="cx-gs">${glob}</div>` : ''}
+    <details class="about"><summary>How causation is separated</summary><p>For every earnings release an OLS model learns, from the year before it (ending 30 days earlier), how ${esc(A.sym)} normally follows the S&amp;P 500 and its sector${X.sector_etf ? ' (' + esc(X.sector_etf) + ')' : ''}${m ? `: currently ${m.beta_market}× the market and ${m.beta_sector}× the sector's extra move` : ''}. On the release day the part those explain is removed; what is left is ${esc(A.sym)}'s own reaction. SEC time stamps fix when the news became public (after 16:00 ET counts for the next session). A reaction bigger than twice its normal daily noise (●) is strong evidence the release caused it.
+      Across 17,766 S&amp;P 500 releases (2016-26), 46% caused such a move (normal days: about 5%), and same-sector stocks without news barely moved on those days. Whether a strong reaction keeps drifting afterwards was not reliable (+0.45% best vs worst fifth over 20 days, t 1.6 with a separate baseline for every date), so the odds above do not use it.
+      Not covered: earnings-call transcripts, analyst estimates (beat or miss is judged from the price reaction) and investor surveys. News tone is a word count, not an AI reading.</p></details></div>`;
+}
 // ---- one stock: everything we know, per horizon ----
 function odAnalyse(sym, own) {
   const p = TL.prof.find(r => r.ticker === sym), O = OD.odds, member = !!p, g = p?.sig || {}, f = p ? p.f || {} : (own?.f || {});
@@ -4880,6 +4942,8 @@ function odShowA(A) {
   } else if (A.member) pl.push(`<li><b>Today from the open:</b> the odds appear after about 09:35 New York time on trading days.</li>`);
   if (R) pl.push(`<li><b>Next week:</b> a proven swing buy signal (${w.sig}) fired. Stocks with this signal were higher a week later ${odP(R['2021-26'].up)} of the time, versus ${odP(R.all_members_spy_up.up)} for any stock.</li>`);
   else pl.push(`<li><b>Next weeks and months:</b> no tested signal says anything about ${esc(A.sym)} right now.${w.ow?.all ? ` Normally it has been higher a week later ${odP(w.ow.all.up)} of the time and a month later ${odP(m.ow?.all?.up)}: that is just how it usually behaves, not a forecast.` : ''}</li>`);
+  const cx = OD.ctx[A.sym]; if (cx?.recent?.['1m']) { const r1 = cx.recent['1m']; const p = [['the overall market', r1.market], ['its sector', r1.sector], ['its own news and results', r1.specific]].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    pl.push(`<li><b>Why it moved:</b> over the last month ${odPct1(r1.total)}, driven mostly by ${p[0][0]} (${odPct1(p[0][1])}).${cx.next_earnings_estimate ? ` Next earnings expected around ${esc(cx.next_earnings_estimate)}.` : ''}</li>`); }
   if (A.own?.season) pl.push(`<li><b>Calendar and time of day:</b> ${A.own.season.consistent ? `${A.own.season.consistent} pattern${A.own.season.consistent > 1 ? 's' : ''} held up for this stock (see below), but` : 'nothing reliable;'} calendar effects have mostly disappeared, so the odds ignore them.</li>`);
   const plain = `<div class="od-plain"><div class="od-plh">What this means</div><ul>${pl.join('')}</ul></div>`;
   const sc = A.member && TL.scores ? TL.scores.sc[A.sym] : null, cls = sc != null ? tlClass(sc) : null;
@@ -4895,6 +4959,7 @@ function odShowA(A) {
     <div class="od-verdict ${R || A.op ? 'on' : ''}">${verdict}</div>
     <div class="od-ev">${ev.map(([k, v, s, t, tip]) => `<div class="od-evr"><span class="od-tag od-${t}">${TAG[t]}</span>
       <div><div class="od-evk">${esc(k)}${v ? ` <b>${esc(v)}</b>` : ''}</div><div class="od-evs">${s}</div><div class="od-evt">${esc(tip)}</div></div></div>`).join('')}</div></details>
+    ${odCatalyst(A)}
     ${odSeason(A)}
     ${A.modelOk && A.x ? `<details class="about"><summary>What drives the pattern score</summary>${odDrivers(A.x)}</details>` : ''}
     <div class="od-foot"><button class="pill${inCmp ? ' on' : ''}" id="od-addcmp">${inCmp ? '✓ In compare' : '+ Compare'}</button>${cls ? `<span>Strategy fit: <b>${esc(cls.label)}</b> (score ${sc.toFixed(0)})</span>` : ''}${A.member ? '<button class="linkbtn" id="od-full">Full strategy analysis</button>' : ''}</div>
@@ -4972,6 +5037,7 @@ async function odGo(t) {
     if (OD.ticker && OD.ticker !== sym && member) return;
     if (own?.error && !member) { el.innerHTML = `<p class="note">${esc(sym)}: ${esc(own.error)}.</p>`; return; }
     OD.last = odAnalyse(sym, own?.error ? null : own); odShowA(OD.last);
+    odCtx(sym).then(() => { if (OD.ticker === sym) odShowA(OD.last); }).catch(e => { OD.ctx[sym] = {error: 'Could not load catalysts: ' + e.message}; if (OD.ticker === sym) odShowA(OD.last); });
   } catch (e) { if (!member) el.innerHTML = `<p class="note">Could not fetch ${esc(sym)}: ${esc(e.message)}</p>`; }
   if (parts.length > 1 || OD.cmp.length) odCmp();
 }
