@@ -776,7 +776,7 @@
   .h-bar0{fill:var(--glass-line)} .h-bar1{fill:var(--good)}
   .h-ring0{fill:none;stroke:var(--glass-line);stroke-width:3.4} .h-ring1{fill:none;stroke:#7ab8a2;stroke-width:3.4;stroke-linecap:round}
   .h-anim{transition:d .8s cubic-bezier(.2,.8,.2,1),cy .8s cubic-bezier(.2,.8,.2,1),transform .6s ease,stroke-dasharray .8s ease} .h-v.neg{fill:var(--bad)}
-  .h-cap{font:600 9px var(--font-ui);fill:var(--muted);letter-spacing:.04em} #h-card,#h-fit{cursor:pointer}
+  .h-cap{font:700 10.5px var(--font-ui);fill:var(--ink-2);letter-spacing:.03em} .hero-art{transition:opacity .25s} .hero-art.stale{opacity:.45} #h-card,#h-fit{cursor:pointer}
   .hero-search{margin:0 0 10px} .hero-search .od-search{background:var(--surface);box-shadow:0 10px 26px -16px rgba(0,0,0,.5)}
   .hero-try{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 16px;font-size:12px;color:var(--muted)} .hero-try span{margin-right:2px}
   .hero-try button{font:600 12px var(--font-ui);padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer}
@@ -5403,9 +5403,10 @@ function odSignals() {                                 // the two things with a 
   el.querySelectorAll('button[data-t]').forEach(b => b.onclick = () => odGo(b.dataset.t));
 }
 async function odGo(t) {
+  const req = OD.req = (OD.req || 0) + 1, stale = () => req !== OD.req;            // a newer check wins: late answers for an older ticker are dropped
   const el = document.getElementById('od-body'); el.innerHTML = '<p class="note">Loading…</p>';
   const parts = String(t || '').toUpperCase().split(/[\s,;]+/).map(x => x.replace(/[^A-Z0-9.\-]/g, '')).filter(Boolean);
-  await Promise.all([tlLoad(), odLoad()]);
+  await Promise.all([tlLoad(), odLoad()]); if (stale()) return;
   if (!TL.loaded || !OD.odds) { el.innerHTML = `<p class="note">Could not load the odds data${OD.err ? ': ' + esc(OD.err) : ''}.</p>`; return; }
   odSignals();
   if (!parts.length) { el.innerHTML = ''; return; }
@@ -5416,15 +5417,15 @@ async function odGo(t) {
   const member = TL.prof.some(r => r.ticker === sym);
   if (member) { OD.last = odAnalyse(sym, null); odShowA(OD.last); }                 // S&P evidence at once, own record when it arrives
   if (member && parts.length === 1) odSyncFit(sym);                                // Analyze view: strategy fit follows the odds check
-  else el.innerHTML = `<p class="note">Fetching ${esc(sym)}'s daily history from Alpaca…</p>`;
+  if (!member) el.innerHTML = `<p class="note">Fetching ${esc(sym)}'s daily history from Alpaca…</p>`;
   (VIEW.cur === 'analyze' && document.getElementById('an-hero') || document.getElementById('od-panel'))?.scrollIntoView({behavior: 'smooth', block: 'start'});
   try {
     const own = (await odOwn([sym]))[sym];
-    if (OD.ticker && OD.ticker !== sym && member) return;
+    if (stale()) return;
     if (own?.error && !member) { el.innerHTML = `<p class="note">${esc(sym)}: ${esc(own.error)}.</p>`; return; }
     OD.last = odAnalyse(sym, own?.error ? null : own); odShowA(OD.last);
-    odCtx(sym).then(() => { if (OD.ticker === sym) odShowA(OD.last); }).catch(e => { OD.ctx[sym] = {error: 'Could not load catalysts: ' + e.message}; if (OD.ticker === sym) odShowA(OD.last); });
-  } catch (e) { if (!member) el.innerHTML = `<p class="note">Could not fetch ${esc(sym)}: ${esc(e.message)}</p>`; }
+    odCtx(sym).then(() => { if (!stale()) odShowA(OD.last); }).catch(e => { OD.ctx[sym] = {error: 'Could not load catalysts: ' + e.message}; if (!stale()) odShowA(OD.last); });
+  } catch (e) { if (stale()) return; if (!member) el.innerHTML = `<p class="note">Could not fetch ${esc(sym)}: ${esc(e.message)}</p>`; }
   if (parts.length > 1 || OD.cmp.length) odCmp();
 }
 function odInit() {
@@ -5660,6 +5661,7 @@ function heroFit(sym, score, label) {                                        // 
 }
 function heroOdds(A) {                                                       // called by the odds checker whenever a stock's evidence updates
   if (!A || !A.sym) return; const fresh = A.sym !== HERO.sym; HERO.sym = A.sym; HERO.demo = false;
+  document.querySelector('.hero-art')?.classList.remove('stale');
   document.body.classList.remove('an-empty');
   const w = A.H?.[0], p = w?.head?.v ?? null, vals = A.own?.spark;
   const k = document.getElementById('h-k'); if (k) k.textContent = w?.head?.edge ? 'UP NEXT WEEK · SIGNAL' : 'UP NEXT WEEK';
@@ -5672,6 +5674,9 @@ function heroInit() {
   const box = document.getElementById('hero-search'), s = document.querySelector('#od-panel .od-search');
   if (box && s && !box.contains(s)) { box.prepend(s); const lead = document.querySelector('#od-panel .od-lead'); if (lead) lead.remove(); }
   document.querySelectorAll('.hero-try [data-t]').forEach(b => b.onclick = () => { const i = document.getElementById('od-input'); if (i) i.value = b.dataset.t; odGo(b.dataset.t); });
+  const inp = document.getElementById('od-input');                            // typed a different ticker but not checked yet: dim the chart and say so
+  if (inp) inp.addEventListener('input', () => { const q = inp.value.trim().toUpperCase(), art = document.querySelector('.hero-art'), c = document.getElementById('h-cap'); if (!art || !c || HERO.demo) return;
+    const off = q && q !== HERO.sym; art.classList.toggle('stale', !!off); c.textContent = off ? `${HERO.sym} · past year · press Check for ${q.split(/[\s,;]+/)[0]}` : `${HERO.sym} · past year`; });
   const go = id => document.getElementById(id)?.scrollIntoView({behavior: 'smooth', block: 'start'});
   const card = document.getElementById('h-card'), fit = document.getElementById('h-fit');
   if (card) card.onclick = () => { if (!HERO.demo) go('od-panel'); };
