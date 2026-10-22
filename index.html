@@ -630,6 +630,8 @@
   .lv-chart-h{display:flex;align-items:center;gap:10px;margin:8px 0 2px} .lv-chart-h .muted{font-size:12px;color:var(--muted)} .lv-chart{min-height:220px}
   details.lv-more{margin-top:10px;border-top:1px solid var(--glass-line);padding-top:8px} details.lv-more>summary{list-style:none;cursor:pointer;font:600 13.5px var(--font-ui);color:var(--accent);padding:6px 0}
   details.lv-more>summary::-webkit-details-marker{display:none} details.lv-more>summary::before{content:'▸ '} details.lv-more[open]>summary::before{content:'▾ '}
+  .lv-idxs{display:flex;flex-wrap:wrap;gap:6px 12px;margin:4px 0 2px} .lv-ix{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
+  .lv-ix i{width:12px;height:4px;border-radius:2px;display:inline-block} .lv-ix b{font-variant-numeric:tabular-nums}
   .mv-link{cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
@@ -3849,17 +3851,41 @@ function acctHtml(dep) {
   const R = acctReturns(s), L = R[R.length - 1], lastB = [...R].reverse().find(x => x.b != null);
   const cell = (k, v, sub, cls = '') => `<div class="lt-cell ${cls}"><div class="lt-k">${k}</div><div class="lt-v">${v}</div>${sub ? `<div class="lt-s">${sub}</div>` : ''}</div>`;
   const diff = lastB ? L.a - lastB.b : null;
-  return `<div class="lv-chart-h">${sel}<span class="muted">vs S&amp;P 500</span></div><div id="acct-plot" class="plot-box lv-chart"></div>`;
+  return `<div class="lv-chart-h">${sel}<span class="muted">vs S&amp;P 500</span></div><div id="acct-plot" class="plot-box lv-chart"></div><div id="acct-idx" class="lv-idxs"></div>`;
+}
+// index closes for the comparison lines (index-closes Edge Function; cached for 10 minutes)
+const LV_IDX = [['SPY', 'S&P 500', '#3b82f6'], ['QQQ', 'Nasdaq 100', '#a855f7'], ['DIA', 'Dow', '#f59e0b'], ['IWM', 'Russell 2000', '#14b8a6']];
+async function idxLoad() {
+  if (LT.idx && Date.now() - LT.idx.at < 6e5) return LT.idx;
+  if (LT.idxBusy) return null; LT.idxBusy = true;
+  try {
+    const token = await getToken(); const r = await fetch(`${SB_URL}/functions/v1/index-closes`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({})});
+    const j = await r.json(); if (j.ok) LT.idx = {at: Date.now(), closes: j.closes};
+  } catch (e) { /* the chart still shows the account and the S&P 500 from the account sync */ }
+  LT.idxBusy = false; return LT.idx;
 }
 function acctPlot(dep) {
   const sel = document.getElementById('acct-range'); if (sel) sel.onchange = () => { LT.acctRange = sel.value; renderTrack(); };
   const el = document.getElementById('acct-plot'); if (!el || typeof Plotly === 'undefined') return;
   const s = acctSeries(dep); if (s.length < 2) return;
-  const R = acctReturns(s), x = R.map(o => o.date), muted = cv('--muted'), line = cv('--ink');
-  const B = R.filter(o => o.b != null);
-  const traces = [{x, y: R.map(o => o.a), mode: 'lines+markers', marker: {size: R.length > 40 ? 0 : 5}, line: {color: line, width: 2}, name: 'Account', hovertemplate: 'account %{y:.2%}<extra></extra>'},
-    {x: B.map(o => o.date), y: B.map(o => o.b), mode: 'lines', line: {color: cv('--c-spy') || muted, width: 1.5}, name: 'S&P 500', hovertemplate: 'S&P 500 %{y:.2%}<extra></extra>'}];
-  Plotly.react(el, traces, plotBase({height: 240, hovermode: 'x unified', margin: {l: 44, r: 8, t: 8, b: 30}, legend: {orientation: 'h', y: 1.12, x: 0}, yaxis: {...plotBase().yaxis, tickformat: '.1%'}}), PLOT_CFG);
+  const R = acctReturns(s), x = R.map(o => o.date), base = s[0].date;
+  const traces = [{x, y: R.map(o => o.a), mode: 'lines+markers', marker: {size: R.length > 40 ? 0 : 6, color: cv('--accent')}, line: {color: cv('--accent'), width: 3.5}, name: 'Account', hovertemplate: 'Account %{y:.2%}<extra></extra>'}];
+  const chips = [];
+  const C = LT.idx?.closes;
+  for (const [sym, name, col] of LV_IDX) {
+    let ys;
+    if (C && C[sym]?.length) {
+      const m = C[sym]; const at = d => { let v = null; for (const [dd, c] of m) { if (dd > d) break; v = c; } return v; };
+      const c0 = at(base); if (!c0) continue; ys = x.map(d => { const c = at(d); return c ? c / c0 - 1 : null; });
+    } else if (sym === 'SPY') { const B = R.filter(o => o.b != null); ys = x.map(d => { const o = B.find(b => b.date === d); return o ? o.b : null; }); }
+    else continue;
+    traces.push({x, y: ys, mode: 'lines', line: {color: col, width: 1.8}, name, hovertemplate: `${name} %{y:.2%}<extra></extra>`, connectgaps: true});
+    const last = [...ys].reverse().find(v => v != null); if (last != null) chips.push([name, last, col]);
+  }
+  Plotly.react(el, traces, plotBase({height: 250, hovermode: 'x unified', margin: {l: 44, r: 8, t: 8, b: 30}, showlegend: false, yaxis: {...plotBase().yaxis, tickformat: '.1%'}}), PLOT_CFG);
+  const a = R[R.length - 1].a, box = document.getElementById('acct-idx');
+  if (box) box.innerHTML = [['Account', a, cv('--accent')], ...chips].map(([n, v, c]) => `<span class="lv-ix"><i style="background:${c}"></i>${esc(n)} <b class="${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%</b></span>`).join('');
+  if (!C && !LT.idxBusy) idxLoad().then(r => { if (r) acctPlot(dep); });
 }
 
 // ---- 3. execution log ----
