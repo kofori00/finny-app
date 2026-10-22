@@ -4883,7 +4883,8 @@ function odRankTxt(op) {
   const n = OD.open?.rows?.length || 0, rank = n ? Math.max(1, Math.round((1 - op.pct) * n) + 1) : null, d = op.decile;
   const band = d >= 10 ? "among today's best 10%" : d >= 9 ? "among today's best 20%" : d >= 8 ? 'above average today' : d >= 4 ? 'about average today'
     : d >= 3 ? 'below average today' : d >= 2 ? "among today's weakest 20%" : "among today's weakest 10%";
-  return {band, rank: rank ? `#${rank} of ${n}` : ''};
+  const old = op.as_of && op.as_of !== odEtToday();
+  return {band: old ? band.replace("today's", "that day's").replace(' today', ' that day') : band, rank: rank ? `#${rank} of ${n}` : ''};
 }
 const odPatTxt = (dec) => dec >= 9 ? 'scores among the top 20% of stocks' : dec >= 7 ? 'scores above average' : dec >= 5 ? 'scores about average' : dec >= 3 ? 'scores below average' : 'scores among the bottom 20%';
 const odEtToday = () => new Intl.DateTimeFormat('en-CA', {timeZone: 'America/New_York'}).format(new Date());
