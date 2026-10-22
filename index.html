@@ -642,6 +642,7 @@
   .nw-sym{font:600 11px var(--font-ui);padding:2px 8px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer}
   .nw-sym.spx{border-color:color-mix(in srgb, var(--lime) 55%, transparent);color:var(--ink)}
   .nw-foot{font-size:11px;color:var(--muted);margin:8px 0 0}
+  body.view-live .wrap > footer{display:none}
   .mv-link{cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
@@ -3885,7 +3886,9 @@ function acctPlot(dep) {
   const el = document.getElementById('acct-plot'); if (!el || typeof Plotly === 'undefined') return;
   const s = acctSeries(dep); if (s.length < 2) return;
   const R = acctReturns(s), x = R.map(o => o.date), base = s[0].date;
-  const traces = [{x, y: R.map(o => o.a), mode: 'lines+markers', marker: {size: R.length > 40 ? 0 : 6, color: cv('--accent')}, line: {color: cv('--accent'), width: 3.5}, name: 'Account', hovertemplate: 'Account %{y:.2%}<extra></extra>'}];
+  const acc = cv('--accent') || '#c7d84a';
+  const traces = [{x, y: R.map(o => o.a), mode: 'lines', line: {color: acc, width: 3, shape: 'spline', smoothing: 0.8}, fill: 'tozeroy', fillcolor: withAlpha(acc, 0.13),
+    name: 'Account', hovertemplate: 'Account %{y:.2%}<extra></extra>'}];
   const chips = [];
   const C = LT.idx?.closes;
   for (const [sym, name, col] of LV_IDX) {
@@ -3895,10 +3898,13 @@ function acctPlot(dep) {
       const c0 = at(base); if (!c0) continue; ys = x.map(d => { const c = at(d); return c ? c / c0 - 1 : null; });
     } else if (sym === 'SPY') { const B = R.filter(o => o.b != null); ys = x.map(d => { const o = B.find(b => b.date === d); return o ? o.b : null; }); }
     else continue;
-    traces.push({x, y: ys, mode: 'lines', line: {color: col, width: 1.8}, name, hovertemplate: `${name} %{y:.2%}<extra></extra>`, connectgaps: true});
+    traces.push({x, y: ys, mode: 'lines', line: {color: col, width: 1.4, shape: 'spline', smoothing: 0.8}, opacity: 0.7, name, hovertemplate: `${name} %{y:.2%}<extra></extra>`, connectgaps: true});
     const last = [...ys].reverse().find(v => v != null); if (last != null) chips.push([name, last, col]);
   }
-  Plotly.react(el, traces, plotBase({height: 250, hovermode: 'x unified', margin: {l: 44, r: 8, t: 8, b: 30}, showlegend: false, yaxis: {...plotBase().yaxis, tickformat: '.1%'}}), PLOT_CFG);
+  const grid = withAlpha(cv('--muted') || '#888', 0.18);
+  Plotly.react(el, traces.slice(1).concat(traces.slice(0, 1)), plotBase({height: 250, hovermode: 'x unified', margin: {l: 40, r: 6, t: 6, b: 26}, showlegend: false,
+    xaxis: {...plotBase().xaxis, showgrid: false, zeroline: false, showline: false},
+    yaxis: {...plotBase().yaxis, tickformat: '.0%', showgrid: true, gridcolor: grid, griddash: 'dot', zeroline: true, zerolinecolor: withAlpha(cv('--muted') || '#888', 0.35), showline: false, nticks: 5}}), PLOT_CFG);
   const a = R[R.length - 1].a, box = document.getElementById('acct-idx');
   if (box) box.innerHTML = [['Account', a, cv('--accent')], ...chips].map(([n, v, c]) => `<span class="lv-ix"><i style="background:${c}"></i>${esc(n)} <b class="${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%</b></span>`).join('');
   if (!C && !LT.idxBusy) idxLoad().then(r => { if (r) acctPlot(dep); });
