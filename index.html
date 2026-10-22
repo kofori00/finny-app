@@ -637,12 +637,22 @@
   .nw-it{padding:10px 0;border-bottom:1px solid var(--glass-line)} .nw-it:last-of-type{border-bottom:0}
   .nw-meta{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
   .nw-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none} .nw-dot.p{background:var(--good)} .nw-dot.n{background:var(--bad)}
-  .nw-h{display:block;margin-top:3px;font:600 14px/1.4 var(--font-ui);color:var(--ink);text-decoration:none} .nw-h:hover{color:var(--accent)}
+  .nw-h{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin-top:3px;font:600 13.5px/1.4 var(--font-ui);color:var(--ink);text-decoration:none} .nw-h:hover{color:var(--accent)}
+  .nw-it{padding:8px 0} .nw-more{display:block;width:100%;margin-top:8px;padding:9px;border-radius:12px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--accent);font:600 13px var(--font-ui);cursor:pointer}
   .nw-syms{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
   .nw-sym{font:600 11px var(--font-ui);padding:2px 8px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer}
   .nw-sym.spx{border-color:color-mix(in srgb, var(--lime) 55%, transparent);color:var(--ink)}
   .nw-foot{font-size:11px;color:var(--muted);margin:8px 0 0}
   body.view-live .wrap > footer{display:none}
+  .lv-evs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 4px} .lv-evs>span{font-size:12px;color:var(--muted);margin-right:2px}
+  .lv-evc{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer}
+  .lv-evc i{width:9px;height:9px;border-radius:50%;border:2px solid var(--ink);box-sizing:border-box}
+  .lv-evcard{margin-top:8px;padding:12px 14px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line);animation:evIn .2s ease both}
+  .lv-evh{display:flex;justify-content:space-between;align-items:center} .lv-evh b{font:700 14.5px var(--font-display);color:var(--ink)}
+  .lv-evh button{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
+  .lv-evm{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink-2);margin:6px 0 8px} .lv-evm .me{color:var(--ink)}
+  .lv-evhl a{display:block;padding:7px 0;border-top:1px solid var(--glass-line);color:var(--ink);font-size:13px;line-height:1.4;text-decoration:none}
+  .lv-evn{font-size:11px;color:var(--muted);margin:6px 0 0}
   .mv-link{cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
@@ -3868,16 +3878,16 @@ function acctHtml(dep) {
   const R = acctReturns(s), L = R[R.length - 1], lastB = [...R].reverse().find(x => x.b != null);
   const cell = (k, v, sub, cls = '') => `<div class="lt-cell ${cls}"><div class="lt-k">${k}</div><div class="lt-v">${v}</div>${sub ? `<div class="lt-s">${sub}</div>` : ''}</div>`;
   const diff = lastB ? L.a - lastB.b : null;
-  return `<div class="lv-chart-h">${sel}<span class="muted">vs S&amp;P 500</span></div><div id="acct-plot" class="plot-box lv-chart"></div><div id="acct-idx" class="lv-idxs"></div>`;
+  return `<div class="lv-chart-h">${sel}<span class="muted">vs S&amp;P 500</span></div><div id="acct-plot" class="plot-box lv-chart"></div><div id="acct-idx" class="lv-idxs"></div><div id="acct-ev"></div>`;
 }
 // index closes for the comparison lines (index-closes Edge Function; cached for 10 minutes)
 const LV_IDX = [['SPY', 'S&P 500', '#3b82f6'], ['QQQ', 'Nasdaq 100', '#a855f7'], ['DIA', 'Dow', '#f59e0b'], ['IWM', 'Russell 2000', '#14b8a6']];
-async function idxLoad() {
-  if (LT.idx && Date.now() - LT.idx.at < 6e5) return LT.idx;
+async function idxLoad(base) {
+  if (LT.idx && Date.now() - LT.idx.at < 6e5 && LT.idx.base === base) return LT.idx;
   if (LT.idxBusy) return null; LT.idxBusy = true;
   try {
-    const token = await getToken(); const r = await fetch(`${SB_URL}/functions/v1/index-closes`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({})});
-    const j = await r.json(); if (j.ok) LT.idx = {at: Date.now(), closes: j.closes};
+    const token = await getToken(); const r = await fetch(`${SB_URL}/functions/v1/index-closes`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({events_from: base})});
+    const j = await r.json(); if (j.ok) LT.idx = {at: Date.now(), base, closes: j.closes, events: j.events || []};
   } catch (e) { /* the chart still shows the account and the S&P 500 from the account sync */ }
   LT.idxBusy = false; return LT.idx;
 }
@@ -3907,7 +3917,29 @@ function acctPlot(dep) {
     yaxis: {...plotBase().yaxis, tickformat: '.0%', showgrid: true, gridcolor: grid, griddash: 'dot', zeroline: true, zerolinecolor: withAlpha(cv('--muted') || '#888', 0.35), showline: false, nticks: 5}}), PLOT_CFG);
   const a = R[R.length - 1].a, box = document.getElementById('acct-idx');
   if (box) box.innerHTML = [['Account', a, cv('--accent')], ...chips].map(([n, v, c]) => `<span class="lv-ix"><i style="background:${c}"></i>${esc(n)} <b class="${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%</b></span>`).join('');
-  if (!C && !LT.idxBusy) idxLoad().then(r => { if (r) acctPlot(dep); });
+  if ((!C || LT.idx?.base !== base) && !LT.idxBusy) idxLoad(base).then(r => { if (r) acctPlot(dep); });
+  // market moments: a ring on the account curve at each big index day; tap the ring or the chip for what happened
+  const EV = (LT.idx?.base === base ? LT.idx.events : []) || [], evBox = document.getElementById('acct-ev');
+  const pts = EV.map((e, i) => ({e, i, o: R.find(r => r.date === e.date)})).filter(x => x.o);
+  if (pts.length) {
+    const ink = cv('--ink') || '#fff';
+    Plotly.addTraces(el, [{x: pts.map(q => q.o.date), y: pts.map(q => q.o.a), mode: 'markers', hoverinfo: 'skip', showlegend: false, marker: {size: 22, color: withAlpha(acc, 0.22), line: {width: 0}}},
+      {x: pts.map(q => q.o.date), y: pts.map(q => q.o.a), customdata: pts.map(q => q.i), mode: 'markers', showlegend: false, hovertemplate: 'Market moment · tap<extra></extra>',
+       marker: {size: 12, color: withAlpha('#000000', 0), line: {width: 2.5, color: ink}}}]);
+    el.removeAllListeners?.('plotly_click'); el.on?.('plotly_click', ev => { const cd = ev.points?.find(q => q.customdata != null)?.customdata; if (cd != null) lvEvShow(cd, R); });
+  }
+  if (evBox) { evBox.innerHTML = pts.length ? `<div class="lv-evs"><span>Market moments</span>${pts.map(q => { const m = q.e.moves?.SPY; return `<button class="lv-evc" data-i="${q.i}"><i></i>${new Date(q.e.date + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'})} <b class="${m >= 0 ? 'pos' : 'neg'}">${m == null ? '' : (m >= 0 ? '+' : '') + (m * 100).toFixed(1) + '%'}</b></button>`; }).join('')}</div><div id="lv-evcard"></div>` : '';
+    evBox.querySelectorAll('[data-i]').forEach(b => b.onclick = () => lvEvShow(+b.dataset.i, R)); }
+}
+function lvEvShow(i, R) {
+  const e = (LT.idx?.events || [])[i], box = document.getElementById('lv-evcard'); if (!e || !box) return;
+  if (LT.evOpen === i && box.innerHTML) { box.innerHTML = ''; LT.evOpen = null; return; } LT.evOpen = i;
+  const k = R.findIndex(r => r.date === e.date), acc = k > 0 ? (1 + R[k].a) / (1 + R[k - 1].a) - 1 : null;
+  const f = v => v == null ? '–' : `<b class="${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%</b>`;
+  box.innerHTML = `<div class="lv-evcard"><div class="lv-evh"><b>${new Date(e.date + 'T12:00:00Z').toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'})}</b><button aria-label="Close" onclick="document.getElementById('lv-evcard').innerHTML='';">×</button></div>
+    <div class="lv-evm"><span>S&amp;P 500 ${f(e.moves?.SPY)}</span><span>Nasdaq ${f(e.moves?.QQQ)}</span><span>Dow ${f(e.moves?.DIA)}</span><span>Russell ${f(e.moves?.IWM)}</span><span class="me">Your account ${f(acc)}</span></div>
+    ${e.headlines?.length ? `<div class="lv-evhl">${e.headlines.map(h => `<a href="${esc(h.url)}" target="_blank" rel="noopener">${esc(h.h)}</a>`).join('')}</div>` : '<p class="note">No market headlines found for that day.</p>'}
+    <p class="lv-evn">A big index day. Headlines are the market news from the previous close to that day's close.</p></div>`;
 }
 
 // ---- 3. execution log ----
@@ -5241,7 +5273,7 @@ function lhInit() { if (!LH.loaded && !LH.busy) { lhRender(); lhLoad(); } }
 
 // ---------------- Latest news (2026-10-22): newest market-wide headlines via the latest-news Edge Function (Alpaca / Benzinga), every 3 minutes.
 // Filters: all, S&P 500 members only, or stocks held in the paper accounts. Tone = finance word list (FinBERT study pending, Bible 6.73).
-const NW = {items: [], filter: 'all', timer: null, held: null, busy: false, at: null};
+const NW = {items: [], filter: 'all', timer: null, held: null, busy: false, at: null, shown: 5};
 async function nwHeld() {
   if (NW.held) return NW.held;
   try { const rows = await sb('live_equity?select=account_id,date,positions&order=date.desc&limit=6'); const seen = new Set(), out = new Set();
@@ -5266,17 +5298,21 @@ function nwRender() {
   if (!NW.items.length) { el.innerHTML = '<p class="note">Loading the latest headlines…</p>'; return; }
   const spx = new Set((typeof TL !== 'undefined' && TL.loaded ? TL.prof : []).map(x => x.ticker));
   let items = NW.items; if (NW.filter === 'spx') items = items.filter(n => n.symbols.some(s => spx.has(s)));
-  el.innerHTML = (items.length ? items.slice(0, 25).map(n => `<article class="nw-it">
+  el.innerHTML = (items.length ? items.slice(0, NW.shown).map(n => `<article class="nw-it">
       <div class="nw-meta"><span class="nw-dot ${n.tone > 0 ? 'p' : n.tone < 0 ? 'n' : ''}" title="${n.tone > 0 ? 'positive' : n.tone < 0 ? 'negative' : 'neutral'} tone"></span>${esc(nwAgo(n.at))}${n.source ? ' · ' + esc(n.source) : ''}</div>
       <a class="nw-h" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.headline)}</a>
       ${n.symbols.length ? `<div class="nw-syms">${n.symbols.map(s => `<button class="nw-sym${spx.has(s) ? ' spx' : ''}" data-t="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}</article>`).join('')
     : '<p class="note">No headlines for this filter right now.</p>') +
+    (items.length > NW.shown ? `<button class="nw-more" id="nw-more">Show more (${Math.min(10, items.length - NW.shown)})</button>` : (NW.shown > 5 && items.length > 5 ? '<button class="nw-more" id="nw-less">Show less</button>' : '')) +
     `<p class="nw-foot">Benzinga via Alpaca · updated ${NW.at ? new Date(NW.at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '–'} · refreshes every 3 min · dot = tone from a word list</p>`;
   el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { if (typeof odGo === 'function') odGo(b.dataset.t); });
+  const more = document.getElementById('nw-more'), less = document.getElementById('nw-less');
+  if (more) more.onclick = () => { NW.shown += 10; nwRender(); };
+  if (less) less.onclick = () => { NW.shown = 5; nwRender(); document.getElementById('nw-panel')?.scrollIntoView({behavior: 'smooth', block: 'start'}); };
 }
 function nwInit() {
   const root = document.getElementById('nw-panel'); if (!root || root.dataset.ready) return; root.dataset.ready = '1';
-  root.querySelectorAll('#nw-tabs button').forEach(b => b.onclick = () => { NW.filter = b.dataset.f; root.querySelectorAll('#nw-tabs button').forEach(x => x.classList.toggle('on', x === b));
+  root.querySelectorAll('#nw-tabs button').forEach(b => b.onclick = () => { NW.filter = b.dataset.f; root.querySelectorAll('#nw-tabs button').forEach(x => x.classList.toggle('on', x === b)); NW.shown = 5;
     if (b.dataset.f === 'held' || NW.lastFilter === 'held') { NW.lastFilter = b.dataset.f; NW.items = []; nwRender(); nwLoad(); } else { NW.lastFilter = b.dataset.f; nwRender(); } });
   nwLoad(); NW.timer = setInterval(() => { if (!document.hidden) nwLoad(); }, 3 * 60 * 1000);
 }
