@@ -799,6 +799,41 @@
   #acc-head{margin-top:6px}
   .vt button{padding:10px 18px} .vt button svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   @media (max-width:760px){ .vt button{padding:11px 6px;font-size:13.5px;gap:6px} .vt button svg{width:18px;height:18px} }
+
+  .cx2{position:relative;padding:18px;border-radius:22px;margin:16px 0 8px;box-shadow:var(--shadow);
+    background:radial-gradient(420px 220px at 100% 0%, color-mix(in srgb, #c98b80 12%, transparent), transparent 70%),
+               radial-gradient(380px 220px at 0% 100%, color-mix(in srgb, var(--lime) 10%, transparent), transparent 70%), var(--glass-2)}
+  .cx-hd{display:flex;align-items:center;margin-bottom:10px} .cx-hd b{display:block;font:800 17px var(--font-display);letter-spacing:-.01em;color:var(--ink)}
+  .cx-hd span:not(.pt-ic){display:block;font-size:12px;color:var(--muted);margin-top:1px}
+  .cx-lead{font:500 15px/1.5 var(--font-ui);color:var(--ink-2);margin:4px 0 12px} .cx-lead b{color:var(--ink)} .cx-lead b.pos{color:var(--good)} .cx-lead b.neg{color:var(--bad)}
+  .cx-bar{margin:0 0 10px} .cx-seg button{padding:6px 16px}
+  .cx2 .cx-dec{border:0;padding:12px 14px;border-radius:16px;background:var(--glass)} .cx2 .cx-dh{display:none}
+  .cx2 .cx-row{grid-template-columns:minmax(0,1.25fr) 1fr 58px;font-size:12.5px;padding:5px 0} .cx2 .cx-tr{height:8px}
+  .cx-chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+  .cx-chip{font:500 12px var(--font-ui);padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass);color:var(--ink-2)} .cx-chip b{color:var(--ink)}
+  .cx-chip.on{border-color:color-mix(in srgb, var(--accent) 40%, transparent);background:var(--accent-soft)}
+  details.cx-fold{border-top:1px solid var(--glass-line);margin-top:10px} details.cx-fold:first-of-type{margin-top:14px}
+  details.cx-fold>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;padding:12px 2px 2px}
+  details.cx-fold>summary::-webkit-details-marker{display:none}
+  details.cx-fold>summary b{font:700 14px var(--font-display);color:var(--ink)} details.cx-fold>summary span{grid-column:1;font-size:11.5px;color:var(--muted);margin-top:2px}
+  details.cx-fold>summary::after{content:'';grid-row:1/3;grid-column:2;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;margin-right:6px}
+  details.cx-fold[open]>summary::after{transform:rotate(-135deg)} .cx-fb{padding:8px 0 4px}
+  .cx2 > details.about{margin-top:12px}
+  .cx-n{padding:10px 0;border-bottom:1px solid var(--glass-line)} .cx-n:last-of-type{border-bottom:0} .cx-n .nw-tone{margin-right:6px;vertical-align:1px}
+  .cx-nh{font:600 13.5px/1.42 var(--font-ui);color:var(--ink);text-decoration:none} .cx-nh:hover{color:var(--accent)}
+  .cx-nm{font-size:11.5px;color:var(--muted);margin-top:4px} .cx-unu{font:700 10px var(--font-ui);padding:1px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-left:2px}
+  .cx-hide{display:none} .cx-more{margin-top:6px!important}
+  .se-fold{margin:6px 0 0} .se-fold .se-card{margin:8px 0 4px}
+  .od-acts{display:flex;gap:8px;margin:14px 0 6px;flex-wrap:wrap}
+  .od-act{font:600 13.5px var(--font-ui);padding:11px 16px;border-radius:14px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer}
+  .od-act.on{background:var(--accent-soft);border-color:color-mix(in srgb, var(--accent) 40%, transparent);color:var(--ink)}
+  .od-fitb{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:8px;min-width:170px;text-align:left;padding:9px 16px}
+  .od-fitb span{font:500 11px var(--font-ui);color:var(--muted)} .od-fitb b{grid-column:1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .od-fitb i{grid-row:1/3;grid-column:2;font-style:normal;color:var(--accent);font-size:16px}
+  .cx2 .tl-foot,.cx-fb .tl-foot{font-size:11px;line-height:1.45;color:var(--muted);margin:8px 0 0}
+  .od-about{margin-top:6px}
+  .od-cmp1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:14px;padding:12px 14px;border-radius:16px;border:1px dashed var(--glass-line);background:var(--glass)}
+  .od-cmp1 span{font-size:12px;color:var(--muted)} .od-cmp1 b{font:700 14px var(--font-display);color:var(--ink)} .od-cmp1 em{flex-basis:100%;font-style:normal;font-size:12px;color:var(--muted)}
+  .od-cmp1 .od-cmpx{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px}
 :root{--bg:#eeece6; --surface:#faf8f3; --surface-2:#f3f0e9; --surface-3:#e8e4db; --border:rgba(60,55,40,.09);
     --glass:rgba(255,253,248,.62); --glass-2:rgba(255,253,248,.46); --glass-line:rgba(255,255,255,.72);
     --ink:#2d3633; --ink-2:#56615c; --muted:#8a938e;
@@ -5058,43 +5093,61 @@ async function odCtx(sym) {
 const odPct1 = (x, d = 1) => x == null || !isFinite(x) ? '–' : (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(d) + '%';
 function odDecomp(lab, x) {
   if (!x) return '';
-  const parts = [['Market', x.market, 'var(--s1)'], ['Sector', x.sector, 'var(--s4)'], ['Own (stock-specific)', x.specific, 'var(--lime)'], ['Normal drift', x.alpha, 'var(--muted)']];
+  const parts = [['Market', x.market, 'var(--s1)'], ['Sector', x.sector, 'var(--s4)'], ['Own news & results', x.specific, 'var(--lime)'], ['Normal drift', x.alpha, 'var(--muted)']];
   const mx = Math.max(0.002, ...parts.map(p => Math.abs(p[1])));
   return `<div class="cx-dec"><div class="cx-dh"><b>${lab}</b> ${odPct1(x.total)}</div>${parts.map(([n, v, c]) => `<div class="cx-row"><span>${n}</span><div class="cx-tr"><i style="${v >= 0 ? 'left:50%' : 'right:50%'};width:${Math.abs(v) / mx * 50}%;background:${c}"></i></div><b class="${v >= 0 ? 'pos' : 'neg'}">${odPct1(v)}</b></div>`).join('')}</div>`;
 }
+const odTxt = s => { const t = document.createElement('textarea'); t.innerHTML = String(s ?? ''); return t.value; };   // decode &amp; etc. in feed headlines
+// Catalysts card v2 (2026-10-22): one lead sentence + one decomposition with a 1D / 1W / 1M switch and key chips; earnings, news,
+// markets and method in folds (calmer, matching the Analyze hero card). OD.cxPer remembers the chosen period.
+function odCxWhy(sym, rec, lab) {
+  if (!rec) return '';
+  const p = [['the market', rec.market], ['its sector', rec.sector], [`${sym}'s own news and results`, rec.specific]].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+  return `${lab} ${esc(sym)} moved <b class="${rec.total >= 0 ? 'pos' : 'neg'}">${odPct1(rec.total)}</b>, mostly from <b>${p[0][0]}</b> (${odPct1(p[0][1])}).`;
+}
 function odCatalyst(A) {
   const X = OD.ctx[A.sym];
-  if (!X) return `<div class="cx-card"><div class="se-top"><b>Catalysts &amp; drivers</b><span>loading earnings, news and market context…</span></div></div>`;
-  if (X.error) return `<div class="cx-card"><div class="se-top"><b>Catalysts &amp; drivers</b><span>${esc(X.error)}</span></div></div>`;
-  const E = X.earnings || [], N = X.news || [], m = X.model;
-  const rec = X.recent?.['1m'], big = (o) => Math.abs(o.t) >= 2;
-  const why = rec ? (() => { const p = [['the market', rec.market], ['its sector', rec.sector], [`${A.sym}'s own news and results`, rec.specific]].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
-    return `Over the last month ${A.sym} moved ${odPct1(rec.total)}. Most of that came from <b>${p[0][0]}</b> (${odPct1(p[0][1])}), then ${p[1][0]} (${odPct1(p[1][1])}) and ${p[2][0]} (${odPct1(p[2][1])}).`; })() : '';
-  const lastE = E[0];
-  const eLine = lastE ? `Last earnings: ${esc(lastE.day)} (${esc(lastE.timing)}): ${odPct1(lastE.ret)} that day, of which <b>${odPct1(lastE.specific)} was ${A.sym}'s own reaction</b>${big(lastE) ? ' — far bigger than its normal daily noise, so the release caused it' : ' — within normal daily noise'}${lastE.post2_20 != null ? `; afterwards it drifted ${odPct1(lastE.post2_20)} beyond what the market and sector explain` : ''}.` : 'No earnings releases found in SEC filings.';
+  const head = (sub) => `<div class="cx-hd"><span class="pt-ic pt-pulse" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12h4l3-8 4 16 3-8h6"/></svg></span><div><b>Why ${esc(A.sym)} moved</b><span>${sub}</span></div></div>`;
+  if (!X) return `<div class="cx-card cx2" id="cx-card">${head('loading earnings, news and market context…')}<div class="nw-skel s"></div></div>`;
+  if (X.error) return `<div class="cx-card cx2" id="cx-card">${head(esc(X.error))}</div>`;
+  const E = X.earnings || [], N = X.news || [], m = X.model, R = X.recent || {}, big = (o) => Math.abs(o.t) >= 2;
+  const PER = [['1d', '1D', 'Today'], ['1w', '1W', 'This week'], ['1m', '1M', 'Over the last month']].filter(([k]) => R[k]);
+  const sel = PER.find(x => x[0] === OD.cxPer) || PER[PER.length - 1];
+  const lastE = E[0], unexplained = (X.big_moves || []).filter(b => !b.news);
+  const eLine = lastE ? `Last earnings: ${esc(lastE.day)} (${esc(lastE.timing)}): ${odPct1(lastE.ret)} that day, of which <b>${odPct1(lastE.specific)} was ${A.sym}'s own reaction</b>${big(lastE) ? ', far bigger than its normal daily noise, so the release caused it' : ', within normal daily noise'}${lastE.post2_20 != null ? `; afterwards it drifted ${odPct1(lastE.post2_20)} beyond what the market and sector explain` : ''}.` : 'No earnings releases found in SEC filings.';
   const path = E.filter(e => e.path && e.path.length >= 21).slice(0, 8);
   const W = 300, Hh = 90, xs = i => (i / 30) * W, cumu = p => { let s = 0; return p.map(v => s += (isFinite(v) ? v : 0)); };
   const all = path.map(e => cumu(e.path)); const mx = Math.max(0.02, ...all.flat().map(Math.abs)); const ys = v => Hh / 2 - v / mx * (Hh / 2 - 4);
   const svg = path.length ? `<svg class="cx-ev" viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none"><line x1="${xs(10)}" x2="${xs(10)}" y1="0" y2="${Hh}" class="cx-zero"/><line x1="0" x2="${W}" y1="${Hh / 2}" y2="${Hh / 2}" class="cx-zero"/>
-      ${all.map((c, j) => `<polyline points="${c.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${path[j].specific >= 0 ? 'var(--good)' : 'var(--bad)'}" stroke-width="${j === 0 ? 2.4 : 1.2}" opacity="${j === 0 ? 1 : 0.55}" vector-effect="non-scaling-stroke"/>`).join('')}</svg>
+      ${all.map((c, j) => `<polyline points="${c.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${path[j].specific >= 0 ? 'var(--good)' : 'var(--bad)'}" stroke-width="${j === 0 ? 2.4 : 1.2}" opacity="${j === 0 ? 1 : 0.5}" vector-effect="non-scaling-stroke"/>`).join('')}</svg>
       <div class="cx-evl"><span>10 days before</span><span>earnings day</span><span>20 days after</span></div>` : '';
   const tbl = E.slice(0, 8).map(e => `<tr><td>${esc(e.day)}<span class="muted"> ${e.timing === 'after close' ? 'pm' : e.timing === 'before open' ? 'am' : ''}</span></td><td>${odPct1(e.ret)}</td><td class="muted">${odPct1(e.market + e.sector)}</td>
-      <td class="${e.specific >= 0 ? 'pos' : 'neg'}"><b>${odPct1(e.specific)}</b>${big(e) ? ' ●' : ''}</td><td class="muted">${odPct1(e.pre10)}</td><td>${e.post2_20 == null ? '…' : odPct1(e.post2_20)}</td></tr>`).join('');
-  const news = N.slice(0, 12).map(n => `<div class="cx-n"><div class="cx-nt"><span class="cx-tone ${n.tone > 0 ? 'p' : n.tone < 0 ? 'n' : ''}">${n.tone > 0 ? 'positive' : n.tone < 0 ? 'negative' : 'neutral'}</span>
-      <a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.headline)}</a></div><div class="cx-nm">${esc(new Date(n.at).toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}))} · ${esc(n.source || '')}${n.specific != null ? ` · that session ${A.sym}'s own move <b class="${n.specific >= 0 ? 'pos' : 'neg'}">${odPct1(n.specific)}</b>${Math.abs(n.t) >= 2 ? ' (unusual)' : ' (normal noise)'}${n.agrees === true ? ' · price agreed' : n.agrees === false ? ' · price disagreed' : ''}` : ''}</div></div>`).join('');
-  const unexplained = (X.big_moves || []).filter(b => !b.news);
+      <td class="${e.specific >= 0 ? 'pos' : 'neg'}"><b>${odPct1(e.specific)}</b>${big(e) ? ' ●' : ''}</td><td>${e.post2_20 == null ? '…' : odPct1(e.post2_20)}</td></tr>`).join('');
+  const nrow = (n, i) => `<div class="cx-n${i >= 5 ? ' cx-hide' : ''}">${n.tone ? `<span class="nw-tone ${n.tone > 0 ? 'p' : 'n'}">${n.tone > 0 ? 'Positive' : 'Negative'}</span>` : ''}
+      <a class="cx-nh" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(odTxt(n.headline))}</a>
+      <div class="cx-nm">${esc(new Date(n.at).toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}))} · ${esc(nwSrc(n.source || ''))}${n.specific != null ? ` · ${esc(A.sym)} <b class="${n.specific >= 0 ? 'pos' : 'neg'}">${odPct1(n.specific)}</b> own move${Math.abs(n.t) >= 2 ? ' <span class="cx-unu">unusual</span>' : ''}` : ''}</div></div>`;
+  const news = N.slice(0, 12);
   const glob = (X.global || []).filter(g => g.chg != null).map(g => `<span class="cx-g"><span>${esc(g.name)}</span><b class="${g.chg >= 0 ? 'pos' : 'neg'}">${odPct1(g.chg, 2)}</b></span>`).join('');
-  return `<div class="cx-card"><div class="se-top"><b>Catalysts &amp; drivers</b><span>why ${esc(A.sym)} moved: market, sector or its own news</span></div>
-    ${why ? `<p class="cx-p">${why}</p>` : ''}<p class="cx-p">${eLine}${X.next_earnings_estimate ? ` Next earnings expected around <b>${esc(X.next_earnings_estimate)}</b> (estimated from its usual rhythm).` : ''}</p>
-    <div class="cx-decs">${odDecomp('1 day', X.recent?.['1d'])}${odDecomp('1 week', X.recent?.['1w'])}${odDecomp('1 month', X.recent?.['1m'])}</div>
-    ${E.length ? `<div class="se-h" style="margin-top:12px">Earnings reactions <span>own (stock-specific) move after removing market and sector · ● = clearly caused by the release</span></div>${svg}
-      <div class="od-cmpw"><table class="od-cmpt cx-t"><thead><tr><th>Day</th><th>Total</th><th>Market+sector</th><th>Own</th><th>10d before</th><th>20d after</th></tr></thead><tbody>${tbl}</tbody></table></div>` : ''}
-    ${news ? `<div class="se-h" style="margin-top:12px">News, last 60 days <span>tone from a finance word list · did the price react?</span></div>${news}` : '<p class="cx-p">No news items in the last 60 days.</p>'}
-    ${unexplained.length ? `<p class="cx-p"><b>Big own moves without a headline:</b> ${unexplained.map(b => `${esc(b.day)} ${odPct1(b.specific)}`).join(' · ')}.</p>` : ''}
-    ${glob ? `<div class="se-h" style="margin-top:12px">Markets today</div><div class="cx-gs">${glob}</div>` : ''}
+  const chips = [lastE ? `<span class="cx-chip${big(lastE) ? ' on' : ''}">Last earnings ${esc(new Date(lastE.day + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'}))}: own <b>${odPct1(lastE.specific)}</b></span>` : '',
+    X.next_earnings_estimate ? `<span class="cx-chip">Next earnings ≈ <b>${esc(X.next_earnings_estimate)}</b></span>` : '',
+    unexplained.length ? `<span class="cx-chip">${unexplained.length} big move${unexplained.length > 1 ? 's' : ''} without a headline</span>` : ''].join('');
+  const fold = (title, sub, body) => `<details class="cx-fold"><summary><b>${title}</b><span>${sub}</span></summary><div class="cx-fb">${body}</div></details>`;
+  return `<div class="cx-card cx2" id="cx-card">${head('market, sector or its own news')}
+    ${sel ? `<p class="cx-lead">${odCxWhy(A.sym, R[sel[0]], sel[2])}</p>
+    <div class="cx-bar"><div class="mv-seg cx-seg">${PER.map(([k, l]) => `<button data-cxp="${k}" class="${k === sel[0] ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+    ${odDecomp(sel[2], R[sel[0]])}` : ''}
+    ${chips ? `<div class="cx-chips">${chips}</div>` : ''}
+    ${fold('Earnings reactions', E.length ? `${E.length} releases · own move after market and sector` : 'none found', `<p class="cx-p">${eLine}</p>${E.length ? `${svg}<div class="od-cmpw"><table class="od-cmpt cx-t"><thead><tr><th>Day</th><th>Total</th><th>Mkt+sector</th><th>Own</th><th>20d after</th></tr></thead><tbody>${tbl}</tbody></table></div><p class="tl-foot">● = clearly caused by the release (own move above twice its normal daily noise).</p>` : ''}`)}
+    ${fold('News, last 60 days', news.length ? `${news.length} headline${news.length > 1 ? 's' : ''}${N.length > 12 ? ' (latest 12)' : ''}` : 'none', news.length ? news.map(nrow).join('') + (news.length > 5 ? `<button class="nw-more cx-more">Show all ${news.length}</button>` : '') + (unexplained.length ? `<p class="cx-p"><b>Big own moves without a headline:</b> ${unexplained.map(b => `${esc(b.day)} ${odPct1(b.specific)}`).join(' · ')}.</p>` : '') + '<p class="tl-foot">Tone from a finance word list (AI reading with FinBERT is being tested).</p>' : '<p class="cx-p">No news items in the last 60 days.</p>')}
+    ${glob ? fold('Markets today', 'indices, rates, oil, gold, dollar', `<div class="cx-gs">${glob}</div>`) : ''}
     <details class="about"><summary>How causation is separated</summary><p>For every earnings release an OLS model learns, from the year before it (ending 30 days earlier), how ${esc(A.sym)} normally follows the S&amp;P 500 and its sector${X.sector_etf ? ' (' + esc(X.sector_etf) + ')' : ''}${m ? `: currently ${m.beta_market}× the market and ${m.beta_sector}× the sector's extra move` : ''}. On the release day the part those explain is removed; what is left is ${esc(A.sym)}'s own reaction. SEC time stamps fix when the news became public (after 16:00 ET counts for the next session). A reaction bigger than twice its normal daily noise (●) is strong evidence the release caused it.
       Across 17,766 S&amp;P 500 releases (2016-26), 46% caused such a move (normal days: about 5%), and same-sector stocks without news barely moved on those days. Whether a strong reaction keeps drifting afterwards was not reliable (+0.45% best vs worst fifth over 20 days, t 1.6 with a separate baseline for every date), so the odds above do not use it.
       Not covered: earnings-call transcripts, analyst estimates (beat or miss is judged from the price reaction) and investor surveys. News tone is a word count, not an AI reading.</p></details></div>`;
+}
+function odCxWire(A) {
+  const c = document.getElementById('cx-card'); if (!c) return;
+  c.querySelectorAll('[data-cxp]').forEach(b => b.onclick = () => { OD.cxPer = b.dataset.cxp; c.outerHTML = odCatalyst(A); odCxWire(A); });
+  const mo = c.querySelector('.cx-more'); if (mo) mo.onclick = () => { c.querySelectorAll('.cx-hide').forEach(x => x.classList.remove('cx-hide')); mo.remove(); };
 }
 // ---- one stock: everything we know, per horizon ----
 function odAnalyse(sym, own) {
@@ -5182,13 +5235,13 @@ function odSeason(A) {
   const G = OD.cal?.groups || {}, mk = Object.entries(G).filter(([, r]) => Object.values(r).some(v => v.verdict === 'consistent')).map(([g]) => g.replace(/^month (\d+)$/, (_, n) => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][+n - 1]));
   const todayLine = [`${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][now.wd] || 'Weekend'}`, ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][now.m]];
   const sc = (x) => x ? `${odS(x.diff, 2)} vs average${x.ok ? ' · consistent' : ' · noise'}` : '–';
-  return `<div class="se-card"><div class="se-top"><b>Seasonality</b><span>${S.consistent} of ${S.tested} patterns held in both halves of ${esc(A.sym)}'s history (about ${exp} expected by luck)</span></div>
+  return `<details class="cx-fold se-fold"><summary><b>Seasonality</b><span>${cons.length ? cons.length + ' consistent pattern' + (cons.length > 1 ? 's' : '') : 'no reliable calendar pattern'} · ${S.consistent} of ${S.tested} held (≈${exp} by luck)</span></summary><div class="se-card">
     <div class="se-now">Now: <b>${todayLine.join(', ')}</b> · this weekday ${sc(S.weekday[now.wd])} · this month ${sc(S.month[now.m])}${hb >= 0 ? ` · this hour ${sc(S.hour[hb])}` : ''}</div>
     <div class="se-grid">${odBars('Weekday', ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], S.weekday, now.wd, 'daily return vs average')}
       ${odBars('Month', ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'], S.month, now.m, 'monthly return vs other months')}
       ${odBars('Time of day', ['9:30', '10', '11', '12', '13', '14', '15'], S.hour, hb, `last ${S.hour_days} sessions, ET`)}</div>
     <div class="se-foot">${cons.length ? `<b>Consistent for ${esc(A.sym)}:</b> ${esc(cons.join(' · '))}. ` : `<b>No consistent pattern for ${esc(A.sym)}.</b> `}Turn of month ${sc(S.tom)}; before holidays ${sc(S.pre_holiday)}.
-      S&amp;P 500 as a whole (2016-26): ${mk.length ? 'only ' + esc(mk.join(', ')) + ' held in both halves' : 'no calendar effect held in both halves'}; weekday, turn-of-month, holiday and option-expiry effects did not. Adding calendar features to the open → close model did not help significantly (t 0.8), so the odds above ignore the calendar.</div></div>`;
+      S&amp;P 500 as a whole (2016-26): ${mk.length ? 'only ' + esc(mk.join(', ')) + ' held in both halves' : 'no calendar effect held in both halves'}; weekday, turn-of-month, holiday and option-expiry effects did not. Adding calendar features to the open → close model did not help significantly (t 0.8), so the odds above ignore the calendar.</div></div></div></details>`;
 }
 // Analyze view (2026-10-22): after an odds check of one S&P 500 stock, the Strategy fit panel below runs for the same ticker (no scrolling)
 async function odSyncFit(sym) {
@@ -5259,8 +5312,9 @@ function odShowA(A) {
     ${odCatalyst(A)}
     ${odSeason(A)}
     ${A.modelOk && A.x ? `<details class="about"><summary>What drives the pattern score</summary>${odDrivers(A.x)}</details>` : ''}
-    <div class="od-foot"><button class="pill${inCmp ? ' on' : ''}" id="od-addcmp">${inCmp ? '✓ In compare' : '+ Compare'}</button>${cls ? `<span>Strategy fit: <b>${esc(cls.label)}</b> (score ${sc.toFixed(0)})</span>` : ''}${A.member ? '<button class="linkbtn" id="od-full">Full strategy analysis</button>' : ''}</div>
-    <p class="tl-foot">${A.member ? 'Today from the open: LightGBM on 13 previous-close price ranks + the opening gap, walk-forward 2021-26 (Bible 6.70). Longer horizons: S&amp;P 500 backtests found no edge, so the tiles show the swing signal when active, else the stock\'s own record (a base rate). ' : ''}Own record from Alpaca daily bars (split and dividend adjusted)${A.own?.as_of ? ' through ' + esc(A.own.as_of) : ''}. History, not a promise; not investment advice.</p>`;
+    <div class="od-acts"><button class="od-act${inCmp ? ' on' : ''}" id="od-addcmp">${inCmp ? '✓ In compare' : '+ Compare'}</button>${A.member ? `<button class="od-act od-fitb" id="od-full"><span>Strategy fit</span><b>${cls ? esc(cls.label) + ' · ' + sc.toFixed(0) : 'Open'}</b><i>→</i></button>` : ''}</div>
+    <details class="about od-about"><summary>About these odds</summary><p class="tl-foot">${A.member ? 'Today from the open: LightGBM on 13 previous-close price ranks + the opening gap, walk-forward 2021-26 (Bible 6.70). Longer horizons: S&amp;P 500 backtests found no edge, so the tiles show the swing signal when active, else the stock\'s own record (a base rate). ' : ''}Own record from Alpaca daily bars (split and dividend adjusted)${A.own?.as_of ? ' through ' + esc(A.own.as_of) : ''}. History, not a promise; not investment advice.</p></details>`;
+  odCxWire(A);
   document.getElementById('od-addcmp').onclick = () => { odCmpToggle(A.sym); odShowA(A); };
   const full = document.getElementById('od-full'); if (full) full.onclick = () => { const box = document.getElementById('tl-input'), pan = document.getElementById('tl-panel'); if (pan) pan.open = true;
     if (box) { box.value = A.sym; document.getElementById('tl-go').click(); pan.scrollIntoView({behavior: 'smooth', block: 'start'}); } };
@@ -5277,6 +5331,8 @@ function odCmpToggle(s) { const i = OD.cmp.indexOf(s); if (i >= 0) OD.cmp.splice
 async function odCmp() {
   const el = document.getElementById('od-cmp'); if (!el) return;
   if (!OD.cmp.length) { el.innerHTML = ''; return; }
+  if (OD.cmp.length === 1) { el.innerHTML = `<div class="od-cmp1"><span>Compare list</span><b>${esc(OD.cmp[0])}</b><button class="od-cmpx" data-x="${esc(OD.cmp[0])}" aria-label="Remove">×</button><em>Check another stock and tap + Compare to see them side by side.</em></div>`;
+    el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { odCmpToggle(b.dataset.x); if (OD.ticker && OD.last) odShowA(OD.last); }); return; }
   el.innerHTML = '<p class="note">Loading the comparison…</p>';
   let own = {}; try { own = await odOwn(OD.cmp); } catch (e) { own = {}; }
   const A = OD.cmp.map(s => odAnalyse(s, own[s]));
@@ -5297,7 +5353,7 @@ async function odCmp() {
       ${row('From 52-week high', A.map(a => a.f.dist_52w_high ?? null), v => odS(v, 0))}
       ${row('Volatility', A.map(a => a.f.vol20 ?? null), v => v == null ? '–' : (v * 100).toFixed(0) + '%', 'min')}
       ${row('Strategy fit', A.map(a => a.member && TL.scores ? TL.scores.sc[a.sym] ?? null : null), v => v == null ? '–' : v.toFixed(0))}
-    </tbody></table></div><p class="tl-foot">Highlighted: best in the row (lowest for volatility). Open → close: today's model odds (S&amp;P 500, the one horizon with an edge). Longer rows: a swing signal when one is active, else the stock's own record.</p>`;
+    </tbody></table></div><details class="about"><summary>About this table</summary><p class="tl-foot">Highlighted: best in the row (lowest for volatility). Open → close: today's model odds (S&amp;P 500, the one horizon with an edge). Longer rows: a swing signal when one is active, else the stock's own record.</p></details>`;
   el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => odGo(b.dataset.t));
   el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => odCmpToggle(b.dataset.x));
   document.getElementById('od-cmpclr').onclick = () => { OD.cmp = []; try { localStorage.removeItem('finny-cmp'); } catch (e) {} odCmp(); if (OD.ticker && OD.last) odShowA(OD.last); };
@@ -5483,8 +5539,8 @@ function nwRender() {
   const list = items.slice(0, NW.shown);
   el.innerHTML = (list.length ? list.map((n, i) => i === 0
       ? `<article class="nw-top">${nwBadge(lead(n), spx)}<div class="nw-tx"><span class="nw-kick">Latest</span>
-          <a class="nw-h" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.headline)}</a>${meta(n)}</div></article>`
-      : `<article class="nw-it">${nwBadge(lead(n), spx)}<div class="nw-tx"><a class="nw-h" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.headline)}</a>${meta(n)}</div></article>`).join('')
+          <a class="nw-h" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(typeof odTxt === 'function' ? odTxt(n.headline) : n.headline)}</a>${meta(n)}</div></article>`
+      : `<article class="nw-it">${nwBadge(lead(n), spx)}<div class="nw-tx"><a class="nw-h" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(typeof odTxt === 'function' ? odTxt(n.headline) : n.headline)}</a>${meta(n)}</div></article>`).join('')
     : '<p class="note">No headlines for this filter right now.</p>') +
     (items.length > NW.shown ? `<button class="nw-more" id="nw-more">Show more</button>` : (NW.shown > 4 && items.length > 4 ? '<button class="nw-more" id="nw-less">Show less</button>' : '')) +
     `<p class="nw-foot">Benzinga · updated ${NW.at ? new Date(NW.at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '–'} · tap a ticker for its odds</p>`;
