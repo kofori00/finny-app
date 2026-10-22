@@ -535,7 +535,7 @@
   .od-search{position:relative;display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line);transition:border-color .15s,box-shadow .15s}
   .od-search:focus-within{border-color:color-mix(in srgb, var(--lime) 70%, transparent);box-shadow:0 0 0 3px var(--accent-soft)}
   .od-search svg{width:18px;height:18px;color:var(--muted);flex:none}
-  #od-panel .od-search input{flex:1;min-width:0;border:0;background:transparent;box-shadow:none;outline:none;color:var(--ink);font:500 16px var(--font-ui);padding:8px 0;border-radius:0}
+  #od-panel .od-search input,#hero-search .od-search input{flex:1;min-width:0;border:0;background:transparent;box-shadow:none;outline:none;color:var(--ink);font:500 16px var(--font-ui);padding:8px 0;border-radius:0}
   .od-search button{flex:none;padding:10px 20px;border-radius:999px;border:0;background:var(--lime);color:var(--lime-ink);font:700 14px var(--font-ui);cursor:pointer}
   .od-search .tl-sugg{top:calc(100% + 6px)}
   .od-sig{display:block;margin:14px 0 10px}
@@ -743,7 +743,7 @@
   details.account summary::-webkit-details-marker{display:none}
   .acct-mail{font-size:12px;color:var(--muted);padding:2px 2px 8px;margin-bottom:6px;border-bottom:1px solid var(--glass-line);white-space:nowrap}
   body.v-analyze #view-sub,body.v-accounts #view-sub{display:none}
-  .hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:center;
+  .hero{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:center;
     padding:28px 28px 24px;margin:0 0 18px;border-radius:26px;border:1px solid var(--glass-line);box-shadow:var(--shadow-lg);
     background:radial-gradient(520px 280px at 100% 0%, color-mix(in srgb, var(--lime) 20%, transparent), transparent 70%),
                radial-gradient(460px 300px at 0% 100%, rgba(63,184,148,.18), transparent 70%), var(--glass);
@@ -766,10 +766,17 @@
   .h-mid{stroke:var(--ink-2);stroke-width:1.4;stroke-dasharray:4 4;opacity:.6} .h-edge{stroke:var(--muted);stroke-width:1;opacity:.35}
   .h-pt{fill:var(--lime);stroke:var(--surface);stroke-width:2.5} .h-halo{fill:var(--lime);opacity:.22;transform-origin:250px 92px;animation:hHalo 2.4s ease-in-out infinite}
   @keyframes hHalo{0%,100%{transform:scale(.7);opacity:.28}50%{transform:scale(1.25);opacity:.08}}
-  .h-card rect:first-child{fill:var(--surface);fill-opacity:.88;stroke:var(--glass-line)} .h-card{filter:drop-shadow(0 8px 14px rgba(0,0,0,.18))}
+  .h-card > rect:first-of-type{fill:var(--surface);fill-opacity:.88;stroke:var(--glass-line)} .h-card{filter:drop-shadow(0 8px 14px rgba(0,0,0,.18))}
   .h-k{font:700 7.5px var(--font-ui);letter-spacing:.08em;fill:var(--muted)} .h-v{font:800 19px var(--font-display);fill:var(--good)} .h-t{font:700 11.5px var(--font-ui);fill:var(--ink)}
   .h-bar0{fill:var(--glass-line)} .h-bar1{fill:var(--good)}
-  .h-ring0{fill:none;stroke:var(--glass-line);stroke-width:3.4} .h-ring1{fill:none;stroke:#3fb894;stroke-width:3.4;stroke-dasharray:43.8 53.4;stroke-linecap:round}
+  .h-ring0{fill:none;stroke:var(--glass-line);stroke-width:3.4} .h-ring1{fill:none;stroke:#3fb894;stroke-width:3.4;stroke-linecap:round}
+  .h-anim{transition:d .8s cubic-bezier(.2,.8,.2,1),cy .8s cubic-bezier(.2,.8,.2,1),transform .6s ease,stroke-dasharray .8s ease} .h-v.neg{fill:var(--bad)}
+  .h-cap{font:600 9px var(--font-ui);fill:var(--muted);letter-spacing:.04em} #h-card,#h-fit{cursor:pointer}
+  .hero-search{margin:0 0 10px} .hero-search .od-search{background:var(--surface);box-shadow:0 10px 26px -16px rgba(0,0,0,.5)}
+  .hero-try{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 16px;font-size:12px;color:var(--muted)} .hero-try span{margin-right:2px}
+  .hero-try button{font:600 12px var(--font-ui);padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer}
+  .hero-try button:hover{border-color:var(--accent);color:var(--ink)}
+  body.an-empty #tl-panel{display:none!important}
   @media (prefers-reduced-motion: reduce){.h-halo,.hero-kick i{animation:none}}
   @media (max-width:760px){
     .hero{grid-template-columns:1fr;gap:6px;padding:22px 18px 14px;border-radius:22px}
@@ -818,6 +825,8 @@
       <span class="hero-kick"><i></i>Stock odds · Strategy fit · News effects</span>
       <h2>Know the odds <em>before you trade.</em></h2>
       <p>Look up any US stock: how often stocks in its position went up, which tested strategies would hold it today, and what its news usually did to the price.</p>
+      <div class="hero-search" id="hero-search"></div>
+      <div class="hero-try"><span>Try</span><button data-t="NVDA">NVDA</button><button data-t="AAPL">AAPL</button><button data-t="TSLA">TSLA</button><button data-t="JPM">JPM</button><button data-t="SPY">SPY</button></div>
       <div class="hero-stats">
         <div><b class="hero-n">5,700+</b><span>strategies tested</span></div>
         <div><b>10 yrs</b><span>S&amp;P 500 history</span></div>
@@ -829,15 +838,16 @@
         <linearGradient id="hgL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="hl0"/><stop offset="1" class="hl1"/></linearGradient>
         <filter id="hgB" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="5"/></filter></defs>
       <g class="hgrid"><path d="M0 50H360M0 100H360M0 150H360M0 200H360"/></g>
-      <path class="h-up" d="M250 92L354 40V92Z"/><path class="h-dn" d="M250 92L354 92V146Z"/>
-      <path class="h-mid" d="M250 92L354 72"/><path class="h-edge" d="M250 92L354 40M250 92L354 146"/>
-      <path d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92L250 220L0 220Z" fill="url(#hgA)"/>
-      <path class="h-glow" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92" stroke="url(#hgL)" filter="url(#hgB)"/>
-      <path class="h-line" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92" stroke="url(#hgL)"/>
-      <circle class="h-halo" cx="250" cy="92" r="13"/><circle class="h-pt" cx="250" cy="92" r="5.5"/>
-      <g class="h-card"><rect x="262" y="156" width="88" height="52" rx="13"/><text x="274" y="175" class="h-k">UP NEXT WEEK</text><text x="274" y="198" class="h-v">58%</text></g>
-      <g class="h-card"><rect x="12" y="14" width="112" height="34" rx="17"/><circle cx="31" cy="31" r="8.5" class="h-ring0"/><circle cx="31" cy="31" r="8.5" class="h-ring1" transform="rotate(-90 31 31)"/>
-        <text x="46" y="35.5" class="h-t">Strategy fit 82</text></g>
+      <path id="h-up" class="h-up h-anim" d="M250 92L354 40V92Z"/><path id="h-dn" class="h-dn h-anim" d="M250 92L354 92V146Z"/>
+      <path id="h-mid" class="h-mid h-anim" d="M250 92L354 72"/><path id="h-edge" class="h-edge h-anim" d="M250 92L354 40M250 92L354 146"/>
+      <path id="h-area" class="h-anim" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92L250 220L0 220Z" fill="url(#hgA)"/>
+      <path id="h-glow" class="h-glow h-anim" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92" stroke="url(#hgL)" filter="url(#hgB)"/>
+      <path id="h-line" class="h-line h-anim" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92" stroke="url(#hgL)"/>
+      <circle id="h-halo" class="h-halo h-anim" cx="250" cy="92" r="13"/><circle id="h-pt" class="h-pt h-anim" cx="250" cy="92" r="5.5"/>
+      <text id="h-cap" class="h-cap" x="4" y="212">Example · search a ticker above</text>
+      <g id="h-card" class="h-card h-anim"><rect x="240" y="156" width="114" height="52" rx="13"/><text id="h-k" x="252" y="175" class="h-k">UP NEXT WEEK</text><text id="h-v" x="252" y="198" class="h-v">58%</text></g>
+      <g id="h-fit" class="h-card h-fitg"><title>Example</title><rect x="12" y="14" width="140" height="34" rx="17"/><circle cx="31" cy="31" r="8.5" class="h-ring0"/><circle id="h-ring1" cx="31" cy="31" r="8.5" class="h-ring1 h-anim" transform="rotate(-90 31 31)" stroke-dasharray="43.8 53.4"/>
+        <text id="h-t" x="46" y="35.5" class="h-t">Strategy fit 82</text></g>
     </svg></div>
   </section>
 
@@ -4734,6 +4744,7 @@ function tlShow(ticker) {
   if (!p) { el.innerHTML = `<p class="note">${tlEsc(ticker)} is not in today's S&amp;P 500 snapshot.</p>`; return; }
   const g = p.sig || {}, f = p.f || {};
   const score = tlScores().sc[p.ticker] || 0, cls = tlClass(score);
+  if (typeof heroFit === 'function') heroFit(p.ticker, score, cls.label);
   const fit = [cls.label, cls.tier >= 3 ? 'var(--accent)' : cls.tier >= 2 ? 'var(--ink)' : 'var(--muted)'];
   const chips = A.sleeves.map(s => `<span class="tl-chip" title="held since ${tlEsc(s.since)} (current target ${tlEsc(s.as_of)})">${tlEsc(s.book)} ${(s.weight * 100).toFixed(0)}%</span>`).join('');
   // recent swing entry signals (live_signal_log, last 20 trading days); both rules hold at most 5 trading days
@@ -5164,6 +5175,7 @@ async function odSyncFit(sym) {
 }
 function odShowA(A) {
   const el = document.getElementById('od-body'); if (!el) return; OD.ticker = A.sym;
+  if (typeof heroOdds === 'function') heroOdds(A);                                 // Analyze hero chart follows the checked stock
   const O = OD.odds, w = A.H[0], m = A.H[2], q = A.H[3], R = w.R, ownN = A.own?.own?.[5]?.all?.n;
   const opTxt = A.op ? `<b>${A.op.as_of !== odEtToday() ? 'On ' + esc(A.op.as_of) : 'Today'} from the open: ${esc(A.sym)} was ${odRankTxt(A.op).band} (${odRankTxt(A.op).rank}).</b> Stocks ranked like this closed above their open ${odP(A.op.p_up)} of the time (any stock ${odP(OD.openMeta?.base_up ?? 0.505)}) and beat the day's median ${odP(A.op.p_beat)}, average ${odS(A.op.exp_ret, 3)} (walk-forward 2021-26). `
     : A.member ? 'Today-from-the-open odds appear after about 09:35 ET. ' : '';
@@ -5301,7 +5313,7 @@ async function odGo(t) {
   if (member) { OD.last = odAnalyse(sym, null); odShowA(OD.last); }                 // S&P evidence at once, own record when it arrives
   if (member && parts.length === 1) odSyncFit(sym);                                // Analyze view: strategy fit follows the odds check
   else el.innerHTML = `<p class="note">Fetching ${esc(sym)}'s daily history from Alpaca…</p>`;
-  document.getElementById('od-panel')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  (VIEW.cur === 'analyze' && document.getElementById('an-hero') || document.getElementById('od-panel'))?.scrollIntoView({behavior: 'smooth', block: 'start'});
   try {
     const own = (await odOwn([sym]))[sym];
     if (OD.ticker && OD.ticker !== sym && member) return;
@@ -5351,6 +5363,7 @@ function viewInit() {
   if (VIEW.ready) return; VIEW.ready = true;
   const mv = document.getElementById('mv-fold'); if (mv) mv.open = true;
   const tl = document.getElementById('tl-panel'); if (tl) tl.open = true;
+  document.body.classList.add('an-empty'); if (typeof heroInit === 'function') heroInit();
   document.querySelectorAll('#view-tabs button').forEach(b => b.onclick = () => viewSet(b.dataset.v));
   document.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => viewSet(b.dataset.goto));
   let v = (location.hash || '').slice(1); if (v === 'live') v = 'analyze';
@@ -5463,6 +5476,63 @@ function nwInit() {
     if (b.dataset.f === 'held' || NW.lastFilter === 'held') { NW.lastFilter = b.dataset.f; NW.items = []; nwRender(); nwLoad(); } else { NW.lastFilter = b.dataset.f; nwRender(); } });
   if (typeof tlLoad === 'function') tlLoad().then(nwRender).catch(() => {});        // S&P 500 member list for the default filter and badges
   nwLoad(); NW.timer = setInterval(() => { if (!document.hidden) nwLoad(); }, 3 * 60 * 1000);
+}
+
+// ---------------- Interactive hero (2026-10-22): the Analyze page's search lives in the hero, and the hero chart redraws for the checked stock ----------------
+// Line = the stock's past year (ticker-odds spark), cone = its 1-week odds (signal if active, else its own record), chip = strategy fit score
+// (ticker lookup voting score, S&P 500 only). Before any check the chart is a labelled example. Tapping the card or chip scrolls to the full panel.
+const HERO = {sym: null, demo: true};
+const HX = 250, HY0 = 14, HY1 = 196;                                         // last price point x; usable y range of the 360x220 drawing
+function heroSmooth(P) {                                                     // Catmull-Rom through the points as cubic Béziers
+  let d = `M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+    d += `C${(p1[0] + (p2[0] - p0[0]) / 6).toFixed(1)} ${(p1[1] + (p2[1] - p0[1]) / 6).toFixed(1)} ${(p2[0] - (p3[0] - p1[0]) / 6).toFixed(1)} ${(p2[1] - (p3[1] - p1[1]) / 6).toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+function heroSet(id, attrs) { const el = document.getElementById(id); if (el) for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); return el; }
+function heroDraw(vals, p, cap) {
+  if (!document.getElementById('h-line') || !vals || vals.length < 2) return;
+  const lo = Math.min(...vals), hi = Math.max(...vals), r = hi - lo || 1;
+  const P = vals.map((v, i) => [i / (vals.length - 1) * HX, 172 - (v - lo) / r * 112]);
+  const line = heroSmooth(P), [, y] = P[P.length - 1];
+  ['h-line', 'h-glow'].forEach(id => heroSet(id, {d: line}));
+  heroSet('h-area', {d: `${line}L${HX} 220L0 220Z`});
+  heroSet('h-pt', {cy: y.toFixed(1)}); const halo = heroSet('h-halo', {cy: y.toFixed(1)}); if (halo) halo.style.transformOrigin = `${HX}px ${y.toFixed(1)}px`;
+  const q = p == null ? 0.5 : Math.max(0.05, Math.min(0.95, p)), sc = Math.min(104, (y - HY0) / q, (HY1 - y) / (1 - q)), top = y - sc * q, bot = y + sc * (1 - q);   // keep the up:down ratio inside the frame
+  heroSet('h-up', {d: `M${HX} ${y.toFixed(1)}L354 ${top.toFixed(1)}V${y.toFixed(1)}Z`}); heroSet('h-dn', {d: `M${HX} ${y.toFixed(1)}L354 ${y.toFixed(1)}V${bot.toFixed(1)}Z`});
+  heroSet('h-edge', {d: `M${HX} ${y.toFixed(1)}L354 ${top.toFixed(1)}M${HX} ${y.toFixed(1)}L354 ${bot.toFixed(1)}`});
+  heroSet('h-mid', {d: `M${HX} ${y.toFixed(1)}L354 ${(y - (q - 0.5) * 80).toFixed(1)}`});
+  const card = document.getElementById('h-card'); if (card) card.setAttribute('transform', `translate(0 ${y > 120 ? -128 : 0})`);   // keep the card off the line
+  const v = document.getElementById('h-v'); if (v) { v.textContent = p == null ? '–' : Math.round(p * 100) + '%'; v.classList.toggle('neg', p != null && p < 0.5); }
+  const c = document.getElementById('h-cap'); if (c) c.textContent = cap;
+}
+function heroFit(sym, score, label) {                                        // called by the ticker lookup once it has scored the stock
+  if (sym !== HERO.sym) return;
+  const g = document.getElementById('h-fit'); if (!g) return; g.style.display = '';
+  document.getElementById('h-t').textContent = score == null ? 'Strategy fit: S&P 500 only' : `Strategy fit ${Math.round(score)}`;
+  heroSet('h-ring1', {'stroke-dasharray': `${(Math.max(0, Math.min(100, score || 0)) / 100 * 53.4).toFixed(1)} 53.4`});
+  g.querySelector('title').textContent = score == null ? 'Strategy fit covers S&P 500 stocks' : `${label || ''} · tap for the strategies`;
+}
+function heroOdds(A) {                                                       // called by the odds checker whenever a stock's evidence updates
+  if (!A || !A.sym) return; const fresh = A.sym !== HERO.sym; HERO.sym = A.sym; HERO.demo = false;
+  document.body.classList.remove('an-empty');
+  const w = A.H?.[0], p = w?.head?.v ?? null, vals = A.own?.spark;
+  const k = document.getElementById('h-k'); if (k) k.textContent = w?.head?.edge ? 'UP NEXT WEEK · SIGNAL' : 'UP NEXT WEEK';
+  if (vals) heroDraw(vals, p, `${A.sym} · past year`);
+  else if (fresh) { const c = document.getElementById('h-cap'); if (c) c.textContent = `${A.sym} · loading…`; const v = document.getElementById('h-v'); if (v) v.textContent = p == null ? '…' : Math.round(p * 100) + '%'; }
+  if (fresh) { const g = document.getElementById('h-fit'); if (g) g.style.display = A.member ? '' : 'none'; if (A.member) document.getElementById('h-t').textContent = 'Strategy fit …';
+    if (!A.member) { const tb = document.getElementById('tl-body'); if (tb) tb.innerHTML = `<p class="note">Strategy fit scores S&amp;P 500 stocks against every validated strategy; ${esc(A.sym)} is not in today's S&amp;P 500.</p>`; } }
+}
+function heroInit() {
+  const box = document.getElementById('hero-search'), s = document.querySelector('#od-panel .od-search');
+  if (box && s && !box.contains(s)) { box.prepend(s); const lead = document.querySelector('#od-panel .od-lead'); if (lead) lead.remove(); }
+  document.querySelectorAll('.hero-try [data-t]').forEach(b => b.onclick = () => { const i = document.getElementById('od-input'); if (i) i.value = b.dataset.t; odGo(b.dataset.t); });
+  const go = id => document.getElementById(id)?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  const card = document.getElementById('h-card'), fit = document.getElementById('h-fit');
+  if (card) card.onclick = () => { if (!HERO.demo) go('od-panel'); };
+  if (fit) fit.onclick = () => { if (!HERO.demo) { const t = document.getElementById('tl-panel'); if (t) t.open = true; go('tl-panel'); } };
 }
 
 </script>
