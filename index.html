@@ -632,6 +632,7 @@
   details.lv-more>summary::-webkit-details-marker{display:none} details.lv-more>summary::before{content:'▸ '} details.lv-more[open]>summary::before{content:'▾ '}
   .lv-idxs{display:flex;flex-wrap:wrap;gap:6px 12px;margin:4px 0 2px} .lv-ix{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
   .lv-ix i{width:12px;height:4px;border-radius:2px;display:inline-block} .lv-ix b{font-variant-numeric:tabular-nums}
+  .od-next{font-size:12.5px;color:var(--ink);background:var(--accent-soft);border-radius:10px;padding:8px 10px;margin-bottom:10px}
   .mv-link{cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
@@ -4887,7 +4888,8 @@ function odCatalyst(A) {
 }
 // ---- one stock: everything we know, per horizon ----
 function odAnalyse(sym, own) {
-  const p = TL.prof.find(r => r.ticker === sym), O = OD.odds, member = !!p, g = p?.sig || {}, f = p ? p.f || {} : (own?.f || {});
+  const p = TL.prof.find(r => r.ticker === sym), O = OD.odds, member = !!p, g = p?.sig || {};
+  const f = {...(own?.f || {}), ...Object.fromEntries(Object.entries(p?.f || {}).filter(([, v]) => v != null))};   // snapshot first, gaps filled from the stock's own bars
   const name = p?.name || own?.asset?.name || '', etf = !p && !!own?.asset?.etf;
   const thin = !p && own?.f && ((own.f.price != null && own.f.price < 5) || (own.f.dollar_vol20 != null && own.f.dollar_vol20 < 2e7));
   const modelOk = O && !etf && !thin && (member || (own?.f && own.f.mom12_1 != null));
@@ -4930,6 +4932,16 @@ function odRankTxt(op) {
   return {band: old ? band.replace("today's", "that day's").replace(' today', ' that day') : band, rank: rank ? `#${rank} of ${n}` : ''};
 }
 const odPatTxt = (dec) => dec >= 9 ? 'scores among the top 20% of stocks' : dec >= 7 ? 'scores above average' : dec >= 5 ? 'scores about average' : dec >= 3 ? 'scores below average' : 'scores among the bottom 20%';
+// when today's open -> close odds will exist, in the viewer's own time zone (computed a few minutes after 09:30 New York)
+function odNextOpen() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}).formatToParts(new Date()).map(x => [x.type, x.value]));
+  const mins = (+p.hour % 24) * 60 + +p.minute, wkend = p.weekday === 'Sat' || p.weekday === 'Sun';
+  if (OD.open?.as_of === odEtToday()) return null;
+  if (wkend) return 'Markets are closed for the weekend: new odds at 09:35 New York time on the next trading day.';
+  if (mins >= 575) return mins < 660 ? "Today's odds are being computed (09:35 New York)…" : "No odds for today yet (holiday or delayed run).";
+  const at = new Date(Date.now() + (575 - mins) * 60e3), h = Math.floor((575 - mins) / 60), m = (575 - mins) % 60;
+  return `Today's odds arrive at ${at.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} your time (09:35 New York), in ${h ? h + ' h ' : ''}${m} min.`;
+}
 const odEtToday = () => new Intl.DateTimeFormat('en-CA', {timeZone: 'America/New_York'}).format(new Date());
 function odTodayTile(A) {                                // the one horizon with a robust edge: S&P 500, from today's open to the close
   const base = OD.openMeta?.base_up ?? 0.505;
@@ -5000,6 +5012,7 @@ function odShowA(A) {
   const TAG = {edge: 'Proven signal', idle: 'Signal not active', weak: 'Weak, unreliable', none: "Tested – doesn't predict", base: 'Typical for this stock', thin: 'Too few cases'};
   // ---- "What this means": three plain sentences, only from evidence that held up in testing ----
   const pl = [];
+  if (A.op && A.op.as_of !== odEtToday() && odNextOpen()) pl.push(`<li><b>${esc(odNextOpen())}</b> The line below is from the last trading day.</li>`);
   if (A.op) {
     const when = A.op.as_of === odEtToday() ? 'Today' : `On ${new Date(A.op.as_of + 'T12:00:00Z').toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'})}`;
     const g = A.op.gap, lean = A.op.p_up < 0.495 ? 'slightly more likely to slip than to rise' : A.op.p_up > 0.515 ? 'slightly more likely to rise than to slip' : 'about as likely to rise as to slip';
@@ -5081,7 +5094,8 @@ function odSignals() {                                 // the two things with a 
     const lab = today ? 'Today' : new Date(OD.open.as_of + 'T12:00:00Z').toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'});
     const row = x => { const d = (x.p_up - base) * 100;
       return `<button class="od-lr" data-t="${esc(x.ticker)}"><b>${esc(x.ticker)}</b><span class="od-lb"><i class="${d >= 0 ? 'up' : 'dn'}" style="width:${Math.min(100, Math.abs(d) / 4 * 100)}%"></i></span><em class="${d >= 0 ? 'pos' : 'neg'}">${odP(x.p_up)}</em></button>`; };
-    html += `<div class="od-board"><div class="od-bh"><b>${lab} from the open</b><span>chance to close above the open · typical ${odP(base)}</span></div>
+    const nx = odNextOpen();
+    html += `<div class="od-board">${nx ? `<div class="od-next">${esc(nx)} Showing the last trading day.</div>` : ''}<div class="od-bh"><b>${lab} from the open</b><span>chance to close above the open · typical ${odP(base)}</span></div>
       <div class="od-cols"><div><div class="od-ch">Best odds</div>${r.slice(0, 5).map(row).join('')}</div><div><div class="od-ch">Weakest</div>${r.slice(-5).reverse().map(row).join('')}</div></div></div>`;
   } else html += `<div class="od-board od-empty"><b>Today from the open</b><span>Odds for every S&amp;P 500 stock appear at about 09:35 New York time on trading days.</span></div>`;
   const s = TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => [r.ticker, r.sig.R18L26 ? 'R18L26' : 'R18P12']);
