@@ -505,9 +505,10 @@
   .vt-dot{width:7px;height:7px;border-radius:50%;background:var(--good);animation:vtPulse 2s ease-in-out infinite}
   .vt button[aria-selected="true"] .vt-dot{background:var(--lime-ink)}
   @keyframes vtPulse{0%,100%{opacity:1}50%{opacity:.35}}
-  body.view-live .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="live"]){display:none!important}
-  body.view-live #ux-bar{display:none!important} body.view-research .wrap > [data-view="live"]{display:none!important}
-  body:not(.view-live):not(.view-research) .wrap > [data-view="live"]{display:none!important}
+  body.v-analyze .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="analyze"]){display:none!important}
+  body.v-accounts .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="accounts"]){display:none!important}
+  body.v-analyze #ux-bar,body.v-accounts #ux-bar{display:none!important} body.v-research .wrap > [data-view]{display:none!important}
+  body:not(.v-analyze):not(.v-accounts):not(.v-research) .wrap > [data-view]{display:none!important}
   @media (max-width:760px){
     .vt{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:120;width:auto;margin:0;justify-content:stretch;
       background:color-mix(in srgb, var(--surface) 82%, transparent);box-shadow:var(--shadow-lg)}
@@ -643,7 +644,7 @@
   .nw-sym{font:600 11px var(--font-ui);padding:2px 8px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer}
   .nw-sym.spx{border-color:color-mix(in srgb, var(--lime) 55%, transparent);color:var(--ink)}
   .nw-foot{font-size:11px;color:var(--muted);margin:8px 0 0}
-  body.view-live .wrap > footer{display:none}
+  body.v-analyze .wrap > footer,body.v-accounts .wrap > footer{display:none}
   .lv-evs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 4px} .lv-evs>span{font-size:12px;color:var(--muted);margin-right:2px}
   .lv-evc{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer}
   .lv-evc i{width:9px;height:9px;border-radius:50%;border:2px solid var(--ink);box-sizing:border-box}
@@ -703,8 +704,72 @@
   .lt-cell{padding:11px 13px} .lt-k{font-size:11.5px} .lt-v{font:800 20px var(--font-display);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
   .lt-s{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lv-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px} .lv-tabs::-webkit-scrollbar{display:none} .lv-tabs .pill{flex:none}
+
+  /* ---- brand v2 (2026-10-22): aurora + contour backdrop, logo, hero, icon badges, section heads, compact header ---- */
+  :root{--backdrop:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22800%22%20fill%3D%22none%22%20stroke%3D%22rgba%2830%2C70%2C60%2C.07%29%22%20stroke-width%3D%221%22%3E%3Cpath%20d%3D%22M0%2C30%20L30%2C38%20L60%2C46%20L90%2C51%20L120%2C54%20L150%2C55%20L180%2C53%20L210%2C51%20L240%2C48%20L270%2C46%20L300%2C45%20L330%2C45%20L360%2C46%20L390%2C47%20L420%2C48%20L450%2C48%20L480%2C46%20L510%2C42%20L540%2C36%20L570%2C28%20L600%2C20%20L630%2C12%20L660%2C6%20L690%2C2%20L720%2C1%20L750%2C2%20L780%2C5%20L810%2C9%20L840%2C13%20L870%2C16%20L900%2C19%20L930%2C20%20L960%2C20%20L990%2C19%20L1020%2C19%20L1050%2C20%20L1080%2C23%20L1110%2C27%20L1140%2C34%20L1170%2C41%20L1200%2C49%22/%3E%3Cpath%20d%3D%22M0%2C116%20L30%2C117%20L60%2C115%20L90%2C113%20L120%2C110%20L150%2C108%20L180%2C107%20L210%2C107%20L240%2C108%20L270%2C109%20L300%2C110%20L330%2C110%20L360%2C108%20L390%2C104%20L420%2C98%20L450%2C90%20L480%2C82%20L510%2C74%20L540%2C68%20L570%2C64%20L600%2C63%20L630%2C64%20L660%2C67%20L690%2C71%20L720%2C75%20L750%2C78%20L780%2C81%20L810%2C82%20L840%2C82%20L870%2C81%20L900%2C81%20L930%2C82%20L960%2C85%20L990%2C89%20L1020%2C96%20L1050%2C103%20L1080%2C110%20L1110%2C117%20L1140%2C122%20L1170%2C124%20L1200%2C124%22/%3E%3Cpath%20d%3D%22M0%2C172%20L30%2C170%20L60%2C169%20L90%2C169%20L120%2C170%20L150%2C171%20L180%2C172%20L210%2C172%20L240%2C171%20L270%2C166%20L300%2C160%20L330%2C153%20L360%2C144%20L390%2C137%20L420%2C130%20L450%2C126%20L480%2C125%20L510%2C126%20L540%2C128%20L570%2C133%20L600%2C137%20L630%2C140%20L660%2C143%20L690%2C144%20L720%2C144%20L750%2C143%20L780%2C143%20L810%2C144%20L840%2C146%20L870%2C151%20L900%2C157%20L930%2C165%20L960%2C172%20L990%2C179%20L1020%2C184%20L1050%2C186%20L1080%2C186%20L1110%2C183%20L1140%2C178%20L1170%2C172%20L1200%2C167%22/%3E%3Cpath%20d%3D%22M0%2C232%20L30%2C233%20L60%2C234%20L90%2C234%20L120%2C233%20L150%2C229%20L180%2C222%20L210%2C215%20L240%2C207%20L270%2C199%20L300%2C192%20L330%2C188%20L360%2C187%20L390%2C188%20L420%2C190%20L450%2C194%20L480%2C199%20L510%2C202%20L540%2C205%20L570%2C206%20L600%2C206%20L630%2C205%20L660%2C205%20L690%2C206%20L720%2C208%20L750%2C213%20L780%2C219%20L810%2C227%20L840%2C234%20L870%2C241%20L900%2C246%20L930%2C248%20L960%2C248%20L990%2C245%20L1020%2C240%20L1050%2C235%20L1080%2C229%20L1110%2C224%20L1140%2C221%20L1170%2C219%20L1200%2C219%22/%3E%3Cpath%20d%3D%22M0%2C295%20L30%2C291%20L60%2C285%20L90%2C277%20L120%2C269%20L150%2C261%20L180%2C254%20L210%2C250%20L240%2C249%20L270%2C250%20L300%2C252%20L330%2C256%20L360%2C261%20L390%2C264%20L420%2C267%20L450%2C268%20L480%2C268%20L510%2C267%20L540%2C267%20L570%2C268%20L600%2C270%20L630%2C275%20L660%2C281%20L690%2C288%20L720%2C296%20L750%2C303%20L780%2C308%20L810%2C310%20L840%2C310%20L870%2C307%20L900%2C302%20L930%2C297%20L960%2C291%20L990%2C287%20L1020%2C283%20L1050%2C282%20L1080%2C281%20L1110%2C281%20L1140%2C281%20L1170%2C280%20L1200%2C277%22/%3E%3Cpath%20d%3D%22M0%2C331%20L30%2C323%20L60%2C317%20L90%2C312%20L120%2C311%20L150%2C312%20L180%2C314%20L210%2C318%20L240%2C323%20L270%2C326%20L300%2C328%20L330%2C330%20L360%2C329%20L390%2C329%20L420%2C329%20L450%2C330%20L480%2C332%20L510%2C337%20L540%2C343%20L570%2C350%20L600%2C358%20L630%2C365%20L660%2C370%20L690%2C372%20L720%2C372%20L750%2C369%20L780%2C364%20L810%2C359%20L840%2C353%20L870%2C349%20L900%2C345%20L930%2C344%20L960%2C343%20L990%2C343%20L1020%2C343%20L1050%2C342%20L1080%2C339%20L1110%2C335%20L1140%2C329%20L1170%2C322%20L1200%2C316%22/%3E%3Cpath%20d%3D%22M0%2C373%20L30%2C374%20L60%2C376%20L90%2C380%20L120%2C385%20L150%2C388%20L180%2C390%20L210%2C391%20L240%2C391%20L270%2C391%20L300%2C391%20L330%2C391%20L360%2C394%20L390%2C398%20L420%2C405%20L450%2C412%20L480%2C420%20L510%2C426%20L540%2C431%20L570%2C434%20L600%2C434%20L630%2C431%20L660%2C426%20L690%2C421%20L720%2C415%20L750%2C411%20L780%2C407%20L810%2C406%20L840%2C405%20L870%2C405%20L900%2C405%20L930%2C404%20L960%2C401%20L990%2C397%20L1020%2C391%20L1050%2C384%20L1080%2C378%20L1110%2C373%20L1140%2C370%20L1170%2C369%20L1200%2C371%22/%3E%3Cpath%20d%3D%22M0%2C446%20L30%2C450%20L60%2C452%20L90%2C453%20L120%2C453%20L150%2C453%20L180%2C452%20L210%2C453%20L240%2C456%20L270%2C460%20L300%2C467%20L330%2C474%20L360%2C482%20L390%2C488%20L420%2C493%20L450%2C496%20L480%2C496%20L510%2C493%20L540%2C488%20L570%2C483%20L600%2C477%20L630%2C473%20L660%2C470%20L690%2C468%20L720%2C467%20L750%2C467%20L780%2C467%20L810%2C466%20L840%2C463%20L870%2C459%20L900%2C453%20L930%2C446%20L960%2C440%20L990%2C435%20L1020%2C432%20L1050%2C431%20L1080%2C433%20L1110%2C438%20L1140%2C444%20L1170%2C451%20L1200%2C458%22/%3E%3Cpath%20d%3D%22M0%2C515%20L30%2C515%20L60%2C514%20L90%2C515%20L120%2C518%20L150%2C522%20L180%2C528%20L210%2C536%20L240%2C543%20L270%2C550%20L300%2C555%20L330%2C558%20L360%2C558%20L390%2C555%20L420%2C551%20L450%2C545%20L480%2C540%20L510%2C535%20L540%2C532%20L570%2C530%20L600%2C529%20L630%2C529%20L660%2C529%20L690%2C528%20L720%2C525%20L750%2C521%20L780%2C515%20L810%2C509%20L840%2C502%20L870%2C497%20L900%2C494%20L930%2C493%20L960%2C495%20L990%2C500%20L1020%2C506%20L1050%2C513%20L1080%2C519%20L1110%2C525%20L1140%2C528%20L1170%2C530%20L1200%2C531%22/%3E%3Cpath%20d%3D%22M0%2C580%20L30%2C584%20L60%2C590%20L90%2C598%20L120%2C605%20L150%2C612%20L180%2C617%20L210%2C620%20L240%2C620%20L270%2C617%20L300%2C613%20L330%2C607%20L360%2C602%20L390%2C597%20L420%2C594%20L450%2C592%20L480%2C592%20L510%2C592%20L540%2C591%20L570%2C590%20L600%2C588%20L630%2C583%20L660%2C577%20L690%2C571%20L720%2C564%20L750%2C559%20L780%2C556%20L810%2C555%20L840%2C557%20L870%2C562%20L900%2C568%20L930%2C575%20L960%2C581%20L990%2C587%20L1020%2C590%20L1050%2C592%20L1080%2C593%20L1110%2C593%20L1140%2C593%20L1170%2C594%20L1200%2C596%22/%3E%3Cpath%20d%3D%22M0%2C667%20L30%2C674%20L60%2C679%20L90%2C682%20L120%2C682%20L150%2C679%20L180%2C675%20L210%2C669%20L240%2C664%20L270%2C659%20L300%2C656%20L330%2C654%20L360%2C654%20L390%2C654%20L420%2C653%20L450%2C652%20L480%2C650%20L510%2C645%20L540%2C639%20L570%2C633%20L600%2C626%20L630%2C621%20L660%2C618%20L690%2C617%20L720%2C619%20L750%2C624%20L780%2C630%20L810%2C637%20L840%2C643%20L870%2C648%20L900%2C652%20L930%2C654%20L960%2C655%20L990%2C655%20L1020%2C655%20L1050%2C656%20L1080%2C658%20L1110%2C662%20L1140%2C667%20L1170%2C672%20L1200%2C677%22/%3E%3Cpath%20d%3D%22M0%2C744%20L30%2C741%20L60%2C737%20L90%2C731%20L120%2C726%20L150%2C721%20L180%2C718%20L210%2C716%20L240%2C716%20L270%2C716%20L300%2C716%20L330%2C714%20L360%2C712%20L390%2C707%20L420%2C702%20L450%2C695%20L480%2C688%20L510%2C683%20L540%2C680%20L570%2C679%20L600%2C681%20L630%2C686%20L660%2C692%20L690%2C698%20L720%2C705%20L750%2C710%20L780%2C714%20L810%2C716%20L840%2C717%20L870%2C717%20L900%2C717%20L930%2C718%20L960%2C720%20L990%2C724%20L1020%2C729%20L1050%2C734%20L1080%2C739%20L1110%2C742%20L1140%2C744%20L1170%2C742%20L1200%2C739%22/%3E%3Cpath%20d%3D%22M0%2C788%20L30%2C783%20L60%2C780%20L90%2C778%20L120%2C778%20L150%2C778%20L180%2C778%20L210%2C777%20L240%2C774%20L270%2C770%20L300%2C764%20L330%2C757%20L360%2C751%20L390%2C745%20L420%2C742%20L450%2C741%20L480%2C743%20L510%2C747%20L540%2C754%20L570%2C760%20L600%2C767%20L630%2C772%20L660%2C776%20L690%2C778%20L720%2C779%20L750%2C779%20L780%2C779%20L810%2C779%20L840%2C782%20L870%2C786%20L900%2C791%20L930%2C796%20L960%2C801%20L990%2C804%20L1020%2C806%20L1050%2C805%20L1080%2C801%20L1110%2C795%20L1140%2C787%20L1170%2C779%20L1200%2C772%22/%3E%3C/svg%3E") 0 0/1200px 800px repeat, radial-gradient(900px 620px at 0% -5%, #cfeee2 0%, transparent 62%), radial-gradient(780px 560px at 105% 18%, #eef5c9 0%, transparent 60%), radial-gradient(1000px 700px at 50% 112%, #d8e3f6 0%, transparent 62%), linear-gradient(170deg,#eef3f3,#e5ebed)}
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){--backdrop:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22800%22%20fill%3D%22none%22%20stroke%3D%22rgba%28255%2C255%2C255%2C.035%29%22%20stroke-width%3D%221%22%3E%3Cpath%20d%3D%22M0%2C30%20L30%2C38%20L60%2C46%20L90%2C51%20L120%2C54%20L150%2C55%20L180%2C53%20L210%2C51%20L240%2C48%20L270%2C46%20L300%2C45%20L330%2C45%20L360%2C46%20L390%2C47%20L420%2C48%20L450%2C48%20L480%2C46%20L510%2C42%20L540%2C36%20L570%2C28%20L600%2C20%20L630%2C12%20L660%2C6%20L690%2C2%20L720%2C1%20L750%2C2%20L780%2C5%20L810%2C9%20L840%2C13%20L870%2C16%20L900%2C19%20L930%2C20%20L960%2C20%20L990%2C19%20L1020%2C19%20L1050%2C20%20L1080%2C23%20L1110%2C27%20L1140%2C34%20L1170%2C41%20L1200%2C49%22/%3E%3Cpath%20d%3D%22M0%2C116%20L30%2C117%20L60%2C115%20L90%2C113%20L120%2C110%20L150%2C108%20L180%2C107%20L210%2C107%20L240%2C108%20L270%2C109%20L300%2C110%20L330%2C110%20L360%2C108%20L390%2C104%20L420%2C98%20L450%2C90%20L480%2C82%20L510%2C74%20L540%2C68%20L570%2C64%20L600%2C63%20L630%2C64%20L660%2C67%20L690%2C71%20L720%2C75%20L750%2C78%20L780%2C81%20L810%2C82%20L840%2C82%20L870%2C81%20L900%2C81%20L930%2C82%20L960%2C85%20L990%2C89%20L1020%2C96%20L1050%2C103%20L1080%2C110%20L1110%2C117%20L1140%2C122%20L1170%2C124%20L1200%2C124%22/%3E%3Cpath%20d%3D%22M0%2C172%20L30%2C170%20L60%2C169%20L90%2C169%20L120%2C170%20L150%2C171%20L180%2C172%20L210%2C172%20L240%2C171%20L270%2C166%20L300%2C160%20L330%2C153%20L360%2C144%20L390%2C137%20L420%2C130%20L450%2C126%20L480%2C125%20L510%2C126%20L540%2C128%20L570%2C133%20L600%2C137%20L630%2C140%20L660%2C143%20L690%2C144%20L720%2C144%20L750%2C143%20L780%2C143%20L810%2C144%20L840%2C146%20L870%2C151%20L900%2C157%20L930%2C165%20L960%2C172%20L990%2C179%20L1020%2C184%20L1050%2C186%20L1080%2C186%20L1110%2C183%20L1140%2C178%20L1170%2C172%20L1200%2C167%22/%3E%3Cpath%20d%3D%22M0%2C232%20L30%2C233%20L60%2C234%20L90%2C234%20L120%2C233%20L150%2C229%20L180%2C222%20L210%2C215%20L240%2C207%20L270%2C199%20L300%2C192%20L330%2C188%20L360%2C187%20L390%2C188%20L420%2C190%20L450%2C194%20L480%2C199%20L510%2C202%20L540%2C205%20L570%2C206%20L600%2C206%20L630%2C205%20L660%2C205%20L690%2C206%20L720%2C208%20L750%2C213%20L780%2C219%20L810%2C227%20L840%2C234%20L870%2C241%20L900%2C246%20L930%2C248%20L960%2C248%20L990%2C245%20L1020%2C240%20L1050%2C235%20L1080%2C229%20L1110%2C224%20L1140%2C221%20L1170%2C219%20L1200%2C219%22/%3E%3Cpath%20d%3D%22M0%2C295%20L30%2C291%20L60%2C285%20L90%2C277%20L120%2C269%20L150%2C261%20L180%2C254%20L210%2C250%20L240%2C249%20L270%2C250%20L300%2C252%20L330%2C256%20L360%2C261%20L390%2C264%20L420%2C267%20L450%2C268%20L480%2C268%20L510%2C267%20L540%2C267%20L570%2C268%20L600%2C270%20L630%2C275%20L660%2C281%20L690%2C288%20L720%2C296%20L750%2C303%20L780%2C308%20L810%2C310%20L840%2C310%20L870%2C307%20L900%2C302%20L930%2C297%20L960%2C291%20L990%2C287%20L1020%2C283%20L1050%2C282%20L1080%2C281%20L1110%2C281%20L1140%2C281%20L1170%2C280%20L1200%2C277%22/%3E%3Cpath%20d%3D%22M0%2C331%20L30%2C323%20L60%2C317%20L90%2C312%20L120%2C311%20L150%2C312%20L180%2C314%20L210%2C318%20L240%2C323%20L270%2C326%20L300%2C328%20L330%2C330%20L360%2C329%20L390%2C329%20L420%2C329%20L450%2C330%20L480%2C332%20L510%2C337%20L540%2C343%20L570%2C350%20L600%2C358%20L630%2C365%20L660%2C370%20L690%2C372%20L720%2C372%20L750%2C369%20L780%2C364%20L810%2C359%20L840%2C353%20L870%2C349%20L900%2C345%20L930%2C344%20L960%2C343%20L990%2C343%20L1020%2C343%20L1050%2C342%20L1080%2C339%20L1110%2C335%20L1140%2C329%20L1170%2C322%20L1200%2C316%22/%3E%3Cpath%20d%3D%22M0%2C373%20L30%2C374%20L60%2C376%20L90%2C380%20L120%2C385%20L150%2C388%20L180%2C390%20L210%2C391%20L240%2C391%20L270%2C391%20L300%2C391%20L330%2C391%20L360%2C394%20L390%2C398%20L420%2C405%20L450%2C412%20L480%2C420%20L510%2C426%20L540%2C431%20L570%2C434%20L600%2C434%20L630%2C431%20L660%2C426%20L690%2C421%20L720%2C415%20L750%2C411%20L780%2C407%20L810%2C406%20L840%2C405%20L870%2C405%20L900%2C405%20L930%2C404%20L960%2C401%20L990%2C397%20L1020%2C391%20L1050%2C384%20L1080%2C378%20L1110%2C373%20L1140%2C370%20L1170%2C369%20L1200%2C371%22/%3E%3Cpath%20d%3D%22M0%2C446%20L30%2C450%20L60%2C452%20L90%2C453%20L120%2C453%20L150%2C453%20L180%2C452%20L210%2C453%20L240%2C456%20L270%2C460%20L300%2C467%20L330%2C474%20L360%2C482%20L390%2C488%20L420%2C493%20L450%2C496%20L480%2C496%20L510%2C493%20L540%2C488%20L570%2C483%20L600%2C477%20L630%2C473%20L660%2C470%20L690%2C468%20L720%2C467%20L750%2C467%20L780%2C467%20L810%2C466%20L840%2C463%20L870%2C459%20L900%2C453%20L930%2C446%20L960%2C440%20L990%2C435%20L1020%2C432%20L1050%2C431%20L1080%2C433%20L1110%2C438%20L1140%2C444%20L1170%2C451%20L1200%2C458%22/%3E%3Cpath%20d%3D%22M0%2C515%20L30%2C515%20L60%2C514%20L90%2C515%20L120%2C518%20L150%2C522%20L180%2C528%20L210%2C536%20L240%2C543%20L270%2C550%20L300%2C555%20L330%2C558%20L360%2C558%20L390%2C555%20L420%2C551%20L450%2C545%20L480%2C540%20L510%2C535%20L540%2C532%20L570%2C530%20L600%2C529%20L630%2C529%20L660%2C529%20L690%2C528%20L720%2C525%20L750%2C521%20L780%2C515%20L810%2C509%20L840%2C502%20L870%2C497%20L900%2C494%20L930%2C493%20L960%2C495%20L990%2C500%20L1020%2C506%20L1050%2C513%20L1080%2C519%20L1110%2C525%20L1140%2C528%20L1170%2C530%20L1200%2C531%22/%3E%3Cpath%20d%3D%22M0%2C580%20L30%2C584%20L60%2C590%20L90%2C598%20L120%2C605%20L150%2C612%20L180%2C617%20L210%2C620%20L240%2C620%20L270%2C617%20L300%2C613%20L330%2C607%20L360%2C602%20L390%2C597%20L420%2C594%20L450%2C592%20L480%2C592%20L510%2C592%20L540%2C591%20L570%2C590%20L600%2C588%20L630%2C583%20L660%2C577%20L690%2C571%20L720%2C564%20L750%2C559%20L780%2C556%20L810%2C555%20L840%2C557%20L870%2C562%20L900%2C568%20L930%2C575%20L960%2C581%20L990%2C587%20L1020%2C590%20L1050%2C592%20L1080%2C593%20L1110%2C593%20L1140%2C593%20L1170%2C594%20L1200%2C596%22/%3E%3Cpath%20d%3D%22M0%2C667%20L30%2C674%20L60%2C679%20L90%2C682%20L120%2C682%20L150%2C679%20L180%2C675%20L210%2C669%20L240%2C664%20L270%2C659%20L300%2C656%20L330%2C654%20L360%2C654%20L390%2C654%20L420%2C653%20L450%2C652%20L480%2C650%20L510%2C645%20L540%2C639%20L570%2C633%20L600%2C626%20L630%2C621%20L660%2C618%20L690%2C617%20L720%2C619%20L750%2C624%20L780%2C630%20L810%2C637%20L840%2C643%20L870%2C648%20L900%2C652%20L930%2C654%20L960%2C655%20L990%2C655%20L1020%2C655%20L1050%2C656%20L1080%2C658%20L1110%2C662%20L1140%2C667%20L1170%2C672%20L1200%2C677%22/%3E%3Cpath%20d%3D%22M0%2C744%20L30%2C741%20L60%2C737%20L90%2C731%20L120%2C726%20L150%2C721%20L180%2C718%20L210%2C716%20L240%2C716%20L270%2C716%20L300%2C716%20L330%2C714%20L360%2C712%20L390%2C707%20L420%2C702%20L450%2C695%20L480%2C688%20L510%2C683%20L540%2C680%20L570%2C679%20L600%2C681%20L630%2C686%20L660%2C692%20L690%2C698%20L720%2C705%20L750%2C710%20L780%2C714%20L810%2C716%20L840%2C717%20L870%2C717%20L900%2C717%20L930%2C718%20L960%2C720%20L990%2C724%20L1020%2C729%20L1050%2C734%20L1080%2C739%20L1110%2C742%20L1140%2C744%20L1170%2C742%20L1200%2C739%22/%3E%3Cpath%20d%3D%22M0%2C788%20L30%2C783%20L60%2C780%20L90%2C778%20L120%2C778%20L150%2C778%20L180%2C778%20L210%2C777%20L240%2C774%20L270%2C770%20L300%2C764%20L330%2C757%20L360%2C751%20L390%2C745%20L420%2C742%20L450%2C741%20L480%2C743%20L510%2C747%20L540%2C754%20L570%2C760%20L600%2C767%20L630%2C772%20L660%2C776%20L690%2C778%20L720%2C779%20L750%2C779%20L780%2C779%20L810%2C779%20L840%2C782%20L870%2C786%20L900%2C791%20L930%2C796%20L960%2C801%20L990%2C804%20L1020%2C806%20L1050%2C805%20L1080%2C801%20L1110%2C795%20L1140%2C787%20L1170%2C779%20L1200%2C772%22/%3E%3C/svg%3E") 0 0/1200px 800px repeat, radial-gradient(900px 620px at 0% -5%, rgba(63,184,148,.20), transparent 62%), radial-gradient(780px 560px at 105% 18%, rgba(199,216,74,.11), transparent 60%), radial-gradient(1000px 700px at 50% 112%, rgba(80,120,200,.16), transparent 62%), linear-gradient(170deg,#162026,#0f161a)} }
+  :root[data-theme="dark"]{--backdrop:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22800%22%20fill%3D%22none%22%20stroke%3D%22rgba%28255%2C255%2C255%2C.035%29%22%20stroke-width%3D%221%22%3E%3Cpath%20d%3D%22M0%2C30%20L30%2C38%20L60%2C46%20L90%2C51%20L120%2C54%20L150%2C55%20L180%2C53%20L210%2C51%20L240%2C48%20L270%2C46%20L300%2C45%20L330%2C45%20L360%2C46%20L390%2C47%20L420%2C48%20L450%2C48%20L480%2C46%20L510%2C42%20L540%2C36%20L570%2C28%20L600%2C20%20L630%2C12%20L660%2C6%20L690%2C2%20L720%2C1%20L750%2C2%20L780%2C5%20L810%2C9%20L840%2C13%20L870%2C16%20L900%2C19%20L930%2C20%20L960%2C20%20L990%2C19%20L1020%2C19%20L1050%2C20%20L1080%2C23%20L1110%2C27%20L1140%2C34%20L1170%2C41%20L1200%2C49%22/%3E%3Cpath%20d%3D%22M0%2C116%20L30%2C117%20L60%2C115%20L90%2C113%20L120%2C110%20L150%2C108%20L180%2C107%20L210%2C107%20L240%2C108%20L270%2C109%20L300%2C110%20L330%2C110%20L360%2C108%20L390%2C104%20L420%2C98%20L450%2C90%20L480%2C82%20L510%2C74%20L540%2C68%20L570%2C64%20L600%2C63%20L630%2C64%20L660%2C67%20L690%2C71%20L720%2C75%20L750%2C78%20L780%2C81%20L810%2C82%20L840%2C82%20L870%2C81%20L900%2C81%20L930%2C82%20L960%2C85%20L990%2C89%20L1020%2C96%20L1050%2C103%20L1080%2C110%20L1110%2C117%20L1140%2C122%20L1170%2C124%20L1200%2C124%22/%3E%3Cpath%20d%3D%22M0%2C172%20L30%2C170%20L60%2C169%20L90%2C169%20L120%2C170%20L150%2C171%20L180%2C172%20L210%2C172%20L240%2C171%20L270%2C166%20L300%2C160%20L330%2C153%20L360%2C144%20L390%2C137%20L420%2C130%20L450%2C126%20L480%2C125%20L510%2C126%20L540%2C128%20L570%2C133%20L600%2C137%20L630%2C140%20L660%2C143%20L690%2C144%20L720%2C144%20L750%2C143%20L780%2C143%20L810%2C144%20L840%2C146%20L870%2C151%20L900%2C157%20L930%2C165%20L960%2C172%20L990%2C179%20L1020%2C184%20L1050%2C186%20L1080%2C186%20L1110%2C183%20L1140%2C178%20L1170%2C172%20L1200%2C167%22/%3E%3Cpath%20d%3D%22M0%2C232%20L30%2C233%20L60%2C234%20L90%2C234%20L120%2C233%20L150%2C229%20L180%2C222%20L210%2C215%20L240%2C207%20L270%2C199%20L300%2C192%20L330%2C188%20L360%2C187%20L390%2C188%20L420%2C190%20L450%2C194%20L480%2C199%20L510%2C202%20L540%2C205%20L570%2C206%20L600%2C206%20L630%2C205%20L660%2C205%20L690%2C206%20L720%2C208%20L750%2C213%20L780%2C219%20L810%2C227%20L840%2C234%20L870%2C241%20L900%2C246%20L930%2C248%20L960%2C248%20L990%2C245%20L1020%2C240%20L1050%2C235%20L1080%2C229%20L1110%2C224%20L1140%2C221%20L1170%2C219%20L1200%2C219%22/%3E%3Cpath%20d%3D%22M0%2C295%20L30%2C291%20L60%2C285%20L90%2C277%20L120%2C269%20L150%2C261%20L180%2C254%20L210%2C250%20L240%2C249%20L270%2C250%20L300%2C252%20L330%2C256%20L360%2C261%20L390%2C264%20L420%2C267%20L450%2C268%20L480%2C268%20L510%2C267%20L540%2C267%20L570%2C268%20L600%2C270%20L630%2C275%20L660%2C281%20L690%2C288%20L720%2C296%20L750%2C303%20L780%2C308%20L810%2C310%20L840%2C310%20L870%2C307%20L900%2C302%20L930%2C297%20L960%2C291%20L990%2C287%20L1020%2C283%20L1050%2C282%20L1080%2C281%20L1110%2C281%20L1140%2C281%20L1170%2C280%20L1200%2C277%22/%3E%3Cpath%20d%3D%22M0%2C331%20L30%2C323%20L60%2C317%20L90%2C312%20L120%2C311%20L150%2C312%20L180%2C314%20L210%2C318%20L240%2C323%20L270%2C326%20L300%2C328%20L330%2C330%20L360%2C329%20L390%2C329%20L420%2C329%20L450%2C330%20L480%2C332%20L510%2C337%20L540%2C343%20L570%2C350%20L600%2C358%20L630%2C365%20L660%2C370%20L690%2C372%20L720%2C372%20L750%2C369%20L780%2C364%20L810%2C359%20L840%2C353%20L870%2C349%20L900%2C345%20L930%2C344%20L960%2C343%20L990%2C343%20L1020%2C343%20L1050%2C342%20L1080%2C339%20L1110%2C335%20L1140%2C329%20L1170%2C322%20L1200%2C316%22/%3E%3Cpath%20d%3D%22M0%2C373%20L30%2C374%20L60%2C376%20L90%2C380%20L120%2C385%20L150%2C388%20L180%2C390%20L210%2C391%20L240%2C391%20L270%2C391%20L300%2C391%20L330%2C391%20L360%2C394%20L390%2C398%20L420%2C405%20L450%2C412%20L480%2C420%20L510%2C426%20L540%2C431%20L570%2C434%20L600%2C434%20L630%2C431%20L660%2C426%20L690%2C421%20L720%2C415%20L750%2C411%20L780%2C407%20L810%2C406%20L840%2C405%20L870%2C405%20L900%2C405%20L930%2C404%20L960%2C401%20L990%2C397%20L1020%2C391%20L1050%2C384%20L1080%2C378%20L1110%2C373%20L1140%2C370%20L1170%2C369%20L1200%2C371%22/%3E%3Cpath%20d%3D%22M0%2C446%20L30%2C450%20L60%2C452%20L90%2C453%20L120%2C453%20L150%2C453%20L180%2C452%20L210%2C453%20L240%2C456%20L270%2C460%20L300%2C467%20L330%2C474%20L360%2C482%20L390%2C488%20L420%2C493%20L450%2C496%20L480%2C496%20L510%2C493%20L540%2C488%20L570%2C483%20L600%2C477%20L630%2C473%20L660%2C470%20L690%2C468%20L720%2C467%20L750%2C467%20L780%2C467%20L810%2C466%20L840%2C463%20L870%2C459%20L900%2C453%20L930%2C446%20L960%2C440%20L990%2C435%20L1020%2C432%20L1050%2C431%20L1080%2C433%20L1110%2C438%20L1140%2C444%20L1170%2C451%20L1200%2C458%22/%3E%3Cpath%20d%3D%22M0%2C515%20L30%2C515%20L60%2C514%20L90%2C515%20L120%2C518%20L150%2C522%20L180%2C528%20L210%2C536%20L240%2C543%20L270%2C550%20L300%2C555%20L330%2C558%20L360%2C558%20L390%2C555%20L420%2C551%20L450%2C545%20L480%2C540%20L510%2C535%20L540%2C532%20L570%2C530%20L600%2C529%20L630%2C529%20L660%2C529%20L690%2C528%20L720%2C525%20L750%2C521%20L780%2C515%20L810%2C509%20L840%2C502%20L870%2C497%20L900%2C494%20L930%2C493%20L960%2C495%20L990%2C500%20L1020%2C506%20L1050%2C513%20L1080%2C519%20L1110%2C525%20L1140%2C528%20L1170%2C530%20L1200%2C531%22/%3E%3Cpath%20d%3D%22M0%2C580%20L30%2C584%20L60%2C590%20L90%2C598%20L120%2C605%20L150%2C612%20L180%2C617%20L210%2C620%20L240%2C620%20L270%2C617%20L300%2C613%20L330%2C607%20L360%2C602%20L390%2C597%20L420%2C594%20L450%2C592%20L480%2C592%20L510%2C592%20L540%2C591%20L570%2C590%20L600%2C588%20L630%2C583%20L660%2C577%20L690%2C571%20L720%2C564%20L750%2C559%20L780%2C556%20L810%2C555%20L840%2C557%20L870%2C562%20L900%2C568%20L930%2C575%20L960%2C581%20L990%2C587%20L1020%2C590%20L1050%2C592%20L1080%2C593%20L1110%2C593%20L1140%2C593%20L1170%2C594%20L1200%2C596%22/%3E%3Cpath%20d%3D%22M0%2C667%20L30%2C674%20L60%2C679%20L90%2C682%20L120%2C682%20L150%2C679%20L180%2C675%20L210%2C669%20L240%2C664%20L270%2C659%20L300%2C656%20L330%2C654%20L360%2C654%20L390%2C654%20L420%2C653%20L450%2C652%20L480%2C650%20L510%2C645%20L540%2C639%20L570%2C633%20L600%2C626%20L630%2C621%20L660%2C618%20L690%2C617%20L720%2C619%20L750%2C624%20L780%2C630%20L810%2C637%20L840%2C643%20L870%2C648%20L900%2C652%20L930%2C654%20L960%2C655%20L990%2C655%20L1020%2C655%20L1050%2C656%20L1080%2C658%20L1110%2C662%20L1140%2C667%20L1170%2C672%20L1200%2C677%22/%3E%3Cpath%20d%3D%22M0%2C744%20L30%2C741%20L60%2C737%20L90%2C731%20L120%2C726%20L150%2C721%20L180%2C718%20L210%2C716%20L240%2C716%20L270%2C716%20L300%2C716%20L330%2C714%20L360%2C712%20L390%2C707%20L420%2C702%20L450%2C695%20L480%2C688%20L510%2C683%20L540%2C680%20L570%2C679%20L600%2C681%20L630%2C686%20L660%2C692%20L690%2C698%20L720%2C705%20L750%2C710%20L780%2C714%20L810%2C716%20L840%2C717%20L870%2C717%20L900%2C717%20L930%2C718%20L960%2C720%20L990%2C724%20L1020%2C729%20L1050%2C734%20L1080%2C739%20L1110%2C742%20L1140%2C744%20L1170%2C742%20L1200%2C739%22/%3E%3Cpath%20d%3D%22M0%2C788%20L30%2C783%20L60%2C780%20L90%2C778%20L120%2C778%20L150%2C778%20L180%2C778%20L210%2C777%20L240%2C774%20L270%2C770%20L300%2C764%20L330%2C757%20L360%2C751%20L390%2C745%20L420%2C742%20L450%2C741%20L480%2C743%20L510%2C747%20L540%2C754%20L570%2C760%20L600%2C767%20L630%2C772%20L660%2C776%20L690%2C778%20L720%2C779%20L750%2C779%20L780%2C779%20L810%2C779%20L840%2C782%20L870%2C786%20L900%2C791%20L930%2C796%20L960%2C801%20L990%2C804%20L1020%2C806%20L1050%2C805%20L1080%2C801%20L1110%2C795%20L1140%2C787%20L1170%2C779%20L1200%2C772%22/%3E%3C/svg%3E") 0 0/1200px 800px repeat, radial-gradient(900px 620px at 0% -5%, rgba(63,184,148,.20), transparent 62%), radial-gradient(780px 560px at 105% 18%, rgba(199,216,74,.11), transparent 60%), radial-gradient(1000px 700px at 50% 112%, rgba(80,120,200,.16), transparent 62%), linear-gradient(170deg,#162026,#0f161a)}
+  .brand{gap:12px} .brand-mark{background:none!important;width:42px;height:42px;border-radius:12px;box-shadow:0 12px 26px -14px rgba(63,184,148,.9)}
+  .brand-mark svg{width:100%!important;height:100%!important;display:block}
+  .brand-txt{display:flex;flex-direction:column;line-height:1}
+  .brand-txt small{font:700 10px var(--font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:6px;-webkit-text-fill-color:var(--muted)}
+  header .theme-toggle{width:40px;height:40px;padding:0;display:grid;place-items:center;border-radius:50%;flex:none}
+  details.account summary{width:40px;height:40px;padding:0!important;border-radius:50%;display:grid;place-items:center;font:700 15px var(--font-display);
+    background:linear-gradient(135deg,#3fb894,#c7d84a)!important;color:#10200f!important;border:0!important;list-style:none;cursor:pointer}
+  details.account summary::-webkit-details-marker{display:none}
+  .acct-mail{font-size:12px;color:var(--muted);padding:2px 2px 8px;margin-bottom:6px;border-bottom:1px solid var(--glass-line);white-space:nowrap}
+  body.v-analyze #view-sub,body.v-accounts #view-sub{display:none}
+  .hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:center;
+    padding:28px 28px 24px;margin:0 0 18px;border-radius:26px;border:1px solid var(--glass-line);box-shadow:var(--shadow-lg);
+    background:radial-gradient(520px 280px at 100% 0%, color-mix(in srgb, var(--lime) 20%, transparent), transparent 70%),
+               radial-gradient(460px 300px at 0% 100%, rgba(63,184,148,.18), transparent 70%), var(--glass);
+    -webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%)}
+  .hero-kick{display:inline-flex;align-items:center;gap:8px;font:700 10.5px var(--font-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--accent);
+    padding:6px 12px;border-radius:999px;background:var(--accent-soft);border:1px solid color-mix(in srgb, var(--accent) 25%, transparent)}
+  .hero-kick i{width:6px;height:6px;border-radius:50%;background:var(--good);animation:vtPulse 2s ease-in-out infinite}
+  .hero h2{font:800 36px/1.07 var(--font-display);letter-spacing:-.035em;margin:16px 0 12px;color:var(--ink)}
+  .hero h2 em{font-style:normal;display:block;background:linear-gradient(95deg,var(--accent),#3fb894);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .hero p{font-size:14.5px;line-height:1.6;color:var(--ink-2);margin:0 0 18px;max-width:48ch}
+  .hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:420px}
+  .hero-stats div{padding:10px 12px;border-radius:14px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .hero-stats b{display:block;font:800 17px var(--font-display);letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+  .hero-stats span{display:block;font-size:11px;line-height:1.3;color:var(--muted);margin-top:3px}
+  .hero-art svg{width:100%;height:auto;display:block;overflow:visible}
+  .hs1{stop-color:var(--lime);stop-opacity:.42} .hs0{stop-color:var(--lime);stop-opacity:0} .hl0{stop-color:#3fb894} .hl1{stop-color:var(--lime)}
+  .hgrid path{stroke:var(--glass-line);stroke-width:1;stroke-dasharray:3 5}
+  .h-line{fill:none;stroke-width:3;stroke-linecap:round} .h-glow{fill:none;stroke-width:7;opacity:.55}
+  .h-up{fill:var(--good);opacity:.16} .h-dn{fill:var(--bad);opacity:.11}
+  .h-mid{stroke:var(--ink-2);stroke-width:1.4;stroke-dasharray:4 4;opacity:.6} .h-edge{stroke:var(--muted);stroke-width:1;opacity:.35}
+  .h-pt{fill:var(--lime);stroke:var(--surface);stroke-width:2.5} .h-halo{fill:var(--lime);opacity:.22;transform-origin:250px 92px;animation:hHalo 2.4s ease-in-out infinite}
+  @keyframes hHalo{0%,100%{transform:scale(.7);opacity:.28}50%{transform:scale(1.25);opacity:.08}}
+  .h-card rect:first-child{fill:var(--surface);fill-opacity:.88;stroke:var(--glass-line)} .h-card{filter:drop-shadow(0 8px 14px rgba(0,0,0,.18))}
+  .h-k{font:700 7.5px var(--font-ui);letter-spacing:.08em;fill:var(--muted)} .h-v{font:800 19px var(--font-display);fill:var(--good)} .h-t{font:700 11.5px var(--font-ui);fill:var(--ink)}
+  .h-bar0{fill:var(--glass-line)} .h-bar1{fill:var(--good)}
+  .h-ring0{fill:none;stroke:var(--glass-line);stroke-width:3.4} .h-ring1{fill:none;stroke:#3fb894;stroke-width:3.4;stroke-dasharray:43.8 53.4;stroke-linecap:round}
+  @media (prefers-reduced-motion: reduce){.h-halo,.hero-kick i{animation:none}}
+  @media (max-width:760px){
+    .hero{grid-template-columns:1fr;gap:6px;padding:22px 18px 14px;border-radius:22px}
+    .hero h2{font-size:29px} .hero p{font-size:14px;margin-bottom:14px} .hero-stats b{font-size:15.5px} .hero-art{margin:6px auto 0;width:100%;max-width:330px}
+    .brand-mark{width:36px;height:36px;border-radius:10px}
+  }
+  .pt-ic{--icc:var(--accent);display:inline-grid;place-items:center;width:34px;height:34px;border-radius:11px;flex:none;margin-right:11px;color:var(--icc);
+    background:linear-gradient(140deg,color-mix(in srgb, var(--icc) 26%, transparent),color-mix(in srgb, var(--icc) 7%, transparent));
+    border:1px solid color-mix(in srgb, var(--icc) 28%, transparent);box-shadow:0 8px 18px -12px var(--icc)}
+  .pt-ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pt-fit,.pt-trade{--icc:#2fa985} .pt-news{--icc:#4f8fe8} .pt-movers{--icc:#e0912f} .pt-wallet,.pt-flask{--icc:#9b74ec} .pt-pulse{--icc:#e8607a}
+  .panel > .panel-title{display:flex;align-items:center;flex-wrap:wrap;gap:0} details.fold>summary.panel-title{gap:0}
+  #tl-panel .tl-row{padding:5px 5px 5px 16px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line);align-items:center;transition:border-color .15s,box-shadow .15s}
+  #tl-panel .tl-row:focus-within{border-color:color-mix(in srgb, var(--lime) 70%, transparent);box-shadow:0 0 0 3px var(--accent-soft)}
+  #tl-panel .tl-row input{border:0!important;background:transparent!important;box-shadow:none;outline:none;padding:8px 0!important;font:500 16px var(--font-ui)}
+  #tl-panel .tl-row button{border-radius:999px;background:var(--lime);color:var(--lime-ink);font:700 14px var(--font-ui);padding:10px 20px}
+  details.fold>summary.panel-title{justify-content:flex-start} details.fold>summary.panel-title::after{margin-left:auto}
+  .sec{display:flex;align-items:center;margin:30px 4px 12px} .sec .pt-ic{width:38px;height:38px;border-radius:12px} .sec .pt-ic svg{width:20px;height:20px}
+  .sec b{display:block;font:800 19px var(--font-display);letter-spacing:-.02em;color:var(--ink)} .sec > div > span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+  #acc-head{margin-top:6px}
+  .vt button{padding:10px 18px} .vt button svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  @media (max-width:760px){ .vt button{padding:11px 6px;font-size:13.5px;gap:6px} .vt button svg{width:18px;height:18px} }
 </style>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f172a"><meta name="mobile-web-app-capable" content="yes"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#121a1f"><meta name="mobile-web-app-capable" content="yes"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 </head>
 <body>
@@ -714,23 +779,46 @@
 
   <header>
     <div class="head-text">
-      <h1 class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Finny</h1>
+      <h1 class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><defs><linearGradient id="lgF" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dcef62"/><stop offset="1" stop-color="#3fb894"/></linearGradient></defs><rect width="32" height="32" rx="9.5" fill="url(#lgF)"/><path d="M7 25h18" stroke="#12210f" stroke-opacity=".28" stroke-width="2" stroke-linecap="round"/><path d="M7 21c3.6 0 4.6-6 8.6-6s4.8-6.2 8.9-6.2" fill="none" stroke="#12210f" stroke-width="2.7" stroke-linecap="round"/><circle cx="24.6" cy="8.8" r="2.7" fill="#12210f"/></svg></span><span class="brand-txt">Finny<small>Odds &amp; strategy lab</small></span></h1>
       <p class="sub" id="view-sub">Compare strategies, see how they behaved in market events, and follow the live paper accounts.<span class="kbd-hint"> Replay keys: <b>Space</b> play/pause · <b>← →</b> step · <b>R</b> reset.</span></p>
     </div>
     <details id="account-btns" class="account" style="display:none"><summary id="account-email"></summary><div class="account-menu"><button class="linkbtn" id="chpw-btn">Change password</button><button class="linkbtn" id="signout-btn">Sign out</button></div></details>
-    <button class="theme-toggle" id="theme-toggle">☾ Dark</button>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Switch light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
   </header>
-  <nav id="view-tabs" class="vt" role="tablist" aria-label="Main sections"><button role="tab" data-v="research" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Research</span></button><button role="tab" data-v="live" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h4l3-8 4 16 3-8h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Live</span><i class="vt-dot"></i></button></nav>
+  <nav id="view-tabs" class="vt" role="tablist" aria-label="Main sections"><button role="tab" data-v="analyze" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/><path d="M8.5 13v-1.5M11 13V9M13.5 13v-2.5"/></svg><span>Analyze</span></button><button role="tab" data-v="research" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Research</span></button><button role="tab" data-v="accounts" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10.5h18"/><circle cx="16.5" cy="15.3" r="1.2"/></svg><span>Accounts</span></button></nav>
 
 
   
-  <div class="panel lh-panel" id="lh-panel">
-    <div class="panel-title">Live paper accounts <span class="lh-live"><i></i>live</span></div>
-    <div id="lh-body"></div>
-  </div>
+  <section class="hero" id="an-hero" data-view="analyze">
+    <div class="hero-txt">
+      <span class="hero-kick"><i></i>Stock odds · Strategy fit · News effects</span>
+      <h2>Know the odds <em>before you trade.</em></h2>
+      <p>Look up any US stock: how often stocks in its position went up, which tested strategies would hold it today, and what its news usually did to the price.</p>
+      <div class="hero-stats">
+        <div><b class="hero-n">5,700+</b><span>strategies tested</span></div>
+        <div><b>10 yrs</b><span>S&amp;P 500 history</span></div>
+        <div><b>2.1M</b><span>headlines analysed</span></div>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 360 220">
+      <defs><linearGradient id="hgA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hs1"/><stop offset="1" class="hs0"/></linearGradient>
+        <linearGradient id="hgL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="hl0"/><stop offset="1" class="hl1"/></linearGradient>
+        <filter id="hgB" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="5"/></filter></defs>
+      <g class="hgrid"><path d="M0 50H360M0 100H360M0 150H360M0 200H360"/></g>
+      <path class="h-up" d="M250 92L354 40V92Z"/><path class="h-dn" d="M250 92L354 92V146Z"/>
+      <path class="h-mid" d="M250 92L354 72"/><path class="h-edge" d="M250 92L354 40M250 92L354 146"/>
+      <path d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92L250 220L0 220Z" fill="url(#hgA)"/>
+      <path class="h-glow" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92" stroke="url(#hgL)" filter="url(#hgB)"/>
+      <path class="h-line" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92" stroke="url(#hgL)"/>
+      <circle class="h-halo" cx="250" cy="92" r="13"/><circle class="h-pt" cx="250" cy="92" r="5.5"/>
+      <g class="h-card"><rect x="262" y="156" width="88" height="52" rx="13"/><text x="274" y="175" class="h-k">UP NEXT WEEK</text><text x="274" y="198" class="h-v">58%</text></g>
+      <g class="h-card"><rect x="12" y="14" width="112" height="34" rx="17"/><circle cx="31" cy="31" r="8.5" class="h-ring0"/><circle cx="31" cy="31" r="8.5" class="h-ring1" transform="rotate(-90 31 31)"/>
+        <text x="46" y="35.5" class="h-t">Strategy fit 82</text></g>
+    </svg></div>
+  </section>
 
-  <div class="panel od-panel" id="od-panel">
-    <div class="panel-title">Odds checker</div>
+  <div class="panel od-panel" id="od-panel" data-view="analyze">
+    <div class="panel-title"><span class="pt-ic pt-odds" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/><circle cx="12" cy="16" r="1.4"/></svg></span>Odds checker</div>
     <p class="od-lead">Any US stock or ETF. Separate tickers with commas to compare.</p>
     <div class="od-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
       <input id="od-input" placeholder="Ticker, e.g. NVDA" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="od-go">Check</button><div id="od-sugg" class="tl-sugg" hidden></div></div>
@@ -739,40 +827,8 @@
     <div id="od-cmp" class="od-cmp"></div>
   </div>
 
-  <div class="panel nw-panel" id="nw-panel">
-    <div class="panel-title">Latest news</div>
-    <div class="mv-seg" id="nw-tabs"><button class="on" data-f="all">All</button><button data-f="spx">S&amp;P 500</button><button data-f="held">My stocks</button></div>
-    <div id="nw-body"><p class="note">Loading the latest headlines…</p></div>
-  </div>
-
-  <details class="panel fold" id="mv-fold">
-    <summary class="panel-title">Top movers (live)</summary>
-
-    <style>
-      #mv-panel .mv-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:4px 0 10px}
-      #mv-panel #mv-tabs button{margin-right:4px}#mv-panel .mv-age{color:var(--muted);font-size:12px}#mv-panel .mv-stale{color:#d97706}
-      #mv-panel .mv-up{color:#16a34a;font-weight:600}#mv-panel .mv-dn{color:#dc2626;font-weight:600}#mv-panel .mv-name{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      #mv-panel .mv-flag{font-size:11px;padding:1px 6px;border-radius:8px;white-space:nowrap}#mv-panel .mv-f-bad{background:rgba(220,38,38,.15);color:#dc2626}
-      #mv-panel .mv-f-warn{background:rgba(217,119,6,.15);color:#b45309}#mv-panel .mv-badge{font-size:10px;padding:1px 5px;border-radius:6px;background:var(--accent);color:var(--accent-ink)}
-      #mv-panel tr.mv-new td{background:rgba(59,130,246,.06)}#mv-panel label{font-size:13px;color:var(--ink-2)}
-    </style>
-    <div id="mv-panel">
-      <div class="mv-bar"><div id="mv-tabs" class="mv-seg"><button class="on" data-t="gainers">Gainers</button><button data-t="losers">Losers</button><button data-t="actives">Active</button></div>
-        <button class="mv-ref" id="mv-refresh" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-      <label class="mv-all"><input type="checkbox" id="mv-all"> include warrants, units and sub-$1</label>
-      <div id="mv-age" class="mv-age"></div>
-      <div id="mv-body"><p class="note">Loading…</p></div>
-      <p class="note">US stocks only (Alpaca screener; EU/UK listings are not covered). <b>1-week odds</b>: how often S&amp;P 500 stocks with a day move like this were higher 5 trading days later (2016-26, point-in-time members; any stock: 54%). Big up-days of 5-20% faded slightly (about 49-50% up, average −0.2% to −0.8%); over a month they did fine. Small caps and SPAC paper in this list behave differently, so treat it as information, not a buy list. Tap any row for its full odds.</p>
-    </div>
-  </details>
-
-  <div class="panel" id="live-panel" style="display:none">
-    <div class="panel-title">Paper trading</div>
-    <div id="live-body"></div>
-  </div>
-
-  <details class="panel fold" id="tl-panel">
-    <summary class="panel-title">Strategy fit (ticker lookup)</summary>
+  <details class="panel fold" id="tl-panel" data-view="analyze">
+    <summary class="panel-title"><span class="pt-ic pt-fit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></span>Strategy fit</summary>
 
     <style>
       #tl-panel .tl-row{display:flex;gap:8px;margin:4px 0 14px}#tl-panel .tl-in{position:relative;flex:1;min-width:0}#tl-panel .tl-row input{width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);color:var(--ink);font-size:15px}
@@ -819,6 +875,45 @@
     <div id="tl-body"></div>
 
   </details>
+
+  <div class="sec" id="an-pulse" data-view="analyze"><span class="pt-ic pt-pulse" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12h4l3-8 4 16 3-8h6"/></svg></span><div><b>Market pulse</b><span>Today's headlines and biggest movers, with what usually happened next.</span></div></div>
+  <div class="panel nw-panel" id="nw-panel" data-view="analyze">
+    <div class="panel-title"><span class="pt-ic pt-news" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="15" rx="2"/><path d="M17 9h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 13h6M7 17h3"/></svg></span>Latest news</div>
+    <div class="mv-seg" id="nw-tabs"><button class="on" data-f="all">All</button><button data-f="spx">S&amp;P 500</button><button data-f="held">My stocks</button></div>
+    <div id="nw-body"><p class="note">Loading the latest headlines…</p></div>
+  </div>
+
+  <details class="panel fold" id="mv-fold" data-view="analyze">
+    <summary class="panel-title"><span class="pt-ic pt-movers" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span>Top movers</summary>
+
+    <style>
+      #mv-panel .mv-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:4px 0 10px}
+      #mv-panel #mv-tabs button{margin-right:4px}#mv-panel .mv-age{color:var(--muted);font-size:12px}#mv-panel .mv-stale{color:#d97706}
+      #mv-panel .mv-up{color:#16a34a;font-weight:600}#mv-panel .mv-dn{color:#dc2626;font-weight:600}#mv-panel .mv-name{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #mv-panel .mv-flag{font-size:11px;padding:1px 6px;border-radius:8px;white-space:nowrap}#mv-panel .mv-f-bad{background:rgba(220,38,38,.15);color:#dc2626}
+      #mv-panel .mv-f-warn{background:rgba(217,119,6,.15);color:#b45309}#mv-panel .mv-badge{font-size:10px;padding:1px 5px;border-radius:6px;background:var(--accent);color:var(--accent-ink)}
+      #mv-panel tr.mv-new td{background:rgba(59,130,246,.06)}#mv-panel label{font-size:13px;color:var(--ink-2)}
+    </style>
+    <div id="mv-panel">
+      <div class="mv-bar"><div id="mv-tabs" class="mv-seg"><button class="on" data-t="gainers">Gainers</button><button data-t="losers">Losers</button><button data-t="actives">Active</button></div>
+        <button class="mv-ref" id="mv-refresh" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      <label class="mv-all"><input type="checkbox" id="mv-all"> include warrants, units and sub-$1</label>
+      <div id="mv-age" class="mv-age"></div>
+      <div id="mv-body"><p class="note">Loading…</p></div>
+      <p class="note">US stocks only (Alpaca screener; EU/UK listings are not covered). <b>1-week odds</b>: how often S&amp;P 500 stocks with a day move like this were higher 5 trading days later (2016-26, point-in-time members; any stock: 54%). Big up-days of 5-20% faded slightly (about 49-50% up, average −0.2% to −0.8%); over a month they did fine. Small caps and SPAC paper in this list behave differently, so treat it as information, not a buy list. Tap any row for its full odds.</p>
+    </div>
+  </details>
+
+  <div class="sec" id="acc-head" data-view="accounts"><span class="pt-ic pt-flask" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/></svg></span><div><b>Forward tests</b><span>Our validated strategies trading simulated money in real time, measured against the market.</span></div></div>
+  <div class="panel lh-panel" id="lh-panel" data-view="accounts">
+    <div class="panel-title"><span class="pt-ic pt-wallet" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10.5h18"/><circle cx="16.5" cy="15.3" r="1.2"/></svg></span>Paper accounts <span class="lh-live"><i></i>live</span></div>
+    <div id="lh-body"></div>
+  </div>
+
+  <div class="panel" id="live-panel" data-view="accounts" style="display:none">
+    <div class="panel-title"><span class="pt-ic pt-trade" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg></span>Paper trading</div>
+    <div id="live-body"></div>
+  </div>
 
   <div class="panel" id="login-panel" style="display:none">
     <div class="panel-title">Sign in</div>
@@ -1681,7 +1776,7 @@ function currentTheme(){
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 function applyThemeIcon(){
-  themeBtn.textContent = currentTheme() === 'dark' ? '☾ Dark' : '☀ Light';
+  themeBtn.innerHTML = currentTheme() === 'dark' ? '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>' : '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'; themeBtn.title = currentTheme() === 'dark' ? 'Dark theme (tap for light)' : 'Light theme (tap for dark)';
 }
 themeBtn.onclick = () => {
   const next = currentTheme() === 'dark' ? 'light' : 'dark';
@@ -2878,7 +2973,8 @@ async function finnyBoot() {
   const status = document.getElementById('sb-status');
   if (!(await getToken())) { showLogin(); return; }
   document.getElementById('account-btns').style.display = '';
-  document.getElementById('account-email').textContent = SESSION.email || '';
+  { const em = SESSION.email || '', sm = document.getElementById('account-email'); sm.textContent = (em[0] || '?').toUpperCase(); sm.title = em; sm.setAttribute('aria-label', 'Account ' + em);
+    const mn = document.querySelector('#account-btns .account-menu'); if (mn && !mn.querySelector('.acct-mail')) mn.insertAdjacentHTML('afterbegin', `<div class="acct-mail">${esc(em)}</div>`); }
   try { viewInit(); } catch (e) { console.error('views', e); }
   try {
     status.textContent = 'Loading strategy registry from Supabase…';
@@ -2937,7 +3033,8 @@ async function finnyBoot() {
     const selKeys = sel.map(s => s.cfg === 'book' ? s.key : `${s.key}::${s.cfg}`).filter(k => DATA[k]);
     window.__FINNY_ACTIVE = selKeys.length ? selKeys : ['spy'];
 
-    status.textContent = `${STRATEGY_ROWS.length} strategies · live from Supabase`;
+    status.textContent = `${STRATEGY_ROWS.length.toLocaleString('en-US')} strategies tested · data live`;
+    document.querySelectorAll('.hero-n').forEach(x => x.textContent = STRATEGY_ROWS.length.toLocaleString('en-US'));
     status.classList.add('ok');
     BR.picked = new Map(); renderBrowser(sel);
     document.getElementById('map-panel').style.display = '';
@@ -5033,6 +5130,12 @@ function odSeason(A) {
     <div class="se-foot">${cons.length ? `<b>Consistent for ${esc(A.sym)}:</b> ${esc(cons.join(' · '))}. ` : `<b>No consistent pattern for ${esc(A.sym)}.</b> `}Turn of month ${sc(S.tom)}; before holidays ${sc(S.pre_holiday)}.
       S&amp;P 500 as a whole (2016-26): ${mk.length ? 'only ' + esc(mk.join(', ')) + ' held in both halves' : 'no calendar effect held in both halves'}; weekday, turn-of-month, holiday and option-expiry effects did not. Adding calendar features to the open → close model did not help significantly (t 0.8), so the odds above ignore the calendar.</div></div>`;
 }
+// Analyze view (2026-10-22): after an odds check of one S&P 500 stock, the Strategy fit panel below runs for the same ticker (no scrolling)
+async function odSyncFit(sym) {
+  const box = document.getElementById('tl-input'), pan = document.getElementById('tl-panel'); if (!box || !pan) return;
+  await tlLoad(); if (!TL.loaded || box.value === sym || !TL.prof.some(r => r.ticker === sym)) return;
+  pan.open = true; box.value = sym; setTimeout(() => document.getElementById('tl-go').click(), 400);
+}
 function odShowA(A) {
   const el = document.getElementById('od-body'); if (!el) return; OD.ticker = A.sym;
   const O = OD.odds, w = A.H[0], m = A.H[2], q = A.H[3], R = w.R, ownN = A.own?.own?.[5]?.all?.n;
@@ -5170,6 +5273,7 @@ async function odGo(t) {
   document.getElementById('od-input').value = parts.length > 1 ? OD.cmp.join(', ') : sym;
   const member = TL.prof.some(r => r.ticker === sym);
   if (member) { OD.last = odAnalyse(sym, null); odShowA(OD.last); }                 // S&P evidence at once, own record when it arrives
+  if (member && parts.length === 1) odSyncFit(sym);                                // Analyze view: strategy fit follows the odds check
   else el.innerHTML = `<p class="note">Fetching ${esc(sym)}'s daily history from Alpaca…</p>`;
   document.getElementById('od-panel')?.scrollIntoView({behavior: 'smooth', block: 'start'});
   try {
@@ -5197,30 +5301,35 @@ function odInit() {
   Promise.all([tlLoad(), odLoad()]).then(() => { odSignals(); if (typeof mvRender === 'function' && MV.cur) mvRender(); if (OD.cmp.length) odCmp(); });
 }
 
-// ---------------- Research | Live views (2026-10-21) ----------------
-// Two main tabs. Live: account overview cards, the odds checker, top movers, paper trading controls, the full ticker lookup.
-// Research: every backtest and strategy-analysis section that was there before. Panels opt into Live with data-view="live";
-// anything untagged belongs to Research, so new research panels need no change. The choice is remembered per device.
-const VIEW = {cur: null, LIVE_IDS: ['lh-panel', 'od-panel', 'nw-panel', 'mv-fold', 'live-panel', 'tl-panel']};
+// ---------------- Analyze | Research | Accounts views (2026-10-22) ----------------
+// Analyze (start page): the odds checker and strategy fit, then the market pulse (news, movers). Accounts: the paper accounts.
+// Research: every backtest and strategy-analysis section. Panels carry data-view="analyze" / "accounts" in the built HTML;
+// anything untagged belongs to Research, so new research panels need no change. The choice is remembered per device ('#live' = Analyze).
+const VIEW = {cur: null, SUB: {
+  analyze: 'Odds, strategy fit and news effects for any US stock, from ten years of tested history.',
+  accounts: 'Forward tests: our strategies trading simulated money, against the market.',
+  research: 'Historic backtests: compare strategies, events, robustness and the research log.'}};
 function viewSet(v, push = true) {
-  VIEW.cur = v; document.body.classList.toggle('view-live', v === 'live'); document.body.classList.toggle('view-research', v !== 'live');
+  if (!VIEW.SUB[v]) v = 'analyze'; VIEW.cur = v;
+  ['analyze', 'accounts', 'research'].forEach(k => document.body.classList.toggle('v-' + k, k === v));
   document.querySelectorAll('#view-tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.v === v ? 'true' : 'false'));
-  const sub = document.getElementById('view-sub');
-  if (sub) sub.textContent = v === 'live' ? 'Live paper accounts, today\'s movers and what our backtests say about a ticker right now.'
-                                          : 'Historic backtests: compare strategies, events, robustness and the research log.';
+  const sub = document.getElementById('view-sub'); if (sub) sub.textContent = VIEW.SUB[v];
   try { localStorage.setItem('finny-view', v); } catch (e) {}
   if (push && location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
-  if (v === 'live') { lhInit(); odInit(); if (typeof nwInit === 'function') nwInit(); }
+  if (v === 'analyze') { odInit(); if (typeof nwInit === 'function') nwInit(); }
+  else if (v === 'accounts') lhInit();
   else requestAnimationFrame(() => document.querySelectorAll('.js-plotly-plot').forEach(p => { try { if (p.offsetParent) Plotly.Plots.resize(p); } catch (e) {} }));
   window.scrollTo({top: 0});
 }
 function viewInit() {
   if (VIEW.ready) return; VIEW.ready = true;
-  VIEW.LIVE_IDS.forEach(id => { const x = document.getElementById(id); if (x) x.dataset.view = 'live'; });
   const mv = document.getElementById('mv-fold'); if (mv) mv.open = true;
+  const tl = document.getElementById('tl-panel'); if (tl) tl.open = true;
   document.querySelectorAll('#view-tabs button').forEach(b => b.onclick = () => viewSet(b.dataset.v));
-  let v = (location.hash || '').slice(1); if (v !== 'live' && v !== 'research') { try { v = localStorage.getItem('finny-view'); } catch (e) { v = null; } }
-  viewSet(v === 'research' ? 'research' : 'live', false);
+  document.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => viewSet(b.dataset.goto));
+  let v = (location.hash || '').slice(1); if (v === 'live') v = 'analyze';
+  if (!VIEW.SUB[v]) { try { v = localStorage.getItem('finny-view'); } catch (e) { v = null; } if (v === 'live') v = 'analyze'; }
+  viewSet(VIEW.SUB[v] ? v : 'analyze', false);
 }
 
 // ---- account overview: one card per paper account (equity, today, since start vs SPY, sparkline, switch light) ----
