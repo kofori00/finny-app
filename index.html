@@ -661,6 +661,11 @@
   .nw-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:11.5px;color:var(--muted)}
   .nw-tone{font:700 10.5px var(--font-ui);padding:2px 8px;border-radius:999px} .nw-tone.p{color:var(--good);background:color-mix(in srgb, var(--good) 14%, transparent)}
   .nw-tone.n{color:var(--bad);background:color-mix(in srgb, var(--bad) 14%, transparent)}
+  .nw-fx{font:600 10.5px var(--font-ui);padding:2px 8px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink-2)}
+  .nw-fx.p{color:var(--good);background:color-mix(in srgb, var(--good) 12%, transparent);border-color:transparent} .nw-fx.n{color:var(--bad);background:color-mix(in srgb, var(--bad) 12%, transparent);border-color:transparent}
+  .nw-hold{font:600 10.5px var(--font-ui);padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+  .nw-fxl{font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--glass)} .nw-fxl b.pos{color:var(--good)} .nw-fxl b.neg{color:var(--bad)}
+  .cx-n .nw-fx{margin-right:6px;vertical-align:1px}
   .nw-plus{font:600 10.5px var(--font-ui);padding:1px 7px;border-radius:999px;border:1px solid var(--glass-line);color:var(--ink-2)}
   .nw-more{border-radius:999px!important;margin-top:12px!important}
   .nw-skel{height:96px;border-radius:18px;margin-bottom:10px;background:linear-gradient(90deg,var(--glass-2),var(--glass),var(--glass-2));background-size:200% 100%;animation:lhSk 1.4s linear infinite}
@@ -836,6 +841,15 @@
   .tlx-lh .tl-winrow{margin:0} #tl-panel .tlx .tl-seg{border-radius:999px} #tl-panel .tlx .tl-seg button{padding:5px 10px}
   #tl-panel .tlx .tl-detail{border-top:0;margin:8px 0 2px;padding:10px 12px;border-radius:14px;background:var(--glass)}
   body.v-analyze #tl-panel .tl-row{display:none}
+  #tl-panel .tlx .tl-detail{font-size:13px;line-height:1.45;color:var(--ink-2)}
+  .tld-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px} .tld-h b{font:700 15px var(--font-display);color:var(--ink)} .tld-h span{font-size:11.5px;color:var(--muted)}
+  .tld-rule{margin:8px 0 10px;font-size:13px;color:var(--ink-2)} .tld-rule span{display:block;font:600 10.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .tld-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px} .tld-kpi div{padding:8px 10px;border-radius:12px;background:var(--glass-2)}
+  .tld-kpi b{display:block;font:800 16px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums} .tld-kpi span{font-size:11px;color:var(--muted)}
+  .tld-win{margin-top:8px;font-size:12.5px}
+  .tld-st{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:10px;font-size:12.5px} .tld-v{flex-basis:100%;font-size:11.5px;color:var(--muted)}
+  .tld-tag{font:700 11px var(--font-ui);padding:3px 9px;border-radius:999px;background:var(--glass-2);color:var(--ink-2)} .tld-tag.ok{background:var(--accent-soft);color:var(--accent)}
+  .tld-tag.out{color:var(--bad);background:color-mix(in srgb, var(--bad) 12%, transparent)} .tld-foot{margin-top:6px;font-size:11px;color:var(--muted)}
   .od-cmp1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:14px;padding:12px 14px;border-radius:16px;border:1px dashed var(--glass-line);background:var(--glass)}
   .od-cmp1 span{font-size:12px;color:var(--muted)} .od-cmp1 b{font:700 14px var(--font-display);color:var(--ink)} .od-cmp1 em{flex-basis:100%;font-style:normal;font-size:12px;color:var(--muted)}
   .od-cmp1 .od-cmpx{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px}
@@ -4892,10 +4906,14 @@ function tlShow(ticker) {
       annotations: [{xref: 'paper', x: 1, y: Math.log10(1), yref: 'y', text: 'buy line', showarrow: false, xanchor: 'right', yanchor: 'bottom', font: {size: 11, color: accent}}]}), PLOT_CFG);
   const detail = id => { const F = A.fams.find(x => x.fam.id + '|' + x.round === id); if (!F) return; const o = F.best.out, m = F.best.m;
     if (o.status === 'out' && o.reason == null) o.reason = tlReason(F.fam, F.best.v, p.ticker);
-    document.getElementById('tl-detail').innerHTML = `<b>${tlEsc(F.fam.short)}</b> <span class="muted">· ${tlEsc(F.fam.source || '')}</span><br>${tlEsc(F.fam.name || '')}<br>
-      ${(TL.win || 'sharpe') !== 'sharpe' && isFinite(F.perf) ? `<span>Current picks, last ${winLab.toLowerCase()}: <b>${tlFmtPerf(F.perf)}</b></span><br>` : ''}
-      <span class="muted">Sharpe ${tlNum(m.sharpe)} (${tlNum(m.sh_1620)} / ${tlNum(m.sh_2126)}) · CAGR ${tlPct(m.cagr)} · max DD ${tlPct(m.maxdd, 0)} · ${tlEsc(m.verdict || '')} · ${F.held}/${F.vars.length} variants buy it</span><br>
-      ${o.status === 'held' ? 'Would buy: rank ' + o.rank + ' of ' + o.of : o.status === 'ranked' ? 'Rank ' + o.rank + ' of ' + o.of + ', buys the top ' + o.n : 'Left out: ' + tlEsc(o.reason || 'not ranked')}`; };
+    const VER = {PASS: 'Validated', WATCH: 'On watch', FAIL: 'Failed checks'}, sts = o.status === 'held' ? ['ok', 'Would buy it', `rank ${o.rank} of ${o.of}`]
+      : o.status === 'ranked' ? ['near', `Rank ${o.rank} of ${o.of}`, `buys the top ${o.n}`] : ['out', 'Filters it out', tlEsc(o.reason || 'not ranked')];
+    document.getElementById('tl-detail').innerHTML = `<div class="tld-h"><b>${tlEsc(F.fam.short)}</b><span>${tlEsc(F.fam.source || '')}</span></div>
+      ${F.fam.name ? `<div class="tld-rule"><span>How it picks</span>${tlEsc(F.fam.name)}</div>` : ''}
+      <div class="tld-kpi"><div><b>${tlNum(m.sharpe)}</b><span>Sharpe</span></div><div><b>${tlPct(m.cagr, 0)}</b><span>a year</span></div><div><b>${tlPct(m.maxdd, 0)}</b><span>worst drop</span></div></div>
+      ${(TL.win || 'sharpe') !== 'sharpe' && isFinite(F.perf) ? `<div class="tld-win">Current picks, last ${winLab.toLowerCase()}: <b>${tlFmtPerf(F.perf)}</b></div>` : ''}
+      <div class="tld-st"><span class="tld-tag ${sts[0]}">${sts[1]}</span><span>${sts[2]}</span><span class="tld-v">${tlEsc(VER[m.verdict] || m.verdict || '')} · ${F.held} of ${F.vars.length} versions buy it</span></div>
+      <div class="tld-foot">Sharpe by period: 2016-20 ${tlNum(m.sh_1620)} · 2021-26 ${tlNum(m.sh_2126)}</div>`; };
   Promise.resolve(mapDone).then(gd => (gd || document.getElementById('tl-map')).on('plotly_click', ev => detail(ev.points[0].customdata)));
   el.querySelectorAll('.tl-li').forEach(x => x.onclick = () => detail(x.dataset.fid));
   el.querySelectorAll('.tl-seg button').forEach(b => b.onclick = () => { TL.win = b.dataset.win; tlShow(ticker); });
@@ -5129,7 +5147,8 @@ function odCatalyst(A) {
       <div class="cx-evl"><span>10 days before</span><span>earnings day</span><span>20 days after</span></div>` : '';
   const tbl = E.slice(0, 8).map(e => `<tr><td>${esc(e.day)}<span class="muted"> ${e.timing === 'after close' ? 'pm' : e.timing === 'before open' ? 'am' : ''}</span></td><td>${odPct1(e.ret)}</td><td class="muted">${odPct1(e.market + e.sector)}</td>
       <td class="${e.specific >= 0 ? 'pos' : 'neg'}"><b>${odPct1(e.specific)}</b>${big(e) ? ' ●' : ''}</td><td>${e.post2_20 == null ? '…' : odPct1(e.post2_20)}</td></tr>`).join('');
-  const nrow = (n, i) => `<div class="cx-n${i >= 5 ? ' cx-hide' : ''}">${n.tone ? `<span class="nw-tone ${n.tone > 0 ? 'p' : 'n'}">${n.tone > 0 ? 'Positive' : 'Negative'}</span>` : ''}
+  const fxc = n => typeof nwFx === 'function' ? nwFxChip(nwFx(n, A.sym)) : '';
+  const nrow = (n, i) => `<div class="cx-n${i >= 5 ? ' cx-hide' : ''}">${fxc(n) || (n.tone ? `<span class="nw-tone ${n.tone > 0 ? 'p' : 'n'}">${n.tone > 0 ? 'Positive' : 'Negative'}</span>` : '')}
       <a class="cx-nh" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(odTxt(n.headline))}</a>
       <div class="cx-nm">${esc(new Date(n.at).toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}))} · ${esc(nwSrc(n.source || ''))}${n.specific != null ? ` · ${esc(A.sym)} <b class="${n.specific >= 0 ? 'pos' : 'neg'}">${odPct1(n.specific)}</b> own move${Math.abs(n.t) >= 2 ? ' <span class="cx-unu">unusual</span>' : ''}` : ''}</div></div>`;
   const news = N.slice(0, 12);
@@ -5144,7 +5163,7 @@ function odCatalyst(A) {
     ${odDecomp(sel[2], R[sel[0]])}` : ''}
     ${chips ? `<div class="cx-chips">${chips}</div>` : ''}
     ${fold('Earnings reactions', E.length ? `${E.length} releases · own move after market and sector` : 'none found', `<p class="cx-p">${eLine}</p>${E.length ? `${svg}<div class="od-cmpw"><table class="od-cmpt cx-t"><thead><tr><th>Day</th><th>Total</th><th>Mkt+sector</th><th>Own</th><th>20d after</th></tr></thead><tbody>${tbl}</tbody></table></div><p class="tl-foot">● = clearly caused by the release (own move above twice its normal daily noise).</p>` : ''}`)}
-    ${fold('News, last 60 days', news.length ? `${news.length} headline${news.length > 1 ? 's' : ''}${N.length > 12 ? ' (latest 12)' : ''}` : 'none', news.length ? news.map(nrow).join('') + (news.length > 5 ? `<button class="nw-more cx-more">Show all ${news.length}</button>` : '') + (unexplained.length ? `<p class="cx-p"><b>Big own moves without a headline:</b> ${unexplained.map(b => `${esc(b.day)} ${odPct1(b.specific)}`).join(' · ')}.</p>` : '') + '<p class="tl-foot">Tone from a finance word list (AI reading with FinBERT is being tested).</p>' : '<p class="cx-p">No news items in the last 60 days.</p>')}
+    ${fold('News, last 60 days', news.length ? `${news.length} headline${news.length > 1 ? 's' : ''}${N.length > 12 ? ' (latest 12)' : ''}` : 'none', news.length ? news.map(nrow).join('') + (news.length > 5 ? `<button class="nw-more cx-more">Show all ${news.length}</button>` : '') + (unexplained.length ? `<p class="cx-p"><b>Big own moves without a headline:</b> ${unexplained.map(b => `${esc(b.day)} ${odPct1(b.specific)}`).join(' · ')}.</p>` : '') + '<p class="tl-foot">Labels: how S&amp;P 500 stocks moved vs market and sector on the day of this type of headline (2016-26). The move happens the same day; afterwards there is no reliable drift, so it explains rather than predicts. FinBERT (AI reading of 733k headlines) explained moves no better than the word list used here (Bible 6.73).</p>' : '<p class="cx-p">No news items in the last 60 days.</p>')}
     ${glob ? fold('Markets today', 'indices, rates, oil, gold, dollar', `<div class="cx-gs">${glob}</div>`) : ''}
     <details class="about"><summary>How causation is separated</summary><p>For every earnings release an OLS model learns, from the year before it (ending 30 days earlier), how ${esc(A.sym)} normally follows the S&amp;P 500 and its sector${X.sector_etf ? ' (' + esc(X.sector_etf) + ')' : ''}${m ? `: currently ${m.beta_market}× the market and ${m.beta_sector}× the sector's extra move` : ''}. On the release day the part those explain is removed; what is left is ${esc(A.sym)}'s own reaction. SEC time stamps fix when the news became public (after 16:00 ET counts for the next session). A reaction bigger than twice its normal daily noise (●) is strong evidence the release caused it.
       Across 17,766 S&amp;P 500 releases (2016-26), 46% caused such a move (normal days: about 5%), and same-sector stocks without news barely moved on those days. Whether a strong reaction keeps drifting afterwards was not reliable (+0.45% best vs worst fifth over 20 days, t 1.6 with a separate baseline for every date), so the odds above do not use it.
@@ -5509,10 +5528,48 @@ function lhInit() { if (!LH.loaded && !LH.busy) { lhRender(); lhLoad(); } }
 const NW = {items: [], filter: 'spx', timer: null, held: null, busy: false, at: null, shown: 4};
 async function nwHeld() {
   if (NW.held) return NW.held;
-  try { const rows = await sb('live_equity?select=account_id,date,positions&order=date.desc&limit=6'); const seen = new Set(), out = new Set();
-    for (const r of rows) { if (seen.has(r.account_id)) continue; seen.add(r.account_id); for (const p of r.positions || []) if (+p.qty) out.add(p.symbol); }
-    NW.held = [...out].slice(0, 60); } catch (e) { NW.held = []; }
+  try { const [rows, acc] = await Promise.all([sb('live_equity?select=account_id,date,equity,positions&order=date.desc&limit=6'), sb('live_accounts?select=id,label')]);
+    const lab = Object.fromEntries(acc.map(a => [a.id, a.label])), seen = new Set(), out = new Set(); NW.hold = {};
+    for (const r of rows) { if (seen.has(r.account_id)) continue; seen.add(r.account_id);
+      for (const p of r.positions || []) if (+p.qty) { out.add(p.symbol); (NW.hold[p.symbol] ||= []).push({acc: lab[r.account_id] || r.account_id, w: r.equity > 0 ? (+p.value || 0) / r.equity : null}); } }
+    NW.held = [...out].slice(0, 60); } catch (e) { NW.held = []; NW.hold = NW.hold || {}; }
   return NW.held;
+}
+// news effects (Bible 6.73): headline type (regex) x word-list tone -> how S&P 500 stocks moved vs market + sector that day, 2016-26
+const NW_CAT = {analyst_down: 'Downgrade', analyst_up: 'Upgrade', guidance: 'Guidance', earnings: 'Earnings', ma: 'M&A', legal: 'Legal',
+  product_fda: 'Product / FDA', capital: 'Capital', management: 'Management', other: 'News'};
+async function nwFxLoad() {
+  if (NW.fx || NW.fxBusy) return; NW.fxBusy = true;
+  try { const r = await sb('live_models?select=data&key=eq.news_effects'); const F = r[0]?.data;
+    if (F) { F.re = Object.fromEntries(F.cats.filter(c => c !== 'other').map(c => [c, new RegExp(F.rx[c], 'i')])); NW.fx = F; } } catch (e) {}
+  NW.fxBusy = false;
+}
+function nwFx(n, sym) {
+  const F = NW.fx; if (!F) return null; const h = (typeof odTxt === 'function' ? odTxt(n.headline) : n.headline) || '';
+  const cat = Object.keys(F.re).find(c => F.re[c].test(h)) || 'other', tb = n.tone > 0 ? 'pos' : n.tone < 0 ? 'neg' : 'neu';
+  const g = F.general[`${cat}|${tb}`], t = sym && F.ticker[sym]?.[cat] || null;
+  return g ? {cat, tb, g, t, sym, show: cat !== 'other' || Math.abs(g.ar0) >= 0.004} : null;
+}
+const nwPc = x => (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(1) + '%';
+function nwFxChip(fx) {
+  if (!fx || !fx.show) return '';
+  const a = fx.g.ar0, cls = Math.abs(a) < 0.003 ? '' : a > 0 ? ' p' : ' n';
+  return `<span class="nw-fx${cls}" title="${esc(NW_CAT[fx.cat])} headlines with ${fx.tb === 'pos' ? 'positive' : fx.tb === 'neg' ? 'negative' : 'neutral'} wording: S&P 500 stocks moved ${nwPc(a)} vs market and sector that day (n ${fx.g.n.toLocaleString()}, 2016-26)">${esc(NW_CAT[fx.cat])} · usually ${nwPc(a)} that day</span>`;
+}
+function nwHoldChip(sym) {
+  const H = (NW.hold || {})[sym]; if (!H || !H.length) return '';
+  return `<span class="nw-hold" title="${esc(H.map(h => `${h.acc}${h.w != null ? ' ' + (h.w * 100).toFixed(0) + '%' : ''}`).join(' · '))}">In ${H.length > 1 ? H.length + ' accounts' : esc(H[0].acc.replace('Paper Account', 'Account'))}</span>`;
+}
+function nwFxLine(fx) {                                         // one plain sentence for the featured story
+  if (!fx || !fx.show) return '';
+  const g = fx.g, t = fx.t, H = (NW.hold || {})[fx.sym] || [];
+  const tone = fx.tb === 'pos' ? 'upbeat' : fx.tb === 'neg' ? 'negative' : 'neutral';
+  let s = `${esc(NW_CAT[fx.cat] === 'News' ? 'Headlines' : NW_CAT[fx.cat] + ' news')} with ${tone} wording moved S&amp;P 500 stocks <b class="${g.ar0 >= 0 ? 'pos' : 'neg'}">${nwPc(g.ar0)}</b> vs the market that day (${Math.round(g.up * 100)}% rose), then ${Math.abs(g.t5) < 2 ? 'no reliable drift' : 'a small drift of ' + nwPc(g.ar5) + ' over 5 days'}.`;
+  const own = t ? (fx.tb === 'neg' ? t[4] : fx.tb === 'pos' ? t[3] : null) ?? t[1] : null;   // the stock's own same-day record, same tone where known
+  if (own != null) s += ` ${esc(fx.sym)}'s own record for ${fx.tb === 'neu' ? 'this type' : fx.tb === 'neg' ? 'negative ' + esc(NW_CAT[fx.cat].toLowerCase()) + ' news' : 'positive ' + esc(NW_CAT[fx.cat].toLowerCase()) + ' news'}: ${nwPc(own)}.`;
+  const imp = H.filter(h => h.w).map(h => `${esc(h.acc)} ≈ <b class="${g.ar0 >= 0 ? 'pos' : 'neg'}">${nwPc(h.w * (own != null ? own : g.ar0))}</b> (${(h.w * 100).toFixed(0)}% weight)`);
+  if (imp.length) s += ` Typical same-day effect on ${imp.join(', ')}.`;
+  return `<p class="nw-fxl">${s}</p>`;
 }
 async function nwLoad() {
   if (NW.busy) return; NW.busy = true;
@@ -5541,11 +5598,11 @@ function nwRender() {
   let items = NW.items; if (NW.filter === 'spx' && spx.size) items = items.filter(n => n.symbols.some(s => spx.has(s)));
   const lead = n => n.symbols.find(s => spx.has(s)) || n.symbols[0] || '';
   const more = n => { const k = n.symbols.length - 1; return k > 0 ? `<span class="nw-plus" title="${esc(n.symbols.slice(0, 8).join(', '))}">+${k}</span>` : ''; };
-  const meta = n => `<div class="nw-meta">${nwTone(n.tone)}<span>${esc(nwAgo(n.at))}${n.source ? ' · ' + esc(nwSrc(n.source)) : ''}</span>${more(n)}</div>`;
+  const meta = n => `<div class="nw-meta">${nwFxChip(nwFx(n, lead(n))) || nwTone(n.tone)}${nwHoldChip(lead(n))}<span>${esc(nwAgo(n.at))}${n.source ? ' · ' + esc(nwSrc(n.source)) : ''}</span>${more(n)}</div>`;
   const list = items.slice(0, NW.shown);
   el.innerHTML = (list.length ? list.map((n, i) => i === 0
       ? `<article class="nw-top">${nwBadge(lead(n), spx)}<div class="nw-tx"><span class="nw-kick">Latest</span>
-          <a class="nw-h" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(typeof odTxt === 'function' ? odTxt(n.headline) : n.headline)}</a>${meta(n)}</div></article>`
+          <a class="nw-h" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(typeof odTxt === 'function' ? odTxt(n.headline) : n.headline)}</a>${meta(n)}${nwFxLine(nwFx(n, lead(n)))}</div></article>`
       : `<article class="nw-it">${nwBadge(lead(n), spx)}<div class="nw-tx"><a class="nw-h" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(typeof odTxt === 'function' ? odTxt(n.headline) : n.headline)}</a>${meta(n)}</div></article>`).join('')
     : '<p class="note">No headlines for this filter right now.</p>') +
     (items.length > NW.shown ? `<button class="nw-more" id="nw-more">Show more</button>` : (NW.shown > 4 && items.length > 4 ? '<button class="nw-more" id="nw-less">Show less</button>' : '')) +
@@ -5559,7 +5616,8 @@ function nwInit() {
   const root = document.getElementById('nw-panel'); if (!root || root.dataset.ready) return; root.dataset.ready = '1';
   root.querySelectorAll('#nw-tabs button').forEach(b => b.onclick = () => { NW.filter = b.dataset.f; root.querySelectorAll('#nw-tabs button').forEach(x => x.classList.toggle('on', x === b)); NW.shown = 4;
     if (b.dataset.f === 'held' || NW.lastFilter === 'held') { NW.lastFilter = b.dataset.f; NW.items = []; nwRender(); nwLoad(); } else { NW.lastFilter = b.dataset.f; nwRender(); } });
-  if (typeof tlLoad === 'function') tlLoad().then(nwRender).catch(() => {});        // S&P 500 member list for the default filter and badges
+  if (typeof tlLoad === 'function') tlLoad().then(nwRender).catch(() => {});
+  Promise.all([nwFxLoad(), nwHeld()]).then(nwRender).catch(() => {});                // news effects + account holdings for the chips        // S&P 500 member list for the default filter and badges
   nwLoad(); NW.timer = setInterval(() => { if (!document.hidden) nwLoad(); }, 3 * 60 * 1000);
 }
 
