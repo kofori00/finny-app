@@ -747,7 +747,7 @@
     background:linear-gradient(135deg,#7ab8a2,var(--lime))!important;color:#17231a!important;border:0!important;list-style:none;cursor:pointer}
   details.account summary::-webkit-details-marker{display:none}
   .acct-mail{font-size:12px;color:var(--muted);padding:2px 2px 8px;margin-bottom:6px;border-bottom:1px solid var(--glass-line);white-space:nowrap}
-  body.v-analyze #view-sub,body.v-accounts #view-sub{display:none}
+  #view-sub{display:none}
   .hero{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:center;
     padding:28px 28px 24px;margin:0 0 18px;border-radius:26px;border:1px solid var(--glass-line);box-shadow:var(--shadow-lg);
     background:radial-gradient(520px 280px at 100% 0%, color-mix(in srgb, var(--lime) 20%, transparent), transparent 70%),
@@ -853,6 +853,21 @@
   .od-cmp1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:14px;padding:12px 14px;border-radius:16px;border:1px dashed var(--glass-line);background:var(--glass)}
   .od-cmp1 span{font-size:12px;color:var(--muted)} .od-cmp1 b{font:700 14px var(--font-display);color:var(--ink)} .od-cmp1 em{flex-basis:100%;font-style:normal;font-size:12px;color:var(--muted)}
   .od-cmp1 .od-cmpx{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px}
+
+  /* ---- Ghanaian accents (2026-10-22): kente ribbon, Adinkra watermark and symbols, icon tiles ---- */
+  .kente{position:absolute;left:18px;right:18px;top:0;height:4px;border-radius:0 0 4px 4px;opacity:.8;
+    background:repeating-linear-gradient(90deg,#d9a943 0 22px,#3d7a55 22px 34px,#c4553a 34px 42px,#1f2a26 42px 47px,#d9a943 47px 66px,#7fb38f 66px 76px,#1f2a26 76px 81px)}
+  .adk-wm{position:absolute;right:16px;top:18px;width:150px;height:150px;fill:none;stroke:var(--lime);stroke-width:.35;opacity:.12;pointer-events:none}
+  .hero > .hero-txt,.hero > .hero-art{position:relative}
+  .hero-stats svg{display:block;width:17px;height:17px;margin-bottom:6px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+  .lab-hero{position:relative;display:grid;grid-template-columns:120px minmax(0,1fr);gap:20px;align-items:center;padding:24px;margin:0 0 18px;border-radius:24px;border:1px solid var(--glass-line);box-shadow:var(--shadow);
+    background:radial-gradient(420px 220px at 0% 0%, color-mix(in srgb, #d9a943 13%, transparent), transparent 70%), var(--glass);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
+  .lab-art{position:relative;width:120px;height:120px} .lab-art svg{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .lab-rings{stroke:#d9a943;stroke-width:.5;opacity:.45} .lab-sk{stroke:var(--accent);stroke-width:1.3;transform:scale(.52);transform-origin:center}
+  .lab-txt h2{font:800 26px/1.1 var(--font-display);letter-spacing:-.03em;margin:12px 0 8px;color:var(--ink)} .lab-txt p{margin:0;font-size:14px;line-height:1.6;color:var(--ink-2)} .lab-txt em{color:var(--ink);font-style:italic}
+  body.v-analyze #rs-hero,body.v-accounts #rs-hero{display:none!important}
+  @media (max-width:640px){ .lab-hero{grid-template-columns:76px minmax(0,1fr);gap:14px;padding:20px 16px} .lab-art{width:76px;height:76px} .lab-txt h2{font-size:21px} .lab-txt p{font-size:13px} }
+  .pt-map,.pt-chart{--icc:#7598c4} .pt-pie,.pt-compass{--icc:#6fae9c} .pt-calendar,.pt-flag{--icc:#c9a05e} .pt-shield,.pt-book{--icc:#9d8fc6} .pt-play{--icc:#c98b80} .pt-chain{--icc:#c9a05e}
 :root{--bg:#eeece6; --surface:#faf8f3; --surface-2:#f3f0e9; --surface-3:#e8e4db; --border:rgba(60,55,40,.09);
     --glass:rgba(255,253,248,.62); --glass-2:rgba(255,253,248,.46); --glass-line:rgba(255,255,255,.72);
     --ink:#2d3633; --ink-2:#56615c; --muted:#8a938e;
@@ -887,7 +902,7 @@
 
   <header>
     <div class="head-text">
-      <h1 class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><defs><linearGradient id="lgF" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfe0b0"/><stop offset="1" stop-color="#7ab8a2"/></linearGradient></defs><rect width="32" height="32" rx="9.5" fill="url(#lgF)"/><path d="M7 25h18" stroke="#12210f" stroke-opacity=".28" stroke-width="2" stroke-linecap="round"/><path d="M7 21c3.6 0 4.6-6 8.6-6s4.8-6.2 8.9-6.2" fill="none" stroke="#12210f" stroke-width="2.7" stroke-linecap="round"/><circle cx="24.6" cy="8.8" r="2.7" fill="#12210f"/></svg></span><span class="brand-txt">Finny<small>Odds &amp; strategy lab</small></span></h1>
+      <h1 class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><title>Finny: the F curls back like Sankofa, "go back and get it" (Adinkra, Ghana)</title><defs><linearGradient id="lgF" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f5a45"/><stop offset="1" stop-color="#1f3b2f"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lgF)"/><path d="M11.5 25.5V10.6Q11.5 7.4 14.7 7.4H20.2C24 7.4 25.6 10.9 23.6 13 21.9 14.8 19 13.7 19.3 11.6 19.5 10.3 21 10 21.7 10.9" fill="none" stroke="#f1e6cc" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 17H17.2" stroke="#f1e6cc" stroke-width="2.9" stroke-linecap="round"/><circle cx="20.6" cy="17" r="1.7" fill="#e0b04a"/><g transform="translate(5 27.6)"><rect width="4.4" height="1.6" rx=".5" fill="#e0b04a"/><rect x="5.4" width="4.4" height="1.6" rx=".5" fill="#c4553a"/><rect x="10.8" width="4.4" height="1.6" rx=".5" fill="#7fb38f"/><rect x="16.2" width="4.4" height="1.6" rx=".5" fill="#e0b04a"/></g></svg></span><span class="brand-txt">Finny<small>Odds &amp; strategy lab</small></span></h1>
       <p class="sub" id="view-sub">Compare strategies, see how they behaved in market events, and follow the live paper accounts.<span class="kbd-hint"> Replay keys: <b>Space</b> play/pause · <b>← →</b> step · <b>R</b> reset.</span></p>
     </div>
     <details id="account-btns" class="account" style="display:none"><summary id="account-email"></summary><div class="account-menu"><button class="linkbtn" id="chpw-btn">Change password</button><button class="linkbtn" id="signout-btn">Sign out</button></div></details>
@@ -898,6 +913,7 @@
 
   
   <section class="hero" id="an-hero" data-view="analyze">
+    <div class="kente" aria-hidden="true"></div><svg class="adk-wm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg>
     <div class="hero-txt">
       <span class="hero-kick"><i></i>Stock odds · Strategy fit · News effects</span>
       <h2>Know the odds <em>before you trade.</em></h2>
@@ -905,9 +921,9 @@
       <div class="hero-search" id="hero-search"></div>
       <div class="hero-try"><span>Try</span><button data-t="NVDA">NVDA</button><button data-t="AAPL">AAPL</button><button data-t="TSLA">TSLA</button><button data-t="JPM">JPM</button><button data-t="SPY">SPY</button></div>
       <div class="hero-stats">
-        <div><b class="hero-n">5,700+</b><span>strategies tested</span></div>
-        <div><b>10 yrs</b><span>S&amp;P 500 history</span></div>
-        <div><b>2.1M</b><span>headlines analysed</span></div>
+        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg><b class="hero-n">5,700+</b><span>strategies tested</span></div>
+        <div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2"/></svg><b>10 yrs</b><span>S&amp;P 500 history</span></div>
+        <div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="14" height="15" rx="2"/><path d="M17 9h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 13h6M7 17h3"/></svg><b>2.1M</b><span>headlines analysed</span></div>
       </div>
     </div>
     <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 360 220">
@@ -1014,7 +1030,7 @@
     </div>
   </details>
 
-  <div class="sec" id="acc-head" data-view="accounts"><span class="pt-ic pt-flask" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7.5 15h9"/></svg></span><div><b>Forward tests</b><span>Our validated strategies trading simulated money in real time, measured against the market.</span></div></div>
+  <div class="sec" id="acc-head" data-view="accounts"><span class="pt-ic pt-chain" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="11.5" height="9" rx="4.5"/><rect x="10" y="7.5" width="11.5" height="9" rx="4.5"/></svg></span><div><b>Forward tests</b><span>Our validated strategies trading simulated money in real time, measured against the market. Nkonsonkonson, the chain link: separate strategies joined in one portfolio.</span></div></div>
   <div class="panel lh-panel" id="lh-panel" data-view="accounts">
     <div class="panel-title"><span class="pt-ic pt-wallet" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10.5h18"/><circle cx="16.5" cy="15.3" r="1.2"/></svg></span>Paper accounts <span class="lh-live"><i></i>live</span></div>
     <div id="lh-body"></div>
@@ -1024,6 +1040,13 @@
     <div class="panel-title"><span class="pt-ic pt-trade" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg></span>Paper trading</div>
     <div id="live-body"></div>
   </div>
+
+  <section class="lab-hero" id="rs-hero">
+    <div class="kente" aria-hidden="true"></div>
+    <div class="lab-art" aria-hidden="true"><svg viewBox="0 0 24 24" class="lab-rings"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg><svg viewBox="0 0 24 24" class="lab-sk"><path d="M12 21C7 16.5 3.2 13 3.2 9 3.2 6 5.5 4 8 4.3 10.2 4.6 10.9 7 9.4 8.1 8.3 8.9 6.9 8.1 7.3 6.9"/><path d="M12 21C17 16.5 20.8 13 20.8 9 20.8 6 18.5 4 16 4.3 13.8 4.6 13.1 7 14.6 8.1 15.7 8.9 17.1 8.1 16.7 6.9"/><path d="M12 21V12.5"/></svg></div>
+    <div class="lab-txt"><span class="hero-kick"><i></i>Research lab</span><h2>Sankofa: learn from the past.</h2>
+      <p><em>Se wo were fi na wosankofa a yenkyi</em>: it is not wrong to go back for what you forgot. Every strategy here was tested on ten years of history, and checked again on years it never saw, before it got near real money.</p></div>
+  </section>
 
   <div class="panel" id="login-panel" style="display:none">
     <div class="panel-title">Sign in</div>
@@ -1095,7 +1118,7 @@
   </div>
 
   <details class="panel fold" id="map-panel" style="display:none">
-    <summary class="panel-title">Strategy map</summary>
+    <summary class="panel-title"><span class="pt-ic pt-map" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="17" r="2"/><circle cx="12" cy="9" r="2"/><circle cx="18" cy="14" r="2"/><circle cx="17" cy="5" r="1.4"/><path d="M3 21h18"/></svg></span>Strategy map</summary>
 
     <div class="sub-head"><select id="map-view" aria-label="View">
         <option value="lookahead">Published vs causal Sharpe</option>
@@ -1116,7 +1139,7 @@
   </details>
 
   <details class="panel fold" id="pb-panel">
-    <summary class="panel-title">Portfolio builder</summary>
+    <summary class="panel-title"><span class="pt-ic pt-pie" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></span>Portfolio builder</summary>
 
     <div class="pb-controls">
       <select id="pb-pool" aria-label="Candidate pool">
@@ -1138,7 +1161,7 @@
   </details>
 
   <details class="panel fold">
-    <summary class="panel-title">Research log</summary>
+    <summary class="panel-title"><span class="pt-ic pt-book" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg></span>Research log</summary>
 
     <p class="note">Every experiment behind the numbers, stored in Supabase. Tap one to see its report and results.</p>
     <div id="rl-body" class="slist"></div>
@@ -1148,13 +1171,13 @@
   <!--controls-->
 
   <div class="panel">
-    <div class="panel-title">Performance Summary</div>
+    <div class="panel-title"><span class="pt-ic pt-chart" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></span>Performance Summary</div>
     <div class="stat-grid" id="stat-grid"></div>
   </div>
 
   
   <details class="panel fold">
-    <summary class="panel-title">Monthly returns</summary>
+    <summary class="panel-title"><span class="pt-ic pt-calendar" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2"/></svg></span>Monthly returns</summary>
 
     <div hidden><select id="heat-strat"></select></div>
     <p id="heat-note" class="note"></p>
@@ -1166,7 +1189,7 @@
   </details>
 
   <details class="panel fold" id="ev-panel">
-    <summary class="panel-title">Events & scenarios</summary>
+    <summary class="panel-title"><span class="pt-ic pt-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg></span>Events & scenarios</summary>
 
     <details class="about"><summary>About</summary><p>Market events from 2000 on (crashes, Fed decisions, politics, style rotations; stress periods suggested by the Bible and book-library notebooks) plus our own milestones, drawn on the main charts and the 12-month-vs-SPY chart. Toggle categories under the date range; hover a label for the news, click it (or a row below) to zoom to the event, double-click a chart to go back. Lenses and the scenario generator use the strategies and date range selected above. Events after mid-2026 are only our own milestones; add others under 'Add your own event'.</p></details>
     <div id="evs-body"></div>
@@ -1174,7 +1197,7 @@
   </details>
 
   <details class="panel fold">
-    <summary class="panel-title">Robustness checks</summary>
+    <summary class="panel-title"><span class="pt-ic pt-shield" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 7.8-8 9-4.6-1.2-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>Robustness checks</summary>
 
     <details class="about"><summary>About</summary><p>Diagnostics suggested by the trading-book notebook (Aronson, Chan, Fitschen, Taleb, Elder, Abraham), using the strategies and dates selected above.</p></details>
     <div class="panel-subtitle">Returns by market regime</div>
@@ -1200,7 +1223,7 @@
   </details>
 
   <details class="panel fold" id="ol-panel">
-    <summary class="panel-title">Outlook: prognosis and period analysis</summary>
+    <summary class="panel-title"><span class="pt-ic pt-compass" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></span>Outlook: prognosis and period analysis</summary>
 
     <div class="pb-controls">
       <select id="ol-years" aria-label="Horizon"><option value="5">Horizon: 1 week</option><option value="21">Horizon: 1 month</option><option value="63">Horizon: 1 quarter</option><option value="252">Horizon: 1 year</option><option value="756">Horizon: 3 years</option><option value="1260" selected>Horizon: 5 years</option></select>
@@ -1215,7 +1238,7 @@
   </details>
 
   <div class="panel">
-    <div class="panel-title">Trade Replay — day by day</div>
+    <div class="panel-title"><span class="pt-ic pt-play" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z"/></svg></span>Trade Replay — day by day</div>
     <div class="controls" style="align-items:center;margin-bottom:14px;">
       <div hidden><div id="replay-strat-btns"></div></div>
       <div class="ctl-group">
