@@ -576,6 +576,18 @@
   .od-cmpt thead th{vertical-align:bottom} .od-cmpn{border:0;background:none;font:800 15px var(--font-display);color:var(--ink);cursor:pointer;padding:0}
   .od-cmpx{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;margin-left:2px} .od-cmps svg{width:90px;height:26px}
   .od-cmpt td.od-best{color:var(--good);font-weight:700}
+  .se-card{margin:14px 0 6px;padding:12px 14px;border-radius:16px;border:1px solid var(--glass-line);background:var(--glass-2)}
+  .se-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px} .se-top b{font:700 15px var(--font-display);color:var(--ink)} .se-top span{font-size:12px;color:var(--muted)}
+  .se-now{font-size:12.5px;color:var(--ink-2);margin:6px 0 10px} .se-now b{color:var(--ink)}
+  .se-grid{display:grid;grid-template-columns:5fr 12fr 7fr;gap:14px} @media (max-width:640px){.se-grid{grid-template-columns:1fr}}
+  .se-h{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px} .se-h span{font-weight:400;color:var(--muted);margin-left:6px;font-size:11px}
+  .se-bars{display:flex;gap:3px;align-items:stretch;height:84px}
+  .se-b{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0} .se-b span{font-size:10px;color:var(--muted);margin-top:2px}
+  .se-b.now span{color:var(--ink);font-weight:700}
+  .se-col{position:relative;flex:1;width:100%;border-radius:4px;background:linear-gradient(transparent calc(50% - .5px),var(--glass-line) calc(50% - .5px),var(--glass-line) calc(50% + .5px),transparent calc(50% + .5px))}
+  .se-b.now .se-col{background-color:var(--accent-soft)}
+  .se-col i{position:absolute;left:18%;right:18%;border-radius:3px;opacity:.45} .se-col i.pos{background:var(--good)} .se-col i.neg{background:var(--bad)} .se-col i.ok{opacity:1;box-shadow:0 0 0 1.5px var(--ink)}
+  .se-foot{font-size:12px;color:var(--ink-2);margin-top:10px;line-height:1.5} .se-foot b{color:var(--ink)}
   .mv-link{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px;cursor:pointer}
 
   /* ---- lean Live components (2026-10-21): movers as two-line rows, sleeves with P&L bars, quieter tiles ---- */
@@ -4697,6 +4709,7 @@ async function odLoad() {
   try { const r = await sb('live_odds?select=built_at,data_through,data&order=id.desc&limit=1'); OD.odds = r[0]?.data || null; } catch (e) { OD.err = e.message; }
   try {                                                  // today-from-the-open odds (open-odds Edge Function, Bible 6.70): newest day + model calibration
     const mm = await sb('live_models?select=cal:data->cal,base_up:data->base_up,wf:data->walk_forward&key=eq.open_model'); OD.openMeta = mm[0] || null;
+    const cm = await sb('live_models?select=data&key=eq.calendar'); OD.cal = cm[0]?.data || null;
     const lo = await sb('live_open_odds?select=as_of&order=as_of.desc&limit=1');
     if (lo[0]) { const rows = await sb(`live_open_odds?select=ticker,gap,decile,pct,p_up,p_beat,exp_ret,as_of&as_of=eq.${lo[0].as_of}`); OD.open = {as_of: lo[0].as_of, rows, map: Object.fromEntries(rows.map(r => [r.ticker, r]))}; }
   } catch (e) { OD.openErr = e.message; }
@@ -4793,6 +4806,34 @@ function odTodayTile(A) {                                // the one horizon with
     <div class="od-bar"><i style="width:${Math.max(2, Math.min(98, A.op.p_up * 100))}%" class="on"></i><b style="left:${base * 100}%"></b></div>
     <div class="od-ts">${Math.abs(d) < 1 ? 'average' : d > 0 ? `+${d.toFixed(1)} pts` : `−${(-d).toFixed(1)} pts`} · decile ${A.op.decile}/10</div><div class="od-ts">beats the median ${odP(A.op.p_beat)}</div></div>`;
 }
+// ---- seasonality (Bible 6.71): this stock's own weekday / month / turn-of-month / pre-holiday / time-of-day patterns + the S&P 500 verdicts ----
+function odEtParts() { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: 'America/New_York', weekday: 'short', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false})
+  .formatToParts(new Date()).map(x => [x.type, x.value])); return {wd: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].indexOf(p.weekday), m: +p.month - 1, day: +p.day, mins: (+p.hour % 24) * 60 + +p.minute}; }
+function odBars(title, labels, stats, cur, sub) {
+  const v = stats.map(x => x ? x.diff : null), mx = Math.max(1e-6, ...v.filter(x => x != null).map(Math.abs));
+  return `<div class="se-blk"><div class="se-h">${title}<span>${sub || ''}</span></div><div class="se-bars">${labels.map((l, i) => { const x = stats[i];
+    if (!x) return `<div class="se-b"><div class="se-col"></div><span>${l}</span></div>`;
+    const h = Math.abs(x.diff) / mx * 100, tip = `${l}: avg ${odS(x.mean, 2)} (${odS(x.diff, 2)} vs other ${title.toLowerCase().startsWith('time') ? 'hours' : 'periods'}), up ${odP(x.up)}, t ${x.t}, n ${x.n}; both halves ${x.h1 != null && x.h2 != null ? (Math.sign(x.h1) === Math.sign(x.h2) ? 'same sign' : 'disagree') : '–'}`;
+    return `<div class="se-b${i === cur ? ' now' : ''}" title="${esc(tip)}"><div class="se-col"><i class="${x.diff >= 0 ? 'pos' : 'neg'}${x.ok ? ' ok' : ''}" style="height:${Math.max(3, h / 2)}%;${x.diff >= 0 ? 'bottom:50%' : 'top:50%'}"></i></div><span>${l}</span></div>`; }).join('')}</div></div>`;
+}
+function odSeason(A) {
+  const S = A.own?.season; if (!S) return A.own ? '' : '<p class="note">Seasonality loads with the stock\'s own record…</p>';
+  const now = odEtParts(), hb = now.mins < 570 || now.mins >= 960 ? -1 : now.mins < 600 ? 0 : Math.min(6, Math.floor((now.mins - 600) / 60) + 1);
+  const cons = []; const name = (arr, labs) => arr.forEach((x, i) => { if (x?.ok) cons.push(`${labs[i]} ${odS(x.diff, 2)}`); });
+  name(S.weekday, ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']); name(S.month, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+  name(S.hour, S.hour_labels); if (S.tom?.ok) cons.push(`turn of month ${odS(S.tom.diff, 2)}`); if (S.pre_holiday?.ok) cons.push(`pre-holiday ${odS(S.pre_holiday.diff, 2)}`);
+  const exp = (S.tested * 0.05 / 2).toFixed(1);
+  const G = OD.cal?.groups || {}, mk = Object.entries(G).filter(([, r]) => Object.values(r).some(v => v.verdict === 'consistent')).map(([g]) => g.replace(/^month (\d+)$/, (_, n) => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][+n - 1]));
+  const todayLine = [`${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][now.wd] || 'Weekend'}`, ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][now.m]];
+  const sc = (x) => x ? `${odS(x.diff, 2)} vs average${x.ok ? ' · consistent' : ' · noise'}` : '–';
+  return `<div class="se-card"><div class="se-top"><b>Seasonality</b><span>${S.consistent} of ${S.tested} patterns held in both halves of ${esc(A.sym)}'s history (about ${exp} expected by luck)</span></div>
+    <div class="se-now">Now: <b>${todayLine.join(', ')}</b> · this weekday ${sc(S.weekday[now.wd])} · this month ${sc(S.month[now.m])}${hb >= 0 ? ` · this hour ${sc(S.hour[hb])}` : ''}</div>
+    <div class="se-grid">${odBars('Weekday', ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], S.weekday, now.wd, 'daily return vs average')}
+      ${odBars('Month', ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'], S.month, now.m, 'monthly return vs other months')}
+      ${odBars('Time of day', ['9:30', '10', '11', '12', '13', '14', '15'], S.hour, hb, `last ${S.hour_days} sessions, ET`)}</div>
+    <div class="se-foot">${cons.length ? `<b>Consistent for ${esc(A.sym)}:</b> ${esc(cons.join(' · '))}. ` : `<b>No consistent pattern for ${esc(A.sym)}.</b> `}Turn of month ${sc(S.tom)}; before holidays ${sc(S.pre_holiday)}.
+      S&amp;P 500 as a whole (2016-26): ${mk.length ? 'only ' + esc(mk.join(', ')) + ' held in both halves' : 'no calendar effect held in both halves'}; weekday, turn-of-month, holiday and option-expiry effects did not. Adding calendar features to the open → close model did not help significantly (t 0.8), so the odds above ignore the calendar.</div></div>`;
+}
 function odShowA(A) {
   const el = document.getElementById('od-body'); if (!el) return; OD.ticker = A.sym;
   const O = OD.odds, w = A.H[0], m = A.H[2], q = A.H[3], R = w.R, ownN = A.own?.own?.[5]?.all?.n;
@@ -4819,6 +4860,8 @@ function odShowA(A) {
     if (m.ow?.last3y) ev.push(['Last 3 years', '', `${odP(w.ow?.last3y?.up)} up after 1 week · ${odP(m.ow.last3y.up)} after 1 month`, 'base', 'Recent behaviour of this stock']);
     if (w.ow?.like_today && w.ow.like_today.n >= 20) ev.push(['After days like today', odS(today), `${odP(w.ow.like_today.up)} up after 1 week · avg ${odS(w.ow.like_today.ret, 2)} (n ${w.ow.like_today.n})`, w.ow.like_today.n < 100 ? 'thin' : 'base', w.ow.like_today.n < 100 ? 'Few cases: treat as noise' : 'Its own history after a similar move']);
     ev.push(['Beat the S&P 500', '', `${odP(w.ow?.beat_spy)} of weeks · ${odP(m.ow?.beat_spy)} of months (own record)`, 'base', 'Most stocks lag the index more often than not']); }
+  if (A.own?.season) ev.push(['Seasonality', `${A.own.season.consistent} of ${A.own.season.tested} consistent`, 'weekday, month, turn of month, pre-holiday and time of day vs this stock\'s average (chart below)',
+    A.own.season.consistent > A.own.season.tested * 0.05 ? 'weak' : 'none', 'Calendar effects mostly vanished in 2016-26; consistent = same sign in both halves and |t| ≥ 2']);
   if (m.sector) ev.push([`Sector: ${A.p.sector}`, '', `S&P 500 ${A.p.sector}: ${odP(w.sector?.[0])} up after 1 week · ${odP(m.sector[0])} after 1 month (2021-26)`, 'base', 'Sector base rate']);
   const TAG = {edge: 'edge', idle: 'edge · idle', weak: 'weak', none: 'no edge', base: 'base rate', thin: 'thin'};
   const sc = A.member && TL.scores ? TL.scores.sc[A.sym] : null, cls = sc != null ? tlClass(sc) : null;
@@ -4832,6 +4875,7 @@ function odShowA(A) {
     <div class="od-verdict ${R || A.op ? 'on' : ''}">${verdict}</div>
     <div class="od-ev">${ev.map(([k, v, s, t, tip]) => `<div class="od-evr"><span class="od-tag od-${t}">${TAG[t]}</span>
       <div><div class="od-evk">${esc(k)}${v ? ` <b>${esc(v)}</b>` : ''}</div><div class="od-evs">${s}</div><div class="od-evt">${esc(tip)}</div></div></div>`).join('')}</div>
+    ${odSeason(A)}
     ${A.modelOk && A.x ? `<details class="about"><summary>What drives the pattern score</summary>${odDrivers(A.x)}</details>` : ''}
     <div class="od-foot"><button class="pill${inCmp ? ' on' : ''}" id="od-addcmp">${inCmp ? '✓ In compare' : '+ Compare'}</button>${cls ? `<span>Strategy fit: <b>${esc(cls.label)}</b> (score ${sc.toFixed(0)})</span>` : ''}${A.member ? '<button class="linkbtn" id="od-full">Full strategy analysis</button>' : ''}</div>
     <p class="tl-foot">${A.member ? 'Today from the open: LightGBM on 13 previous-close price ranks + the opening gap, walk-forward 2021-26 (Bible 6.70). Longer horizons: S&amp;P 500 backtests found no edge, so the tiles show the swing signal when active, else the stock\'s own record (a base rate). ' : ''}Own record from Alpaca daily bars (split and dividend adjusted)${A.own?.as_of ? ' through ' + esc(A.own.as_of) : ''}. History, not a promise; not investment advice.</p>`;
