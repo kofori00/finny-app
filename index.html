@@ -831,6 +831,11 @@
   .od-fitb span{font:500 11px var(--font-ui);color:var(--muted)} .od-fitb b{grid-column:1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .od-fitb i{grid-row:1/3;grid-column:2;font-style:normal;color:var(--accent);font-size:16px}
   .cx2 .tl-foot,.cx-fb .tl-foot{font-size:11px;line-height:1.45;color:var(--muted);margin:8px 0 0}
   .od-about{margin-top:6px}
+  .tlx{padding:16px} .tlx .tl-top{margin-bottom:6px} .tlx .tl-tk{font-size:22px} .tlx .tl-name{font-size:13.5px} .tl-lead{margin-top:10px}
+  .tlx-lh{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 4px} .tlx-lh b{font:700 14.5px var(--font-display);color:var(--ink)}
+  .tlx-lh .tl-winrow{margin:0} #tl-panel .tlx .tl-seg{border-radius:999px} #tl-panel .tlx .tl-seg button{padding:5px 10px}
+  #tl-panel .tlx .tl-detail{border-top:0;margin:8px 0 2px;padding:10px 12px;border-radius:14px;background:var(--glass)}
+  body.v-analyze #tl-panel .tl-row{display:none}
   .od-cmp1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:14px;padding:12px 14px;border-radius:16px;border:1px dashed var(--glass-line);background:var(--glass)}
   .od-cmp1 span{font-size:12px;color:var(--muted)} .od-cmp1 b{font:700 14px var(--font-display);color:var(--ink)} .od-cmp1 em{flex-basis:100%;font-style:normal;font-size:12px;color:var(--muted)}
   .od-cmp1 .od-cmpx{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px}
@@ -4822,27 +4827,28 @@ function tlShow(ticker) {
   const listTitle = rel.length ? 'Best strategies that like it' : 'Best strategies (none would buy it)';
   const conds = g.ibs != null ? [['120-day rank', g.ret_rank120, 0.8, '>'], ['Sector rank', g.rank_in_sector60, 0.7, '>'], ['Big up-day', g.max_ret20 / 0.08, 0.5, '>'], ['Closed near low', 1 - g.ibs, 0.88, '>']] : [];
   const bars = conds.map(([k, v, t]) => { const ok = v > t; return `<div class="tl-bar"><span>${k}</span><div class="tl-track"><div class="tl-fill" style="width:${Math.max(2, Math.min(100, v * 100))}%;background:${ok ? 'var(--accent)' : 'var(--muted)'}"></div><div class="tl-tick" style="left:${t * 100}%"></div></div><b>${ok ? '✓' : '·'}</b></div>`; }).join('');
+  const TOP_N = 30, held = SF.filter(F => F.best.out.status === 'held'), h0 = held[0];
+  const lead = held.length ? `<b>${held.length}</b> of our ${SF.length} validated strategy families would buy ${tlEsc(p.ticker)} today${h0 ? `; the strongest of them is <b>${tlEsc(h0.fam.short)}</b>` : ''}.`
+    : `None of our ${SF.length} validated strategy families would buy ${tlEsc(p.ticker)} today${rel.length ? `; ${rel.length} have it close to their buy line` : ''}.`;
   el.innerHTML = `${banner}
-    <div class="tl-top">
+    <div class="cx2 tlx"><div class="tl-top">
       <div class="tl-id"><div class="tl-tk">${tlEsc(p.ticker)}</div><div class="tl-name">${tlEsc(tlTitle(p.name || ''))}</div><div class="tl-sub">${tlEsc(p.sector || '')} · $${f.mc ? (f.mc / 1e9).toFixed(0) : '–'}bn · 12m ${tlPct(f.mom12m, 0)}</div>
         <div class="tl-chips">${chips}${swing}</div></div>
       <div class="tl-score"><div class="tl-ring" style="--p:${Math.min(100, score).toFixed(1)}"><span>${score.toFixed(0)}</span></div>
         <div><div class="tl-fit" style="color:${fit[1]}">${fit[0]}</div><div class="tl-sub">voting score · beats ${cls.pct.toFixed(0)}% of S&amp;P 500</div>
         <div class="tl-pos"><i style="left:${cls.pct.toFixed(1)}%"></i></div><div class="tl-posl"><span>No fit</span><span>Excellent</span></div></div></div>
     </div>
-    <div class="tl-winrow"><span>Rank strategies by</span><div class="tl-seg">${Object.entries(TL_WIN).map(([k, [lab, , sh]]) => `<button data-win="${k}" title="${lab}" class="${(TL.win || 'sharpe') === k ? 'on' : ''}">${sh}</button>`).join('')}</div></div>
-    <div class="tl-grid">
-      <div class="tl-card"><div class="tl-h">Factor profile <span class="muted">vs what our 50 best strategies hold</span></div><div id="tl-radar" class="tl-plot"></div></div>
-      <div class="tl-card"><div class="tl-h">Strategy map <span class="muted">30 best by ${winLab === 'Backtest Sharpe' ? 'backtest Sharpe' : 'last ' + winLab.toLowerCase()} · tap a dot</span></div><div id="tl-map" class="tl-plot"></div><div id="tl-detail" class="tl-detail"></div></div>
-    </div>
-    <div class="tl-grid">
-      <div class="tl-card"><div class="tl-h">Voting score across the S&amp;P 500 <span class="muted">${TL_K} best strategies vote</span></div><div id="tl-hist" class="tl-plot-s"></div></div>
-      <div class="tl-card"><div class="tl-h">${listTitle} <span class="muted">ranked by ${winLab === 'Backtest Sharpe' ? 'backtest Sharpe' : 'picks\' return, last ' + winLab.toLowerCase()}</span></div>${list}</div>
-    </div>
-    <div class="tl-grid tl-grid-1">
-      <div class="tl-card"><div class="tl-h">Swing setup <span class="muted">${g.R18L26 ? 'buy signal' : 'no signal'} at the ${tlEsc(TL.asof)} close</span></div>${bars || '<p class="note">No swing data.</p>'}<div id="tl-timeline" class="tl-plot-t"></div></div>
-    </div>
-    <p class="tl-foot">${(TL.win || 'sharpe') !== 'sharpe' ? `Window view: how each strategy's <b>current picks</b> moved over the last ${winLab.toLowerCase()}, not its track record (momentum strategies lead long windows by construction). ` : ''}Fit with our backtested strategies, not a return forecast (Bible §6.53–6.57). The voting score always uses backtest Sharpe. Data ${tlEsc(TL.asof)} · SEC filings + Alpaca.</p>`;
+    <p class="cx-lead tl-lead">${lead}</p>
+    <div class="tlx-lh"><b>${listTitle}</b><div class="tl-winrow"><span>rank by</span><div class="tl-seg">${Object.entries(TL_WIN).map(([k, [lab, , sh]]) => `<button data-win="${k}" title="${lab}" class="${(TL.win || 'sharpe') === k ? 'on' : ''}">${sh}</button>`).join('')}</div></div></div>
+    ${list}
+    <div id="tl-detail" class="tl-detail"></div>
+    <details class="cx-fold tl-fold"><summary><b>Strategy map</b><span>${TOP_N} best by ${winLab === 'Backtest Sharpe' ? 'backtest Sharpe' : 'last ' + winLab.toLowerCase()} · tap a dot for details</span></summary><div id="tl-map" class="tl-plot"></div></details>
+    <details class="cx-fold tl-fold"><summary><b>Factor profile</b><span>${tlEsc(p.ticker)} vs what our 50 best strategies hold</span></summary><div id="tl-radar" class="tl-plot"></div></details>
+    <details class="cx-fold tl-fold"><summary><b>Score across the S&amp;P 500</b><span>where ${tlEsc(p.ticker)} sits when the ${TL_K} best strategies vote</span></summary><div id="tl-hist" class="tl-plot-s"></div></details>
+    <details class="cx-fold tl-fold"><summary><b>Swing setup</b><span>${g.R18L26 || g.R18P12 ? 'buy signal' : 'no signal'} at the ${tlEsc(TL.asof)} close${mine.length ? ' · ' + mine.length + ' signal' + (mine.length > 1 ? 's' : '') + ' in 20 days' : ''}</span></summary>${bars || '<p class="note">No swing data.</p>'}<div id="tl-timeline" class="tl-plot-t"></div></details>
+    <details class="about tl-about"><summary>About the fit score</summary><p class="tl-foot">${(TL.win || 'sharpe') !== 'sharpe' ? `Window view: how each strategy's <b>current picks</b> moved over the last ${winLab.toLowerCase()}, not its track record (momentum strategies lead long windows by construction). ` : ''}Fit with our backtested strategies, not a return forecast (Bible §6.53–6.57). The voting score always uses backtest Sharpe. Data ${tlEsc(TL.asof)} · SEC filings + Alpaca.</p></details>
+    </div>`;
+  el.querySelectorAll('details.tl-fold').forEach(d => d.addEventListener('toggle', () => { if (d.open) d.querySelectorAll('.js-plotly-plot').forEach(q => { try { Plotly.Plots.resize(q); } catch (e) {} }); }));
   const accent = tlCV('--accent'), muted = tlCV('--muted'), ink2 = tlCV('--ink-2'), border = tlCV('--border');
   // timeline of this stock's entry signals over the last 20 trading days
   const tl0 = new Date(new Date(TL.asof + 'T12:00:00Z').getTime() - 30 * 864e5).toISOString().slice(0, 10);
