@@ -3216,6 +3216,7 @@ async function finnyBoot() {
   if (!(await getToken())) { showLogin(AUTH_MSG); return; }
   if (RECOVERY) { RECOVERY = false; const np = prompt('Choose a new password (at least 8 characters):');
     if (np && np.length >= 8) { try { await authPost('user', {password: np}, await getToken()); alert('Password changed.'); } catch (e) { alert('Could not change the password: ' + e.message); } } }
+  { const em = SESSION.email || '', sm = document.getElementById('account-email'); sm.textContent = (em[0] || '?').toUpperCase(); sm.title = em; sm.setAttribute('aria-label', 'Account ' + em); }   // initial on the avatar, also on the waiting screen
   ACCESS = await myAccess().catch(() => 'none');
   if (ACCESS !== 'owner' && ACCESS !== 'customer') { document.getElementById('account-btns').style.display = ''; showPending(ACCESS); return; }
   document.body.classList.remove('pending'); document.getElementById('pending-panel').style.display = 'none';
