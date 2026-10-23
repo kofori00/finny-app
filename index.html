@@ -769,7 +769,12 @@
   .hgrid path{stroke:var(--glass-line);stroke-width:1;stroke-dasharray:3 5}
   .h-line{fill:none;stroke-width:3;stroke-linecap:round} .h-glow{fill:none;stroke-width:7;opacity:.55}
   .h-up{fill:var(--good);opacity:.2} .h-dn{fill:var(--bad);opacity:.16} .h-up.h-o{opacity:.08} .h-dn.h-o{opacity:.07}
-  .hero-win{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:6px;font-size:11.5px;color:var(--muted)} .hero-win[hidden]{display:none}
+  .hero-win{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted)} .hero-acc[hidden]{display:none}
+  .hero-acc{grid-column:1/-1;position:relative;margin-top:6px;padding:14px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .ha-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px} .ha-h b{font:700 14px var(--font-display);color:var(--ink)}
+  .ha-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px} .ha-k div{padding:8px 10px;border-radius:12px;background:var(--glass)}
+  .ha-k b{display:block;font:800 16px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums} .ha-k span{display:block;font-size:11px;line-height:1.3;color:var(--muted);margin-top:2px}
+  .hero-acc p{font-size:12px;line-height:1.5;color:var(--ink-2);margin:10px 0 0}
   .hero-win button{font:600 11.5px var(--font-ui);padding:4px 10px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer} .hero-win button.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
   .h-mid{stroke:var(--ink-2);stroke-width:1.4;stroke-dasharray:4 4;opacity:.6} .h-edge{stroke:var(--muted);stroke-width:1;opacity:.35}
   .h-pt{fill:var(--lime);stroke:var(--surface);stroke-width:2.5} .h-halo{fill:var(--lime);opacity:.22;transform-origin:250px 92px;animation:hHalo 2.4s ease-in-out infinite}
@@ -944,7 +949,8 @@
       <g id="h-card" class="h-card h-anim"><rect x="240" y="156" width="114" height="52" rx="13"/><text id="h-k" x="252" y="175" class="h-k">UP NEXT WEEK</text><text id="h-v" x="252" y="198" class="h-v">58%</text></g>
       <g id="h-fit" class="h-card h-fitg"><title>Example</title><rect x="12" y="14" width="140" height="34" rx="17"/><circle cx="31" cy="31" r="8.5" class="h-ring0"/><circle id="h-ring1" cx="31" cy="31" r="8.5" class="h-ring1 h-anim" transform="rotate(-90 31 31)" stroke-dasharray="43.8 53.4"/>
         <text id="h-t" x="46" y="35.5" class="h-t">Strategy fit 82</text></g>
-    </svg><div class="hero-win" id="hero-win" hidden><span>Cone from</span><button data-w="1y" class="on">past year</button><button data-w="3m">3 months</button></div></div>
+    </svg></div>
+    <div class="hero-acc" id="hero-acc" hidden><div class="ha-h"><b>How accurate is this forecast?</b><div class="hero-win" id="hero-win"><button data-w="1y" class="on">12 months</button><button data-w="3m">3 months</button></div></div><div class="ha-body"></div></div>
   </section>
 
   <div class="panel od-panel" id="od-panel" data-view="analyze">
@@ -5701,13 +5707,14 @@ function heroTiles(A) {                                                      // 
   const win = HERO.win === '3m' ? 'last 3 months' : 'last 12 months', S = esc(A.sym);
   const tile = (icon, val, label, src, tip = '') => `<div${tip ? ` title="${tip}"` : ''}>${ic(icon)}<b>${val}</b><span class="hs-l">${label}</span><span class="hs-s">${src}</span></div>`;
   box.innerHTML = tile(I.odds, p == null ? '…' : Math.round(p * 100) + '%', `chance ${S} is higher in 1 week`, w?.head?.edge ? 'from a tested buy signal' : `from ${S}'s own history`, w?.head?.src ? esc(w.head.src) : '')
-    + (W ? tile(I.hit, Math.round(W.hit * 100) + '%', 'of past 1-week forecasts were right', `${W.n} forecasts, ${win}`,
-               `Each day we replayed the forecast with only the data known then and checked it 5 trading days later. Brier score ${W.brier} (a coin flip scores 0.25; lower is better).${other ? ` Other window: ${Math.round(other.hit * 100)}% right.` : ''}`)
-         + tile(I.miss, '±' + (W.rmse * 100).toFixed(1) + '%', 'average miss of those forecasts', `actual 1-week move vs expected, ${win}`,
-               `Root mean square error of actual 1-week move minus the expected move (${hPc(wf.mu_now, 2)}). The cone on the chart shows where 68% and 90% of these misses fell.`)
-       : A.own && !wf ? tile(I.hit, A.H?.[2]?.head?.v == null ? '–' : Math.round(A.H[2].head.v * 100) + '%', `chance ${S} is higher in 1 month`, `from ${S}'s own history`)
-         + tile(I.miss, isFinite(A.f?.vol20) ? '±' + (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '–', `how much ${S} usually moves in a week`, 'up or down, last 20 trading days')
-       : tile(I.hit, '…', 'checking past forecasts', '') + tile(I.miss, '…', 'average forecast miss', ''));
+    + tile(I.hit, A.H?.[2]?.head?.v == null ? '…' : Math.round(A.H[2].head.v * 100) + '%', `chance ${S} is higher in 1 month`, `from ${S}'s own history`)
+    + tile(I.miss, isFinite(A.f?.vol20) ? '±' + (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '…', `how much ${S} usually moves in a week`, 'up or down, last 20 trading days');
+  // accuracy of the 1-week forecast (walk-forward replay in ticker-odds v3), shown under the chart next to the cone it sizes
+  const acc = document.getElementById('hero-acc');
+  if (acc) { acc.hidden = !W; if (W) acc.querySelector('.ha-body').innerHTML = `<div class="ha-k"><div><b>${Math.round(W.hit * 100)}%</b><span>of 1-week forecasts right</span></div>
+      <div><b>±${(W.rmse * 100).toFixed(1)}%</b><span>average miss</span></div><div><b>${W.brier.toFixed(3)}</b><span>Brier score (coin 0.250)</span></div></div>
+      <p>Each day of the ${win} we re-made ${S}'s 1-week forecast with only the data known that day and compared it with what happened 5 trading days later (${W.n} forecasts).
+      ${W.brier < 0.245 ? 'It did better than a coin flip.' : W.brier <= 0.255 ? 'That is about as good as a coin flip: treat the odds as a base rate, not a prediction.' : 'It did worse than a coin flip.'} The cone shows where 68% (dark) and 90% (light) of the misses fell.</p>`; }
   const sw = document.getElementById('hero-win'); if (sw) { sw.hidden = !wf; sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.w === HERO.win)); }
 }
 function heroFit(sym, score, label) {                                        // called by the ticker lookup once it has scored the stock
