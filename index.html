@@ -5004,6 +5004,9 @@ function tlShow(ticker) {
   const conds = g.ibs != null ? [['120-day rank', g.ret_rank120, 0.8, '>'], ['Sector rank', g.rank_in_sector60, 0.7, '>'], ['Big up-day', g.max_ret20 / 0.08, 0.5, '>'], ['Closed near low', 1 - g.ibs, 0.88, '>']] : [];
   const bars = conds.map(([k, v, t]) => { const ok = v > t; return `<div class="tl-bar"><span>${k}</span><div class="tl-track"><div class="tl-fill" style="width:${Math.max(2, Math.min(100, v * 100))}%;background:${ok ? 'var(--accent)' : 'var(--muted)'}"></div><div class="tl-tick" style="left:${t * 100}%"></div></div><b>${ok ? '✓' : '·'}</b></div>`; }).join('');
   const TOP_N = 30, held = SF.filter(F => F.best.out.status === 'held'), h0 = held[0];
+  TL.lastFit = {ticker: p.ticker, score: Math.round(score), label: cls.label, held: held.length, of: SF.length,             // for Ask Finny's suggestions and context
+    top: held.slice(0, 3).map(F => ({name: F.fam.short, rule: F.fam.name || '', source: F.fam.source || '', backtest_sharpe: F.best.m?.sharpe ?? null}))};
+  if (typeof akChips === 'function') akChips();
   const lead = held.length ? `<b>${held.length}</b> of our ${SF.length} validated strategy families would buy ${tlEsc(p.ticker)} today${h0 ? `; the strongest of them is <b>${tlEsc(h0.fam.short)}</b>` : ''}.`
     : `None of our ${SF.length} validated strategy families would buy ${tlEsc(p.ticker)} today${rel.length ? `; ${rel.length} have it close to their buy line` : ''}.`;
   el.innerHTML = `${banner}
@@ -5946,15 +5949,28 @@ function akContext() {                                       // compact numbers 
     odds_higher_1_month_pct: pc(m?.head?.v), normal_weekly_swing_pct: isFinite(A.f?.vol20) ? pc(A.f.vol20 / Math.sqrt(52)) : null,
     today_from_open_odds_pct: A.op ? pc(A.op.p_up) : null,
     one_week_forecasts_replayed_over_last_12_months: wf ? {number_of_1_week_forecasts: wf.n, share_right_pct: pc(wf.hit), typical_miss_of_the_1_week_move_pct: pc(wf.rmse), range_of_9_in_10_misses_pct: [pc(wf.q05), pc(wf.q95)]} : null,
-    strategy_fit_score: sc != null ? Math.round(sc) : null, return_12m_pct: pc(A.f?.mom12m ?? A.own?.f?.mom12m), history_since: A.own?.first || null};
+    strategy_fit_score: sc != null ? Math.round(sc) : null,
+    strategies_that_would_buy_it: typeof TL !== 'undefined' && TL.lastFit?.ticker === A.sym ? {count: TL.lastFit.held, of_validated_families: TL.lastFit.of, top: TL.lastFit.top} : null,
+    swing_signal_today: w?.head?.edge ? (w.sig || 'yes') : 'none', return_12m_pct: pc(A.f?.mom12m ?? A.own?.f?.mom12m), history_since: A.own?.first || null};
 }
 const akFmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\[(\d+)\]/g, '<sup class="ak-ref">$1</sup>').replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
   .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g, '') + '</ul>').replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
-function akChips() {
-  const el = document.getElementById('ak-chips'); if (!el) return; const s = typeof HERO !== 'undefined' && HERO.sym && !HERO.demo ? HERO.sym : null;
-  const Q = [...(s ? [`Explain the numbers for ${s}`] : []), 'How are the odds calculated?', 'Why is the cone wide for some stocks?', 'What is the R18L26 swing signal?', 'Is the 1-week chance a prediction?'];
-  el.innerHTML = Q.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('');
+function akChips() {                                          // suggestions follow the stock on screen and the strategies that like it
+  const el = document.getElementById('ak-chips'); if (!el) return;
+  const A = typeof HERO !== 'undefined' && !HERO.demo ? HERO.last : null, S = A?.sym, Q = [];
+  if (S) {
+    const w = A.H?.[0], p = w?.head?.v, wf = A.own?.wf?.['1y'], fit = typeof TL !== 'undefined' && TL.lastFit?.ticker === S ? TL.lastFit : null;
+    if (p != null) Q.push(w?.head?.edge ? `What does today's swing signal mean for ${S}?` : `Why is ${S}'s chance of a higher week ${Math.round(p * 100)}%?`);
+    if (fit?.top?.length) Q.push(`What is ${fit.top[0].name} and why would it buy ${S}?`);
+    else if (fit) Q.push(`Why does no tested strategy want ${S} right now?`);
+    if (wf) Q.push(`How reliable were past 1-week forecasts for ${S}?`);
+    if (isFinite(A.f?.vol20)) Q.push(`Is ${S} more volatile than the market, and what does that mean for me?`);
+    if (A.op) Q.push(`What does today-from-the-open say about ${S}?`);
+    Q.push(`Explain all of ${S}'s numbers in simple words`);
+  } else Q.push('Which strategies passed every test?', 'What is the R18L26 swing signal?', 'How does Strategy fit pick strategies?', 'Why do most weekly odds look like a coin flip?');
+  el.innerHTML = Q.slice(0, 5).map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('');
   el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { document.getElementById('ak-q').value = b.dataset.q; akAsk(); });
+  const inp = document.getElementById('ak-q'); if (inp) inp.placeholder = S ? `Ask anything about ${S} or its strategies…` : 'Ask about a stock, a strategy or the research…';
 }
 async function akAsk() {
   const box = document.getElementById('ak-q'), out = document.getElementById('ak-out'), q = (box?.value || '').trim(); if (!q || AK.busy) return;
