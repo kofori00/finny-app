@@ -763,6 +763,7 @@
   .hero-stats div{padding:10px 12px;border-radius:14px;background:var(--glass-2);border:1px solid var(--glass-line)}
   .hero-stats b{display:block;font:800 17px var(--font-display);letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
   .hero-stats span{display:block;font-size:11px;line-height:1.3;color:var(--muted);margin-top:3px}
+  .hero-stats .hs-l{font-size:12px;line-height:1.3;color:var(--ink-2);margin-top:4px} .hero-stats .hs-s{font-size:10.5px;line-height:1.3;color:var(--muted);margin-top:3px}
   .hero-art svg{width:100%;height:auto;display:block;overflow:visible}
   .hs1{stop-color:var(--lime);stop-opacity:.42} .hs0{stop-color:var(--lime);stop-opacity:0} .hl0{stop-color:#7ab8a2} .hl1{stop-color:var(--lime)}
   .hgrid path{stroke:var(--glass-line);stroke-width:1;stroke-dasharray:3 5}
@@ -5697,13 +5698,16 @@ function heroTiles(A) {                                                      // 
   const ic = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${n}</svg>`;
   const I = {odds: '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/><circle cx="12" cy="16" r="1.4"/>', hit: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>',
     miss: '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4M17 8l4 4-4 4"/>'};
-  const win = HERO.win === '3m' ? '3 months' : 'past year';
-  box.innerHTML = `<div title="${w?.head?.src ? esc(w.head.src) : ''}">${ic(I.odds)}<b>${p == null ? '…' : Math.round(p * 100) + '%'}</b><span>up next week · ${w?.head?.edge ? 'signal' : 'own record'}</span></div>`
-    + (W ? `<div title="Direction calls (up when the odds are 50% or more), scored on what happened 5 trading days later. Brier ${W.brier} (a coin flip scores 0.25; lower is better).${other ? ` Other window: ${Math.round(other.hit * 100)}% right.` : ''}">${ic(I.hit)}<b>${Math.round(W.hit * 100)}%</b><span>calls right · ${win}</span></div>`
-         + `<div title="Actual 1-week move minus the expected move (${hPc(wf.mu_now, 2)}). Typical miss = root mean square error; the cone shows the 16-84% and 5-95% ranges of these misses.">${ic(I.miss)}<b>±${(W.rmse * 100).toFixed(1)}%</b><span>typical miss · ${W.n} forecasts</span></div>`
-       : A.own && !wf ? `<div>${ic(I.hit)}<b>${A.H?.[2]?.head?.v == null ? '–' : Math.round(A.H[2].head.v * 100) + '%'}</b><span>up in 1 month · own record</span></div>`   // no forecast check (short history)
-         + `<div>${ic(I.miss)}<b>${isFinite(A.f?.vol20) ? '±' + (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '–'}</b><span>typical 1-week move</span></div>`
-       : `<div>${ic(I.hit)}<b>…</b><span>checking past forecasts</span></div><div>${ic(I.miss)}<b>…</b><span>typical miss</span></div>`);
+  const win = HERO.win === '3m' ? 'last 3 months' : 'last 12 months', S = esc(A.sym);
+  const tile = (icon, val, label, src, tip = '') => `<div${tip ? ` title="${tip}"` : ''}>${ic(icon)}<b>${val}</b><span class="hs-l">${label}</span><span class="hs-s">${src}</span></div>`;
+  box.innerHTML = tile(I.odds, p == null ? '…' : Math.round(p * 100) + '%', `chance ${S} is higher in 1 week`, w?.head?.edge ? 'from a tested buy signal' : `from ${S}'s own history`, w?.head?.src ? esc(w.head.src) : '')
+    + (W ? tile(I.hit, Math.round(W.hit * 100) + '%', 'of past 1-week forecasts were right', `${W.n} forecasts, ${win}`,
+               `Each day we replayed the forecast with only the data known then and checked it 5 trading days later. Brier score ${W.brier} (a coin flip scores 0.25; lower is better).${other ? ` Other window: ${Math.round(other.hit * 100)}% right.` : ''}`)
+         + tile(I.miss, '±' + (W.rmse * 100).toFixed(1) + '%', 'average miss of those forecasts', `actual 1-week move vs expected, ${win}`,
+               `Root mean square error of actual 1-week move minus the expected move (${hPc(wf.mu_now, 2)}). The cone on the chart shows where 68% and 90% of these misses fell.`)
+       : A.own && !wf ? tile(I.hit, A.H?.[2]?.head?.v == null ? '–' : Math.round(A.H[2].head.v * 100) + '%', `chance ${S} is higher in 1 month`, `from ${S}'s own history`)
+         + tile(I.miss, isFinite(A.f?.vol20) ? '±' + (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '–', `how much ${S} usually moves in a week`, 'up or down, last 20 trading days')
+       : tile(I.hit, '…', 'checking past forecasts', '') + tile(I.miss, '…', 'average forecast miss', ''));
   const sw = document.getElementById('hero-win'); if (sw) { sw.hidden = !wf; sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.w === HERO.win)); }
 }
 function heroFit(sym, score, label) {                                        // called by the ticker lookup once it has scored the stock
