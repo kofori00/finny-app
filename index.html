@@ -5712,14 +5712,14 @@ function heroTiles(A) {                                                      // 
   const tile = (icon, val, label, src, tip = '') => `<div${tip ? ` title="${tip}"` : ''}>${ic(icon)}<b>${val}</b><span class="hs-l">${label}</span><span class="hs-s">${src}</span></div>`;
   box.innerHTML = tile(I.odds, p == null ? '…' : Math.round(p * 100) + '%', `chance ${S} is higher in 1 week`, w?.head?.edge ? 'from a tested buy signal' : `from ${S}'s own history`, w?.head?.src ? esc(w.head.src) : '')
     + tile(I.hit, A.H?.[2]?.head?.v == null ? '…' : Math.round(A.H[2].head.v * 100) + '%', `chance ${S} is higher in 1 month`, `from ${S}'s own history`)
-    + tile(I.miss, isFinite(A.f?.vol20) ? (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '…', `typical weekly move of ${S}`, 'up or down, based on the last 20 trading days');
+    + tile(I.miss, isFinite(A.f?.vol20) ? (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '…', `${S}'s normal swing in a week, up or down`, `1 standard deviation: about 2 in 3 weeks move less than ${isFinite(A.f?.vol20) ? (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : 'this'} (last 20 trading days)`);
   // accuracy of the 1-week forecast (walk-forward replay in ticker-odds v3), shown under the chart next to the cone it sizes
   const acc = document.getElementById('hero-acc');
   if (acc) { acc.hidden = !W; if (W) {
     const hr = Math.round(W.hit * 100), verdict = hr >= 55 ? 'right more often than a coin flip' : hr >= 45 ? 'about as often right as a coin flip, so treat the odds as a base rate, not a prediction' : 'right less often than a coin flip';
     acc.querySelector('.ha-sum').textContent = `${hr}% right · typically off by ${(W.rmse * 100).toFixed(1)}%`;
     acc.querySelector('.ha-body').innerHTML = `<div class="ha-k"><div><b>${hr}%</b><span>of 1-week forecasts right</span></div>
-      <div><b>${(W.rmse * 100).toFixed(1)}%</b><span>typical miss, too high or too low</span></div><div><b>${hPc(W.q05)} to ${hPc(W.q95)}</b><span>range of 9 in 10 misses (actual minus forecast)</span></div></div>
+      <div><b>${(W.rmse * 100).toFixed(1)}%</b><span>typical miss, too high or too low: about 2 in 3 forecasts were off by less (1 standard deviation)</span></div><div><b>${hPc(W.q05)} to ${hPc(W.q95)}</b><span>range of 9 in 10 misses (actual minus forecast)</span></div></div>
       <p>Each day of the ${win} we re-made ${S}'s 1-week forecast with only the data known that day and compared it with what happened 5 trading days later (${W.n} forecasts).
       It was ${verdict}. The cone shows where 68% (dark) and 90% (light) of the misses fell.</p>`; } }
   const sw = document.getElementById('hero-win'); if (sw) { sw.hidden = !wf; sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.w === HERO.win)); }
