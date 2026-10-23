@@ -272,7 +272,7 @@
   .picker-body{margin-top:8px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
   .picker-body .slist{max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #controls-panel .panel-title{display:none}
-  body.signed-out .wrap > *:not(header):not(.banner):not(#login-panel){display:none !important}
+  body.signed-out .wrap > *:not(header):not(.banner):not(#login-panel):not(#pending-panel){display:none !important}
   .panel-title{font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink)}
   .panel-title::before{display:none}
   .smeta,.pill span,.br-count,#range-note{font-family:var(--font-ui);font-variant-numeric:tabular-nums}
@@ -885,6 +885,23 @@
   body.v-analyze #rs-hero,body.v-accounts #rs-hero{display:none!important}
   @media (max-width:640px){ .lab-hero{grid-template-columns:76px minmax(0,1fr);gap:14px;padding:20px 16px} .lab-art{width:76px;height:76px} .lab-txt h2{font-size:21px} .lab-txt p{font-size:13px} }
   .pt-map,.pt-chart{--icc:#7598c4} .pt-pie,.pt-compass{--icc:#6fae9c} .pt-calendar,.pt-flag{--icc:#c9a05e} .pt-shield,.pt-book{--icc:#9d8fc6} .pt-play{--icc:#c98b80} .pt-chain{--icc:#c9a05e}
+
+  /* ---- sign-in, waiting screen, customers (2026-10-23) ---- */
+  .login-card{max-width:440px;margin:24px auto} .lg-sub{font-size:13.5px;line-height:1.5;color:var(--ink-2);margin:6px 0 14px}
+  .lg-oauth{display:grid;gap:8px} .lg-oauth button{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--glass-line);
+    background:var(--surface);color:var(--ink);font:600 14.5px var(--font-ui);cursor:pointer} .lg-oauth button:hover{border-color:var(--accent)} .lg-oauth svg{width:20px;height:20px;flex:none}
+  .lg-or{display:flex;align-items:center;gap:10px;margin:16px 0 10px;font-size:12px;color:var(--muted)} .lg-or::before,.lg-or::after{content:'';flex:1;height:1px;background:var(--glass-line)}
+  #login-panel .login-form{display:grid;gap:8px} #login-panel .login-form input{padding:12px 14px;border-radius:12px;font-size:15px}
+  .lg-btns{display:flex;gap:8px;margin-top:4px} .lg-btns button{flex:1;padding:12px;border-radius:999px;font:700 14px var(--font-ui);cursor:pointer}
+  .lg-sec{border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink)} .lg-links{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:13px}
+  body.role-customer #view-tabs button[data-v="accounts"],body.role-customer #nw-tabs button[data-f="held"]{display:none!important}
+  body.pending .wrap > *:not(header):not(.banner):not(#pending-panel){display:none!important}
+  .cu-count{margin-left:10px;font:700 11px var(--font-ui);padding:2px 9px;border-radius:999px;background:color-mix(in srgb, #c9a05e 18%, transparent);color:#c9a05e}
+  .cu-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--glass-line)} .cu-row:last-child{border-bottom:0}
+  .cu-id{min-width:0} .cu-id b{display:block;font:600 14px var(--font-ui);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .cu-id span{font-size:11.5px;color:var(--muted)}
+  .cu-act{display:flex;gap:6px;align-items:center} .cu-act button{font:700 12px var(--font-ui);padding:7px 12px;border-radius:999px;cursor:pointer;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2)}
+  .cu-act .cu-ok{background:var(--lime);color:var(--lime-ink);border-color:transparent} .cu-act .cu-no{color:var(--bad)}
+  .cu-st{font:700 11px var(--font-ui);padding:3px 9px;border-radius:999px} .cu-st.approved{background:var(--accent-soft);color:var(--accent)} .cu-st.rejected{color:var(--bad);background:color-mix(in srgb, var(--bad) 12%, transparent)}
 :root{--bg:#eeece6; --surface:#faf8f3; --surface-2:#f3f0e9; --surface-3:#e8e4db; --border:rgba(60,55,40,.09);
     --glass:rgba(255,253,248,.62); --glass-2:rgba(255,253,248,.46); --glass-line:rgba(255,255,255,.72);
     --ink:#2d3633; --ink-2:#56615c; --muted:#8a938e;
@@ -1050,6 +1067,12 @@
     </div>
   </details>
 
+  <div class="panel" id="cust-panel" data-view="accounts">
+    <div class="panel-title"><span class="pt-ic pt-flask" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10.5h18"/><circle cx="16.5" cy="15.3" r="1.2"/></svg></span>Customers <span class="cu-count" id="cust-count" hidden></span></div>
+    <p class="lg-sub">People who signed up. Approved customers see Analyze and Research; your paper accounts stay private.</p>
+    <div id="cust-body"><p class="note">Loading…</p></div>
+  </div>
+
   <div class="sec" id="acc-head" data-view="accounts"><span class="pt-ic pt-chain" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="11.5" height="9" rx="4.5"/><rect x="10" y="7.5" width="11.5" height="9" rx="4.5"/></svg></span><div><b>Forward tests</b><span>Our validated strategies trading simulated money in real time, measured against the market. Nkonsonkonson, the chain link: separate strategies joined in one portfolio.</span></div></div>
   <div class="panel lh-panel" id="lh-panel" data-view="accounts">
     <div class="panel-title"><span class="pt-ic pt-wallet" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10.5h18"/><circle cx="16.5" cy="15.3" r="1.2"/></svg></span>Paper accounts <span class="lh-live"><i></i>live</span></div>
@@ -1068,14 +1091,28 @@
       <p><em>Se wo were fi na wosankofa a yenkyi</em>: it is not wrong to go back for what you forgot. Every strategy here was tested on ten years of history, and checked again on years it never saw, before it got near real money.</p></div>
   </section>
 
-  <div class="panel" id="login-panel" style="display:none">
-    <div class="panel-title">Sign in</div>
+  <div class="panel login-card" id="login-panel" style="display:none">
+    <div class="panel-title">Welcome to Finny</div>
+    <p class="lg-sub">Sign in, or create a free account. New accounts get access after a quick approval.</p>
+    <div class="lg-oauth">
+      <button type="button" data-oauth="google"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.8 1.1-2.9 0-5.4-2-6.3-4.6H2.1v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.7 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.1a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.1-3.1A11 11 0 0 0 2.1 7.1l3.6 2.8C6.6 7.3 9.1 5.4 12 5.4z"/></svg><span>Continue with Google</span></button>
+      <button type="button" data-oauth="apple"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.8-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.6-1-2.6-4.1zM13.9 5c.7-.9 1.2-2.1 1.1-3.3-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.2 1.1.1 2.3-.6 3-1.5z"/></svg><span>Continue with Apple</span></button>
+      <button type="button" data-oauth="azure"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#F25022" d="M2 2h9.5v9.5H2z"/><path fill="#7FBA00" d="M12.5 2H22v9.5h-9.5z"/><path fill="#00A4EF" d="M2 12.5h9.5V22H2z"/><path fill="#FFB900" d="M12.5 12.5H22V22h-9.5z"/></svg><span>Continue with Microsoft</span></button>
+      <button type="button" data-oauth="github"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1.5a10.5 10.5 0 0 0-3.3 20.5c.5.1.7-.2.7-.5v-1.8c-2.9.6-3.5-1.4-3.5-1.4-.5-1.2-1.2-1.5-1.2-1.5-1-.7.1-.7.1-.7 1 .1 1.6 1.1 1.6 1.1.9 1.6 2.5 1.1 3.1.9.1-.7.4-1.1.7-1.4-2.3-.3-4.8-1.2-4.8-5.2 0-1.1.4-2.1 1.1-2.8-.1-.3-.5-1.4.1-2.8 0 0 .9-.3 2.9 1.1a10 10 0 0 1 5.2 0c2-1.4 2.9-1.1 2.9-1.1.6 1.4.2 2.5.1 2.8.7.7 1.1 1.7 1.1 2.8 0 4-2.5 4.9-4.8 5.2.4.3.7 1 .7 2v2.9c0 .3.2.6.7.5A10.5 10.5 0 0 0 12 1.5z"/></svg><span>Continue with GitHub</span></button>
+    </div>
+    <div class="lg-or"><span>or with e-mail</span></div>
     <form id="login-form" class="login-form">
-      <input id="login-email" type="email" autocomplete="username" placeholder="Email" required>
-      <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" required>
-      <button class="primary" type="submit">Sign in</button>
+      <input id="login-email" type="email" autocomplete="username" placeholder="E-mail" required>
+      <input id="login-password" type="password" autocomplete="current-password" placeholder="Password (not needed for an e-mail link)">
+      <div class="lg-btns"><button class="primary" type="submit" id="lg-signin">Sign in</button><button type="submit" id="lg-create" class="lg-sec">Create account</button></div>
     </form>
+    <div class="lg-links"><button type="button" id="lg-magic" class="linkbtn">E-mail me a sign-in link</button><button type="button" id="lg-forgot" class="linkbtn">Forgot password?</button></div>
     <div id="login-msg" class="login-msg"></div>
+  </div>
+  <div class="panel login-card" id="pending-panel" style="display:none">
+    <div class="panel-title">Almost there</div>
+    <p class="lg-sub pd-msg"></p><p class="lg-sub"><b class="pd-mail"></b></p>
+    <div class="lg-btns"><button type="button" class="lg-sec" id="pending-out">Sign out</button></div>
   </div>
 
   <div class="panel" id="controls-panel">
@@ -3080,17 +3117,35 @@ function showLogin(msg) {
 }
 function wireAuth() {
   const form = document.getElementById('login-form');
+  const msg = t => { document.getElementById('login-msg').textContent = t; }, mail = () => document.getElementById('login-email').value.trim(), pw = () => document.getElementById('login-password').value;
   form.onsubmit = async ev => {
     ev.preventDefault();
-    const btn = form.querySelector('button'); btn.disabled = true;
-    document.getElementById('login-msg').textContent = 'Signing in…';
+    const create = ev.submitter && ev.submitter.id === 'lg-create', btn = ev.submitter || form.querySelector('button'); btn.disabled = true;
+    if (create && pw().length < 8) { msg('Choose a password of at least 8 characters.'); btn.disabled = false; return; }
+    msg(create ? 'Creating your account…' : 'Signing in…');
     try {
-      await signIn(document.getElementById('login-email').value.trim(), document.getElementById('login-password').value);
+      if (create) {
+        const j = await authPost(`signup?redirect_to=${encodeURIComponent(APP_HOME())}`, {email: mail(), password: pw()});
+        if (!j.access_token) { msg(`Almost there: we sent a confirmation link to ${mail()}. Open it on this device to finish.`); btn.disabled = false; return; }
+        saveSession(toSession(j));
+      } else await signIn(mail(), pw());
       document.getElementById('login-panel').style.display = 'none'; document.body.classList.remove('signed-out');
       document.getElementById('login-password').value = ''; btn.disabled = false;
       finnyBoot();
-    } catch (e) { document.getElementById('login-msg').textContent = 'Sign-in failed: ' + e.message; btn.disabled = false; }
+    } catch (e) { msg((create ? 'Could not create the account: ' : 'Sign-in failed: ') + e.message); btn.disabled = false; }
   };
+  document.querySelectorAll('[data-oauth]').forEach(b => b.onclick = () => oauth(b.dataset.oauth));
+  document.getElementById('lg-magic').onclick = async () => {
+    if (!mail()) { msg('Enter your e-mail address first.'); return; }
+    try { await authPost(`otp?redirect_to=${encodeURIComponent(APP_HOME())}`, {email: mail(), create_user: true}); msg(`Check your inbox: we sent a sign-in link to ${mail()}.`); }
+    catch (e) { msg('Could not send the link: ' + e.message); }
+  };
+  document.getElementById('lg-forgot').onclick = async () => {
+    if (!mail()) { msg('Enter your e-mail address first, then tap "Forgot password?" again.'); return; }
+    try { await authPost(`recover?redirect_to=${encodeURIComponent(APP_HOME())}`, {email: mail()}); msg(`If ${mail()} has an account, a reset link is on its way.`); }
+    catch (e) { msg('Could not send the reset link: ' + e.message); }
+  };
+  document.getElementById('pending-out').onclick = () => { document.getElementById('pending-panel').style.display = 'none'; document.body.classList.remove('pending'); signOut(); };
   document.getElementById('signout-btn').onclick = signOut;
   document.getElementById('chpw-btn').onclick = async () => {
     const pw = prompt('New password (at least 12 characters):');
@@ -3099,6 +3154,33 @@ function wireAuth() {
     try { await authPost('user', {password: pw}, await getToken()); alert('Password changed.'); }
     catch (e) { alert('Could not change password: ' + e.message); }
   };
+}
+// ---- customer accounts (2026-10-23): Google / Apple / Microsoft / GitHub, e-mail link, e-mail + password sign-up, password reset ----
+// New accounts land as 'pending' (public.app_users) until the owner approves them; public.my_access() says owner | customer | pending | rejected.
+let ACCESS = null;
+const APP_HOME = () => location.origin + location.pathname;
+function oauth(provider) { location.href = `${SB_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(APP_HOME())}${provider === 'azure' ? '&scopes=email' : ''}`; }
+const jwtEmail = t => { try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).email || ''; } catch (e) { return ''; } };
+function handleAuthRedirect() {                                  // tokens or errors come back in the URL fragment after Google, e-mail links etc.
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('error_description') || h.get('error')) { AUTH_MSG = 'Sign-in failed: ' + (h.get('error_description') || h.get('error')).replace(/\+/g, ' '); history.replaceState(null, '', location.pathname + '#analyze'); return; }
+  if (!h.get('access_token')) return;
+  saveSession({access_token: h.get('access_token'), refresh_token: h.get('refresh_token'), expires_at: Date.now() / 1000 + (+h.get('expires_in') || 3600), email: jwtEmail(h.get('access_token'))});
+  if (h.get('type') === 'recovery') RECOVERY = true;
+  history.replaceState(null, '', location.pathname + '#analyze');
+}
+let AUTH_MSG = '', RECOVERY = false;
+async function myAccess() {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/my_access`, {method: 'POST', headers: {apikey: SB_KEY, Authorization: 'Bearer ' + await getToken(), 'Content-Type': 'application/json'}, body: '{}'});
+  return r.ok ? (await r.json()) : 'none';
+}
+function showPending(status) {
+  document.body.classList.add('signed-out', 'pending'); document.getElementById('login-panel').style.display = 'none';
+  const p = document.getElementById('pending-panel'); p.style.display = '';
+  p.querySelector('.pd-mail').textContent = SESSION?.email || '';
+  p.querySelector('.pd-msg').textContent = status === 'rejected' ? 'This account was not approved for access. Contact the owner if you think this is a mistake.'
+    : 'Thanks for signing up. Your account is waiting for approval; you will get access as soon as it is approved. Check back later.';
+  document.getElementById('sb-status').textContent = status === 'rejected' ? 'Access not approved' : 'Waiting for approval';
 }
 const inList = keys => 'in.(' + keys.map(k => '"' + k.replace(/"/g, '\\"') + '"').join(',') + ')';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -3124,7 +3206,13 @@ let STRATEGY_ROWS = [];
 
 async function finnyBoot() {
   const status = document.getElementById('sb-status');
-  if (!(await getToken())) { showLogin(); return; }
+  if (!(await getToken())) { showLogin(AUTH_MSG); return; }
+  if (RECOVERY) { RECOVERY = false; const np = prompt('Choose a new password (at least 8 characters):');
+    if (np && np.length >= 8) { try { await authPost('user', {password: np}, await getToken()); alert('Password changed.'); } catch (e) { alert('Could not change the password: ' + e.message); } } }
+  ACCESS = await myAccess().catch(() => 'none');
+  if (ACCESS !== 'owner' && ACCESS !== 'customer') { document.getElementById('account-btns').style.display = ''; showPending(ACCESS); return; }
+  document.body.classList.remove('pending'); document.getElementById('pending-panel').style.display = 'none';
+  document.body.classList.toggle('role-owner', ACCESS === 'owner'); document.body.classList.toggle('role-customer', ACCESS === 'customer');
   document.getElementById('account-btns').style.display = '';
   { const em = SESSION.email || '', sm = document.getElementById('account-email'); sm.textContent = (em[0] || '?').toUpperCase(); sm.title = em; sm.setAttribute('aria-label', 'Account ' + em);
     const mn = document.querySelector('#account-btns .account-menu'); if (mn && !mn.querySelector('.acct-mail')) mn.insertAdjacentHTML('afterbegin', `<div class="acct-mail">${esc(em)}</div>`); }
@@ -3135,11 +3223,10 @@ async function finnyBoot() {
     // RLS returns an empty list (not 401) to signed-in accounts that are not allow-listed
     if (!STRATEGY_ROWS.length) throw Object.assign(new Error(`${SESSION.email || 'This account'} is signed in but not allowed to read the dashboard data.`), {auth: true});
     // Live tab first: it needs only the registry (labels), not the backtest curves the Research tab loads next
-    document.getElementById('live-panel').style.display = '';
-    liveLoad();
+    if (ACCESS === 'owner') { document.getElementById('live-panel').style.display = ''; liveLoad(); if (typeof custInit === 'function') custInit(); }
     try { tlInit(); } catch (e) { console.error('ticker lookup', e); }
     try { mvInit(); } catch (e) { console.error('movers', e); }
-    const LIVE = await liveSeries();                 // paper accounts as selectable series: every backtest analytic applies to them
+    const LIVE = ACCESS === 'owner' ? await liveSeries() : [];                 // paper accounts as selectable series: every backtest analytic applies to them
     STRATEGY_ROWS = LIVE.map(x => x.row).concat(STRATEGY_ROWS);
     const byKey = Object.fromEntries(STRATEGY_ROWS.map(r => [r.key, r]));
     luckAdjust();
@@ -3889,6 +3976,7 @@ document.querySelectorAll('details.fold').forEach(d => d.addEventListener('toggl
   if (d.open && typeof Plotly !== 'undefined') d.querySelectorAll('.js-plotly-plot').forEach(p => Plotly.Plots.resize(p));
 }));
 
+handleAuthRedirect();
 wireAuth();
 wireBrowser();
 finnyBoot();
@@ -5496,7 +5584,7 @@ const VIEW = {cur: null, SUB: {
   accounts: 'Forward tests: our strategies trading simulated money, against the market.',
   research: 'Historic backtests: compare strategies, events, robustness and the research log.'}};
 function viewSet(v, push = true) {
-  if (!VIEW.SUB[v]) v = 'analyze'; VIEW.cur = v;
+  if (!VIEW.SUB[v] || (v === 'accounts' && document.body.classList.contains('role-customer'))) v = 'analyze'; VIEW.cur = v;   // customers have no Accounts tab
   ['analyze', 'accounts', 'research'].forEach(k => document.body.classList.toggle('v-' + k, k === v));
   document.querySelectorAll('#view-tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.v === v ? 'true' : 'false'));
   const sub = document.getElementById('view-sub'); if (sub) sub.textContent = VIEW.SUB[v];
@@ -5782,6 +5870,37 @@ function heroInit() {
   if (card) card.onclick = () => { if (!HERO.demo) go('od-panel'); };
   if (fit) fit.onclick = () => { if (!HERO.demo) { const t = document.getElementById('tl-panel'); if (t) t.open = true; go('tl-panel'); } };
 }
+
+// ---------------- Customers (2026-10-23, owner only, Accounts tab): approve or reject people who signed up ----------------
+// Reads public.app_users (RLS: the owner sees every row) and calls public.set_customer_status(); pending sign-ups are listed first.
+const CU = {rows: [], busy: false};
+async function custLoad() {
+  if (CU.busy) return; CU.busy = true;
+  try { CU.rows = await sb('app_users?select=user_id,email,provider,status,created_at,decided_at&order=created_at.desc'); CU.err = null; } catch (e) { CU.err = e.message; }
+  CU.busy = false; custRender();
+}
+async function custSet(id, status) {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/set_customer_status`, {method: 'POST', headers: {apikey: SB_KEY, Authorization: 'Bearer ' + await getToken(), 'Content-Type': 'application/json'},
+    body: JSON.stringify({target: id, new_status: status})});
+  if (!r.ok) alert('Could not update: ' + ((await r.json().catch(() => ({}))).message || r.status));
+  custLoad();
+}
+function custRender() {
+  const el = document.getElementById('cust-body'); if (!el) return;
+  if (CU.err) { el.innerHTML = `<p class="note">Could not load customers: ${esc(CU.err)}</p>`; return; }
+  const order = {pending: 0, approved: 1, rejected: 2}, rows = [...CU.rows].sort((a, b) => order[a.status] - order[b.status] || b.created_at.localeCompare(a.created_at));
+  const n = rows.filter(r => r.status === 'pending').length, cnt = document.getElementById('cust-count'); if (cnt) { cnt.textContent = n ? `${n} waiting` : ''; cnt.hidden = !n; }
+  const day = d => d ? new Date(d).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'}) : '';
+  const PROV = {google: 'Google', apple: 'Apple', azure: 'Microsoft', github: 'GitHub', email: 'E-mail'};
+  el.innerHTML = rows.length ? rows.map(r => `<div class="cu-row">
+      <span class="nw-av" style="--h:${typeof nwHue === 'function' ? nwHue(r.email || '?') : 200}">${esc((r.email || '?')[0].toUpperCase())}</span>
+      <div class="cu-id"><b>${esc(r.email || '(no e-mail)')}</b><span>${esc(PROV[r.provider] || r.provider || '')} · signed up ${day(r.created_at)}${r.decided_at ? ' · decided ' + day(r.decided_at) : ''}</span></div>
+      <div class="cu-act">${r.status === 'pending' ? `<button class="cu-ok" data-id="${esc(r.user_id)}" data-s="approved">Approve</button><button class="cu-no" data-id="${esc(r.user_id)}" data-s="rejected">Reject</button>`
+        : `<span class="cu-st ${r.status}">${r.status === 'approved' ? 'Approved' : 'Rejected'}</span><button class="cu-undo" data-id="${esc(r.user_id)}" data-s="${r.status === 'approved' ? 'rejected' : 'approved'}">${r.status === 'approved' ? 'Revoke' : 'Approve'}</button>`}</div></div>`).join('')
+    : '<p class="note">No sign-ups yet.</p>';
+  el.querySelectorAll('[data-id]').forEach(b => b.onclick = () => { if (b.dataset.s !== 'approved' && !confirm('Remove access for this account?')) return; custSet(b.dataset.id, b.dataset.s); });
+}
+function custInit() { custLoad(); if (!CU.timer) CU.timer = setInterval(() => { if (!document.hidden) custLoad(); }, 5 * 60 * 1000); }
 
 </script>
 </body>
