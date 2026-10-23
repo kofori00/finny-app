@@ -13,7 +13,7 @@ h1{color:var(--ink);font-size:28px;margin:0 0 4px}h2{color:var(--ink);font-size:
 <h2>How we use it</h2>
 <p>Only to let you sign in, to decide on access, and to contact you about your account if needed. We do not sell or share your data and we do not use it for advertising.</p>
 <h2>Ask Finny (AI answers)</h2>
-<p>When you use Ask Finny, your question and the numbers shown for the stock on screen are sent to Google's Gemini service to write the answer, together with passages from Finny's own research. Do not type personal information into questions. We keep your questions for 90 days to apply the daily limit and to improve the answers.</p>
+<p>When you use Ask Finny, your question and the numbers shown for the stock on screen are sent to Google's Gemini service to write the answer, together with passages from Finny's own research and any live app numbers it looks up (odds, strategy fit, movers, news). When Gemini is unavailable, the same information goes to an open-source model run by Cloudflare Workers AI instead. Do not type personal information into questions. We keep your questions for 90 days to apply the daily limit and to improve the answers.</p>
 <h2>Where it is stored</h2>
 <p>Account data is stored with Supabase (database and sign-in). The app itself is served by GitHub Pages. Market data and news come from Alpaca; your personal data is not sent to them.</p>
 <h2>Your choices</h2>

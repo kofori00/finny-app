@@ -6045,7 +6045,13 @@ async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
   try { return await f(c.args || {}); } catch (e) { return {error: e.message}; }
 }
-const akFmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => `<sup class="ak-ref">${l.split(/\s*,\s*/).join(',')}</sup>`).replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
+const akSep = l => /^\s*\|?\s*:?-{2,}/.test(l || '');
+const akPlain = s => String(s || '').split('\n').map((l, i, L) => {      // models sometimes still write markdown tables or headings: make them bullets / bold lines
+  if (akSep(l) || akSep(L[i + 1])) return null;                        // the separator line and the table's header row
+  if (/^\s*\|.*\|\s*$/.test(l)) { const c = l.trim().replace(/^\||\|$/g, '').split('|').map(x => x.trim()).filter(Boolean); return c.length ? '- ' + c[0] + (c.length > 1 ? ': ' + c.slice(1).join(' · ') : '') : null; }
+  const h = l.match(/^\s*#{1,6}\s+(.*)$/); return h ? `**${h[1].replace(/\*\*/g, '')}**` : l;
+}).filter(l => l !== null).join('\n');
+const akFmt = s => esc(akPlain(s)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => `<sup class="ak-ref">${l.split(/\s*,\s*/).join(',')}</sup>`).replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
   .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g, '') + '</ul>').replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
 // Sources: only the passages the answer actually cites, renumbered 1..k in reading order; the other close passages fold away.
 const AK_KIND = {'Finny FAQ': ['Guide', 'k-guide'], 'Research notes (Bible)': ['Research note', 'k-note'], 'Strategy description': ['Strategy', 'k-strat']};
