@@ -904,20 +904,39 @@
   .cu-act .cu-ok{background:var(--lime);color:var(--lime-ink);border-color:transparent} .cu-act .cu-no{color:var(--bad)}
   .cu-st{font:700 11px var(--font-ui);padding:3px 9px;border-radius:999px} .cu-st.approved{background:var(--accent-soft);color:var(--accent)} .cu-st.rejected{color:var(--bad);background:color-mix(in srgb, var(--bad) 12%, transparent)}
 
-  /* ---- Ask Finny (2026-10-23) ---- */
-  .pt-ask{--icc:#7598c4} .ak-beta{margin-left:8px;font:700 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
-  .ak-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px} .ak-chips button{font:600 12px var(--font-ui);padding:6px 11px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer;text-align:left}
-  .ak-chips button:hover{border-color:var(--accent);color:var(--ink)}
-  .ak-form{display:flex;gap:8px;padding:5px 5px 5px 16px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line)} .ak-form:focus-within{border-color:color-mix(in srgb, var(--lime) 70%, transparent);box-shadow:0 0 0 3px var(--accent-soft)}
-  #ask-panel .ak-form input{flex:1;min-width:0;border:0!important;background:transparent!important;outline:none;box-shadow:none;color:var(--ink);font:500 15px var(--font-ui);padding:8px 0}
+  /* ---- Ask Finny v2 (2026-10-23): same family as the Analyze hero card ---- */
+  .ask-panel{position:relative;padding:26px 22px 20px;border-radius:26px;box-shadow:var(--shadow-lg);
+    background:radial-gradient(480px 260px at 100% 0%, color-mix(in srgb, #7598c4 20%, transparent), transparent 70%),
+               radial-gradient(420px 260px at 0% 100%, color-mix(in srgb, var(--lime) 14%, transparent), transparent 70%), var(--glass)}
+  .ak-wm{top:22px;right:18px;width:120px;height:120px;stroke:#7598c4;opacity:.16} .ask-panel > *:not(.kente):not(.ak-wm){position:relative}
+  .ask-panel .hero-kick{color:#7598c4;background:color-mix(in srgb, #7598c4 14%, transparent);border-color:color-mix(in srgb, #7598c4 30%, transparent)} .ask-panel .hero-kick i{background:#7598c4}
+  .ak-beta{font-weight:800;opacity:.75;margin-left:2px}
+  .ak-h{font:800 27px/1.12 var(--font-display);letter-spacing:-.03em;margin:14px 0 8px;color:var(--ink);max-width:16ch}
+  .ak-h em{font-style:normal;background:linear-gradient(95deg,#7598c4,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .ak-sub{font-size:13.5px;line-height:1.55;color:var(--ink-2);margin:0 0 16px;max-width:46ch}
+  .ak-chips{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -22px 14px;padding:2px 22px 4px}
+  .ak-chips::-webkit-scrollbar{display:none}
+  .ak-chips button{flex:none;scroll-snap-align:start;width:176px;min-height:0;display:flex;flex-direction:column;justify-content:flex-start;gap:10px;text-align:left;
+    padding:13px 14px;border-radius:18px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);font:600 13px/1.35 var(--font-ui);cursor:pointer;transition:transform .15s,border-color .15s}
+  .ak-chips button:hover,.ak-chips button:focus-visible{border-color:color-mix(in srgb, var(--accent) 50%, transparent);transform:translateY(-2px)}
+  .ak-chips .pt-ic{width:30px;height:30px;border-radius:10px;margin:0} .ak-chips .pt-ic svg{width:16px;height:16px}
+  .ak-form{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--glass-line);box-shadow:0 10px 26px -16px rgba(0,0,0,.5)}
+  .ak-form:focus-within{border-color:color-mix(in srgb, var(--lime) 70%, transparent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .ak-form svg{width:18px;height:18px;flex:none;fill:none;stroke:#7598c4;stroke-width:1.8;stroke-linejoin:round}
+  #ask-panel .ak-form input{flex:1;min-width:0;border:0!important;background:transparent!important;outline:none;box-shadow:none;color:var(--ink);font:500 15px var(--font-ui);padding:9px 0}
   .ak-form button{flex:none;padding:10px 20px;border-radius:999px;border:0;background:var(--lime);color:var(--lime-ink);font:700 14px var(--font-ui);cursor:pointer} .ak-form button:disabled{opacity:.5}
-  .ak-out:empty{display:none} .ak-out{margin-top:14px}
-  .ak-a{padding:14px 16px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-line);font-size:14px;line-height:1.6;color:var(--ink-2)} .ak-a p{margin:0 0 8px} .ak-a p:last-child{margin:0}
-  .ak-a b{color:var(--ink)} .ak-a ul{margin:6px 0;padding-left:18px} .ak-ref{font:700 10px var(--font-ui);color:var(--accent);margin:0 1px}
-  .ak-src{margin-top:10px;font-size:12px;color:var(--ink-2)} .ak-src>span{display:block;font:700 10.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-  .ak-src div{padding:3px 0} .ak-src em{font-style:normal;color:var(--muted);margin-left:4px} .ak-foot{font-size:11px;color:var(--muted);margin:10px 0 0}
-  .ak-think{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13px} .ak-think i{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:akB 1s infinite ease-in-out}
+  .ak-out:empty{display:none} .ak-out{margin-top:16px}
+  .ak-card{padding:16px;border-radius:20px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .ak-who{display:flex;align-items:center;gap:10px;margin-bottom:10px} .ak-who img{width:30px;height:30px;border-radius:9px} .ak-who b{font:700 14px var(--font-display);color:var(--ink)} .ak-who span{display:block;font-size:11px;color:var(--muted)}
+  .ak-q{font:600 13.5px var(--font-ui);color:var(--ink);margin:0 0 10px;padding:9px 12px;border-radius:12px;background:var(--glass)}
+  .ak-a{font-size:14px;line-height:1.62;color:var(--ink-2)} .ak-a p{margin:0 0 8px} .ak-a p:last-child{margin:0} .ak-a b{color:var(--ink)} .ak-a ul{margin:6px 0;padding-left:18px} .ak-a li{margin:3px 0}
+  .ak-ref{font:700 10px var(--font-ui);color:var(--accent);margin:0 1px}
+  .ak-src{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px} .ak-src span{display:inline-flex;align-items:center;gap:5px;max-width:100%;font:600 11px var(--font-ui);padding:4px 10px;border-radius:999px;
+    background:var(--glass);border:1px solid var(--glass-line);color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .ak-src span b{color:var(--accent)}
+  .ak-foot{font-size:11px;color:var(--muted);margin:12px 0 0}
+  .ak-think{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13px;padding:6px 2px} .ak-think i{width:6px;height:6px;border-radius:50%;background:#7598c4;animation:akB 1s infinite ease-in-out}
   .ak-think i:nth-child(2){animation-delay:.15s} .ak-think i:nth-child(3){animation-delay:.3s} .ak-think span{margin-left:6px} @keyframes akB{0%,100%{opacity:.25}50%{opacity:1}}
+  @media (max-width:640px){ .ask-panel{padding:22px 16px 16px;border-radius:22px} .ak-h{font-size:24px} .ak-chips{margin:0 -16px 14px;padding:2px 16px 4px} .ak-wm{width:96px;height:96px} }
 :root{--bg:#eeece6; --surface:#faf8f3; --surface-2:#f3f0e9; --surface-3:#e8e4db; --border:rgba(60,55,40,.09);
     --glass:rgba(255,253,248,.62); --glass-2:rgba(255,253,248,.46); --glass-line:rgba(255,255,255,.72);
     --ink:#2d3633; --ink-2:#56615c; --muted:#8a938e;
@@ -1056,13 +1075,16 @@
 
   </details>
 
-  <div class="panel ask-panel" id="ask-panel" data-view="analyze">
-    <div class="panel-title"><span class="pt-ic pt-ask" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/></svg></span>Ask Finny <span class="ak-beta">beta</span></div>
-    <p class="lg-sub">Ask about the odds, a strategy or the research. Answers come only from Finny's own research notes and the numbers on screen.</p>
+  <section class="panel ask-panel" id="ask-panel" data-view="analyze">
+    <div class="kente" aria-hidden="true"></div><svg class="adk-wm ak-wm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12C9 7 4 9 6 13s6 1 6-1zM12 12c5-3 3-8-1-6s-1 6 1 6zM12 12c3 5 8 3 6-1s-6-1-6 1zM12 12c-5 3-3 8 1 6s1-6-1-6z"/></svg>
+    <span class="hero-kick"><i></i>AI · Ask Finny <b class="ak-beta">beta</b></span>
+    <h2 class="ak-h">Ask anything about a <em>stock or a strategy.</em></h2>
+    <p class="ak-sub">Answers come only from Finny's own research and the numbers on screen, with sources. History, not advice.</p>
     <div class="ak-chips" id="ak-chips"></div>
-    <form id="ak-form" class="ak-form"><input id="ak-q" maxlength="600" placeholder="e.g. Why is the cone so wide for TSLA?" autocomplete="off"><button id="ak-go" type="submit">Ask</button></form>
+    <form id="ak-form" class="ak-form"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+      <input id="ak-q" maxlength="600" placeholder="Ask about a stock, a strategy or the research…" autocomplete="off"><button id="ak-go" type="submit">Ask</button></form>
     <div id="ak-out" class="ak-out"></div>
-  </div>
+  </section>
 
   <div class="sec" id="an-pulse" data-view="analyze"><span class="pt-ic pt-pulse" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12h4l3-8 4 16 3-8h6"/></svg></span><div><b>Market pulse</b><span>Today's headlines and biggest movers, with what usually happened next.</span></div></div>
   <div class="panel nw-panel" id="nw-panel" data-view="analyze">
@@ -5968,7 +5990,11 @@ function akChips() {                                          // suggestions fol
     if (A.op) Q.push(`What does today-from-the-open say about ${S}?`);
     Q.push(`Explain all of ${S}'s numbers in simple words`);
   } else Q.push('Which strategies passed every test?', 'What is the R18L26 swing signal?', 'How does Strategy fit pick strategies?', 'Why do most weekly odds look like a coin flip?');
-  el.innerHTML = Q.slice(0, 5).map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('');
+  const IC = {odds: ['pt-odds', '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/><circle cx="12" cy="16" r="1.4"/>'], fit: ['pt-fit', '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>'],
+    hit: ['pt-news', '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>'], vol: ['pt-movers', '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4M17 8l4 4-4 4"/>'],
+    open: ['pt-pulse', '<path d="M2 12h4l3-8 4 16 3-8h6"/>'], ask: ['pt-ask', '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>'], pass: ['pt-wallet', '<path d="M12 3l8 3v6c0 4.5-3.4 7.8-8 9-4.6-1.2-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>']};
+  const kind = q => /chance|coin flip|odds/i.test(q) ? 'odds' : /strateg|\bbuy\b|signal/i.test(q) ? (/passed/i.test(q) ? 'pass' : /signal/i.test(q) ? 'open' : 'fit') : /reliable|forecast/i.test(q) ? 'hit' : /volatile/i.test(q) ? 'vol' : /open/i.test(q) ? 'open' : 'ask';
+  el.innerHTML = Q.slice(0, 5).map(q => { const [c, d] = IC[kind(q)]; return `<button type="button" data-q="${esc(q)}"><span class="pt-ic ${c}" aria-hidden="true"><svg viewBox="0 0 24 24">${d}</svg></span>${esc(q)}</button>`; }).join('');
   el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { document.getElementById('ak-q').value = b.dataset.q; akAsk(); });
   const inp = document.getElementById('ak-q'); if (inp) inp.placeholder = S ? `Ask anything about ${S} or its strategies…` : 'Ask about a stock, a strategy or the research…';
 }
@@ -5982,8 +6008,11 @@ async function akAsk() {
       body: JSON.stringify({question: q, symbol: ctx?.symbol || null, context: ctx})});
     const j = await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status}));
     if (!j.ok) throw new Error(j.error || 'no answer');
-    out.innerHTML = `<div class="ak-a"><p>${akFmt(j.answer)}</p></div>` + (j.sources?.length ? `<div class="ak-src"><span>Sources</span>${j.sources.map(s => `<div><sup class="ak-ref">${s.n}</sup>${esc(s.title || s.source)} <em>${esc(s.source)}</em></div>`).join('')}</div>` : '')
-      + `<p class="ak-foot">AI answer (${esc(j.model || 'Gemini')}) written only from Finny's research${ctx ? ' and the numbers shown for ' + esc(ctx.symbol) : ''}. It can make mistakes; history, not investment advice.</p>`;
+    const logo = document.querySelector('.brand-mark img')?.src || '';
+    out.innerHTML = `<div class="ak-card"><div class="ak-who">${logo ? `<img src="${logo}" alt="">` : ''}<div><b>Finny</b><span>from our research${ctx ? ' · ' + esc(ctx.symbol) : ''}</span></div></div>
+      <div class="ak-q">${esc(q)}</div><div class="ak-a"><p>${akFmt(j.answer)}</p></div>`
+      + (j.sources?.length ? `<div class="ak-src">${j.sources.map(s => `<span title="${esc(s.source)}"><b>${s.n}</b>${esc((s.title || s.source).replace(/^[a-z0-9_]+\|/i, ''))}</span>`).join('')}</div>` : '')
+      + `<p class="ak-foot">AI answer (${esc((j.model || 'Gemini').replace(' (cached)', ''))}) from Finny's research only. It can make mistakes; history, not investment advice.</p></div>`;
   } catch (e) { out.innerHTML = `<p class="note">Ask Finny could not answer: ${esc(e.message)}</p>`; }
   AK.busy = false; btn.disabled = false;
 }
