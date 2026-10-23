@@ -778,6 +778,12 @@
   .ha-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px} .ha-k div{padding:8px 10px;border-radius:12px;background:var(--glass)}
   .ha-k b{display:block;font:800 16px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums} .ha-k span{display:block;font-size:11px;line-height:1.3;color:var(--muted);margin-top:2px}
   .hero-acc p{font-size:12px;line-height:1.5;color:var(--ink-2);margin:10px 0 0}
+  .hero-disc{grid-column:1/-1;margin-top:10px;padding:14px;border-radius:16px;border:1px solid color-mix(in srgb, #c9a05e 35%, transparent);background:color-mix(in srgb, #c9a05e 8%, transparent)} .hero-disc[hidden]{display:none}
+  .hd-h{display:flex;align-items:center;gap:8px} .hd-h b{font:700 14px var(--font-display);color:var(--ink)} .hd-h svg{width:18px;height:18px;fill:none;stroke:#c9a05e;stroke-width:2;stroke-linecap:round;flex:none}
+  .hd-lead{font-size:13px;line-height:1.5;color:var(--ink-2);margin:8px 0} .hd-lead b{color:var(--ink)}
+  .hd-lim{margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;color:var(--ink-2)} .hd-lim li{margin:4px 0} .hd-lim b{color:var(--ink)}
+  .hd-more{margin-top:8px} .hd-more>summary{cursor:pointer;font:600 12.5px var(--font-ui);color:var(--accent);padding:4px 0}
+  .hd-more p{font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:8px 0 0} .hd-more b{color:var(--ink)}
   .hero-win button{font:600 11.5px var(--font-ui);padding:4px 10px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer} .hero-win button.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
   .h-mid{stroke:var(--ink-2);stroke-width:1.4;stroke-dasharray:4 4;opacity:.6} .h-edge{stroke:var(--muted);stroke-width:1;opacity:.35}
   .h-pt{fill:var(--lime);stroke:var(--surface);stroke-width:2.5} .h-halo{fill:var(--lime);opacity:.22;transform-origin:250px 92px;animation:hHalo 2.4s ease-in-out infinite}
@@ -955,6 +961,7 @@
     </svg></div>
     <details class="hero-acc" id="hero-acc" hidden><summary><span><b>How accurate is this forecast?</b><span class="ha-sum"></span></span></summary>
       <div class="ha-h"><div class="hero-win" id="hero-win"><button data-w="1y" class="on">12 months</button><button data-w="3m">3 months</button></div></div><div class="ha-body"></div></details>
+    <div class="hero-disc" id="hero-disc" hidden><div class="hd-h"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg><b>History, not a promise</b></div><div class="hd-body"></div></div>
   </section>
 
   <div class="panel od-panel" id="od-panel" data-view="analyze">
@@ -5722,6 +5729,24 @@ function heroTiles(A) {                                                      // 
       <div><b>${(W.rmse * 100).toFixed(1)}%</b><span>typical miss, too high or too low: about 2 in 3 forecasts were off by less (1 standard deviation)</span></div><div><b>${hPc(W.q05)} to ${hPc(W.q95)}</b><span>range of 9 in 10 misses (actual minus forecast)</span></div></div>
       <p>Each day of the ${win} we re-made ${S}'s 1-week forecast with only the data known that day and compared it with what happened 5 trading days later (${W.n} forecasts).
       It was ${verdict}. The cone shows where 68% (dark) and 90% (light) of the misses fell.</p>`; } }
+  // disclaimer (2026-10-23, user's wording): what each number is, why it is history and not a prediction, and the limits; filled per ticker
+  const dc = document.getElementById('hero-disc');
+  if (dc) { const p1 = p, p4 = A.H?.[2]?.head?.v ?? null, sw1 = isFinite(A.f?.vol20) ? A.f.vol20 / Math.sqrt(52) : null, since = A.own?.first ? new Date(A.own.first + 'T12:00:00Z').getFullYear() : null;
+    dc.hidden = p1 == null;
+    const pc = x => x == null ? '–' : Math.round(x * 100) + '%', tilt = x => x == null ? '' : x >= 0.57 ? 'That is above the usual 52–56% for large US stocks: a stronger historical tilt, but still history.'
+      : x >= 0.5 ? 'Because markets drift upward over time, most large US stocks and indexes land in the 52–56% range, so this is essentially a coin flip tilted slightly upward.'
+      : 'That is below a coin flip: historically this stock fell in more of these periods than it rose.';
+    const cmp = sw1 == null ? '' : sw1 < 0.015 ? 'calmer than' : sw1 <= 0.03 ? 'similar to' : 'much more volatile than';
+    const hr = W ? Math.round(W.hit * 100) : null;
+    dc.querySelector('.hd-body').innerHTML = `
+      <p class="hd-lead">The numbers above are <b>statistically accurate reflections of ${S}'s past</b>, not forward-looking predictions or guarantees.</p>
+      <ul class="hd-lim"><li><b>Past performance is not future catalysts.</b> These figures do not account for upcoming earnings, company news, regulatory decisions or interest-rate moves.</li>
+        <li><b>Direction is not size.</b> A ${pc(p1)} "higher" rate says nothing about how big the moves are: three weeks of +1% and one week of −15% is a 75% win rate and still a heavy loss.</li></ul>
+      <details class="hd-more"><summary>What each number means</summary>
+        <p><b>${pc(p1)} higher in 1 week · ${pc(p4)} higher in 1 month.</b> ${w?.head?.edge ? 'The 1-week number comes from a tested buy signal that is active today; ' : ''}Across all rolling 1-week and 1-month periods${since ? ' since ' + since : ''}, ${S} closed higher this often. ${tilt(p1)}</p>
+        ${sw1 == null ? '' : `<p><b>${(sw1 * 100).toFixed(1)}% normal weekly swing.</b> One standard deviation of ${S}'s daily moves over the last 20 trading days, scaled to a week: about 2 in 3 weeks move less than this, up or down. The S&amp;P 500 index itself usually swings about 2% a week, so ${S} is ${cmp} the market.</p>`}
+        ${W ? `<p><b>Forecast check and cone.</b> Over the ${win}, ${S}'s 1-week forecasts were right ${hr}% of the time and typically off by ${(W.rmse * 100).toFixed(1)}%. ${hr >= 55 ? 'That is somewhat better than chance, but only on past data.' : hr >= 45 ? 'Treating these historical percentages as price predictions was about as accurate as random chance.' : 'That is worse than random chance.'}</p>` : ''}
+        <p>Not investment advice.</p></details>`; }
   const sw = document.getElementById('hero-win'); if (sw) { sw.hidden = !wf; sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.w === HERO.win)); }
 }
 function heroFit(sym, score, label) {                                        // called by the ticker lookup once it has scored the stock
