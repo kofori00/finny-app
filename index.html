@@ -771,7 +771,10 @@
   .h-up{fill:var(--good);opacity:.2} .h-dn{fill:var(--bad);opacity:.16} .h-up.h-o{opacity:.08} .h-dn.h-o{opacity:.07}
   .hero-win{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted)} .hero-acc[hidden]{display:none}
   .hero-acc{grid-column:1/-1;position:relative;margin-top:6px;padding:14px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)}
-  .ha-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px} .ha-h b{font:700 14px var(--font-display);color:var(--ink)}
+  .hero-acc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px} .hero-acc>summary::-webkit-details-marker{display:none}
+  .hero-acc>summary b{display:block;font:700 14px var(--font-display);color:var(--ink)} .ha-sum{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .hero-acc>summary::after{content:'';flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;margin-right:4px}
+  .hero-acc[open]>summary::after{transform:rotate(-135deg)} .ha-h{display:flex;justify-content:flex-end;margin:12px 0 10px}
   .ha-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px} .ha-k div{padding:8px 10px;border-radius:12px;background:var(--glass)}
   .ha-k b{display:block;font:800 16px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums} .ha-k span{display:block;font-size:11px;line-height:1.3;color:var(--muted);margin-top:2px}
   .hero-acc p{font-size:12px;line-height:1.5;color:var(--ink-2);margin:10px 0 0}
@@ -950,7 +953,8 @@
       <g id="h-fit" class="h-card h-fitg"><title>Example</title><rect x="12" y="14" width="140" height="34" rx="17"/><circle cx="31" cy="31" r="8.5" class="h-ring0"/><circle id="h-ring1" cx="31" cy="31" r="8.5" class="h-ring1 h-anim" transform="rotate(-90 31 31)" stroke-dasharray="43.8 53.4"/>
         <text id="h-t" x="46" y="35.5" class="h-t">Strategy fit 82</text></g>
     </svg></div>
-    <div class="hero-acc" id="hero-acc" hidden><div class="ha-h"><b>How accurate is this forecast?</b><div class="hero-win" id="hero-win"><button data-w="1y" class="on">12 months</button><button data-w="3m">3 months</button></div></div><div class="ha-body"></div></div>
+    <details class="hero-acc" id="hero-acc" hidden><summary><span><b>How accurate is this forecast?</b><span class="ha-sum"></span></span></summary>
+      <div class="ha-h"><div class="hero-win" id="hero-win"><button data-w="1y" class="on">12 months</button><button data-w="3m">3 months</button></div></div><div class="ha-body"></div></details>
   </section>
 
   <div class="panel od-panel" id="od-panel" data-view="analyze">
@@ -5711,10 +5715,13 @@ function heroTiles(A) {                                                      // 
     + tile(I.miss, isFinite(A.f?.vol20) ? '±' + (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '…', `how much ${S} usually moves in a week`, 'up or down, last 20 trading days');
   // accuracy of the 1-week forecast (walk-forward replay in ticker-odds v3), shown under the chart next to the cone it sizes
   const acc = document.getElementById('hero-acc');
-  if (acc) { acc.hidden = !W; if (W) acc.querySelector('.ha-body').innerHTML = `<div class="ha-k"><div><b>${Math.round(W.hit * 100)}%</b><span>of 1-week forecasts right</span></div>
-      <div><b>±${(W.rmse * 100).toFixed(1)}%</b><span>average miss</span></div><div><b>${W.brier.toFixed(3)}</b><span>Brier score (coin 0.250)</span></div></div>
+  if (acc) { acc.hidden = !W; if (W) {
+    const hr = Math.round(W.hit * 100), verdict = hr >= 55 ? 'right more often than a coin flip' : hr >= 45 ? 'about as often right as a coin flip, so treat the odds as a base rate, not a prediction' : 'right less often than a coin flip';
+    acc.querySelector('.ha-sum').textContent = `${hr}% right · ±${(W.rmse * 100).toFixed(1)}% average miss`;
+    acc.querySelector('.ha-body').innerHTML = `<div class="ha-k"><div><b>${hr}%</b><span>of 1-week forecasts right</span></div>
+      <div><b>±${(W.rmse * 100).toFixed(1)}%</b><span>average miss</span></div><div><b>${hPc(W.q05)} to ${hPc(W.q95)}</b><span>9 in 10 misses fell in this range</span></div></div>
       <p>Each day of the ${win} we re-made ${S}'s 1-week forecast with only the data known that day and compared it with what happened 5 trading days later (${W.n} forecasts).
-      ${W.brier < 0.245 ? 'It did better than a coin flip.' : W.brier <= 0.255 ? 'That is about as good as a coin flip: treat the odds as a base rate, not a prediction.' : 'It did worse than a coin flip.'} The cone shows where 68% (dark) and 90% (light) of the misses fell.</p>`; }
+      It was ${verdict}. The cone shows where 68% (dark) and 90% (light) of the misses fell.</p>`; } }
   const sw = document.getElementById('hero-win'); if (sw) { sw.hidden = !wf; sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.w === HERO.win)); }
 }
 function heroFit(sym, score, label) {                                        // called by the ticker lookup once it has scored the stock
