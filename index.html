@@ -767,7 +767,9 @@
   .hs1{stop-color:var(--lime);stop-opacity:.42} .hs0{stop-color:var(--lime);stop-opacity:0} .hl0{stop-color:#7ab8a2} .hl1{stop-color:var(--lime)}
   .hgrid path{stroke:var(--glass-line);stroke-width:1;stroke-dasharray:3 5}
   .h-line{fill:none;stroke-width:3;stroke-linecap:round} .h-glow{fill:none;stroke-width:7;opacity:.55}
-  .h-up{fill:var(--good);opacity:.16} .h-dn{fill:var(--bad);opacity:.11}
+  .h-up{fill:var(--good);opacity:.2} .h-dn{fill:var(--bad);opacity:.16} .h-up.h-o{opacity:.08} .h-dn.h-o{opacity:.07}
+  .hero-win{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:6px;font-size:11.5px;color:var(--muted)} .hero-win[hidden]{display:none}
+  .hero-win button{font:600 11.5px var(--font-ui);padding:4px 10px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer} .hero-win button.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
   .h-mid{stroke:var(--ink-2);stroke-width:1.4;stroke-dasharray:4 4;opacity:.6} .h-edge{stroke:var(--muted);stroke-width:1;opacity:.35}
   .h-pt{fill:var(--lime);stroke:var(--surface);stroke-width:2.5} .h-halo{fill:var(--lime);opacity:.22;transform-origin:250px 92px;animation:hHalo 2.4s ease-in-out infinite}
   @keyframes hHalo{0%,100%{transform:scale(.7);opacity:.28}50%{transform:scale(1.25);opacity:.08}}
@@ -931,7 +933,7 @@
         <linearGradient id="hgL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="hl0"/><stop offset="1" class="hl1"/></linearGradient>
         <filter id="hgB" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="5"/></filter></defs>
       <g class="hgrid"><path d="M0 50H360M0 100H360M0 150H360M0 200H360"/></g>
-      <path id="h-up" class="h-up h-anim" d="M250 92L354 40V92Z"/><path id="h-dn" class="h-dn h-anim" d="M250 92L354 92V146Z"/>
+      <path id="h-up2" class="h-up h-o h-anim" d="M250 92L354 40V92Z"/><path id="h-dn2" class="h-dn h-o h-anim" d="M250 92L354 92V146Z"/><path id="h-up" class="h-up h-anim" d="M250 92L354 40V92Z"/><path id="h-dn" class="h-dn h-anim" d="M250 92L354 92V146Z"/>
       <path id="h-mid" class="h-mid h-anim" d="M250 92L354 72"/><path id="h-edge" class="h-edge h-anim" d="M250 92L354 40M250 92L354 146"/>
       <path id="h-area" class="h-anim" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92L250 220L0 220Z" fill="url(#hgA)"/>
       <path id="h-glow" class="h-glow h-anim" d="M0 172C28 164 50 150 76 154S122 126 148 132S196 102 220 106S242 95 250 92" stroke="url(#hgL)" filter="url(#hgB)"/>
@@ -941,7 +943,7 @@
       <g id="h-card" class="h-card h-anim"><rect x="240" y="156" width="114" height="52" rx="13"/><text id="h-k" x="252" y="175" class="h-k">UP NEXT WEEK</text><text id="h-v" x="252" y="198" class="h-v">58%</text></g>
       <g id="h-fit" class="h-card h-fitg"><title>Example</title><rect x="12" y="14" width="140" height="34" rx="17"/><circle cx="31" cy="31" r="8.5" class="h-ring0"/><circle id="h-ring1" cx="31" cy="31" r="8.5" class="h-ring1 h-anim" transform="rotate(-90 31 31)" stroke-dasharray="43.8 53.4"/>
         <text id="h-t" x="46" y="35.5" class="h-t">Strategy fit 82</text></g>
-    </svg></div>
+    </svg><div class="hero-win" id="hero-win" hidden><span>Cone from</span><button data-w="1y" class="on">past year</button><button data-w="3m">3 months</button></div></div>
   </section>
 
   <div class="panel od-panel" id="od-panel" data-view="analyze">
@@ -5648,7 +5650,7 @@ function nwInit() {
 // ---------------- Interactive hero (2026-10-22): the Analyze page's search lives in the hero, and the hero chart redraws for the checked stock ----------------
 // Line = the stock's past year (ticker-odds spark), cone = its 1-week odds (signal if active, else its own record), chip = strategy fit score
 // (ticker lookup voting score, S&P 500 only). Before any check the chart is a labelled example. Tapping the card or chip scrolls to the full panel.
-const HERO = {sym: null, demo: true};
+const HERO = {sym: null, demo: true, win: '1y', last: null};
 const HX = 250, HY0 = 14, HY1 = 196;                                         // last price point x; usable y range of the 360x220 drawing
 function heroSmooth(P) {                                                     // Catmull-Rom through the points as cubic Béziers
   let d = `M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
@@ -5659,21 +5661,50 @@ function heroSmooth(P) {                                                     // 
   return d;
 }
 function heroSet(id, attrs) { const el = document.getElementById(id); if (el) for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); return el; }
-function heroDraw(vals, p, cap) {
+// cone (2026-10-23): when the stock's own walk-forward check is available (ticker-odds v3, A.own.wf), the cone is the real uncertainty band:
+// centre = expected 1-week move, inner band = 16-84 % and outer band = 5-95 % of how far past 1-week forecasts missed (past year or 3 months),
+// coloured green above today's price and red below. Without it (example, short history) it falls back to the odds ratio only.
+function heroCone(x0, y, top, bot) {                                         // split a cone at today's price: green above, red below
+  const yc = Math.min(Math.max(y, top), bot), f = n => n.toFixed(1);
+  return [`M${x0} ${f(y)}L354 ${f(top)}V${f(yc)}Z`, `M${x0} ${f(y)}L354 ${f(yc)}V${f(bot)}Z`];
+}
+function heroDraw(vals, p, cap, wf) {
   if (!document.getElementById('h-line') || !vals || vals.length < 2) return;
-  const lo = Math.min(...vals), hi = Math.max(...vals), r = hi - lo || 1;
-  const P = vals.map((v, i) => [i / (vals.length - 1) * HX, 172 - (v - lo) / r * 112]);
+  const last = vals[vals.length - 1], W = wf && wf[HERO.win] && isFinite(wf.mu_now) ? wf[HERO.win] : null;
+  const ret = W ? [W.q05, W.q16, 0, W.q84, W.q95].map(e => last * (1 + wf.mu_now + e)) : [];
+  const lo = Math.min(...vals, ...ret), hi = Math.max(...vals, ...ret), r = hi - lo || 1, Y = v => 172 - (v - lo) / r * 112;
+  const P = vals.map((v, i) => [i / (vals.length - 1) * HX, Y(v)]);
   const line = heroSmooth(P), [, y] = P[P.length - 1];
   ['h-line', 'h-glow'].forEach(id => heroSet(id, {d: line}));
   heroSet('h-area', {d: `${line}L${HX} 220L0 220Z`});
   heroSet('h-pt', {cy: y.toFixed(1)}); const halo = heroSet('h-halo', {cy: y.toFixed(1)}); if (halo) halo.style.transformOrigin = `${HX}px ${y.toFixed(1)}px`;
-  const q = p == null ? 0.5 : Math.max(0.05, Math.min(0.95, p)), sc = Math.min(104, (y - HY0) / q, (HY1 - y) / (1 - q)), top = y - sc * q, bot = y + sc * (1 - q);   // keep the up:down ratio inside the frame
-  heroSet('h-up', {d: `M${HX} ${y.toFixed(1)}L354 ${top.toFixed(1)}V${y.toFixed(1)}Z`}); heroSet('h-dn', {d: `M${HX} ${y.toFixed(1)}L354 ${y.toFixed(1)}V${bot.toFixed(1)}Z`});
-  heroSet('h-edge', {d: `M${HX} ${y.toFixed(1)}L354 ${top.toFixed(1)}M${HX} ${y.toFixed(1)}L354 ${bot.toFixed(1)}`});
-  heroSet('h-mid', {d: `M${HX} ${y.toFixed(1)}L354 ${(y - (q - 0.5) * 80).toFixed(1)}`});
-  const card = document.getElementById('h-card'); if (card) card.setAttribute('transform', `translate(0 ${y > 120 ? -128 : 0})`);   // keep the card off the line
+  let t1, b1, t2, b2, mid;
+  if (W) { [b2, b1, mid, t1, t2] = ret.map(Y); }
+  else { const q = p == null ? 0.5 : Math.max(0.05, Math.min(0.95, p)), sc = Math.min(104, (y - HY0) / q, (HY1 - y) / (1 - q)); t1 = t2 = y - sc * q; b1 = b2 = y + sc * (1 - q); mid = y - (q - 0.5) * 80; }
+  const [u1, d1] = heroCone(HX, y, t1, b1), [u2, d2] = heroCone(HX, y, t2, b2);
+  heroSet('h-up', {d: u1}); heroSet('h-dn', {d: d1}); heroSet('h-up2', {d: W ? u2 : u1}); heroSet('h-dn2', {d: W ? d2 : d1});
+  heroSet('h-edge', {d: `M${HX} ${y.toFixed(1)}L354 ${t2.toFixed(1)}M${HX} ${y.toFixed(1)}L354 ${b2.toFixed(1)}`});
+  heroSet('h-mid', {d: `M${HX} ${y.toFixed(1)}L354 ${mid.toFixed(1)}`});
+  const card = document.getElementById('h-card'); if (card) card.setAttribute('transform', `translate(0 ${y > 115 ? -128 : 0})`);   // keep the card off the line
   const v = document.getElementById('h-v'); if (v) { v.textContent = p == null ? '–' : Math.round(p * 100) + '%'; v.classList.toggle('neg', p != null && p < 0.5); }
-  const c = document.getElementById('h-cap'); if (c) c.textContent = cap;
+  const c = document.getElementById('h-cap'); if (c) c.textContent = cap + (W ? ` · cone: ${HERO.win === '3m' ? '3-month' : 'past-year'} forecast misses` : '');
+}
+const hPc = (x, d = 1) => (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(d) + '%';
+function heroTiles(A) {                                                      // the three tiles become facts about this stock's 1-week forecast
+  const box = document.querySelector('.hero-stats'); if (!box) return;
+  if (!HERO.demoTiles) HERO.demoTiles = box.innerHTML;
+  const w = A.H?.[0], p = w?.head?.v ?? null, wf = A.own?.wf, W = wf?.[HERO.win], other = wf?.[HERO.win === '1y' ? '3m' : '1y'];
+  const ic = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${n}</svg>`;
+  const I = {odds: '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/><circle cx="12" cy="16" r="1.4"/>', hit: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>',
+    miss: '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4M17 8l4 4-4 4"/>'};
+  const win = HERO.win === '3m' ? '3 months' : 'past year';
+  box.innerHTML = `<div title="${w?.head?.src ? esc(w.head.src) : ''}">${ic(I.odds)}<b>${p == null ? '…' : Math.round(p * 100) + '%'}</b><span>up next week · ${w?.head?.edge ? 'signal' : 'own record'}</span></div>`
+    + (W ? `<div title="Direction calls (up when the odds are 50% or more), scored on what happened 5 trading days later. Brier ${W.brier} (a coin flip scores 0.25; lower is better).${other ? ` Other window: ${Math.round(other.hit * 100)}% right.` : ''}">${ic(I.hit)}<b>${Math.round(W.hit * 100)}%</b><span>calls right · ${win}</span></div>`
+         + `<div title="Actual 1-week move minus the expected move (${hPc(wf.mu_now, 2)}). Typical miss = root mean square error; the cone shows the 16-84% and 5-95% ranges of these misses.">${ic(I.miss)}<b>±${(W.rmse * 100).toFixed(1)}%</b><span>typical miss · ${W.n} forecasts</span></div>`
+       : A.own && !wf ? `<div>${ic(I.hit)}<b>${A.H?.[2]?.head?.v == null ? '–' : Math.round(A.H[2].head.v * 100) + '%'}</b><span>up in 1 month · own record</span></div>`   // no forecast check (short history)
+         + `<div>${ic(I.miss)}<b>${isFinite(A.f?.vol20) ? '±' + (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '–'}</b><span>typical 1-week move</span></div>`
+       : `<div>${ic(I.hit)}<b>…</b><span>checking past forecasts</span></div><div>${ic(I.miss)}<b>…</b><span>typical miss</span></div>`);
+  const sw = document.getElementById('hero-win'); if (sw) { sw.hidden = !wf; sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.w === HERO.win)); }
 }
 function heroFit(sym, score, label) {                                        // called by the ticker lookup once it has scored the stock
   if (sym !== HERO.sym) return;
@@ -5688,7 +5719,8 @@ function heroOdds(A) {                                                       // 
   document.body.classList.remove('an-empty');
   const w = A.H?.[0], p = w?.head?.v ?? null, vals = A.own?.spark;
   const k = document.getElementById('h-k'); if (k) k.textContent = w?.head?.edge ? 'UP NEXT WEEK · SIGNAL' : 'UP NEXT WEEK';
-  if (vals) heroDraw(vals, p, `${A.sym} · past year`);
+  HERO.last = A; heroTiles(A);
+  if (vals) heroDraw(vals, p, `${A.sym} · past year`, A.own?.wf);
   else if (fresh) { const c = document.getElementById('h-cap'); if (c) c.textContent = `${A.sym} · loading…`; const v = document.getElementById('h-v'); if (v) v.textContent = p == null ? '…' : Math.round(p * 100) + '%'; }
   if (fresh) { const g = document.getElementById('h-fit'); if (g) g.style.display = A.member ? '' : 'none'; if (A.member) document.getElementById('h-t').textContent = 'Strategy fit …';
     if (!A.member) { const tb = document.getElementById('tl-body'); if (tb) tb.innerHTML = `<p class="note">Strategy fit scores S&amp;P 500 stocks against every validated strategy; ${esc(A.sym)} is not in today's S&amp;P 500.</p>`; } }
@@ -5700,6 +5732,8 @@ function heroInit() {
   const inp = document.getElementById('od-input');                            // typed a different ticker but not checked yet: dim the chart and say so
   if (inp) inp.addEventListener('input', () => { const q = inp.value.trim().toUpperCase(), art = document.querySelector('.hero-art'), c = document.getElementById('h-cap'); if (!art || !c || HERO.demo) return;
     const off = q && q !== HERO.sym; art.classList.toggle('stale', !!off); c.textContent = off ? `${HERO.sym} · past year · press Check for ${q.split(/[\s,;]+/)[0]}` : `${HERO.sym} · past year`; });
+  document.querySelectorAll('#hero-win [data-w]').forEach(b => b.onclick = () => { HERO.win = b.dataset.w; const A = HERO.last; if (!A) return; heroTiles(A);
+    heroDraw(A.own?.spark, A.H?.[0]?.head?.v ?? null, `${A.sym} · past year`, A.own?.wf); });
   const go = id => document.getElementById(id)?.scrollIntoView({behavior: 'smooth', block: 'start'});
   const card = document.getElementById('h-card'), fit = document.getElementById('h-fit');
   if (card) card.onclick = () => { if (!HERO.demo) go('od-panel'); };
