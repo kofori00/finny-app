@@ -701,7 +701,7 @@
   .mv-nm{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mv-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px} .mv-tags:empty{display:none}
   .mv-chip{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--ink-2);white-space:nowrap}
-  .mv-chip.mv-c-up{color:var(--good)} .mv-chip.mv-c-dn{color:var(--bad)}
+  .mv-chip.mv-c-up{color:var(--good)} .mv-chip.mv-c-dn{color:var(--bad)} .mv-chip.mv-c-wait{color:var(--muted);font-weight:500}
   .mv-chip.mv-f-bad{background:color-mix(in srgb, var(--bad) 14%, transparent);border-color:transparent;color:var(--bad)}
   .mv-chip.mv-f-warn{background:color-mix(in srgb, #d9a23a 15%, transparent);border-color:transparent;color:#c48a1f}
   .mv-q{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
@@ -1123,7 +1123,7 @@
         <button class="mv-ref" id="mv-refresh" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
       <div id="mv-body"><div class="nw-skel s"></div><div class="nw-skel s"></div><div class="nw-skel s"></div></div>
       <div id="mv-age" class="mv-age"></div>
-      <details class="about mv-about"><summary>About these lists</summary><p>US stocks only (Alpaca screener; EU/UK listings are not covered). <b>1-week odds</b>: how often S&amp;P 500 stocks with a day move like this were higher 5 trading days later (2016-26, point-in-time members; any stock: 54%). Big up-days of 5-20% faded slightly (about 49-50% up, average −0.2% to −0.8%); over a month they did fine. Small caps and SPAC paper in this list behave differently, so treat it as information, not a buy list. Tap any row for its full odds.</p></details>
+      <details class="about mv-about"><summary>About these lists</summary><p>US stocks only (Alpaca screener; EU/UK listings are not covered). <b>1-week odds</b>: each stock's OWN record, the same number its odds checker shows: how often it was higher 5 trading days later over its full history (or, for S&amp;P 500 stocks with a tested swing signal today, that signal's record). History, not a forecast. <b>under 1y data</b> means the stock has traded for less than a year, so its odds rest on very few weeks. Across the S&amp;P 500, big up-days of 5-20% faded slightly over the next week (about 49-50% up vs 54% on any day); over a month they did fine. Small caps and SPAC paper in this list behave differently, so treat it as information, not a buy list. Tap any row for its full odds.</p></details>
     </div>
   </details>
 
@@ -5171,7 +5171,26 @@ function tlInit() {
 // Edge Function in public.live_movers; the panel reloads the latest snapshot every 3 minutes and whenever the tab becomes visible.
 // Default filter hides warrants, units and rights and anything under $1 (mostly SPAC paper and sub-$1 microcaps). Not trading advice:
 // these lists are where our research finds the WORST forward returns (lottery spikes), see the About text.
-const MV = {tab: 'gainers', all: false, prev: null, cur: null, timer: null, ticker: null, shown: 6};
+const MV = {tab: 'gainers', all: false, prev: null, cur: null, timer: null, ticker: null, shown: 6, odds: {}, busy: new Set()};
+// per-ticker 1-week odds (2026-10-24): the SAME headline as the odds checker (the stock's own record, or a tested swing signal), fetched
+// with ticker-odds for the rows on screen only, 4 symbols per call, cached 10 minutes by odOwn; failed fetches are retried after 2 minutes
+async function mvOddsLoad(syms) {
+  const now = Date.now(), need = syms.filter(s => !MV.busy.has(s) && !(MV.odds[s] && !(MV.odds[s].retry && now - MV.odds[s].at > 12e4)));
+  if (!need.length) return; need.forEach(s => MV.busy.add(s));
+  await Promise.all([tlLoad(), odLoad()]).catch(() => {});
+  for (let i = 0; i < need.length; i += 4) {
+    const part = need.slice(i, i + 4);
+    try {
+      const R = await odOwn(part);
+      for (const s of part) {
+        const own = R[s]; if (!own || own.error) { MV.odds[s] = {err: own?.error || 'no data', at: Date.now()}; continue; }
+        const A = odAnalyse(s, own), w = A.H?.[0], ow = w?.ow?.all;
+        MV.odds[s] = w?.head ? {v: w.head.v, edge: !!w.head.edge, sig: w.sig, n: ow?.n, first: own.first, days: own.days, at: Date.now()} : {err: 'no odds', at: Date.now()};
+      }
+    } catch (e) { part.forEach(s => { MV.odds[s] = {err: e.message, retry: true, at: Date.now()}; }); }
+    part.forEach(s => MV.busy.delete(s)); mvRender();
+  }
+}
 const mvJunk = r => /\b(warrants?|units?|rights?)\b/i.test(r.name || '') || (/[WUR]$/.test(r.symbol) && /acquisition/i.test(r.name || ''));
 function mvFlags(r) {
   const f = [];
@@ -5202,9 +5221,14 @@ function mvRender() {
   const pctCls = x => x == null ? '' : x >= 0 ? 'mv-up' : 'mv-dn';
   const fmtP = x => x == null ? '–' : x >= 100 ? x.toFixed(2) : x >= 1 ? x.toFixed(2) : x.toFixed(4);
   const spx = new Set((typeof TL !== 'undefined' && TL.loaded ? TL.prof : []).map(x => x.ticker));
-  const base = typeof OD !== 'undefined' && OD.odds ? OD.odds.models.up_5.base_test : null;
-  const odds = r => { if (base == null || r.pct == null) return ''; const b = odBucket(5, r.pct / 100); if (!b) return ''; const d = b.up - base;
-    return `<span class="mv-chip ${d < -0.02 ? 'mv-c-dn' : d > 0.02 ? 'mv-c-up' : ''}" title="${b.n.toLocaleString()} S&P 500 days with a move from ${(b.lo * 100).toFixed(0)}% to ${(b.hi * 100).toFixed(0)}%: avg ${(b.ret * 100).toFixed(2)}% a week later (any stock ${(base * 100).toFixed(0)}%)">1w odds ${(b.up * 100).toFixed(0)}%</span>`; };
+  const odds = r => { const o = MV.odds[r.symbol];
+    if (!o || (o.retry && MV.busy.has(r.symbol))) return '<span class="mv-chip mv-c-wait" title="Loading this stock\'s own record">1w odds …</span>';
+    if (o.err) return /history/i.test(o.err) ? '<span class="mv-chip mv-c-wait" title="Too little trading history for odds">too new for odds</span>' : '';
+    const p = Math.round(o.v * 100), yr = (o.first || '').slice(0, 4);
+    const tip = o.edge ? `${o.sig} swing buy signal today: in testing, stocks with this signal were higher a week later ${p}% of the time`
+      : `${r.symbol}'s own record: higher one week later on ${p}% of ${o.n ? o.n.toLocaleString() + ' ' : ''}trading days since ${yr}. History, not a forecast.`;
+    return `<span class="mv-chip ${o.v >= 0.55 ? 'mv-c-up' : o.v <= 0.45 ? 'mv-c-dn' : ''}" title="${esc(tip)}">1w odds ${p}%${o.edge ? ' · signal' : ''}</span>`
+      + (o.days < 252 ? '<span class="mv-chip mv-f-warn" title="Less than a year of trading: the odds rest on very few weeks">under 1y data</span>' : ''); };
   const name = n => (n || '').replace(/\s+(Class [A-Z]|Common Stock|Ordinary Shares?|American Depositary Shares?|Inc\.?|Corporation|Corp\.?|Holdings?|Limited|Ltd\.?|plc)\b.*$/i, '').replace(/[,\s]+$/, '').trim() || n || ''; const nice = n => typeof tlTitle === 'function' ? tlTitle(name(n)) : name(n);
   const rows = list.slice(0, MV.shown).map((r, i) => { const isNew = before.size && !before.has(r.symbol), link = true;   // any US ticker opens in the odds checker
     const right2 = MV.tab === 'actives' ? (r.volume != null ? (r.volume / 1e6).toFixed(1) + 'M vol' : '') : (r.change == null ? '' : (r.change >= 0 ? '+' : '−') + '$' + Math.abs(r.change).toFixed(Math.abs(r.change) < 0.1 ? 3 : 2));
@@ -5223,6 +5247,7 @@ function mvRender() {
   const sa = document.getElementById('mv-showall'); if (sa) sa.onclick = e => { e.preventDefault(); MV.all = true; mvRender(); };
   const ha = document.getElementById('mv-hideall'); if (ha) ha.onclick = e => { e.preventDefault(); MV.all = false; MV.shown = 6; mvRender(); };
   mvAge();
+  mvOddsLoad(list.slice(0, MV.shown).map(r => r.symbol));
 }
 function mvInit() {
   const root = document.getElementById('mv-panel'); if (!root || root.dataset.ready) return; root.dataset.ready = '1';
