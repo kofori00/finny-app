@@ -931,8 +931,19 @@
   .ak-q{font:600 13.5px var(--font-ui);color:var(--ink);margin:0 0 10px;padding:9px 12px;border-radius:12px;background:var(--glass)}
   .ak-a{font-size:14px;line-height:1.62;color:var(--ink-2)} .ak-a p{margin:0 0 8px} .ak-a p:last-child{margin:0} .ak-a b{color:var(--ink)} .ak-a ul{margin:6px 0;padding-left:18px} .ak-a li{margin:3px 0}
   .ak-ref{font:700 10px var(--font-ui);color:var(--accent);margin:0 1px}
-  .ak-src{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px} .ak-src span{display:inline-flex;align-items:center;gap:5px;max-width:100%;font:600 11px var(--font-ui);padding:4px 10px;border-radius:999px;
-    background:var(--glass);border:1px solid var(--glass-line);color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .ak-src span b{color:var(--accent)}
+  .ak-src{margin-top:14px;padding-top:12px;border-top:1px solid var(--glass-line)}
+  .ak-src-h{display:flex;align-items:center;gap:6px;font:700 11px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .ak-src-h span{font:700 10px var(--font-ui);letter-spacing:0;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+  .ak-src ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .ak-src li{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)}
+  .ak-n{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 11px var(--font-ui);background:var(--accent-soft);color:var(--accent)}
+  .ak-n:empty{background:transparent;border:1px dashed var(--glass-line)}
+  .ak-src li div{min-width:0} .ak-src li b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:600 13px/1.35 var(--font-ui);color:var(--ink)}
+  .ak-src li small{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:11px;color:var(--muted)}
+  .ak-src li small i{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none} .ak-src li small i.k-note{color:#7598c4} .ak-src li small i.k-strat{color:var(--lime)} .ak-src li small i.k-guide{color:#c9a46a}
+  .ak-more{margin-top:8px} .ak-more summary{cursor:pointer;list-style:none;font:600 12px var(--font-ui);color:var(--muted);padding:4px 2px}
+  .ak-more summary::-webkit-details-marker{display:none} .ak-more summary::before{content:'+ '} .ak-more[open] summary::before{content:'− '}
+  .ak-more ol{margin-top:6px} .ak-more li{opacity:.75}
   .ak-foot{font-size:11px;color:var(--muted);margin:12px 0 0}
   .ak-think{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13px;padding:6px 2px} .ak-think i{width:6px;height:6px;border-radius:50%;background:#7598c4;animation:akB 1s infinite ease-in-out}
   .ak-think i:nth-child(2){animation-delay:.15s} .ak-think i:nth-child(3){animation-delay:.3s} .ak-think span{margin-left:6px} @keyframes akB{0%,100%{opacity:.25}50%{opacity:1}}
@@ -5906,7 +5917,7 @@ function heroOdds(A) {                                                       // 
   document.body.classList.remove('an-empty');
   const w = A.H?.[0], p = w?.head?.v ?? null, vals = A.own?.spark;
   const k = document.getElementById('h-k'); if (k) k.textContent = w?.head?.edge ? 'UP NEXT WEEK · SIGNAL' : 'UP NEXT WEEK';
-  HERO.last = A; heroTiles(A); if (fresh && typeof akChips === 'function') akChips();
+  HERO.last = A; heroTiles(A); if (typeof akChips === 'function') akChips();   // every update: the first quick estimate is replaced once the stock's own history arrives
   if (vals) heroDraw(vals, p, `${A.sym} · past year`, A.own?.wf);
   else if (fresh) { const c = document.getElementById('h-cap'); if (c) c.textContent = `${A.sym} · loading…`; const v = document.getElementById('h-v'); if (v) v.textContent = p == null ? '…' : Math.round(p * 100) + '%'; }
   if (fresh) { const g = document.getElementById('h-fit'); if (g) g.style.display = A.member ? '' : 'none'; if (A.member) document.getElementById('h-t').textContent = 'Strategy fit …';
@@ -5975,8 +5986,30 @@ function akContext() {                                       // compact numbers 
     strategies_that_would_buy_it: typeof TL !== 'undefined' && TL.lastFit?.ticker === A.sym ? {count: TL.lastFit.held, of_validated_families: TL.lastFit.of, top: TL.lastFit.top} : null,
     swing_signal_today: w?.head?.edge ? (w.sig || 'yes') : 'none', return_12m_pct: pc(A.f?.mom12m ?? A.own?.f?.mom12m), history_since: A.own?.first || null};
 }
-const akFmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\[(\d+)\]/g, '<sup class="ak-ref">$1</sup>').replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
+const akFmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => `<sup class="ak-ref">${l.split(/\s*,\s*/).join(',')}</sup>`).replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
   .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g, '') + '</ul>').replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
+// Sources: only the passages the answer actually cites, renumbered 1..k in reading order; the other close passages fold away.
+const AK_KIND = {'Finny FAQ': ['Guide', 'k-guide'], 'Research notes (Bible)': ['Research note', 'k-note'], 'Strategy description': ['Strategy', 'k-strat']};
+function akSources(answer, sources) {
+  const order = [], cited = new Set();
+  answer.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => { l.split(/\s*,\s*/).forEach(n => { n = +n; if (!cited.has(n) && sources.some(s => s.n === n)) { cited.add(n); order.push(n); } }); return _; });
+  const map = new Map(order.map((n, i) => [n, i + 1]));
+  const text = answer.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => '[' + l.split(/\s*,\s*/).filter(n => map.has(+n)).map(n => map.get(+n)).sort((x, y) => x - y).join(', ') + ']').replace(/\s*\[\]/g, '');
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const row = (s, n) => {
+    let t = (s.title || s.source || '').replace(/^[a-z0-9_]+\|/i, ''), d = '';
+    t = t.replace(/\s*\((\d{4})-(\d{2})(?:-(\d{2}))?[^)]*\)\s*$/, (_, y, m, dd) => { d = (dd ? +dd + ' ' : '') + MON[+m - 1] + ' ' + y; return ''; })
+      .replace(/^\s*(?:§\s*)?\d+(?:\.\d+)*\.?\s+/, '').replace(/["“”]/g, '').replace(/\s*\(\d+\)$/, '').trim();
+    const [k, c] = AK_KIND[s.source] || ['Source', 'k-guide'];
+    return `<li><span class="ak-n">${n ?? ''}</span><div><b>${esc(t || k)}</b><small><i class="${c}"></i>${k}${d ? ' · ' + d : ''}</small></div></li>`;
+  };
+  const used = order.map(n => sources.find(s => s.n === n)), rest = sources.filter(s => !cited.has(s.n));
+  let html = '';
+  if (used.length) html += `<div class="ak-src"><div class="ak-src-h">Sources <span>${used.length}</span></div><ol>${used.map((s, i) => row(s, i + 1)).join('')}</ol>`
+    + (rest.length ? `<details class="ak-more"><summary>${rest.length} more related passage${rest.length > 1 ? 's' : ''}</summary><ol>${rest.map(s => row(s)).join('')}</ol></details>` : '') + '</div>';
+  else if (rest.length) html = `<div class="ak-src"><div class="ak-src-h">Related reading <span>${rest.length}</span></div><ol>${rest.slice(0, 3).map(s => row(s)).join('')}</ol></div>`;
+  return {text, html};
+}
 function akChips() {                                          // suggestions follow the stock on screen and the strategies that like it
   const el = document.getElementById('ak-chips'); if (!el) return;
   const A = typeof HERO !== 'undefined' && !HERO.demo ? HERO.last : null, S = A?.sym, Q = [];
@@ -6008,10 +6041,9 @@ async function akAsk() {
       body: JSON.stringify({question: q, symbol: ctx?.symbol || null, context: ctx})});
     const j = await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status}));
     if (!j.ok) throw new Error(j.error || 'no answer');
-    const logo = document.querySelector('.brand-mark img')?.src || '';
+    const logo = document.querySelector('.brand-mark img')?.src || '', src = akSources(j.answer || '', j.sources || []);
     out.innerHTML = `<div class="ak-card"><div class="ak-who">${logo ? `<img src="${logo}" alt="">` : ''}<div><b>Finny</b><span>from our research${ctx ? ' · ' + esc(ctx.symbol) : ''}</span></div></div>
-      <div class="ak-q">${esc(q)}</div><div class="ak-a"><p>${akFmt(j.answer)}</p></div>`
-      + (j.sources?.length ? `<div class="ak-src">${j.sources.map(s => `<span title="${esc(s.source)}"><b>${s.n}</b>${esc((s.title || s.source).replace(/^[a-z0-9_]+\|/i, ''))}</span>`).join('')}</div>` : '')
+      <div class="ak-q">${esc(q)}</div><div class="ak-a"><p>${akFmt(src.text)}</p></div>${src.html}`
       + `<p class="ak-foot">AI answer (${esc((j.model || 'Gemini').replace(' (cached)', ''))}) from Finny's research only. It can make mistakes; history, not investment advice.</p></div>`;
   } catch (e) { out.innerHTML = `<p class="note">Ask Finny could not answer: ${esc(e.message)}</p>`; }
   AK.busy = false; btn.disabled = false;
