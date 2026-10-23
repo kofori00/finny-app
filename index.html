@@ -888,7 +888,7 @@
 
   /* ---- sign-in, waiting screen, customers (2026-10-23) ---- */
   .login-card{max-width:440px;margin:24px auto} .lg-sub{font-size:13.5px;line-height:1.5;color:var(--ink-2);margin:6px 0 14px}
-  .lg-oauth{display:grid;gap:8px} .lg-oauth button{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--glass-line);
+  .lg-oauth{display:grid;gap:8px} .lg-oauth button[hidden],.lg-or[hidden]{display:none!important} .lg-oauth button{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--glass-line);
     background:var(--surface);color:var(--ink);font:600 14.5px var(--font-ui);cursor:pointer} .lg-oauth button:hover{border-color:var(--accent)} .lg-oauth svg{width:20px;height:20px;flex:none}
   .lg-or{display:flex;align-items:center;gap:10px;margin:16px 0 10px;font-size:12px;color:var(--muted)} .lg-or::before,.lg-or::after{content:'';flex:1;height:1px;background:var(--glass-line)}
   #login-panel .login-form{display:grid;gap:8px} #login-panel .login-form input{padding:12px 14px;border-radius:12px;font-size:15px}
@@ -3135,6 +3135,11 @@ function wireAuth() {
     } catch (e) { msg((create ? 'Could not create the account: ' : 'Sign-in failed: ') + e.message); btn.disabled = false; }
   };
   document.querySelectorAll('[data-oauth]').forEach(b => b.onclick = () => oauth(b.dataset.oauth));
+  // show only the one-tap providers that are switched on in Supabase (Authentication -> Providers); the rest stay hidden
+  document.querySelectorAll('[data-oauth]').forEach(b => b.hidden = true); document.querySelector('.lg-or')?.setAttribute('hidden', '');
+  fetch(`${SB_URL}/auth/v1/settings`, {headers: {apikey: SB_KEY}}).then(r => r.json()).then(j => { let n = 0;
+    document.querySelectorAll('[data-oauth]').forEach(b => { b.hidden = !j.external?.[b.dataset.oauth]; if (!b.hidden) n++; });
+    if (n) document.querySelector('.lg-or')?.removeAttribute('hidden'); }).catch(() => {});
   document.getElementById('lg-magic').onclick = async () => {
     if (!mail()) { msg('Enter your e-mail address first.'); return; }
     try { await authPost(`otp?redirect_to=${encodeURIComponent(APP_HOME())}`, {email: mail(), create_user: true}); msg(`Check your inbox: we sent a sign-in link to ${mail()}.`); }
