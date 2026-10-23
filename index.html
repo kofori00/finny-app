@@ -903,6 +903,21 @@
   .cu-act{display:flex;gap:6px;align-items:center} .cu-act button{font:700 12px var(--font-ui);padding:7px 12px;border-radius:999px;cursor:pointer;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2)}
   .cu-act .cu-ok{background:var(--lime);color:var(--lime-ink);border-color:transparent} .cu-act .cu-no{color:var(--bad)}
   .cu-st{font:700 11px var(--font-ui);padding:3px 9px;border-radius:999px} .cu-st.approved{background:var(--accent-soft);color:var(--accent)} .cu-st.rejected{color:var(--bad);background:color-mix(in srgb, var(--bad) 12%, transparent)}
+
+  /* ---- Ask Finny (2026-10-23) ---- */
+  .pt-ask{--icc:#7598c4} .ak-beta{margin-left:8px;font:700 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+  .ak-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px} .ak-chips button{font:600 12px var(--font-ui);padding:6px 11px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);cursor:pointer;text-align:left}
+  .ak-chips button:hover{border-color:var(--accent);color:var(--ink)}
+  .ak-form{display:flex;gap:8px;padding:5px 5px 5px 16px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line)} .ak-form:focus-within{border-color:color-mix(in srgb, var(--lime) 70%, transparent);box-shadow:0 0 0 3px var(--accent-soft)}
+  #ask-panel .ak-form input{flex:1;min-width:0;border:0!important;background:transparent!important;outline:none;box-shadow:none;color:var(--ink);font:500 15px var(--font-ui);padding:8px 0}
+  .ak-form button{flex:none;padding:10px 20px;border-radius:999px;border:0;background:var(--lime);color:var(--lime-ink);font:700 14px var(--font-ui);cursor:pointer} .ak-form button:disabled{opacity:.5}
+  .ak-out:empty{display:none} .ak-out{margin-top:14px}
+  .ak-a{padding:14px 16px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-line);font-size:14px;line-height:1.6;color:var(--ink-2)} .ak-a p{margin:0 0 8px} .ak-a p:last-child{margin:0}
+  .ak-a b{color:var(--ink)} .ak-a ul{margin:6px 0;padding-left:18px} .ak-ref{font:700 10px var(--font-ui);color:var(--accent);margin:0 1px}
+  .ak-src{margin-top:10px;font-size:12px;color:var(--ink-2)} .ak-src>span{display:block;font:700 10.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .ak-src div{padding:3px 0} .ak-src em{font-style:normal;color:var(--muted);margin-left:4px} .ak-foot{font-size:11px;color:var(--muted);margin:10px 0 0}
+  .ak-think{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13px} .ak-think i{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:akB 1s infinite ease-in-out}
+  .ak-think i:nth-child(2){animation-delay:.15s} .ak-think i:nth-child(3){animation-delay:.3s} .ak-think span{margin-left:6px} @keyframes akB{0%,100%{opacity:.25}50%{opacity:1}}
 :root{--bg:#eeece6; --surface:#faf8f3; --surface-2:#f3f0e9; --surface-3:#e8e4db; --border:rgba(60,55,40,.09);
     --glass:rgba(255,253,248,.62); --glass-2:rgba(255,253,248,.46); --glass-line:rgba(255,255,255,.72);
     --ink:#2d3633; --ink-2:#56615c; --muted:#8a938e;
@@ -1040,6 +1055,14 @@
     <div id="tl-body"></div>
 
   </details>
+
+  <div class="panel ask-panel" id="ask-panel" data-view="analyze">
+    <div class="panel-title"><span class="pt-ic pt-ask" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/></svg></span>Ask Finny <span class="ak-beta">beta</span></div>
+    <p class="lg-sub">Ask about the odds, a strategy or the research. Answers come only from Finny's own research notes and the numbers on screen.</p>
+    <div class="ak-chips" id="ak-chips"></div>
+    <form id="ak-form" class="ak-form"><input id="ak-q" maxlength="600" placeholder="e.g. Why is the cone so wide for TSLA?" autocomplete="off"><button id="ak-go" type="submit">Ask</button></form>
+    <div id="ak-out" class="ak-out"></div>
+  </div>
 
   <div class="sec" id="an-pulse" data-view="analyze"><span class="pt-ic pt-pulse" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12h4l3-8 4 16 3-8h6"/></svg></span><div><b>Market pulse</b><span>Today's headlines and biggest movers, with what usually happened next.</span></div></div>
   <div class="panel nw-panel" id="nw-panel" data-view="analyze">
@@ -5598,7 +5621,7 @@ function viewSet(v, push = true) {
   const sub = document.getElementById('view-sub'); if (sub) sub.textContent = VIEW.SUB[v];
   try { localStorage.setItem('finny-view', v); } catch (e) {}
   if (push && location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
-  if (v === 'analyze') { odInit(); if (typeof nwInit === 'function') nwInit(); }
+  if (v === 'analyze') { odInit(); if (typeof nwInit === 'function') nwInit(); if (typeof akInit === 'function') akInit(); }
   else if (v === 'accounts') lhInit();
   else requestAnimationFrame(() => document.querySelectorAll('.js-plotly-plot').forEach(p => { try { if (p.offsetParent) Plotly.Plots.resize(p); } catch (e) {} }));
   window.scrollTo({top: 0});
@@ -5858,7 +5881,7 @@ function heroOdds(A) {                                                       // 
   document.body.classList.remove('an-empty');
   const w = A.H?.[0], p = w?.head?.v ?? null, vals = A.own?.spark;
   const k = document.getElementById('h-k'); if (k) k.textContent = w?.head?.edge ? 'UP NEXT WEEK · SIGNAL' : 'UP NEXT WEEK';
-  HERO.last = A; heroTiles(A);
+  HERO.last = A; heroTiles(A); if (fresh && typeof akChips === 'function') akChips();
   if (vals) heroDraw(vals, p, `${A.sym} · past year`, A.own?.wf);
   else if (fresh) { const c = document.getElementById('h-cap'); if (c) c.textContent = `${A.sym} · loading…`; const v = document.getElementById('h-v'); if (v) v.textContent = p == null ? '…' : Math.round(p * 100) + '%'; }
   if (fresh) { const g = document.getElementById('h-fit'); if (g) g.style.display = A.member ? '' : 'none'; if (A.member) document.getElementById('h-t').textContent = 'Strategy fit …';
@@ -5909,6 +5932,49 @@ function custRender() {
   el.querySelectorAll('[data-id]').forEach(b => b.onclick = () => { if (b.dataset.s !== 'approved' && !confirm('Remove access for this account?')) return; custSet(b.dataset.id, b.dataset.s); });
 }
 function custInit() { custLoad(); if (!CU.timer) CU.timer = setInterval(() => { if (!document.hidden) custLoad(); }, 5 * 60 * 1000); }
+
+// ---------------- Ask Finny (2026-10-23): questions answered from Finny's own research (ask-finny Edge Function) ----------------
+// The question, plus the numbers the app shows for the stock on screen, go to ask-finny: it finds the closest passages in our research
+// notes / strategy texts / FAQ (built-in gte-small embeddings) and Gemini writes a short answer with [n] citations. History, not advice.
+const AK = {busy: false};
+function akContext() {                                       // compact numbers for the stock on screen (hero / odds checker state)
+  const A = typeof HERO !== 'undefined' ? HERO.last : null; if (!A || !A.sym) return null;
+  const w = A.H?.[0], m = A.H?.[2], wf = A.own?.wf?.['1y'], pc = x => x == null || !isFinite(x) ? null : Math.round(x * 1000) / 10;
+  const sc = A.member && typeof TL !== 'undefined' && TL.scores ? TL.scores.sc[A.sym] : null;
+  return {symbol: A.sym, name: A.name || null, sp500_member: !!A.member,
+    odds_higher_1_week_pct: pc(w?.head?.v), odds_1_week_source: w?.head?.edge ? 'tested swing buy signal active today' : "stock's own history (base rate)",
+    odds_higher_1_month_pct: pc(m?.head?.v), normal_weekly_swing_pct: isFinite(A.f?.vol20) ? pc(A.f.vol20 / Math.sqrt(52)) : null,
+    today_from_open_odds_pct: A.op ? pc(A.op.p_up) : null,
+    one_week_forecasts_replayed_over_last_12_months: wf ? {number_of_1_week_forecasts: wf.n, share_right_pct: pc(wf.hit), typical_miss_of_the_1_week_move_pct: pc(wf.rmse), range_of_9_in_10_misses_pct: [pc(wf.q05), pc(wf.q95)]} : null,
+    strategy_fit_score: sc != null ? Math.round(sc) : null, return_12m_pct: pc(A.f?.mom12m ?? A.own?.f?.mom12m), history_since: A.own?.first || null};
+}
+const akFmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\[(\d+)\]/g, '<sup class="ak-ref">$1</sup>').replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
+  .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g, '') + '</ul>').replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
+function akChips() {
+  const el = document.getElementById('ak-chips'); if (!el) return; const s = typeof HERO !== 'undefined' && HERO.sym && !HERO.demo ? HERO.sym : null;
+  const Q = [...(s ? [`Explain the numbers for ${s}`] : []), 'How are the odds calculated?', 'Why is the cone wide for some stocks?', 'What is the R18L26 swing signal?', 'Is the 1-week chance a prediction?'];
+  el.innerHTML = Q.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('');
+  el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { document.getElementById('ak-q').value = b.dataset.q; akAsk(); });
+}
+async function akAsk() {
+  const box = document.getElementById('ak-q'), out = document.getElementById('ak-out'), q = (box?.value || '').trim(); if (!q || AK.busy) return;
+  AK.busy = true; const btn = document.getElementById('ak-go'); btn.disabled = true;
+  out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Reading Finny\'s research…</span></div>';
+  try {
+    const ctx = akContext(), token = await getToken();
+    const r = await fetch(`${SB_URL}/functions/v1/ask-finny`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({question: q, symbol: ctx?.symbol || null, context: ctx})});
+    const j = await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status}));
+    if (!j.ok) throw new Error(j.error || 'no answer');
+    out.innerHTML = `<div class="ak-a"><p>${akFmt(j.answer)}</p></div>` + (j.sources?.length ? `<div class="ak-src"><span>Sources</span>${j.sources.map(s => `<div><sup class="ak-ref">${s.n}</sup>${esc(s.title || s.source)} <em>${esc(s.source)}</em></div>`).join('')}</div>` : '')
+      + `<p class="ak-foot">AI answer (${esc(j.model || 'Gemini')}) written only from Finny's research${ctx ? ' and the numbers shown for ' + esc(ctx.symbol) : ''}. It can make mistakes; history, not investment advice.</p>`;
+  } catch (e) { out.innerHTML = `<p class="note">Ask Finny could not answer: ${esc(e.message)}</p>`; }
+  AK.busy = false; btn.disabled = false;
+}
+function akInit() {
+  const f = document.getElementById('ak-form'); if (!f || f.dataset.wired) return; f.dataset.wired = '1';
+  f.onsubmit = e => { e.preventDefault(); akAsk(); }; akChips();
+}
 
 </script>
 </body>
