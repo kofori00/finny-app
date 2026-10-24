@@ -974,6 +974,28 @@
     --c-v1:#a3ada8; --v-sig:#dfc07e; --v-beat:#7fadd3; --v-below:#4f5a56; --div-neg:#dfa08a; --div-mid:#2a3235; --div-pos:#7fadd3;
     --shadow:0 1px 0 rgba(255,255,255,.035) inset, 0 12px 30px -22px rgba(0,0,0,.5); --shadow-lg:0 22px 48px -26px rgba(0,0,0,.55);}
   #mv-panel .mv-pct.mv-up{color:var(--good)} #mv-panel .mv-pct.mv-dn{color:var(--bad)} html{background:var(--bg)} .hero h2 em{background:linear-gradient(95deg,var(--accent),#7ab8a2);-webkit-background-clip:text;background-clip:text}
+
+  .v2-panel{position:relative;overflow:hidden;padding:24px 20px 18px;border-radius:24px;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface) 55%);border:1px solid var(--glass-line)}
+  .v2-wm{position:absolute;right:-18px;top:-10px;width:150px;height:150px;opacity:.05;fill:none;stroke:var(--ink);stroke-width:1.2}
+  .v2-rec{margin:14px 0 6px;padding:14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .v2-rh{display:flex;justify-content:space-between;gap:8px;font:700 11px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)} .v2-rh em{font-style:normal;letter-spacing:0;text-transform:none;font-weight:600}
+  .v2-sts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0} .v2-st b{display:block;font:800 20px var(--font-display);color:var(--ink)} .v2-st span{font-size:11.5px;color:var(--muted)}
+  .v2-st.v2-main b{color:var(--accent)}
+  .v2-chart{width:100%;height:110px;display:block;margin:4px 0 6px} .v2-zero{stroke:var(--glass-line);stroke-dasharray:3 4}
+  .v2-lead{margin:4px 0;font-size:13.5px;color:var(--ink-2)} .v2-honest{margin:8px 0 0;font-size:12.5px;line-height:1.55;color:var(--ink-2)} .v2-honest b{color:var(--ink)}
+  .v2-lh{display:flex;flex-direction:column;gap:2px;margin:16px 2px 8px} .v2-lh b{font:700 14px var(--font-ui);color:var(--ink)} .v2-lh span{font-size:12px;color:var(--muted)}
+  .v2-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+  .v2-pk{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line);cursor:pointer;text-align:left;color:inherit;font:inherit}
+  .v2-pk .nw-av{width:38px;height:38px;flex:none;font-size:10.5px} .v2-pn{flex:1;min-width:0;display:flex;flex-direction:column} .v2-pn b{font:600 13.5px var(--font-ui);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .v2-pn small{font-size:11px;color:var(--muted)}
+  .v2-v{flex:none;font:800 15px var(--font-display);color:var(--accent);opacity:calc(.55 + var(--v)*.45)} .v2-v i{font:600 10.5px var(--font-ui);font-style:normal;color:var(--muted)}
+  .v2-t{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px} .v2-t th{text-align:left;font-weight:600;color:var(--muted);padding:5px 6px;border-bottom:1px solid var(--glass-line)} .v2-t td{padding:6px;border-bottom:1px solid var(--glass-line)}
+  .v2-t td.pos{color:var(--good)} .v2-t td.neg{color:var(--bad)} .v2-t em{font-style:normal;font-size:10.5px;color:var(--muted)}
+  .v2-strats{display:flex;flex-wrap:wrap;gap:5px} .v2-strats span{font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line)} .v2-strats i{font-style:normal;color:var(--muted)}
+  .v2-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--muted);white-space:nowrap} .v2-tag.ok{color:var(--good)} .v2-tag.bad{color:var(--bad)}
+  .v2-bt{display:block;overflow-x:auto;white-space:nowrap} .v2-acc{display:block;font-size:10.5px;color:var(--muted);font-weight:500} .v2-disc{display:inline-block;margin-top:6px;font-size:11.5px;color:var(--muted)} .v2-note{margin:10px 2px 0;font-size:12.5px;line-height:1.55;color:var(--ink-2);white-space:normal}
+  .h-v.v2-hv-lo{fill:var(--ink-2)} .mv-chip.v2-mvpk{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+  .v2-badge{font:700 9.5px var(--font-ui);letter-spacing:.08em;padding:2px 7px;border-radius:999px;background:#d9a23a;color:#2a2110;margin-left:6px;vertical-align:middle}
+  @media (max-width:560px){ .v2-panel{padding:20px 16px 14px} .v2-st b{font-size:17px} .v2-list{grid-template-columns:1fr} }
 </style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1c2326"><meta name="mobile-web-app-capable" content="yes"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
@@ -998,9 +1020,9 @@
   <section class="hero" id="an-hero" data-view="analyze">
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg>
     <div class="hero-txt">
-      <span class="hero-kick"><i></i>Stock odds · Strategy fit · News effects</span>
-      <h2>Know the odds <em>before you trade.</em></h2>
-      <p>Look up any US stock: how often stocks in its position went up, which tested strategies would hold it today, and what its news usually did to the price.</p>
+      <span class="hero-kick"><i></i>Proven strategies · Live record · Stock history</span>
+      <h2>See what proven strategies <em>hold today.</em></h2>
+      <p>Look up any US stock: how many of our 21 proven strategies would buy it today, how it usually behaves, and what its news tends to do. Every monthly pick is tracked live, wins and losses.</p>
       <div class="hero-search" id="hero-search"></div>
       <div class="hero-try"><span>Try</span><button data-t="NVDA">NVDA</button><button data-t="AAPL">AAPL</button><button data-t="TSLA">TSLA</button><button data-t="JPM">JPM</button><button data-t="SPY">SPY</button></div>
       <div class="hero-stats">
@@ -1028,6 +1050,14 @@
     <details class="hero-acc" id="hero-acc" hidden><summary><span><b>How accurate is this forecast?</b><span class="ha-sum"></span></span></summary>
       <div class="ha-h"><div class="hero-win" id="hero-win"><button data-w="1y" class="on">12 months</button><button data-w="3m">3 months</button></div></div><div class="ha-body"></div></details>
     <div class="hero-disc" id="hero-disc" hidden><div class="hd-h"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg><b>History, not a promise</b></div><div class="hd-body"></div></div>
+  </section>
+
+  <section class="panel v2-panel" id="v2-panel" data-view="analyze">
+    <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg>
+    <span class="hero-kick"><i></i>Proven strategies · tracked live</span>
+    <h2 class="ak-h">This month's <em>picks.</em></h2>
+    <p class="ak-sub">S&amp;P 500 stocks that 4 or more of our 21 proven strategies would buy. Frozen each month, tracked every evening against the market, never edited.</p>
+    <div id="v2-body"><p class="note">Loading this month's picks…</p></div>
   </section>
 
   <div class="panel od-panel" id="od-panel" data-view="analyze">
@@ -1134,6 +1164,11 @@
   </div>
 
   <div class="sec" id="acc-head" data-view="accounts"><span class="pt-ic pt-chain" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="11.5" height="9" rx="4.5"/><rect x="10" y="7.5" width="11.5" height="9" rx="4.5"/></svg></span><div><b>Forward tests</b><span>Our validated strategies trading simulated money in real time, measured against the market. Nkonsonkonson, the chain link: separate strategies joined in one portfolio.</span></div></div>
+  <div class="panel v2-board-p" id="v2-board-p" data-view="accounts">
+    <div class="panel-title"><span class="pt-ic pt-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg></span>Scoreboard: is it working live?</div>
+    <div id="v2-board"><p class="note">Loading…</p></div>
+  </div>
+
   <div class="panel lh-panel" id="lh-panel" data-view="accounts">
     <div class="panel-title"><span class="pt-ic pt-wallet" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10.5h18"/><circle cx="16.5" cy="15.3" r="1.2"/></svg></span>Paper accounts <span class="lh-live"><i></i>live</span></div>
     <div id="lh-body"></div>
@@ -6152,6 +6187,167 @@ async function akAsk() {
 function akInit() {
   const f = document.getElementById('ak-form'); if (!f || f.dataset.wired) return; f.dataset.wired = '1';
   f.onsubmit = e => { e.preventDefault(); akAsk(); }; akChips();
+}
+
+// ---------------- Finny v2 (2026-10-24; the live app since 2026-10-24, v1 archived at /v1/) ----------------
+// What changes, after the honest review of v1:
+//  1. "This month's picks" leads the Analyze view: S&P 500 stocks that 4 or more of our 21 significant strategy families would buy
+//     (Bible 6.75, the one signal that held up: a 1-month RANKING signal). Frozen on the first trading day of each month by the
+//     v2-picks Edge Function and marked to market every evening against the average S&P 500 stock and SPY; never edited.
+//  2. Weekly odds are demoted to background ("rose in X% of past weeks"): they are base rates, not forecasts (walk-forward ~50-55% right).
+//     The hero's big number becomes "N of 21 proven strategies would buy it today".
+//  3. Accounts: a scoreboard of the paper accounts and the picks, live since start vs SPY, with "too early to tell" until 12 months.
+// This file only wraps v1 functions (heroOdds, mvRender, akChips, akContext, viewSet); the v1 files are unchanged.
+const V2 = {P: null, M: null, busy: false, err: null, votes: null, F: null, shown: 12};
+const v2Pc = (x, d = 1) => x == null || !isFinite(x) ? '–' : (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(d) + '%';
+const v2Day = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'});
+// ---- today's votes of the FAM strategies (the same selection as the v2-picks function; checked identical on 2026-10-24) ----
+function v2Votes() {
+  if (V2.votes) return V2.votes; if (typeof TL === 'undefined' || !TL.loaded) return null;
+  const sig = TL.strats.filter(r => r.metrics?.sharpe != null && ['PASS', 'PASS+DIV'].includes(r.metrics?.verdict)).sort((a, b) => b.metrics.sharpe - a.metrics.sharpe);
+  const fam = {}; for (const r of sig) fam[r.id.split('|')[0] + ':' + r.family.id] ||= r;
+  V2.F = Object.values(fam); const v = {};
+  for (const r of V2.F) { const S = tlSelect(r.family, r.variant || {}); if (S.na) continue; for (const t of S.top) (v[t] ||= []).push(r.family.short || r.id); }
+  return V2.votes = v;
+}
+// ---- the live record: chain each month's marks (the last mark of a closed month is its final result) ----
+function v2Record() {
+  const P = V2.P || [], M = V2.M || []; let kp = 1, ku = 1, ks = 1; const pts = [], months = [];
+  for (const p of P) {
+    const m = M.filter(x => x.pick_id === p.id && x.picks_ret != null);
+    for (const x of m) pts.push({d: x.date, pk: kp * (1 + x.picks_ret) - 1, uni: ku * (1 + (x.uni_ret ?? 0)) - 1, spy: ks * (1 + (x.spy_ret ?? 0)) - 1});
+    const z = m[m.length - 1];
+    months.push({p, last: z || null, open: !z?.final});
+    if (z) { kp *= 1 + z.picks_ret; ku *= 1 + (z.uni_ret ?? 0); ks *= 1 + (z.spy_ret ?? 0); }
+  }
+  return {pts, months, pk: kp - 1, uni: ku - 1, spy: ks - 1, start: P[0]?.as_of || null};
+}
+function v2Chart(pts) {
+  if (pts.length < 2) return '';
+  const W = 320, H = 110, all = pts.flatMap(p => [p.pk, p.uni, p.spy]).concat(0), lo = Math.min(...all), hi = Math.max(...all), r = hi - lo || 0.01;
+  const y = v => (H - 8 - (v - lo) / r * (H - 16)).toFixed(1), x = i => (i / (pts.length - 1) * W).toFixed(1);
+  const line = (k, c, w) => `<polyline points="${pts.map((p, i) => x(i) + ',' + y(p[k])).join(' ')}" fill="none" stroke="${c}" stroke-width="${w}" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
+  return `<svg class="v2-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}" class="v2-zero"/>
+    ${line('spy', 'var(--muted)', 1.4)}${line('uni', '#7598c4', 1.6)}${line('pk', 'var(--accent)', 2.4)}</svg>`;
+}
+async function v2Load() {
+  if (V2.busy) return; V2.busy = true;
+  try { [V2.P, V2.M] = await Promise.all([sb('v2_picks?select=id,as_of,picks,strategies,rule,votes_hist&order=as_of'),
+    sb('v2_pick_marks?select=pick_id,date,picks_ret,uni_ret,spy_ret,n_picks,n_uni,final&order=date')]); V2.err = null; }
+  catch (e) { V2.err = e.message; }
+  V2.busy = false; v2Render(); if (HERO.last) v2Hero(HERO.last);
+}
+function v2Render() {
+  const el = document.getElementById('v2-body'); if (!el) return;
+  if (V2.err) { el.innerHTML = `<p class="note">Could not load this month's picks: ${esc(V2.err)}</p>`; return; }
+  if (!V2.P) { el.innerHTML = '<p class="note">Loading this month\'s picks…</p>'; return; }
+  if (!V2.P.length) { el.innerHTML = '<p class="note">The first picks are made on the first trading day of the month.</p>'; return; }
+  const cur = V2.P[V2.P.length - 1], R = v2Record(), nS = cur.strategies.length, live = R.pts.length;
+  const mo = Math.max(0, (Date.now() - Date.parse(R.start + 'T21:00:00Z')) / (30.44 * 864e5));
+  const lead = R.pk - R.uni;
+  const stat = (v, l, cls = '') => `<div class="v2-st ${cls}"><b>${live ? v2Pc(v) : '–'}</b><span>${l}</span></div>`;
+  const row = p => `<button class="v2-pk" data-t="${esc(p.t)}" title="Would be bought by: ${esc(p.by.join(', '))}"><span class="nw-av spx" style="--h:${nwHue(p.t)}">${esc(p.t.slice(0, 4))}</span>
+      <span class="v2-pn"><b>${esc(typeof tlTitle === 'function' ? tlTitle(p.name) : p.name)}</b><small>${esc(p.sector)}</small></span><span class="v2-v" style="--v:${Math.min(1, p.votes / 8)}">${p.votes}<i>/${nS}</i></span></button>`;
+  const hist = R.months.filter(m => m.last).map(m => `<tr><td>${esc(new Date(m.p.as_of + 'T12:00:00Z').toLocaleDateString(undefined, {month: 'short', year: 'numeric'}))}${m.open ? ' <em>open</em>' : ''}</td>
+      <td class="${m.last.picks_ret >= 0 ? 'pos' : 'neg'}">${v2Pc(m.last.picks_ret)}</td><td>${v2Pc(m.last.uni_ret)}</td><td>${v2Pc(m.last.spy_ret)}</td><td>${m.p.picks.length}</td></tr>`).join('');
+  el.innerHTML = `
+    <div class="v2-rec">
+      <div class="v2-rh"><span>Live record since ${v2Day(R.start)}</span><em>${live ? `${live} trading day${live > 1 ? 's' : ''}` : 'starts after the next close'}</em></div>
+      <div class="v2-sts">${stat(R.pk, 'our picks', 'v2-main')}${stat(R.uni, 'average S&amp;P 500 stock')}${stat(R.spy, 'S&amp;P 500 index (SPY)')}</div>
+      ${v2Chart(R.pts)}
+      ${live ? `<p class="v2-lead">${lead >= 0 ? 'Ahead of' : 'Behind'} the average stock by <b>${Math.abs(lead * 100).toFixed(1)} points</b>.</p>` : ''}
+      <p class="v2-honest"><b>${mo < 12 ? 'Too early to tell' : 'Judge it now'}</b> · ${mo < 12 ? `${mo < 1 ? 'less than 1' : Math.floor(mo)} of 12 months. ` : ''}In the 2016-26 backtest, stocks held by 4 or more of these strategies rose
+        <b>+1.75%</b> a month on average, against <b>+1.01%</b> for stocks none of them held, and were higher after a month 57.9% vs 55.3% of the time.
+        That edge is modest, so a single month says little: it takes about a year live before skill can be told apart from luck. The strategies were
+        chosen knowing the whole backtest, so this live record is the real test. Every month is frozen when it is made and never edited.
+        <br><span class="v2-disc">Disclosure: Finny's own paper accounts (simulated money) may hold some of these stocks. Not personal advice.</span></p>
+    </div>
+    <div class="v2-lh"><b>${v2Day(cur.as_of)}: ${cur.picks.length} stocks</b><span>held by 4+ of ${nS} proven strategies · equal weight · one month · tap one for its odds</span></div>
+    <div class="v2-list">${cur.picks.slice(0, V2.shown).map(row).join('')}</div>
+    ${cur.picks.length > V2.shown ? `<button class="nw-more" id="v2-more">Show all ${cur.picks.length}</button>` : ''}
+    ${hist ? `<details class="about"><summary>Month by month</summary><table class="v2-t"><tr><th>Month</th><th>Picks</th><th>Avg stock</th><th>SPY</th><th>Stocks</th></tr>${hist}</table></details>` : ''}
+    <details class="about"><summary>How the picks are made</summary><p>Each of our ${nS} significant strategy families (the best-tested variant of each: it passed every check in our research,
+      including a backtest Sharpe above the market's and a both-halves stability test) picks its stocks from today's S&amp;P 500, exactly as in the backtests.
+      A stock that 4 or more of them would buy is a pick. Equal weight, held one month, then replaced. Returns include dividends and splits; the
+      benchmark is every S&amp;P 500 member on the pick date, equally weighted, because the signal ranks stocks against each other.</p>
+      <p class="v2-strats">${cur.strategies.slice().sort((a, b) => b.sharpe - a.sharpe).map(s => `<span>${esc(s.name)} <i>${(+s.sharpe).toFixed(2)}</i></span>`).join('')}</p>
+      <p>History and research, not advice. Past results, in backtests or live, do not guarantee future returns.</p></details>`;
+  el.querySelectorAll('.v2-pk').forEach(b => b.onclick = () => odGo(b.dataset.t));
+  const more = document.getElementById('v2-more'); if (more) more.onclick = () => { V2.shown = 999; v2Render(); };
+}
+// ---- hero: proven-strategy agreement first, weekly odds as background ----
+function v2Hero(A) {
+  if (!A?.sym || HERO.demo) return;
+  const V = v2Votes(), nS = V2.F?.length || 21, n = V?.[A.sym]?.length || 0, S = esc(A.sym);
+  const pick = (V2.P?.[V2.P.length - 1]?.picks || []).find(p => p.t === A.sym);
+  const k = document.getElementById('h-k'), v = document.getElementById('h-v');
+  if (k) k.textContent = 'PROVEN STRATEGIES';
+  if (v) { v.textContent = !A.member ? 'S&P 500 only' : V ? `${n} of ${nS}` : '…'; v.classList.toggle('v2-hv-lo', !A.member || n < 4); }
+  const box = document.querySelector('.hero-stats'); if (!box || box.children.length < 3) return;
+  const t0 = box.children[0], t1 = box.children[1], w = A.H?.[0]?.head?.v;
+  t0.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg><b>${!A.member ? '–' : V ? n + '/' + nS : '…'}</b>
+    <span class="hs-l">${A.member ? `proven strategies would buy ${S} today` : `${S} is not in the S&amp;P 500`}</span>
+    <span class="hs-s">${!A.member ? 'the strategies pick from S&amp;P 500 stocks' : pick ? `in this month's picks (${pick.votes} on ${v2Day(V2.P[V2.P.length - 1].as_of)})` : n >= 4 ? 'top group: 4+ rose +1.75% vs +1.01% a month, 2016-26' : '4 or more makes a monthly pick'}</span>`;
+  t0.title = V?.[A.sym]?.length ? 'Would buy it: ' + V[A.sym].join(', ') : '';
+  t1.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><b>${w == null ? '…' : Math.round(w * 100) + '%'}</b>
+    <span class="hs-l">of past weeks ${S} ended higher</span><span class="hs-s">${A.H?.[0]?.head?.edge ? 'tested swing signal active: its record' : 'background, not a forecast: past 1-week calls were about a coin flip'}</span>`;
+  t1.title = '';
+}
+// ---- wraps of v1 functions (v1 files untouched) ----
+const v1heroOdds = heroOdds; heroOdds = function (A) { v1heroOdds(A); v2Hero(A); };
+const v1mvRender = mvRender; mvRender = function () {
+  v1mvRender();
+  const picks = new Set((V2.P?.[V2.P.length - 1]?.picks || []).map(p => p.t));
+  document.querySelectorAll('#mv-body .mv-row').forEach(r => {
+    r.querySelectorAll('.mv-chip').forEach(c => { const m = c.textContent.match(/^1w odds (\d+)%/); if (m) { c.textContent = `up ${m[1]}% of past weeks`; c.classList.remove('mv-c-up', 'mv-c-dn'); } });
+    if (picks.has(r.dataset.od) && !r.querySelector('.v2-mvpk')) r.querySelector('.mv-tags')?.insertAdjacentHTML('afterbegin', '<span class="mv-chip v2-mvpk">this month\'s pick</span>');
+  });
+};
+const v1akContext = akContext; akContext = function () {
+  const c = v1akContext(); if (!c) return c; const V = v2Votes(), pick = (V2.P?.[V2.P.length - 1]?.picks || []).find(p => p.t === c.symbol);
+  return {...c, proven_strategies_that_would_buy_it_today: V && c.sp500_member ? {count: (V[c.symbol] || []).length, of: V2.F.length, names: V[c.symbol] || []} : null,
+    in_this_months_picks: pick ? {since: V2.P[V2.P.length - 1].as_of, votes: pick.votes} : false,
+    note_on_weekly_odds: 'weekly odds are the stock\'s own base rate (background), not a forecast'};
+};
+const v1akChips = akChips; akChips = function () {
+  v1akChips(); const el = document.getElementById('ak-chips'), S = !HERO.demo && HERO.last?.sym; if (!el || !V2.P?.length) return;
+  const pick = S && (V2.P[V2.P.length - 1].picks || []).find(p => p.t === S);
+  const q = pick ? `Why is ${S} in this month's picks?` : "How are this month's picks chosen, and how have they done?";
+  const b = document.createElement('button'); b.type = 'button'; b.dataset.q = q;
+  b.innerHTML = `<span class="pt-ic pt-fit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></span>${esc(q)}`;
+  b.onclick = () => { document.getElementById('ak-q').value = q; akAsk(); }; el.prepend(b);
+};
+const v1viewSet = viewSet; viewSet = function (v, push) { v1viewSet(v, push); if (VIEW.cur === 'analyze') { if (!V2.P && !V2.busy) v2Load(); } else if (VIEW.cur === 'accounts') v2Board(); };
+// ---- Accounts: scoreboard (owner only: the Accounts view is hidden from customers) ----
+async function v2Board() {
+  const el = document.getElementById('v2-board'); if (!el) return;
+  if (!V2.P && !V2.busy) await v2Load();
+  try {
+    const [acc, eq, dep] = await Promise.all([sb('live_accounts?select=id,label&order=id'), sb('live_equity?select=account_id,date,equity,pnl,spy_close&order=date'),
+      sb('live_deployments?select=account_id,strategy_key,created_at&status=eq.active')]);
+    const perf = e => {                                        // chained daily returns, worst drop, SPY over the same days
+      let g = 1, peak = 1, dd = 0;
+      for (let i = 1; i < e.length; i++) { g *= 1 + (e[i].pnl != null ? e[i].pnl / e[i - 1].equity : e[i].equity / e[i - 1].equity - 1); peak = Math.max(peak, g); dd = Math.min(dd, g / peak - 1); }
+      const s0 = e.find(r => r.spy_close > 0), s1 = [...e].reverse().find(r => r.spy_close > 0);
+      return {ret: g - 1, dd, spy: s0 && s1 && s0 !== s1 ? s1.spy_close / s0.spy_close - 1 : null, since: e[0].date, to: e[e.length - 1].date,
+        mo: (Date.parse(e[e.length - 1].date) - Date.parse(e[0].date)) / (30.44 * 864e5)};
+    };
+    const rows = [], earlier = [];
+    for (const a of acc) {                                     // judge the strategy running now from its own start; earlier strategies in the account shown apart
+      const e = eq.filter(r => r.account_id === a.id && r.equity > 0), d = dep.find(x => x.account_id === a.id); if (e.length < 2) continue;
+      const start = d ? d.created_at.slice(0, 10) : e[0].date, cur = e.filter(r => r.date >= start), old = e.filter(r => r.date <= start);
+      if (cur.length >= 2) rows.push({name: (d ? d.strategy_key.split('|').pop().replace(/_/g, ' ') : a.label), acc: a.label, ...perf(cur)});
+      if (old.length >= 20) earlier.push({acc: a.label, ...perf(old)});
+    }
+    const R = v2Record();
+    if (R.start) rows.push({name: "v2 monthly picks", since: R.start, ret: R.pts.length ? R.pk : null, spy: R.pts.length ? R.spy : null, dd: null, mo: (Date.now() - Date.parse(R.start)) / (30.44 * 864e5), uni: R.pts.length ? R.uni : null});
+    const verdict = r => r.mo < 12 ? `<span class="v2-tag">too early · ${Math.max(0, Math.floor(r.mo))}/12 months</span>` : r.ret - (r.spy ?? 0) > 0 ? '<span class="v2-tag ok">ahead of SPY</span>' : '<span class="v2-tag bad">behind SPY</span>';
+    el.innerHTML = `<table class="v2-t v2-bt"><tr><th>Strategy</th><th>Live since</th><th>Return</th><th>SPY</th><th>Ahead</th><th>Worst drop</th><th></th></tr>${rows.map(r => `<tr>
+      <td><b>${esc(r.name)}</b>${r.acc ? `<small class="v2-acc">${esc(r.acc)}</small>` : ''}</td><td>${v2Day(r.since)}</td><td class="${(r.ret ?? 0) >= 0 ? 'pos' : 'neg'}">${v2Pc(r.ret)}</td><td>${v2Pc(r.spy)}</td>
+      <td class="${(r.ret ?? 0) - (r.spy ?? 0) >= 0 ? 'pos' : 'neg'}">${r.ret == null || r.spy == null ? '–' : v2Pc(r.ret - r.spy)}</td><td>${r.dd == null ? '–' : v2Pc(r.dd)}</td><td>${verdict(r)}</td></tr>`).join('')}</table>
+      ${earlier.length ? `<p class="v2-note"><b>Earlier strategies in these accounts</b> (replaced before the current ones started): ${earlier.map(r => `${esc(r.acc)} ${v2Day(r.since)} to ${v2Day(r.to)}: ${v2Pc(r.ret)} vs SPY ${v2Pc(r.spy)}, worst drop ${v2Pc(r.dd)}`).join('; ')}. They lost to the market, which is part of why they were replaced; that history stays visible here.</p>` : ''}
+      <p class="v2-note">A strategy is judged only after 12 months live: before that, normal ups and downs are bigger than any edge we expect. Backtests are the hypothesis; this table is the test. Paper money, not real trades.</p>`;
+  } catch (e) { el.innerHTML = `<p class="note">Could not load the scoreboard: ${esc(e.message)}</p>`; }
 }
 
 </script>
