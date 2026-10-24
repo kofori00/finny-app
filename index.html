@@ -6365,25 +6365,33 @@ const HS = {rows: null, busy: false};
 const v2Owner = () => document.body.classList.contains('role-owner');
 async function hsLoad() {
   if (!v2Owner() || HS.busy || HS.rows) return; HS.busy = true;
-  try { HS.rows = await sb('v2_hs_holdings?select=key,name,family,as_of,picks,sharpe,cagr,maxdd,sharpe_equal_weight,source&order=sharpe.desc'); } catch (e) { HS.err = e.message; }
+  try { HS.rows = await sb('v2_hs_holdings?select=key,name,family,as_of,picks,sharpe,cagr,maxdd,sharpe_equal_weight,source,validation&order=sharpe.desc'); } catch (e) { HS.err = e.message; }
   HS.busy = false; hsRender(); if (HERO.last) v2Hero(HERO.last);
 }
-function hsCount(t) { const R = HS.rows || [], held = R.filter(r => r.picks.includes(t)); return {n: held.length, of: R.length, fam: new Set(held.map(r => r.family)).size, fams: new Set(R.map(r => r.family)).size, held}; }
+const hsOk = r => r.validation?.verdict === 'holds up';
+function hsCount(t) { const R = HS.rows || [], held = R.filter(r => r.picks.includes(t)); return {n: held.length, of: R.length, fam: new Set(held.map(r => r.family)).size, fams: new Set(R.map(r => r.family)).size, held, ok: held.filter(hsOk).length, okOf: R.filter(hsOk).length}; }
 function hsRender() {
   const el = document.getElementById('hs-body'); if (!el) return;
   if (HS.err) { el.innerHTML = `<p class="note">Could not load the group: ${esc(HS.err)}</p>`; return; }
   if (!HS.rows) { el.innerHTML = '<p class="note">Loading…</p>'; return; }
-  const all = [...new Set(HS.rows.flatMap(r => r.picks))].map(t => ({t, ...hsCount(t)})).sort((a, b) => b.fam - a.fam || b.n - a.n || a.t.localeCompare(b.t));
+  const all = [...new Set(HS.rows.flatMap(r => r.picks))].map(t => ({t, ...hsCount(t)})).sort((a, b) => b.ok - a.ok || b.fam - a.fam || b.n - a.n || a.t.localeCompare(b.t));
+  const okN = HS.rows.filter(hsOk), V = HS.rows[0]?.validation;
   const asof = HS.rows[0]?.as_of, fams = all[0]?.fams || 4;
   el.innerHTML = `<p class="v2-note" style="margin-top:0">Stocks held by our ${HS.rows.length} strategies with a backtest Sharpe of 1.3+ and 20%+ a year, ranked by how many <b>families</b> hold them
       (${fams}: SX25 with its 11 variants, SX30, VX09, ZX18), then by how many strategies. Holdings from the ${v2Day(asof)} rebalance; next change in January.</p>
-    <table class="v2-t hs-t"><tr><th>Stock</th><th>Families</th><th>Strategies</th><th></th></tr>${all.map(x => `<tr data-t="${esc(x.t)}">
-      <td><b>${esc(x.t)}</b></td><td>${x.fam}/${x.fams}</td><td>${x.n}/${x.of}</td><td><span class="hs-bar"><i style="width:${(x.n / x.of * 100).toFixed(0)}%"></i></span></td></tr>`).slice(0, HS.all ? 999 : 12).join('')}</table>
+    ${V ? `<p class="v2-note"><b>Re-validated ${v2Day(V.date)}:</b> the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21 of 22) and the backtest numbers.
+      But with <b>equal weights</b> only ${okN.length} keep a Sharpe of 1.2+ in both halves: ${esc(okN.map(r => r.name.split('_').slice(0, 2).join(' ')).join(', '))}. The rest owe much of their 1.3+ to volatility sizing.
+      The table is ranked by those ${okN.length} first ("Holds up" column).</p>` : ''}
+    <table class="v2-t hs-t"><tr><th>Stock</th><th>Holds up</th><th>Families</th><th>Strategies</th><th></th></tr>${all.map(x => `<tr data-t="${esc(x.t)}">
+      <td><b>${esc(x.t)}</b></td><td>${x.ok ? `<b class="pos">${x.ok}/${x.okOf}</b>` : `0/${x.okOf}`}</td><td>${x.fam}/${x.fams}</td><td>${x.n}/${x.of}</td><td><span class="hs-bar"><i style="width:${(x.n / x.of * 100).toFixed(0)}%"></i></span></td></tr>`).slice(0, HS.all ? 999 : 12).join('')}</table>
     ${all.length > 12 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${all.length}</button>` : ''}
-    <details class="about"><summary>The ${HS.rows.length} strategies and their catch</summary><table class="v2-t"><tr><th>Strategy</th><th>Sharpe</th><th>Equal weight</th><th>CAGR</th><th>Worst drop</th></tr>
-      ${HS.rows.map(r => `<tr title="${esc(r.source || '')}"><td>${esc(r.name.replace(/_/g, ' '))}<small class="v2-acc">${esc(r.family)}</small></td><td>${(+r.sharpe).toFixed(2)}</td>
-        <td>${r.sharpe_equal_weight == null ? '–' : (+r.sharpe_equal_weight).toFixed(2)}</td><td>${v2Pc(r.cagr, 0)}</td><td>${v2Pc(r.maxdd, 0)}</td></tr>`).join('')}</table>
-      <p class="v2-note">Backtest 2016-26 after the strict causal re-test. "Equal weight" is the same picks without volatility sizing (Bible 6.26): where it drops a lot, part of the Sharpe came from sizing, not from picking stocks.
+    <details class="about"><summary>The ${HS.rows.length} strategies and their catch</summary><table class="v2-t v2-bt"><tr><th>Strategy</th><th>Sharpe</th><th>Equal wt</th><th>Eq. CAGR</th><th>Eq. 2016-20 / 21-26</th><th>Worst drop</th><th></th></tr>
+      ${HS.rows.slice().sort((a, b) => (b.validation?.equal?.sharpe || 0) - (a.validation?.equal?.sharpe || 0)).map(r => { const v = r.validation, e = v?.equal;
+        return `<tr title="${esc(r.source || '')}"><td>${esc(r.name.replace(/_/g, ' '))}<small class="v2-acc">${esc(r.family)}</small></td><td>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</td>
+        <td><b>${e ? e.sharpe.toFixed(2) : '–'}</b></td><td>${e ? v2Pc(e.cagr, 0) : '–'}</td><td>${e ? e.h1.toFixed(2) + ' / ' + e.h2.toFixed(2) : '–'}</td><td>${v2Pc(v?.vol?.maxdd ?? r.maxdd, 0)}</td>
+        <td><span class="v2-tag ${v?.verdict === 'holds up' ? 'ok' : v?.verdict === 'weak' ? 'bad' : ''}">${esc(v?.verdict || '')}</span></td></tr>`; }).join('')}</table>
+      <p class="v2-note">Backtest 2016 to 30 Jun 2026, next-day execution, 10 bps per trade, re-run on ${V ? v2Day(V.date) : ''}. "Equal wt" is the same picks without volatility sizing (Bible 6.26). "Holds up" = equal-weight Sharpe 1.2+ and 1.0+ in both halves; "weak" = below 1.0.
+      None beats SPY by a statistically clear margin in excess return with equal weights (t below 2): their edge is mostly a smoother ride (cash switches, lower swings), not much higher returns.
       11 of the ${HS.rows.length} are SX25 variants, so a high strategy count mostly means "SX25 holds it"; the family count is the fairer measure. Cash switches and stops are not applied here.
       SXG4 uses Account 1's actual SX25 targets; the research version of SX25 differs by 2-3 names (AMD and JBL vs FFIV). Visible to you only.</p></details>`;
   el.querySelectorAll('tr[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
