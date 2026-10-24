@@ -6256,6 +6256,11 @@ async function v2Load() {
   catch (e) { V2.err = e.message; }
   V2.busy = false; v2Render(); if (HERO.last) v2Hero(HERO.last);
 }
+function v2FirstMark() {                                    // the first weekday close after the snapshot; marks arrive about 22:20 UTC
+  const d = new Date(), utc = d.getUTCHours() + d.getUTCMinutes() / 60, t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  if (utc >= 22.4 || t.getUTCDay() === 0 || t.getUTCDay() === 6) do t.setUTCDate(t.getUTCDate() + 1); while (t.getUTCDay() === 0 || t.getUTCDay() === 6);
+  return 'first numbers ' + t.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'short'}) + ', after the US close';
+}
 function v2Render() {
   const el = document.getElementById('v2-body'); if (!el) return;
   if (V2.err) { el.innerHTML = `<p class="note">Could not load this month's picks: ${esc(V2.err)}</p>`; return; }
@@ -6271,7 +6276,7 @@ function v2Render() {
       <td class="${m.last.picks_ret >= 0 ? 'pos' : 'neg'}">${v2Pc(m.last.picks_ret)}</td><td>${v2Pc(m.last.uni_ret)}</td><td>${v2Pc(m.last.spy_ret)}</td><td>${m.p.picks.length}</td></tr>`).join('');
   el.innerHTML = `
     <div class="v2-rec">
-      <div class="v2-rh"><span>Live record since ${v2Day(R.start)}</span><em>${live ? `${live} trading day${live > 1 ? 's' : ''}` : 'starts after the next close'}</em></div>
+      <div class="v2-rh"><span>Live record since ${v2Day(R.start)}</span><em>${live ? `${live} trading day${live > 1 ? 's' : ''}` : v2FirstMark()}</em></div>
       <div class="v2-sts">${stat(R.pk, 'our picks', 'v2-main')}${stat(R.uni, 'average S&amp;P 500 stock')}${stat(R.spy, 'S&amp;P 500 index (SPY)')}</div>
       ${v2Chart(R.pts)}
       ${live ? `<p class="v2-lead">${lead >= 0 ? 'Ahead of' : 'Behind'} the average stock by <b>${Math.abs(lead * 100).toFixed(1)} points</b>.</p>` : ''}
