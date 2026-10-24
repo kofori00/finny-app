@@ -998,6 +998,13 @@
   body:not(.role-owner) .owner-only{display:none!important}
   .hs-line{margin:10px 2px 0;padding:9px 12px;border-radius:14px;background:var(--glass);border:1px dashed var(--glass-line);font-size:12.5px;color:var(--ink-2)} .hs-line b{color:var(--ink)}
   .hs-k{display:block;font:700 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .hs-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 4px} .hs-sum>div{padding:12px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .hs-sum b{display:block;font:800 22px var(--font-display);color:var(--ink)} .hs-sum b i{font:600 13px var(--font-ui);font-style:normal;color:var(--muted)} .hs-sum span{font-size:11.5px;color:var(--muted);line-height:1.3;display:block;margin-top:2px}
+  .hs-sum>div:first-child b{color:var(--accent)}
+  .hs-ok{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px} .hs-ok em{font:700 11px var(--font-ui);font-style:normal;color:var(--muted)}
+  .hs-dots{display:flex;gap:4px} .hs-dots i{width:9px;height:9px;border-radius:50%;background:var(--glass-line);border:1px solid var(--glass-line)} .hs-dots i.on{background:var(--accent);border-color:transparent;box-shadow:0 0 0 3px var(--accent-soft)}
+  .hs-strats{display:flex;flex-direction:column;gap:6px;margin-top:8px} .hs-s{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)}
+  .hs-s b{font:600 13px var(--font-ui);color:var(--ink)} .hs-s small{display:block;font-size:11px;color:var(--muted)} .hs-sn{font:600 12.5px var(--font-ui);color:var(--muted);white-space:nowrap} .hs-sn i{font-style:normal;margin:0 4px} .hs-sn b{font:800 14px var(--font-display);color:var(--ink)}
   .hs-t tr[data-t]{cursor:pointer} .hs-bar{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--glass-2);overflow:hidden;vertical-align:middle} .hs-bar i{display:block;height:100%;background:var(--accent)}
   @media (max-width:560px){ .v2-panel{padding:20px 16px 14px} .v2-st b{font-size:17px} .v2-list{grid-template-columns:1fr} }
 </style>
@@ -1064,10 +1071,13 @@
     <div id="v2-body"><p class="note">Loading this month's picks…</p></div>
   </section>
 
-  <div class="panel hs-panel owner-only" id="hs-panel" data-view="analyze">
-    <div class="panel-title"><span class="pt-ic pt-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg></span>High-Sharpe group <span class="v2-badge" style="background:#9aa39e;color:#1c2326">YOU ONLY</span></div>
+  <section class="panel v2-panel hs-panel owner-only" id="hs-panel" data-view="analyze">
+    <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C7 16.5 3.2 13 3.2 9 3.2 6 5.5 4 8 4.3 10.2 4.6 10.9 7 9.4 8.1 8.3 8.9 6.9 8.1 7.3 6.9"/><path d="M12 21C17 16.5 20.8 13 20.8 9 20.8 6 18.5 4 16 4.3 13.8 4.6 13.1 7 14.6 8.1 15.7 8.9 17.1 8.1 16.7 6.9"/><path d="M12 21V12.5"/></svg>
+    <span class="hero-kick"><i></i>High-Sharpe group · you only</span>
+    <h2 class="ak-h">What our strongest <em>strategies hold.</em></h2>
+    <p class="ak-sub">The 14 strategies with a backtest Sharpe of 1.3+ and 20%+ a year, re-tested. A separate ranking, never mixed into the monthly picks.</p>
     <div id="hs-body"><p class="note">Loading…</p></div>
-  </div>
+  </section>
 
   <div class="panel od-panel" id="od-panel" data-view="analyze">
     <div class="panel-title"><span class="pt-ic pt-odds" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/><circle cx="12" cy="16" r="1.4"/></svg></span>Odds checker</div>
@@ -6221,15 +6231,15 @@ function v2Votes() {
 }
 // ---- the live record: chain each month's marks (the last mark of a closed month is its final result) ----
 function v2Record() {
-  const P = V2.P || [], M = V2.M || []; let kp = 1, ku = 1, ks = 1; const pts = [], months = [];
+  const P = V2.P || [], M = V2.M || []; let kp = 1, ku = 1, ks = 1, ka = 1, kc = 1; const pts = [], months = [];
   for (const p of P) {
     const m = M.filter(x => x.pick_id === p.id && x.picks_ret != null);
     for (const x of m) pts.push({d: x.date, pk: kp * (1 + x.picks_ret) - 1, uni: ku * (1 + (x.uni_ret ?? 0)) - 1, spy: ks * (1 + (x.spy_ret ?? 0)) - 1});
     const z = m[m.length - 1];
     months.push({p, last: z || null, open: !z?.final});
-    if (z) { kp *= 1 + z.picks_ret; ku *= 1 + (z.uni_ret ?? 0); ks *= 1 + (z.spy_ret ?? 0); }
+    if (z) { kp *= 1 + z.picks_ret; ku *= 1 + (z.uni_ret ?? 0); ks *= 1 + (z.spy_ret ?? 0); ka *= 1 + (z.a20_ret ?? 0); kc *= 1 + (z.c20_ret ?? 0); }
   }
-  return {pts, months, pk: kp - 1, uni: ku - 1, spy: ks - 1, start: P[0]?.as_of || null};
+  return {pts, months, pk: kp - 1, uni: ku - 1, spy: ks - 1, a20: ka - 1, c20: kc - 1, start: P[0]?.as_of || null, shadowStart: P.find(p => p.shadow)?.as_of || null};
 }
 function v2Chart(pts) {
   if (pts.length < 2) return '';
@@ -6241,8 +6251,8 @@ function v2Chart(pts) {
 }
 async function v2Load() {
   if (V2.busy) return; V2.busy = true;
-  try { [V2.P, V2.M] = await Promise.all([sb('v2_picks?select=id,as_of,picks,strategies,rule,votes_hist&order=as_of'),
-    sb('v2_pick_marks?select=pick_id,date,picks_ret,uni_ret,spy_ret,n_picks,n_uni,final&order=date')]); V2.err = null; }
+  try { [V2.P, V2.M] = await Promise.all([sb('v2_picks?select=id,as_of,picks,strategies,rule,votes_hist,shadow&order=as_of'),
+    sb('v2_pick_marks?select=pick_id,date,picks_ret,uni_ret,spy_ret,n_picks,n_uni,a20_ret,c20_ret,final&order=date')]); V2.err = null; }
   catch (e) { V2.err = e.message; }
   V2.busy = false; v2Render(); if (HERO.last) v2Hero(HERO.last);
 }
@@ -6350,6 +6360,8 @@ async function v2Board() {
     }
     const R = v2Record();
     if (R.start) rows.push({name: "v2 monthly picks", since: R.start, ret: R.pts.length ? R.pk : null, spy: R.pts.length ? R.spy : null, dd: null, mo: (Date.now() - Date.parse(R.start)) / (30.44 * 864e5), uni: R.pts.length ? R.uni : null});
+    if (R.shadowStart) for (const [nm, k, d] of [["Shadow: top 20, equal votes", "a20", "the method in use"], ["Shadow: top 20, weighted votes", "c20", "weights by t vs luck (Bible 6.77)"]])
+      rows.push({name: nm, acc: d, since: R.shadowStart, ret: R.pts.length ? R[k] : null, spy: R.pts.length ? R.spy : null, dd: null, mo: (Date.now() - Date.parse(R.shadowStart)) / (30.44 * 864e5)});
     const verdict = r => r.mo < 12 ? `<span class="v2-tag">too early · ${Math.max(0, Math.floor(r.mo))}/12 months</span>` : r.ret - (r.spy ?? 0) > 0 ? '<span class="v2-tag ok">ahead of SPY</span>' : '<span class="v2-tag bad">behind SPY</span>';
     el.innerHTML = `<table class="v2-t v2-bt"><tr><th>Strategy</th><th>Live since</th><th>Return</th><th>SPY</th><th>Ahead</th><th>Worst drop</th><th></th></tr>${rows.map(r => `<tr>
       <td><b>${esc(r.name)}</b>${r.acc ? `<small class="v2-acc">${esc(r.acc)}</small>` : ''}</td><td>${v2Day(r.since)}</td><td class="${(r.ret ?? 0) >= 0 ? 'pos' : 'neg'}">${v2Pc(r.ret)}</td><td>${v2Pc(r.spy)}</td>
@@ -6375,26 +6387,31 @@ function hsRender() {
   if (HS.err) { el.innerHTML = `<p class="note">Could not load the group: ${esc(HS.err)}</p>`; return; }
   if (!HS.rows) { el.innerHTML = '<p class="note">Loading…</p>'; return; }
   const all = [...new Set(HS.rows.flatMap(r => r.picks))].map(t => ({t, ...hsCount(t)})).sort((a, b) => b.ok - a.ok || b.fam - a.fam || b.n - a.n || a.t.localeCompare(b.t));
-  const okN = HS.rows.filter(hsOk), V = HS.rows[0]?.validation;
-  const asof = HS.rows[0]?.as_of, fams = all[0]?.fams || 4;
-  el.innerHTML = `<p class="v2-note" style="margin-top:0">Stocks held by our ${HS.rows.length} strategies with a backtest Sharpe of 1.3+ and 20%+ a year, ranked by how many <b>families</b> hold them
-      (${fams}: SX25 with its 11 variants, SX30, VX09, ZX18), then by how many strategies. Holdings from the ${v2Day(asof)} rebalance; next change in January.</p>
-    ${V ? `<p class="v2-note"><b>Re-validated ${v2Day(V.date)}:</b> the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21 of 22) and the backtest numbers.
-      But with <b>equal weights</b> only ${okN.length} keep a Sharpe of 1.2+ in both halves: ${esc(okN.map(r => r.name.split('_').slice(0, 2).join(' ')).join(', '))}. The rest owe much of their 1.3+ to volatility sizing.
-      The table is ranked by those ${okN.length} first ("Holds up" column).</p>` : ''}
-    <table class="v2-t hs-t"><tr><th>Stock</th><th>Holds up</th><th>Families</th><th>Strategies</th><th></th></tr>${all.map(x => `<tr data-t="${esc(x.t)}">
-      <td><b>${esc(x.t)}</b></td><td>${x.ok ? `<b class="pos">${x.ok}/${x.okOf}</b>` : `0/${x.okOf}`}</td><td>${x.fam}/${x.fams}</td><td>${x.n}/${x.of}</td><td><span class="hs-bar"><i style="width:${(x.n / x.of * 100).toFixed(0)}%"></i></span></td></tr>`).slice(0, HS.all ? 999 : 12).join('')}</table>
-    ${all.length > 12 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${all.length}</button>` : ''}
-    <details class="about"><summary>The ${HS.rows.length} strategies and their catch</summary><table class="v2-t v2-bt"><tr><th>Strategy</th><th>Sharpe</th><th>Equal wt</th><th>Eq. CAGR</th><th>Eq. 2016-20 / 21-26</th><th>Worst drop</th><th></th></tr>
-      ${HS.rows.slice().sort((a, b) => (b.validation?.equal?.sharpe || 0) - (a.validation?.equal?.sharpe || 0)).map(r => { const v = r.validation, e = v?.equal;
-        return `<tr title="${esc(r.source || '')}"><td>${esc(r.name.replace(/_/g, ' '))}<small class="v2-acc">${esc(r.family)}</small></td><td>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</td>
-        <td><b>${e ? e.sharpe.toFixed(2) : '–'}</b></td><td>${e ? v2Pc(e.cagr, 0) : '–'}</td><td>${e ? e.h1.toFixed(2) + ' / ' + e.h2.toFixed(2) : '–'}</td><td>${v2Pc(v?.vol?.maxdd ?? r.maxdd, 0)}</td>
-        <td><span class="v2-tag ${v?.verdict === 'holds up' ? 'ok' : v?.verdict === 'weak' ? 'bad' : ''}">${esc(v?.verdict || '')}</span></td></tr>`; }).join('')}</table>
-      <p class="v2-note">Backtest 2016 to 30 Jun 2026, next-day execution, 10 bps per trade, re-run on ${V ? v2Day(V.date) : ''}. "Equal wt" is the same picks without volatility sizing (Bible 6.26). "Holds up" = equal-weight Sharpe 1.2+ and 1.0+ in both halves; "weak" = below 1.0.
-      None beats SPY by a statistically clear margin in excess return with equal weights (t below 2): their edge is mostly a smoother ride (cash switches, lower swings), not much higher returns.
-      11 of the ${HS.rows.length} are SX25 variants, so a high strategy count mostly means "SX25 holds it"; the family count is the fairer measure. Cash switches and stops are not applied here.
-      SXG4 uses Account 1's actual SX25 targets; the research version of SX25 differs by 2-3 names (AMD and JBL vs FFIV). Visible to you only.</p></details>`;
-  el.querySelectorAll('tr[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
+  const okN = HS.rows.filter(hsOk), V = HS.rows[0]?.validation, asof = HS.rows[0]?.as_of, fams = all[0]?.fams || 4;
+  const nm = t => { const p = typeof TL !== 'undefined' && TL.prof?.find(r => r.ticker === t); return p ? (typeof tlTitle === 'function' ? tlTitle(p.name) : p.name) : ''; };
+  const LBL = {SXG4_V38_SPY200_TBill: 'SXG4 (your Account 1)', NB069_SX25_V38: 'SX25 + V38', VX09_Deterministic_Drawdown_Stop_Circuit: 'VX09', ZX18_Volume_Adjusted_Moving_Average_VAMA: 'ZX18', SX30_Cross_Sleeve_Momentum_Shifter: 'SX30'};
+  const short = r => LBL[r.name] || r.name.replace(/^(NB\d+|SXG\d+)_/, '').replace(/_/g, ' ').replace(/^SX25 Multi Sleeve Triple Parity$/, 'SX25').replace(/Deterministic Drawdown Stop Circuit/, '').trim();
+  const dots = x => Array.from({length: x.okOf}, (_, i) => `<i class="${i < x.ok ? 'on' : ''}"></i>`).join('');
+  const card = x => `<button class="v2-pk hs-pk" data-t="${esc(x.t)}" title="${esc(x.held.map(r => r.name).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
+      <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${x.n} of ${x.of} strategies · ${x.fam} of ${x.fams} families</small></span>
+      <span class="hs-ok" aria-label="${x.ok} of ${x.okOf} validated strategies"><span class="hs-dots">${dots(x)}</span><em>${x.ok}/${x.okOf}</em></span></button>`;
+  const strat = r => { const v = r.validation, e = v?.equal; return `<div class="hs-s"><div><b>${esc(short(r) || r.name)}</b><small>${esc(r.family)}</small></div>
+      <div class="hs-sn"><span>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</span><i>→</i><b>${e ? e.sharpe.toFixed(2) : '–'}</b></div>
+      <span class="v2-tag ${v?.verdict === 'holds up' ? 'ok' : v?.verdict === 'weak' ? 'bad' : ''}">${esc(v?.verdict || '')}</span></div>`; };
+  el.innerHTML = `
+    <div class="hs-sum">
+      <div><b>${okN.length}<i>/${HS.rows.length}</i></b><span>hold up after re-testing</span></div>
+      <div><b>${fams}</b><span>strategy families</span></div>
+      <div><b>${new Date(asof + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'})}</b><span>holdings date · next: Jan</span></div>
+    </div>
+    <div class="v2-lh"><b>Ranked by the ${okN.length} that hold up</b><span>${esc(okN.map(short).join(' · '))} · dots = how many of them hold it · tap for its odds</span></div>
+    <div class="v2-list">${all.slice(0, HS.all ? 999 : 10).map(card).join('')}</div>
+    ${all.length > 10 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${all.length}</button>` : ''}
+    <details class="about"><summary>The ${HS.rows.length} strategies: Sharpe as claimed → with equal weights</summary><div class="hs-strats">${HS.rows.slice().sort((a, b) => (b.validation?.equal?.sharpe || 0) - (a.validation?.equal?.sharpe || 0)).map(strat).join('')}</div>
+      <p class="v2-note">${V ? `Re-tested ${v2Day(V.date)}: the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21) and the backtest numbers. ` : ''}"Holds up" = equal-weight Sharpe 1.2+ and 1.0+ in both 2016-20 and 2021-26; "weak" = below 1.0. The others owe much of their 1.3+ to volatility sizing.
+      With equal weights none beats SPY by a statistically clear margin (t below 2): the edge is mostly a smoother ride. 11 of 14 are SX25 variants. Cash switches and stops are not applied here.
+      SXG4 uses Account 1's actual SX25 targets. Visible to you only.</p></details>`;
+  el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
   const m = document.getElementById('hs-more'); if (m) m.onclick = () => { HS.all = true; hsRender(); };
 }
 const v2HeroBase = v2Hero; v2Hero = function (A) {
