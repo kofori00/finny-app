@@ -537,7 +537,10 @@
   .od-search svg{width:18px;height:18px;color:var(--muted);flex:none}
   #od-panel .od-search input,#hero-search .od-search input{flex:1;min-width:0;border:0;background:transparent;box-shadow:none;outline:none;color:var(--ink);font:500 16px var(--font-ui);padding:8px 0;border-radius:0}
   .od-search button{flex:none;padding:10px 20px;border-radius:999px;border:0;background:var(--lime);color:var(--lime-ink);font:700 14px var(--font-ui);cursor:pointer}
-  .od-search .tl-sugg{top:calc(100% + 6px)}
+  .od-search .tl-sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;max-height:min(320px,46vh);overflow-y:auto;background:var(--surface);border:1px solid var(--glass-line);border-radius:16px;box-shadow:0 14px 34px -10px rgba(0,0,0,.45)}
+  .od-search .tl-opt{display:flex;gap:10px;align-items:baseline;padding:11px 16px;cursor:pointer;border-bottom:1px solid var(--glass-line)} .od-search .tl-opt:last-child{border-bottom:0}
+  .od-search .tl-opt b{flex:none;min-width:52px;font:700 14px var(--font-ui);color:var(--ink)} .od-search .tl-opt span{min-width:0;flex:1;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .od-search .tl-opt:hover,.od-search .tl-opt.act{background:var(--glass)}
   .od-sig{display:block;margin:14px 0 10px}
   .od-board{padding:12px 14px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)}
   .od-bh{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-bottom:8px} .od-bh b{font:700 14.5px var(--font-display);color:var(--ink)} .od-bh span{font-size:11.5px;color:var(--muted)}
@@ -801,7 +804,7 @@
   body.an-empty #tl-panel{display:none!important}
   @media (prefers-reduced-motion: reduce){.h-halo,.hero-kick i{animation:none}}
   @media (max-width:760px){
-    .hero{grid-template-columns:1fr;gap:6px;padding:22px 18px 14px;border-radius:22px}
+    .hero{grid-template-columns:minmax(0,1fr);gap:6px;padding:22px 18px 14px;border-radius:22px}   /* minmax(0,..): a wide child must not widen the page */
     .hero h2{font-size:29px} .hero p{font-size:14px;margin-bottom:14px} .hero-stats b{font-size:15.5px} .hero-art{margin:6px auto 0;width:100%;max-width:330px}
     .brand-mark{width:36px;height:36px;border-radius:10px}
   }
@@ -6247,13 +6250,17 @@ const v1tlSelect = tlSelect; tlSelect = function (fam, v) {
   return TL.cache[key] = {uni: U, trendUni: U, pos: Object.fromEntries(held.map((t, i) => [t, i + 1])), of: held.length, top: new Set(held), n: Math.max(held.length, 1)};
 };
 const v1tlReason = tlReason; tlReason = (fam, v, t) => fam.elite ? (fam.elite.kind === 'signal' ? 'no entry signal in the last 5 trading days' : 'not in its current holdings') : v1tlReason(fam, v, t);
-const v1tlLoad = tlLoad; tlLoad = async function () {
+const v1tlLoad = tlLoad; let tlLoadP = null;                // one shared load: every caller (each keystroke in a search box) waits for it
+tlLoad = function () { if (TL.loaded) return Promise.resolve(); return tlLoadP ||= tlLoadOnce().finally(() => { tlLoadP = null; }); };
+async function tlLoadOnce() {
   if (TL.loaded || TL.busy) return;
   const ep = sb('v2_elite?select=key,label,kind,is_public,spec,holdings,holdings_as_of,components,metrics,notes,sort&order=sort').catch(e => { EL.err = e.message; return null; });
   await v1tlLoad(); EL.rows = await ep; if (!TL.loaded) return;
   TL.strats = (EL.rows || []).map(elStrat); TL.cache = TL.scores = TL.ideal = null; V2.votes = V2.F = null;
   tlRender(EL.err ? 'Could not load the strategies: ' + EL.err : undefined); if (HERO.last) v2Hero(HERO.last);
-};
+  const inp = document.getElementById('od-input');             // typed while it was loading: show the suggestions now
+  if (inp && document.activeElement === inp && inp.value.trim()) inp.oninput?.();
+}
 const v1tlShow = tlShow; tlShow = function (ticker) {                 // v1 wording assumed 1,569 variants; say what is counted now
   v1tlShow(ticker); const el = document.getElementById('tl-body'), n = TL.strats.length; if (!el || !EL.rows) return;
   el.querySelectorAll('.tl-lead, details.tl-fold summary span, .tl-foot').forEach(x => { x.innerHTML = x.innerHTML.replace(/validated strategy families/g, 'top strategies')
