@@ -1037,6 +1037,13 @@
   .rs-chip{font:inherit;font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink);cursor:pointer} .rs-chip i{font-style:normal;color:var(--muted)}
   .rs-name{font:inherit;background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:left} .rs-name:hover b,.hs-s[data-rs]:hover b{text-decoration:underline;text-underline-offset:3px}
   .hs-s[data-rs]{cursor:pointer}
+  .lc{margin:8px 0 2px;padding:10px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .lc p{margin:6px 0 0;font-size:12.5px;line-height:1.5;color:var(--ink-2)} .lc p b{color:var(--ink)}
+  .lc-h{display:flex;justify-content:space-between;align-items:center;gap:10px} .lc-run{display:block;margin-top:4px;color:var(--muted)}
+  .lc-tag{font:700 10.5px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--muted);white-space:nowrap}
+  .lc-tag.ok{color:var(--good)} .lc-tag.bad{color:var(--bad)} .lc-tag.mid{color:var(--accent)}
+  .lc-sp{width:120px;height:34px;flex:none} .lc-sp .b{fill:var(--accent-soft);stroke:none} .lc-sp .bar{stroke:var(--muted);stroke-dasharray:3 3;stroke-width:1;vector-effect:non-scaling-stroke}
+  .lc-sp .m{fill:none;stroke:var(--accent);stroke-width:2;vector-effect:non-scaling-stroke} .lc-sp .l{fill:none;stroke:var(--ink-2);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.7}
+  .lc-tw{overflow-x:auto} .lc-t{white-space:nowrap} .lc-t small{display:block;font-size:10.5px;color:var(--muted)}
   .rs-inline{font:inherit;font-weight:700;background:none;border:0;padding:0;color:var(--accent);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
   @media (max-width:560px){ .v2-panel{padding:20px 16px 14px} .v2-st b{font-size:17px} .v2-list{grid-template-columns:1fr} .fwd-st b{font-size:16px} }
 </style>
@@ -6725,6 +6732,98 @@ function rsLinkify(root) {
   });
 }
 ['od-body', 'tl-body'].forEach(id => { const el = document.getElementById(id); if (el) new MutationObserver(() => rsLinkify(el)).observe(el, {childList: true}); });
+
+// ---------------- live confidence for the odds: a recursive, real-time check (2026-10-25, Bible 6.88) ----------------
+// Every call the odds make is forward-tested automatically (public.odds_calls, odds-live Edge Function): the swing signals ("higher 5 trading
+// days after the signal") and the open-to-close odds ("closes above today's open"). Here a Beta posterior starts at the backtest rate and is
+// updated one resolved trading day at a time; stocks move together within a day, so a day adds at most LC_CAP calls' worth of evidence.
+// Two answers per call: how sure the live record alone is that the call beats a typical stock (flat prior), and the combined estimate
+// (backtest prior worth LC_N0 calls, plus live) with its 90% range. Calls still running are shown at the latest trade, not counted until resolved.
+const LC = {days: null, live: null, err: null, busy: false, timer: null};
+const LC_N0 = 100, LC_CAP = 10;
+// ---- Beta distribution: regularized incomplete beta (continued fraction) and quantiles by bisection ----
+function lcLgamma(x) { const g = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+  let y = x, t = x + 5.5; t -= (x + 0.5) * Math.log(t); let s = 1.000000000190015; for (const c of g) s += c / ++y; return -t + Math.log(2.5066282746310005 * s / x); }
+function lcBetacf(a, b, x) { let qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap; d = 1 / (Math.abs(d) < 1e-30 ? 1e-30 : d); let h = d;
+  for (let m = 1; m <= 300; m++) { const m2 = 2 * m; let aa = m * (b - m) * x / ((qam + m2) * (a + m2)); d = 1 + aa * d; d = 1 / (Math.abs(d) < 1e-30 ? 1e-30 : d); c = 1 + aa / c; c = Math.abs(c) < 1e-30 ? 1e-30 : c; h *= d * c;
+    aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2)); d = 1 + aa * d; d = 1 / (Math.abs(d) < 1e-30 ? 1e-30 : d); c = 1 + aa / c; c = Math.abs(c) < 1e-30 ? 1e-30 : c; const del = d * c; h *= del; if (Math.abs(del - 1) < 3e-12) break; }
+  return h; }
+function lcBetaCdf(x, a, b) { if (x <= 0) return 0; if (x >= 1) return 1;
+  const bt = Math.exp(lcLgamma(a + b) - lcLgamma(a) - lcLgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+  return x < (a + 1) / (a + b + 2) ? bt * lcBetacf(a, b, x) / a : 1 - bt * lcBetacf(b, a, 1 - x) / b; }
+function lcBetaQ(q, a, b) { let lo = 0, hi = 1; for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (lcBetaCdf(m, a, b) < q) lo = m; else hi = m; } return (lo + hi) / 2; }
+// ---- the recursion: one resolved day at a time ----
+function lcPost(kind, grp) {
+  const D = (LC.days || []).filter(r => r.kind === kind && r.grp === grp); if (!D.length) return null;
+  const p0 = D[D.length - 1].p_prior, bar = D[D.length - 1].base, dir = grp === 'down' ? -1 : 1;    // a 'down' call is right when the stock does WORSE than the bar
+  let a = p0 * LC_N0, b = (1 - p0) * LC_N0, la = 1, lb = 1, n = 0, ups = 0, ret = 0, spy = 0; const path = [];
+  for (const r of D) { const w = Math.min(r.n, LC_CAP) / r.n; a += r.ups * w; b += (r.n - r.ups) * w; la += r.ups * w; lb += (r.n - r.ups) * w; n += r.n; ups += r.ups; ret += r.ret * r.n; spy += r.spy_ret * r.n;
+    path.push({day: r.day, m: a / (a + b), lo: lcBetaQ(0.05, a, b), hi: lcBetaQ(0.95, a, b), live: la / (la + lb)}); }
+  const sure = p => dir > 0 ? 1 - lcBetaCdf(bar, ...p) : lcBetaCdf(bar, ...p);
+  return {kind, grp, p0, bar, n, ups, days: D.length, since: D[0].day, ret: ret / n, spy: spy / n, nEff: la + lb - 2,
+    mean: a / (a + b), lo: lcBetaQ(0.05, a, b), hi: lcBetaQ(0.95, a, b), sureLive: sure([la, lb]), sureAll: sure([a, b]), path};
+}
+async function lcLoad(force) {
+  if (LC.busy || (LC.days && !force)) return; LC.busy = true;
+  try { LC.days = await sb('odds_calls_daily?select=kind,grp,day,n,ups,beats,ret,spy_ret,p_prior,base&order=day'); LC.err = null; } catch (e) { LC.err = e.message; }
+  await lcLive(); LC.busy = false; lcSafe();
+  clearInterval(LC.timer); LC.timer = setInterval(async () => { if (document.visibilityState === 'visible' && VIEW.cur === 'analyze' && lcMarketOpen()) { await lcLive(); lcSafe(); } }, 60e3);
+}
+async function lcLive() {
+  try { const token = await getToken(); const r = await fetch(`${SB_URL}/functions/v1/odds-live`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: '{"action":"live"}'});
+    const j = await r.json(); if (j.ok) LC.live = j; } catch (e) { /* keep the last snapshot */ }
+}
+function lcMarketOpen() { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}).formatToParts(new Date()).map(x => [x.type, x.value]));
+  const m = (+p.hour % 24) * 60 + +p.minute; return !['Sat', 'Sun'].includes(p.weekday) && m >= 570 && m <= 960; }
+const lcP = x => Math.round(x * 100) + '%';
+function lcSpark(P) {
+  if (P.path.length < 2) return '';
+  const all = P.path.flatMap(x => [x.lo, x.hi, x.live]).concat(P.bar), lo = Math.min(...all) - 0.01, hi = Math.max(...all) + 0.01, W = 140, H = 40;
+  const X = i => (i / (P.path.length - 1) * W).toFixed(1), Y = v => (H - (v - lo) / (hi - lo) * H).toFixed(1);
+  const band = P.path.map((x, i) => `${X(i)},${Y(x.hi)}`).join(' ') + ' ' + P.path.slice().reverse().map((x, i) => `${X(P.path.length - 1 - i)},${Y(x.lo)}`).join(' ');
+  return `<svg class="lc-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polygon points="${band}" class="b"/><line x1="0" x2="${W}" y1="${Y(P.bar)}" y2="${Y(P.bar)}" class="bar"/>
+    <polyline points="${P.path.map((x, i) => `${X(i)},${Y(x.live)}`).join(' ')}" class="l"/><polyline points="${P.path.map((x, i) => `${X(i)},${Y(x.m)}`).join(' ')}" class="m"/></svg>`;
+}
+function lcVerdict(P) {
+  if (P.days < 20) return ['early', `too early: ${P.days} trading day${P.days > 1 ? 's' : ''} live`];
+  return P.sureLive >= 0.9 ? ['ok', 'holding up live'] : P.sureLive >= 0.6 ? ['mid', 'leaning right, not proven live'] : ['bad', 'not confirmed live'];
+}
+function lcBlock(P, running) {
+  const [cls, word] = lcVerdict(P), what = P.grp === 'down' ? 'closed below their open' : P.kind === 'open' ? 'closed above their open' : 'were higher 5 trading days later';
+  return `<div class="lc"><div class="lc-h"><span class="lc-tag ${cls}">Live check · ${esc(word)}</span>${lcSpark(P)}</div>
+    <p>Forward test since ${esc(v2Day(P.since))}: <b>${P.grp === 'down' ? P.n - P.ups : P.ups} of ${P.n}</b> ${what} (<b>${lcP(P.grp === 'down' ? 1 - P.ups / P.n : P.ups / P.n)}</b>; backtest ${lcP(P.grp === 'down' ? 1 - P.p0 : P.p0)}, typical stock ${lcP(P.grp === 'down' ? 1 - P.bar : P.bar)}).
+      Confidence it beats a typical stock: <b>${lcP(P.sureLive)}</b> on the live record alone; backtest and live together: ${lcP(P.grp === 'down' ? 1 - P.mean : P.mean)} (90%: ${lcP(P.grp === 'down' ? 1 - P.hi : P.lo)}–${lcP(P.grp === 'down' ? 1 - P.lo : P.hi)}).${running ? ' ' + running : ''}</p></div>`;
+}
+function lcRunningSwing(kind) {
+  const S = (LC.live?.swing || []).filter(x => x.kind === kind); if (!S.length) return '';
+  const up = S.filter(x => x.now > x.entry).length; return `<span class="lc-run">Running now: ${S.length} signal${S.length > 1 ? 's' : ''}, ${up} above their entry${LC.live.at ? ' at ' + esc(new Date(LC.live.at).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})) : ''}.</span>`;
+}
+function lcRunningOpen(grp) {
+  const g = LC.live?.open?.groups?.[grp]; if (!g?.n || LC.live.open.as_of !== odEtToday()) return '';
+  return `<span class="lc-run">Today so far: ${g.up} of ${g.n} such calls are above their open.</span>`;
+}
+// ---- into the odds view: under the swing and open-to-close sentences of "What this means", and one summary for all calls ----
+function lcPaint() {
+  const el = document.getElementById('od-body'); if (!el || !LC.days || !OD.ticker) return;
+  el.querySelectorAll('.lc, .lc-all').forEach(x => x.remove());
+  const A = OD.lastA; if (!A || A.sym !== OD.ticker) return;
+  const lis = [...el.querySelectorAll('.od-plain li')];
+  const sw = A.H?.[0]?.sig && String(A.H[0].sig).match(/R18(L26|P12)/)?.[0], liS = lis.find(li => /swing buy signal/.test(li.textContent));
+  if (sw && liS) { const P = lcPost(sw, sw); if (P) liS.insertAdjacentHTML('beforeend', lcBlock(P, lcRunningSwing(sw))); }
+  const liO = lis.find(li => /from the open to the close/.test(li.textContent));
+  if (A.op && liO) { const g = A.op.p_up > 0.515 ? 'up' : A.op.p_up < 0.495 ? 'down' : 'flat'; const P = g !== 'flat' && lcPost('open', g); if (P) liO.insertAdjacentHTML('beforeend', lcBlock(P, lcRunningOpen(g))); }
+  const rows = [['R18L26', 'R18L26', 'Swing signal R18L26', 'higher after 5 days'], ['R18P12', 'R18P12', 'Swing signal R18P12', 'higher after 5 days'],
+    ['open', 'up', 'Open: "more likely to rise"', 'closed above the open'], ['open', 'down', 'Open: "more likely to slip"', 'closed below the open']].map(([k, g, name, what]) => {
+      const P = lcPost(k, g); if (!P) return ''; const [cls, word] = lcVerdict(P), hit = g === 'down' ? 1 - P.ups / P.n : P.ups / P.n, bar = g === 'down' ? 1 - P.bar : P.bar;
+      return `<tr><td><b>${esc(name)}</b><small>${P.n} calls · ${P.days} days</small></td><td>${lcP(hit)}<small>${esc(what)}; typical ${lcP(bar)}</small></td><td><b>${lcP(P.sureLive)}</b><small>sure it beats typical</small></td><td>${lcSpark(P)}</td><td><span class="lc-tag ${cls}">${esc(word)}</span></td></tr>`; }).join('');
+  const plain = el.querySelector('.od-plain');
+  if (plain && rows) plain.insertAdjacentHTML('afterend', `<details class="cx-fold lc-all"><summary><b>How the odds are doing live</b><span>every call forward-tested, updated as each one resolves</span></summary>
+    <div class="lc-tw"><table class="v2-t lc-t">${rows}</table></div>
+    <p class="v2-note">Each line starts from the backtest and is updated after every trading day with the calls that resolved (stocks move together, so one day counts as at most ${LC_CAP} calls). The band is the combined estimate's 90% range, the thin line the live record alone, the dashed line a typical stock.
+      Confidence means: how sure the live record is, on its own, that the call does better than a typical stock. Below 20 trading days it says little. Calls still running are shown at the latest trade${LC.live?.src === 'iex' ? ' (IEX)' : ''} and count only once they resolve.</p></details>`);
+}
+const lcSafe = () => { try { lcPaint(); } catch (e) { console.warn('live check', e); } };     // never let the live check break the odds view
+const v1odShowA = odShowA; odShowA = function (A) { v1odShowA(A); OD.lastA = A; if (LC.days) lcSafe(); else lcLoad().catch(e => console.warn('live check', e)); };
 
 </script>
 </body>
