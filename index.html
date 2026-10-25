@@ -1009,7 +1009,36 @@
   .hs-strats{display:flex;flex-direction:column;gap:6px;margin-top:8px} .hs-s{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)}
   .hs-s b{font:600 13px var(--font-ui);color:var(--ink)} .hs-s small{display:block;font-size:11px;color:var(--muted)} .hs-sn{font:600 12.5px var(--font-ui);color:var(--muted);white-space:nowrap} .hs-sn i{font-style:normal;margin:0 4px} .hs-sn b{font:800 14px var(--font-display);color:var(--ink)}
   .hs-t tr[data-t]{cursor:pointer} .hs-bar{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--glass-2);overflow:hidden;vertical-align:middle} .hs-bar i{display:block;height:100%;background:var(--accent)}
-  @media (max-width:560px){ .v2-panel{padding:20px 16px 14px} .v2-st b{font-size:17px} .v2-list{grid-template-columns:1fr} }
+  [data-t],[data-od],.tl-li,[data-hs],[data-set]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .fwd-empty{margin:12px 2px 2px;font-size:13.5px;line-height:1.6;color:var(--ink-2)} .fwd-empty b{color:var(--ink)}
+  .fwd-b{margin:12px 0 0;padding:14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line)} .fwd-b.fwd-done{opacity:.8}
+  .fwd-bh{display:flex;justify-content:space-between;align-items:center;gap:10px} .fwd-bh b{font:700 14.5px var(--font-ui);color:var(--ink)} .fwd-bh small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+  .fwd-sp{width:96px;height:30px;flex:none} .fwd-sp polyline{fill:none;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round} .fwd-sp .a{stroke:var(--accent);stroke-width:2.2} .fwd-sp .s{stroke:var(--muted)}
+  .fwd-st{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 4px} .fwd-st b{display:block;font:800 18px var(--font-display);color:var(--ink)} .fwd-st span{font-size:11.5px;color:var(--muted)}
+  .fwd-st .pos b{color:var(--good)} .fwd-st .neg b{color:var(--bad)}
+  .fwd-d summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-2);padding:6px 0} .fwd-tw{overflow-x:auto} .fwd-t{white-space:nowrap} .fwd-t small{display:block;font-size:10.5px;color:var(--muted)}
+  .fwd-t tr.fwd-cl td{color:var(--muted)} .fwd-tk{font:700 12.5px var(--font-ui);color:var(--ink);background:none;border:0;padding:0;cursor:pointer}
+  .fwd-sell{width:28px;height:28px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass);color:var(--muted);font-size:15px;line-height:1;cursor:pointer}
+  .fwd-acts{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap} .fwd-hint{font-size:11.5px;color:var(--muted)}
+  .fwd-end{margin-left:auto;font:600 12px var(--font-ui);padding:6px 12px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass);color:var(--bad);cursor:pointer}
+  .fwd-sheet{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(10,14,16,.42);animation:fwdIn .16s ease-out}
+  .fwd-card{width:min(520px,100%);max-height:85vh;overflow:auto;padding:18px 16px calc(16px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;background:var(--surface);border:1px solid var(--glass-line);box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+  .fwd-h b{display:block;font:800 20px var(--font-display);color:var(--ink)} .fwd-h span{font-size:12.5px;color:var(--muted)}
+  .fwd-sub{margin:8px 0 12px;font-size:12.5px;line-height:1.5;color:var(--ink-2)} .fwd-os{display:flex;flex-direction:column;gap:8px}
+  .fwd-o{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border-radius:14px;border:1px solid var(--glass-line);background:var(--glass);color:inherit;font:inherit;text-align:left;cursor:pointer}
+  .fwd-o b{font:700 14px var(--font-ui);color:var(--ink)} .fwd-o span{font-size:12px;color:var(--muted)} .fwd-o.fwd-main{background:var(--accent-soft);border-color:transparent} .fwd-o.fwd-main b{color:var(--accent)}
+  .fwd-o.fwd-lite{padding:9px 14px} .fwd-o.busy{opacity:.6} .fwd-o:disabled{cursor:default}
+  .fwd-x{width:100%;margin-top:10px;padding:11px;border-radius:14px;border:0;background:none;color:var(--muted);font:600 13.5px var(--font-ui);cursor:pointer}
+  .fwd-toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:9100;max-width:min(92vw,480px);padding:11px 16px;border-radius:14px;background:var(--ink);color:var(--surface);font-size:13px;line-height:1.4;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+  .fwd-toast.on{opacity:1;transform:translate(-50%,0)} .fwd-toast.bad{background:var(--bad);color:#fff}
+  @keyframes fwdIn{from{opacity:0}to{opacity:1}}
+  .rs-link{margin-left:auto;font:600 12px var(--font-ui);padding:4px 11px;border-radius:999px;border:1px solid var(--glass-line);background:var(--accent-soft);color:var(--accent);cursor:pointer;white-space:nowrap}
+  .tld-h{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+  .rs-chip{font:inherit;font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink);cursor:pointer} .rs-chip i{font-style:normal;color:var(--muted)}
+  .rs-name{font:inherit;background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:left} .rs-name:hover b,.hs-s[data-rs]:hover b{text-decoration:underline;text-underline-offset:3px}
+  .hs-s[data-rs]{cursor:pointer}
+  .rs-inline{font:inherit;font-weight:700;background:none;border:0;padding:0;color:var(--accent);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
+  @media (max-width:560px){ .v2-panel{padding:20px 16px 14px} .v2-st b{font-size:17px} .v2-list{grid-template-columns:1fr} .fwd-st b{font-size:16px} }
 </style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1c2326"><meta name="mobile-web-app-capable" content="yes"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
@@ -1072,6 +1101,14 @@
     <h2 class="ak-h">This month's <em>picks.</em></h2>
     <p class="ak-sub">S&amp;P 500 stocks that several of our top strategies hold (from November: 2 or more of the ones with a Sharpe of 1.2+ after re-checks). Frozen each month, tracked every evening against the market, never edited.</p>
     <div id="v2-body"><p class="note">Loading this month's picks…</p></div>
+  </section>
+
+  <section class="panel v2-panel fwd-panel" id="fwd-panel" data-view="analyze">
+    <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7.5" width="11.5" height="9" rx="4.5"/><rect x="10" y="7.5" width="11.5" height="9" rx="4.5"/></svg>
+    <span class="hero-kick"><i></i>Forward tests · live prices</span>
+    <h2 class="ak-h">Your forward <em>tests.</em></h2>
+    <p class="ak-sub">Test any stock or strategy from today on: long-press it anywhere in the app. Virtual money, real prices, no orders.</p>
+    <div id="fwd-body"><p class="note">Loading…</p></div>
   </section>
 
   <section class="panel v2-panel hs-panel owner-only" id="hs-panel" data-view="analyze">
@@ -6267,7 +6304,9 @@ const v1tlShow = tlShow; tlShow = function (ticker) {                 // v1 word
     .replace(/the \d+ best strategies vote/, `our ${n} top strategies vote`).replace(/our \d+ best strategies hold/, `our ${n} top strategies hold`).replace(/\d+ best by/, `all ${n} by`)
     .replace(/None of the \d+ best strategies/, 'None of the top strategies'); });
   el.querySelector('.tl-about .tl-foot')?.insertAdjacentHTML('afterbegin', `Only strategies with a Sharpe of 1.2 or more (or 25%+ a year) after our own re-checks count here (${n}${v2Owner() ? ', including your accounts and combinations' : ''}); the weaker ones were removed on 25 Oct 2026. `);
-  const d = document.getElementById('tl-detail'); if (d) new MutationObserver(() => { const v = d.querySelector('.tld-v'); if (v && / · \d+ of 1 versions? buy it$/.test(v.textContent)) v.textContent = v.textContent.replace(/ · \d+ of 1 versions? buy it$/, ''); }).observe(d, {childList: true});
+  const d = document.getElementById('tl-detail'); if (d) new MutationObserver(() => { const v = d.querySelector('.tld-v'); if (v && / · \d+ of 1 versions? buy it$/.test(v.textContent)) v.textContent = v.textContent.replace(/ · \d+ of 1 versions? buy it$/, '');
+    const h = d.querySelector('.tld-h'), e = h && EL.rows.find(r => r.label === h.querySelector('b')?.textContent);         // research link (Bible 6.87)
+    if (e && !h.querySelector('.rs-link')) h.insertAdjacentHTML('beforeend', `<button type="button" class="rs-link" data-rs="${esc(e.key)}">Research ›</button>`); }).observe(d, {childList: true});
 };
 // with 6-11 strategies most stocks score 0, so a percentile label called a near miss a "Strong fit": label by the Sharpe-weighted share instead
 tlClass = function (score) { const pct = tlScores().pctOf(score), t = score >= 50 ? 4 : score >= 25 ? 3 : score >= 10 ? 2 : score > 0 ? 1 : 0;
@@ -6342,7 +6381,7 @@ function v2Render() {
         chosen knowing the whole backtest, so this live record is the real test. Every month is frozen when it is made and never edited.
         <br><span class="v2-disc">Disclosure: Finny's own paper accounts (simulated money) may hold some of these stocks. Not personal advice.</span></p>
     </div>
-    <div class="v2-lh"><b>${v2Day(cur.as_of)}: ${cur.picks.length} stocks</b><span>held by ${E ? V2_MIN : 4}+ of ${nS} ${E ? 'top' : 'best-tested'} strategies · equal weight · one month · tap one for its odds</span></div>
+    <div class="v2-lh" data-set="picks"><b>${v2Day(cur.as_of)}: ${cur.picks.length} stocks</b><span>held by ${E ? V2_MIN : 4}+ of ${nS} ${E ? 'top' : 'best-tested'} strategies · equal weight · one month · tap one for its odds</span></div>
     <div class="v2-list">${cur.picks.slice(0, V2.shown).map(row).join('')}</div>
     ${cur.picks.length > V2.shown ? `<button class="nw-more" id="v2-more">Show all ${cur.picks.length}</button>` : ''}
     ${hist ? `<details class="about"><summary>Month by month</summary><table class="v2-t"><tr><th>Month</th><th>Picks</th><th>Avg stock</th><th>SPY</th><th>Stocks</th></tr>${hist}</table></details>` : ''}
@@ -6353,7 +6392,8 @@ function v2Render() {
       including a backtest Sharpe above the market's and a both-halves stability test) picks its stocks from today's S&amp;P 500, exactly as in the backtests.
       A stock that 4 or more of them would buy is a pick.`} Equal weight, held one month, then replaced. Returns include dividends and splits; the
       benchmark is every S&amp;P 500 member on the pick date, equally weighted, because the signal ranks stocks against each other.</p>
-      <p class="v2-strats">${cur.strategies.slice().sort((a, b) => b.sharpe - a.sharpe).map(s => `<span>${esc(s.name)} <i>${(+s.sharpe).toFixed(2)}</i></span>`).join('')}</p>
+      <p class="v2-strats">${cur.strategies.slice().sort((a, b) => b.sharpe - a.sharpe).map(s => `<button type="button" class="rs-chip" data-rs="${esc(s.id)}" title="Open its research">${esc(s.name)} <i>${(+s.sharpe).toFixed(2)}</i></button>`).join('')}</p>
+      <p class="v2-note">Tap a strategy for its research: backtest, robustness and how it works.</p>
       <p>History and research, not advice. Past results, in backtests or live, do not guarantee future returns.</p></details>`;
   el.querySelectorAll('.v2-pk').forEach(b => b.onclick = () => odGo(b.dataset.t));
   const more = document.getElementById('v2-more'); if (more) more.onclick = () => { V2.shown = 999; v2Render(); };
@@ -6421,7 +6461,7 @@ async function v2Board() {
     for (const a of acc) {                                     // judge the strategy running now from its own start; earlier strategies in the account shown apart
       const e = eq.filter(r => r.account_id === a.id && r.equity > 0), d = dep.find(x => x.account_id === a.id); if (e.length < 2) continue;
       const start = d ? d.created_at.slice(0, 10) : e[0].date, cur = e.filter(r => r.date >= start), old = e.filter(r => r.date <= start);
-      if (cur.length >= 2) rows.push({name: (d ? d.strategy_key.split('|').pop().replace(/_/g, ' ') : a.label), acc: a.label, ...perf(cur)});
+      if (cur.length >= 2) rows.push({name: (d ? d.strategy_key.split('|').pop().replace(/_/g, ' ') : a.label), acc: a.label, rs: `live:${a.id}`, ...perf(cur)});
       if (old.length >= 20) earlier.push({acc: a.label, ...perf(old)});
     }
     const R = v2Record();
@@ -6432,7 +6472,7 @@ async function v2Board() {
       mo: (Date.now() - Date.parse(R.oldStart)) / (30.44 * 864e5)});
     const verdict = r => r.mo < 12 ? `<span class="v2-tag">too early · ${Math.max(0, Math.floor(r.mo))}/12 months</span>` : r.ret - (r.spy ?? 0) > 0 ? '<span class="v2-tag ok">ahead of SPY</span>' : '<span class="v2-tag bad">behind SPY</span>';
     el.innerHTML = `<table class="v2-t v2-bt"><tr><th>Strategy</th><th>Live since</th><th>Return</th><th>SPY</th><th>Ahead</th><th>Worst drop</th><th></th></tr>${rows.map(r => `<tr>
-      <td><b>${esc(r.name)}</b>${r.acc ? `<small class="v2-acc">${esc(r.acc)}</small>` : ''}</td><td>${v2Day(r.since)}</td><td class="${(r.ret ?? 0) >= 0 ? 'pos' : 'neg'}">${v2Pc(r.ret)}</td><td>${v2Pc(r.spy)}</td>
+      <td>${r.rs ? `<button type="button" class="rs-name" data-rs="${esc(r.rs)}" title="Open its research"><b>${esc(r.name)}</b> ›</button>` : `<b>${esc(r.name)}</b>`}${r.acc ? `<small class="v2-acc">${esc(r.acc)}</small>` : ''}</td><td>${v2Day(r.since)}</td><td class="${(r.ret ?? 0) >= 0 ? 'pos' : 'neg'}">${v2Pc(r.ret)}</td><td>${v2Pc(r.spy)}</td>
       <td class="${(r.ret ?? 0) - (r.spy ?? 0) >= 0 ? 'pos' : 'neg'}">${r.ret == null || r.spy == null ? '–' : v2Pc(r.ret - r.spy)}</td><td>${r.dd == null ? '–' : v2Pc(r.dd)}</td><td>${verdict(r)}</td></tr>`).join('')}</table>
       ${earlier.length ? `<p class="v2-note"><b>Earlier strategies in these accounts</b> (replaced before the current ones started): ${earlier.map(r => `${esc(r.acc)} ${v2Day(r.since)} to ${v2Day(r.to)}: ${v2Pc(r.ret)} vs SPY ${v2Pc(r.spy)}, worst drop ${v2Pc(r.dd)}`).join('; ')}. They lost to the market, which is part of why they were replaced; that history stays visible here.</p>` : ''}
       <p class="v2-note">A strategy is judged only after 12 months live: before that, normal ups and downs are bigger than any edge we expect. Backtests are the hypothesis; this table is the test. Paper money, not real trades.</p>`;
@@ -6463,7 +6503,7 @@ function hsRender() {
   const card = x => `<button class="v2-pk hs-pk" data-t="${esc(x.t)}" title="${esc(x.held.map(r => r.name).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
       <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${x.n} of ${x.of} strategies · ${x.fam} of ${x.fams} families</small></span>
       <span class="hs-ok" aria-label="${x.ok} of ${x.okOf} validated strategies"><span class="hs-dots">${dots(x)}</span><em>${x.ok}/${x.okOf}</em></span></button>`;
-  const strat = r => { const v = r.validation, e = v?.equal; return `<div class="hs-s"><div><b>${esc(short(r) || r.name)}</b><small>${esc(r.family)}</small></div>
+  const strat = r => { const v = r.validation, e = v?.equal; return `<div class="hs-s" data-hs="${esc(r.key)}" data-hs-name="${esc(short(r) || r.name)}" data-rs="${esc(r.key)}" role="button" tabindex="0" title="Open its research"><div><b>${esc(short(r) || r.name)} ›</b><small>${esc(r.family)}</small></div>
       <div class="hs-sn"><span>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</span><i>→</i><b>${e ? e.sharpe.toFixed(2) : '–'}</b></div>
       <span class="v2-tag ${v?.verdict === 'holds up' ? 'ok' : v?.verdict === 'weak' ? 'bad' : ''}">${esc(v?.verdict || '')}</span></div>`; };
   el.innerHTML = `
@@ -6490,6 +6530,201 @@ const v2HeroBase = v2Hero; v2Hero = function (A) {
   line.innerHTML = `<span class="hs-k">High-Sharpe group · you only</span><b>${c.n}/${c.of}</b> strategies · <b>${c.fam}/${c.fams}</b> families hold ${esc(A.sym)}${c.n ? ': ' + esc([...new Set(c.held.map(r => r.family))].join(', ')) : ''}`;
 };
 const v2viewSetHS = viewSet; viewSet = function (v, push) { v2viewSetHS(v, push); if (VIEW.cur === 'analyze') hsLoad(); };
+
+// ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
+// Long press (or right-click) on any element with a ticker (data-t / data-od: odds lists, movers, news, picks, high-Sharpe cards) or a strategy
+// (.tl-li in strategy fit, data-hs high-Sharpe strategies, data-set the monthly picks) opens a sheet: start a forward test now. The fwd Edge
+// Function records the live price (and SPY's) at that moment; nothing is ordered anywhere. Books are per user (RLS), marked every evening.
+const FWD = {books: null, pos: null, marks: null, px: null, at: null, busy: false, err: null, timer: null, open: {}};
+async function fwdApi(body) {
+  const token = await getToken();
+  const r = await fetch(`${SB_URL}/functions/v1/fwd`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({})); if (!r.ok || !j.ok) throw new Error(j.error || 'HTTP ' + r.status); return j;
+}
+const fwdName = t => { const p = typeof TL !== 'undefined' && TL.prof?.find(r => r.ticker === t); return p ? (typeof tlTitle === 'function' ? tlTitle(p.name) : p.name) : ''; };
+const fwdPc = x => v2Pc(Math.abs(x) < 5e-5 ? 0 : x);                     // no "−0.0%" from float noise
+const fwdTime = iso => new Date(iso).toLocaleString(undefined, {weekday: 'short', hour: '2-digit', minute: '2-digit'});
+function fwdToast(msg, bad) {
+  let t = document.getElementById('fwd-toast'); if (!t) { document.body.insertAdjacentHTML('beforeend', '<div id="fwd-toast" class="fwd-toast" role="status" aria-live="polite"></div>'); t = document.getElementById('fwd-toast'); }
+  t.innerHTML = msg; t.classList.toggle('bad', !!bad); t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 5200);
+}
+// ---- what was pressed: one ticker, or a strategy with its current holdings ----
+function fwdTarget(el) {
+  if (el.matches('.tl-li')) {
+    const id = el.dataset.fid.split('|')[0], s = TL.strats.find(x => x.family.id === id); if (!s) return null;
+    const S = tlSelect(s.family, s.variant || {}); return {kind: 'strategy', key: 'elite:' + id, name: s.family.short, tickers: S.na ? [] : [...S.top]};
+  }
+  if (el.dataset.hs) { const r = (HS.rows || []).find(x => x.key === el.dataset.hs); return r && {kind: 'strategy', key: 'hs:' + r.key, name: el.dataset.hsName || r.name, tickers: r.picks}; }
+  if (el.dataset.set === 'picks') { const c = V2.P?.[V2.P.length - 1]; return c && {kind: 'strategy', key: 'picks', name: `Monthly picks (${v2Day(c.as_of)})`, tickers: c.picks.map(p => p.t)}; }
+  const t = el.dataset.t || el.dataset.od; return t && {kind: 'ticker', t};
+}
+async function fwdMenu(el) {
+  const T = fwdTarget(el); if (!T || document.getElementById('fwd-sheet')) return;
+  if (!FWD.books) await fwdLoad(true).catch(() => {});
+  if (!FWD.books) return fwdToast('Could not reach your forward tests' + (FWD.err ? ': ' + esc(FWD.err) : ''), true);
+  const open = FWD.books.filter(b => !b.closed_at);
+  let opts = '';
+  if (T.kind === 'ticker') {
+    const man = open.filter(b => b.kind === 'manual');
+    opts = (man.length ? man.map(b => `<button class="fwd-o" data-act="add" data-book="${b.id}"><b>Add to ${esc(b.name)}</b><span>${FWD.pos.filter(p => p.book_id === b.id && !p.exit_at).length} open · $1,000 at the live price</span></button>`).join('')
+      : `<button class="fwd-o fwd-main" data-act="add"><b>Start a forward test</b><span>$1,000 at the live price now · tracked against SPY</span></button>`)
+      + `<button class="fwd-o" data-act="new"><b>Add to a new book…</b><span>keep this test apart from the others</span></button>`
+      + (typeof odGo === 'function' ? `<button class="fwd-o fwd-lite" data-act="odds"><b>Open its odds</b></button>` : '');
+  } else {
+    const ex = open.find(b => b.kind === 'strategy' && b.strategy_key === T.key);
+    opts = !T.tickers.length ? '<p class="note">This strategy holds no stocks today.</p>'
+      : (ex ? `<button class="fwd-o fwd-main" data-act="rebal" data-book="${ex.id}"><b>Update ${esc(ex.name)} to today's holdings</b><span>sells what left, buys what came in, at live prices</span></button>`
+        : `<button class="fwd-o fwd-main" data-act="strat"><b>Forward test all ${T.tickers.length} stocks</b><span>$10,000 split equally at the live price now · tracked against SPY</span></button>`);
+  }
+  const title = T.kind === 'ticker' ? `<b>${esc(T.t)}</b><span>${esc(fwdName(T.t))}</span>` : `<b>${esc(T.name)}</b><span>${T.tickers.length} stocks today: ${esc(T.tickers.slice(0, 8).join(', '))}${T.tickers.length > 8 ? '…' : ''}</span>`;
+  document.body.insertAdjacentHTML('beforeend', `<div id="fwd-sheet" class="fwd-sheet" role="dialog" aria-modal="true" aria-label="Start a forward test"><div class="fwd-card">
+    <div class="fwd-h">${title}</div>
+    <p class="fwd-sub">A forward test starts at the live price at this moment and is followed every day against the same money in SPY. Virtual: no orders are placed.</p>
+    <div class="fwd-os">${opts}</div><button class="fwd-x" data-act="x">Cancel</button></div></div>`);
+  const sh = document.getElementById('fwd-sheet'), close = () => sh.remove();
+  sh.addEventListener('click', async e => {
+    if (e.target === sh) return close(); const b = e.target.closest('[data-act]'); if (!b) return; const act = b.dataset.act;
+    if (act === 'x') return close();
+    if (act === 'odds') { close(); return odGo(T.t); }
+    let body;
+    if (act === 'add') body = {action: 'add', tickers: [T.t], ...(b.dataset.book ? {book_id: +b.dataset.book} : {new_book: {name: 'My forward tests'}})};
+    if (act === 'new') { const n = prompt('Name for the new book', `${T.t} test`); if (!n) return; body = {action: 'add', tickers: [T.t], new_book: {name: n.trim().slice(0, 80)}}; }
+    if (act === 'strat') body = {action: 'add', tickers: T.tickers, new_book: {name: T.name, kind: 'strategy', strategy_key: T.key}};
+    if (act === 'rebal') body = {action: 'rebalance', book_id: +b.dataset.book, tickers: T.tickers};
+    sh.querySelectorAll('button').forEach(x => x.disabled = true); b.classList.add('busy');
+    try {
+      const j = await fwdApi(body); close();
+      const a = j.added || [], src = a[0] ? ` · ${a[0].src.split(' ')[0].toUpperCase()} trade ${fwdTime(a[0].at)}` : '';
+      fwdToast(T.kind === 'ticker' ? (a.length ? `<b>${esc(T.t)}</b> started at $${a[0].p.toFixed(2)}${src}` : `${esc(T.t)} is already in that book`)
+        : `<b>${esc(T.name)}</b>: ${a.length} bought${j.closed?.length ? `, ${j.closed.length} sold` : ''}${src}`);
+      await fwdLoad(true); document.getElementById('fwd-panel')?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    } catch (err) { close(); fwdToast('Could not start it: ' + esc(err.message), true); }
+  });
+}
+// ---- long press / right-click anywhere ----
+(function () {
+  const SEL = '[data-t],[data-od],.tl-li,[data-hs],[data-set]'; let tm = null, sx = 0, sy = 0, fired = false;
+  const cancel = () => { if (tm) { clearTimeout(tm); tm = null; } };
+  const fire = () => { fired = true; };                      // the click that ends this press is swallowed (also when it lands on the sheet's backdrop)
+  document.addEventListener('pointerdown', e => {
+    const el = e.target.closest?.(SEL); fired = false; if (!el || e.button > 0 || el.closest('#fwd-sheet')) return; sx = e.clientX; sy = e.clientY;
+    tm = setTimeout(() => { tm = null; fire(); try { navigator.vibrate?.(12); } catch (x) {} fwdMenu(el); }, 520);
+  }, {passive: true});
+  document.addEventListener('pointermove', e => { if (tm && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel(); }, {passive: true});
+  ['pointerup', 'pointercancel', 'scroll'].forEach(k => document.addEventListener(k, cancel, {passive: true, capture: k === 'scroll'}));
+  document.addEventListener('pointerup', () => { if (fired) setTimeout(() => { fired = false; }, 400); }, {passive: true});
+  document.addEventListener('click', e => { if (fired) { fired = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener('contextmenu', e => { const el = e.target.closest?.(SEL); if (!el || el.closest('#fwd-sheet')) return; e.preventDefault(); cancel(); if (!fired) { fire(); fwdMenu(el); } });
+})();
+// ---- the panel: your books, valued at live prices ----
+async function fwdLoad(force) {
+  if (FWD.busy || (FWD.books && !force)) return; FWD.busy = true;
+  try {
+    [FWD.books, FWD.pos, FWD.marks] = await Promise.all([sb('fwd_books?select=*&order=created_at.desc'), sb('fwd_positions?select=*&order=entry_at'), sb('fwd_marks?select=*&order=date')]);
+    FWD.err = null; if (FWD.pos.some(p => !p.exit_at)) await fwdQuotes();
+  } catch (e) { FWD.err = e.message; }
+  FWD.busy = false; fwdRender(); fwdTick();
+}
+async function fwdQuotes() { try { const j = await fwdApi({action: 'quotes'}); FWD.px = j.px; FWD.at = j.at; } catch (e) { /* keep the last prices */ } }
+function fwdTick() {
+  clearInterval(FWD.timer); if (!FWD.pos?.some(p => !p.exit_at)) return;
+  FWD.timer = setInterval(async () => { if (document.visibilityState !== 'visible' || (typeof VIEW !== 'undefined' && VIEW.cur !== 'analyze')) return; await fwdQuotes(); fwdRender(); }, 60e3);
+}
+function fwdVal(p) {                                       // [value, same money in SPY] now (open) or at exit (closed)
+  const px = p.exit_at ? p.exit_price : FWD.px?.[p.ticker]?.p, sp = p.exit_at ? p.spy_exit : FWD.px?.SPY?.p;
+  return px && sp ? [p.notional * px / p.entry_price, p.notional * sp / p.spy_entry] : [p.notional, p.notional];
+}
+function fwdSpark(id) {
+  const M = (FWD.marks || []).filter(m => m.book_id === id); if (M.length < 2) return '';
+  const a = M.map(m => m.value / m.cost - 1), s = M.map(m => m.spy_value / m.cost - 1), all = a.concat(s, 0), lo = Math.min(...all), hi = Math.max(...all), r = hi - lo || 0.01;
+  const P = v => v.map((x, i) => `${(i / (v.length - 1) * 120).toFixed(1)},${(30 - (x - lo) / r * 28).toFixed(1)}`).join(' ');
+  return `<svg class="fwd-sp" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true"><polyline points="${P(s)}" class="s"/><polyline points="${P(a)}" class="a"/></svg>`;
+}
+function fwdRender() {
+  const el = document.getElementById('fwd-body'); if (!el) return;
+  if (FWD.err) { el.innerHTML = `<p class="note">Could not load your forward tests: ${esc(FWD.err)}</p>`; return; }
+  if (!FWD.books) { el.innerHTML = '<p class="note">Loading…</p>'; return; }
+  const howto = '<b>Long-press</b> any stock in the app (odds, movers, news, picks) to start one, or long-press a strategy in Strategy fit to test all its stocks. It starts at the live price that moment and is followed against the same money in SPY.';
+  if (!FWD.books.length) { el.innerHTML = `<p class="fwd-empty">${howto}</p>`; return; }
+  const card = b => {
+    const P = FWD.pos.filter(p => p.book_id === b.id), O = P.filter(p => !p.exit_at), C = P.filter(p => p.exit_at);
+    let v = 0, s = 0, c = 0; for (const p of P) { const [x, y] = fwdVal(p); v += x; s += y; c += p.notional; }
+    const ret = c ? v / c - 1 : 0, spy = c ? s / c - 1 : 0, lead = Math.abs(ret - spy) < 5e-5 ? 0 : ret - spy, days = Math.max(0, Math.floor((Date.now() - Date.parse(b.created_at)) / 864e5));
+    const row = p => { const [x, y] = fwdVal(p), r = x / p.notional - 1, d = r - (y / p.notional - 1), now = p.exit_at ? p.exit_price : FWD.px?.[p.ticker]?.p;
+      return `<tr class="${p.exit_at ? 'fwd-cl' : ''}"><td><button class="fwd-tk" data-t="${esc(p.ticker)}">${esc(p.ticker)}</button></td><td>$${(+p.entry_price).toFixed(2)}<small>${esc(fwdTime(p.entry_at))}</small></td>
+        <td>${now ? '$' + (+now).toFixed(2) : '–'}${p.exit_at ? `<small>sold ${esc(fwdTime(p.exit_at))}</small>` : ''}</td><td class="${r >= 0 ? 'pos' : 'neg'}">${fwdPc(r)}</td><td class="${d >= 0 ? 'pos' : 'neg'}">${fwdPc(d)}</td>
+        <td>${p.exit_at ? '' : `<button class="fwd-sell" data-sell="${p.id}" aria-label="Sell ${esc(p.ticker)} at the live price" title="Sell at the live price">×</button>`}</td></tr>`; };
+    return `<div class="fwd-b${b.closed_at ? ' fwd-done' : ''}" data-book="${b.id}">
+      <div class="fwd-bh"><div>${b.kind === 'strategy' && b.strategy_key !== 'picks' ? `<button type="button" class="rs-name" data-rs="${esc(b.strategy_key)}" title="Open its research"><b>${esc(b.name)}</b> ›</button>` : `<b>${esc(b.name)}</b>`}<small>${b.kind === 'strategy' ? 'strategy' : 'your picks'} · since ${esc(v2Day(b.created_at.slice(0, 10)))} · ${days} day${days === 1 ? '' : 's'} · ${O.length} open${C.length ? `, ${C.length} sold` : ''}${b.closed_at ? ' · closed' : ''}</small></div>${fwdSpark(b.id)}</div>
+      <div class="fwd-st"><div class="${ret >= 0 ? 'pos' : 'neg'}"><b>${fwdPc(ret)}</b><span>this test</span></div><div><b>${fwdPc(spy)}</b><span>same money in SPY</span></div>
+        <div class="${lead >= 0 ? 'pos' : 'neg'}"><b>${fwdPc(lead)}</b><span>${lead >= 0 ? 'ahead' : 'behind'}</span></div></div>
+      <details class="fwd-d"${FWD.open[b.id] ? ' open' : ''}><summary>${P.length} position${P.length === 1 ? '' : 's'}</summary>
+        <div class="fwd-tw"><table class="v2-t fwd-t"><tr><th>Stock</th><th>Bought</th><th>Now</th><th>Return</th><th>vs SPY</th><th></th></tr>${O.concat(C).map(row).join('')}</table></div>
+        ${b.closed_at ? '' : `<div class="fwd-acts">${b.kind === 'strategy' ? '<span class="fwd-hint">Long-press the strategy again to update it to its current holdings.</span>' : ''}<button class="fwd-end" data-end="${b.id}">End this test</button></div>`}</details></div>`;
+  };
+  const open = FWD.books.filter(b => !b.closed_at), done = FWD.books.filter(b => b.closed_at), feed = Object.values(FWD.px || {})[0]?.src;
+  el.innerHTML = `${open.map(card).join('') || '<p class="note">No open tests.</p>'}
+    ${done.length ? `<details class="about"><summary>Ended tests (${done.length})</summary>${done.map(card).join('')}</details>` : ''}
+    <p class="v2-note">${howto} Prices: ${feed === 'iex' ? 'live trades on the IEX exchange (close to, not exactly, the consolidated price)' : 'live trades'}${FWD.at ? `, checked ${esc(fwdTime(FWD.at))}` : ''}; every evening each test is also marked at the official close.
+      Price returns, dividends not included. 12 months is the minimum before a result says much.</p>`;
+  el.querySelectorAll('details.fwd-d').forEach(d => d.addEventListener('toggle', () => { FWD.open[d.closest('[data-book]').dataset.book] = d.open; }));
+  el.querySelectorAll('.fwd-tk').forEach(b => b.onclick = () => odGo(b.dataset.t));
+  el.querySelectorAll('[data-sell]').forEach(b => b.onclick = async () => {
+    const p = FWD.pos.find(x => x.id === +b.dataset.sell); if (!confirm(`Sell ${p.ticker} in this test at the live price? This cannot be undone.`)) return;
+    b.disabled = true; try { const j = await fwdApi({action: 'close', position_ids: [p.id]}); fwdToast(`${esc(p.ticker)} sold at $${j.closed[0]?.p?.toFixed(2) ?? '–'}`); } catch (e) { fwdToast('Could not sell: ' + esc(e.message), true); }
+    fwdLoad(true); });
+  el.querySelectorAll('[data-end]').forEach(b => b.onclick = async () => {
+    const k = FWD.books.find(x => x.id === +b.dataset.end); if (!confirm(`End "${k.name}"? Every open position is sold at the live price and the result is kept.`)) return;
+    b.disabled = true; try { await fwdApi({action: 'close', book_id: k.id}); fwdToast(`"${esc(k.name)}" ended; its record stays under Ended tests`); } catch (e) { fwdToast('Could not end it: ' + esc(e.message), true); }
+    fwdLoad(true); });
+}
+const v2viewSetFwd = viewSet; viewSet = function (v, push) { v2viewSetFwd(v, push); if (VIEW.cur === 'analyze') fwdLoad(); };
+
+// ---------------- strategy -> research links (2026-10-25, Bible 6.87) ----------------
+// Wherever a strategy appears (strategy fit detail, this month's picks, the high-Sharpe strategies, the scoreboard, forward-test books, the
+// swing-signal mentions in odds and strategy fit), tapping it opens its research: the Research view with that strategy's backtest curve added
+// to the charts (next to what was already selected) and in focus, the strategy browser filtered to its family, and its "About" sheet if it has
+// one. Paper accounts open their account sheet (the strategies they hold, as tabs). Any element with data-rs="<reference>" is a link;
+// rsKey turns elite keys (v2_elite.research_key), research keys, account keys and signal codes into a strategies.key.
+const RS_CODES = {R18L26: 'sxswing_audited|R18L26', R18P12: 'sxswing_audited|R18P12'};
+function rsKey(x) {
+  if (!x) return null; x = String(x).replace(/^(elite|hs):/, '');
+  const has = k => typeof STRATEGY_ROWS !== 'undefined' && STRATEGY_ROWS.some(r => r.key === k);
+  if (SI_ACCOUNTS[x] || has(x)) return x;
+  const e = (typeof EL !== 'undefined' && EL.rows || []).find(r => r.key === x || r.label === x); if (e?.research_key && has(e.research_key)) return e.research_key;
+  if (RS_CODES[x] && has(RS_CODES[x])) return RS_CODES[x];
+  const nm = x.includes('|') && x.split('|').pop(), same = nm ? STRATEGY_ROWS.filter(r => r.key.endsWith('|' + nm)) : [];   // lookup ids use other battery names
+  return same.length === 1 ? same[0].key : null;                                                                          // (nov500b| vs sxnov500b|): unique name only
+}
+const rsCode = row => (String(row.label).match(/^([A-Z]+\d+[A-Z]*\d*)(?=_|\b)/) || [])[1] || String(row.label).replace(/_/g, ' ');
+async function rsGo(x) {
+  const k = rsKey(x); if (!k) return fwdToast('There is no research page for this one yet.', true);
+  if (SI_ACCOUNTS[k]) return siOpen(k);
+  const row = STRATEGY_ROWS.find(r => r.key === k), code = rsCode(row), cfg = ['dashboard', 'benchmark', 'live'].includes(row.source) ? 'book' : MAIN;
+  const cur = [...BR.picked.values()].filter(s => s.key !== k);
+  const sel = [{key: k, cfg}, ...(cur.some(s => s.key === 'spy') ? [] : [{key: 'spy', cfg: 'book'}]), ...cur].slice(0, MAX_CURVES);
+  viewSet('research'); fwdToast(`Opening <b>${esc(code)}</b> in Research…`);
+  BR.q = code; const q = document.getElementById('br-q'); if (q) q.value = code;
+  try { history.replaceState(null, '', '#s=' + encodeURIComponent(sel.map(s => `${s.key}~${s.cfg}`).join(','))); } catch (e) {}
+  PENDING_SEL = sel; const pk = document.getElementById('br-picker'); if (pk) pk.open = false;      // as writeSelection, awaited so the focus can follow
+  await finnyBoot();
+  const fs = document.getElementById('focus-strat');
+  if (fs && [...fs.options].some(o => o.value === k)) { fs.value = k; fs.dispatchEvent(new Event('change')); }
+  if (SI.rows.has(k)) siOpen(k);
+  fwdToast(`<b>${esc(code)}</b> is in the charts and in focus. Research shows the plain Sharpe; the app shows it over T-bills, which is a bit lower.`);
+}
+document.addEventListener('click', e => { const b = e.target.closest?.('[data-rs]'); if (!b) return; e.preventDefault(); e.stopPropagation(); rsGo(b.dataset.rs); });
+document.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const b = e.target.closest?.('[data-rs][role=button]'); if (b) { e.preventDefault(); rsGo(b.dataset.rs); } });
+// swing-signal codes inside text (odds "What this means", strategy fit's signal banner and chip) become links
+function rsLinkify(root) {
+  root?.querySelectorAll('.od-plain li, .tl-alert b, .tl-chip').forEach(el => {
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), hits = []; let n;
+    while ((n = w.nextNode())) if (/\bR18(L26|P12)\b/.test(n.nodeValue) && !n.parentElement.closest('[data-rs]')) hits.push(n);
+    for (const t of hits) { const s = document.createElement('span');
+      s.innerHTML = esc(t.nodeValue).replace(/\b(R18(?:L26|P12))\b/g, '<button type="button" class="rs-inline" data-rs="$1" title="Open its research">$1</button>'); t.replaceWith(...s.childNodes); }
+  });
+}
+['od-body', 'tl-body'].forEach(id => { const el = document.getElementById(id); if (el) new MutationObserver(() => rsLinkify(el)).observe(el, {childList: true}); });
 
 </script>
 </body>
