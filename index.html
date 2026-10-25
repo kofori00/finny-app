@@ -1031,9 +1031,9 @@
   <section class="hero" id="an-hero" data-view="analyze">
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg>
     <div class="hero-txt">
-      <span class="hero-kick"><i></i>Proven strategies · Live record · Stock history</span>
-      <h2>See what proven strategies <em>hold today.</em></h2>
-      <p>Look up any US stock: how many of our 21 proven strategies would buy it today, how it usually behaves, and what its news tends to do. Every monthly pick is tracked live, wins and losses.</p>
+      <span class="hero-kick"><i></i>Top strategies · Live record · Stock history</span>
+      <h2>See what our top strategies <em>hold today.</em></h2>
+      <p>Look up any US stock: how many of our top strategies (Sharpe 1.2+ after re-checks) hold it today, how it usually behaves, and what its news tends to do. Every monthly pick is tracked live, wins and losses.</p>
       <div class="hero-search" id="hero-search"></div>
       <div class="hero-try"><span>Try</span><button data-t="NVDA">NVDA</button><button data-t="AAPL">AAPL</button><button data-t="TSLA">TSLA</button><button data-t="JPM">JPM</button><button data-t="SPY">SPY</button></div>
       <div class="hero-stats">
@@ -1065,9 +1065,9 @@
 
   <section class="panel v2-panel" id="v2-panel" data-view="analyze">
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg>
-    <span class="hero-kick"><i></i>Proven strategies · tracked live</span>
+    <span class="hero-kick"><i></i>Top strategies · tracked live</span>
     <h2 class="ak-h">This month's <em>picks.</em></h2>
-    <p class="ak-sub">S&amp;P 500 stocks that 4 or more of our 21 proven strategies would buy. Frozen each month, tracked every evening against the market, never edited.</p>
+    <p class="ak-sub">S&amp;P 500 stocks that several of our top strategies hold (from November: 2 or more of the ones with a Sharpe of 1.2+ after re-checks). Frozen each month, tracked every evening against the market, never edited.</p>
     <div id="v2-body"><p class="note">Loading this month's picks…</p></div>
   </section>
 
@@ -6214,32 +6214,78 @@ function akInit() {
 //     (Bible 6.75, the one signal that held up: a 1-month RANKING signal). Frozen on the first trading day of each month by the
 //     v2-picks Edge Function and marked to market every evening against the average S&P 500 stock and SPY; never edited.
 //  2. Weekly odds are demoted to background ("rose in X% of past weeks"): they are base rates, not forecasts (walk-forward ~50-55% right).
-//     The hero's big number becomes "N of 21 proven strategies would buy it today".
+//     The hero's big number became "N of 21 strategies would buy it today"; since 2026-10-25 it counts the elite set (see below).
 //  3. Accounts: a scoreboard of the paper accounts and the picks, live since start vs SPY, with "too early to tell" until 12 months.
 // This file only wraps v1 functions (heroOdds, mvRender, akChips, akContext, viewSet); the v1 files are unchanged.
 const V2 = {P: null, M: null, busy: false, err: null, votes: null, F: null, shown: 12};
 const v2Pc = (x, d = 1) => x == null || !isFinite(x) ? '–' : (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(d) + '%';
 const v2Day = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'});
-// ---- today's votes of the FAM strategies (the same selection as the v2-picks function; checked identical on 2026-10-24) ----
+// ---- elite set (2026-10-25, Bible 6.85): strategy fit, the hero vote and (from November) the monthly picks use only the strategies that still
+//      hold Sharpe 1.2+ (or CAGR 25%+) after our re-checks (public.v2_elite). RLS decides who sees what: approved customers get the 6 public rows
+//      (4 rule strategies, VX09's holdings, the R18L26 swing signal); the owner also gets NB069, the account sleeves and the P6 / P8 combinations.
+//      Rule strategies run through tlSelect as before; the others hold a fixed list (static), the stocks with a swing entry in the last 5
+//      trading days (signal), the latest live_targets sleeves (account) or the union of their parts (combo).
+const EL = {rows: null, err: null};
+const EL_SRC = {static: 'fixed holdings', signal: 'swing signal, holds up to 5 trading days', account: 'your live account sleeve', combo: 'combination of sleeves'};
+const elTd = (a, b) => { let n = 0; for (let d = new Date(a + 'T12:00:00Z'); d < new Date(b + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 1)) { const w = d.getUTCDay(); if (w && w < 6) n++; } return n; };
+function elStrat(e) {
+  const m = e.metrics || {}, f = e.kind === 'spec' ? e.spec.family : {name: e.notes || '', elite: e};
+  const src = (e.kind === 'spec' ? f.source || '' : EL_SRC[e.kind] + (e.holdings_as_of ? ' as of ' + e.holdings_as_of : '')) + (m.basis ? ' · ' + m.basis : '');
+  return {id: 'elite|' + e.key, family: {...f, id: e.key, short: e.label, source: src}, variant: e.kind === 'spec' ? e.spec.variant || {} : {}, metrics: {...m, round: 'elite'}, elite: e};
+}
+function elHeld(e) {
+  if (e.kind === 'static') return e.holdings || [];
+  if (e.kind === 'signal') return [...new Set((TL.signals || []).filter(x => x.strategy === e.key && elTd(x.as_of, TL.asof) < 5).map(x => x.ticker))];
+  if (e.kind === 'spec') { const S = tlSelect({...e.spec.family, short: e.label}, e.spec.variant || {}); return S.na ? [] : [...S.top]; }
+  const latest = {}; for (const t of TL.targets || []) for (const [bk, w] of Object.entries(t.books || {})) if (!latest[bk] || t.id > latest[bk].id) latest[bk] = {id: t.id, w};
+  return [...new Set((e.components || []).flatMap(c => latest[c] ? Object.keys(latest[c].w) : (r => r ? elHeld(r) : [])(EL.rows.find(x => x.key === c))))];
+}
+const v1tlSelect = tlSelect; tlSelect = function (fam, v) {
+  if (!fam.elite) return v1tlSelect(fam, v);
+  const key = 'elite|' + fam.id; TL.cache ||= {}; if (TL.cache[key]) return TL.cache[key];
+  const U = new Set(TL.prof.map(r => r.ticker)), held = elHeld(fam.elite).filter(t => U.has(t));
+  return TL.cache[key] = {uni: U, trendUni: U, pos: Object.fromEntries(held.map((t, i) => [t, i + 1])), of: held.length, top: new Set(held), n: Math.max(held.length, 1)};
+};
+const v1tlReason = tlReason; tlReason = (fam, v, t) => fam.elite ? (fam.elite.kind === 'signal' ? 'no entry signal in the last 5 trading days' : 'not in its current holdings') : v1tlReason(fam, v, t);
+const v1tlLoad = tlLoad; tlLoad = async function () {
+  if (TL.loaded || TL.busy) return;
+  const ep = sb('v2_elite?select=key,label,kind,is_public,spec,holdings,holdings_as_of,components,metrics,notes,sort&order=sort').catch(e => { EL.err = e.message; return null; });
+  await v1tlLoad(); EL.rows = await ep; if (!TL.loaded) return;
+  TL.strats = (EL.rows || []).map(elStrat); TL.cache = TL.scores = TL.ideal = null; V2.votes = V2.F = null;
+  tlRender(EL.err ? 'Could not load the strategies: ' + EL.err : undefined); if (HERO.last) v2Hero(HERO.last);
+};
+const v1tlShow = tlShow; tlShow = function (ticker) {                 // v1 wording assumed 1,569 variants; say what is counted now
+  v1tlShow(ticker); const el = document.getElementById('tl-body'), n = TL.strats.length; if (!el || !EL.rows) return;
+  el.querySelectorAll('.tl-lead, details.tl-fold summary span, .tl-foot').forEach(x => { x.innerHTML = x.innerHTML.replace(/validated strategy families/g, 'top strategies')
+    .replace(/the \d+ best strategies vote/, `our ${n} top strategies vote`).replace(/our \d+ best strategies hold/, `our ${n} top strategies hold`).replace(/\d+ best by/, `all ${n} by`)
+    .replace(/None of the \d+ best strategies/, 'None of the top strategies'); });
+  el.querySelector('.tl-about .tl-foot')?.insertAdjacentHTML('afterbegin', `Only strategies with a Sharpe of 1.2 or more (or 25%+ a year) after our own re-checks count here (${n}${v2Owner() ? ', including your accounts and combinations' : ''}); the weaker ones were removed on 25 Oct 2026. `);
+  const d = document.getElementById('tl-detail'); if (d) new MutationObserver(() => { const v = d.querySelector('.tld-v'); if (v && / · \d+ of 1 versions? buy it$/.test(v.textContent)) v.textContent = v.textContent.replace(/ · \d+ of 1 versions? buy it$/, ''); }).observe(d, {childList: true});
+};
+// with 6-11 strategies most stocks score 0, so a percentile label called a near miss a "Strong fit": label by the Sharpe-weighted share instead
+tlClass = function (score) { const pct = tlScores().pctOf(score), t = score >= 50 ? 4 : score >= 25 ? 3 : score >= 10 ? 2 : score > 0 ? 1 : 0;
+  return {label: ['No fit', 'Weak fit', 'Moderate fit', 'Strong fit', 'Excellent fit'][t], tier: t, pct}; };
+// ---- today's votes of the elite set (the owner's count includes the private rows; picks use the public ones: V2.pub) ----
 function v2Votes() {
-  if (V2.votes) return V2.votes; if (typeof TL === 'undefined' || !TL.loaded) return null;
-  const sig = TL.strats.filter(r => r.metrics?.sharpe != null && ['PASS', 'PASS+DIV'].includes(r.metrics?.verdict)).sort((a, b) => b.metrics.sharpe - a.metrics.sharpe);
-  const fam = {}; for (const r of sig) fam[r.id.split('|')[0] + ':' + r.family.id] ||= r;
-  V2.F = Object.values(fam); const v = {};
-  for (const r of V2.F) { const S = tlSelect(r.family, r.variant || {}); if (S.na) continue; for (const t of S.top) (v[t] ||= []).push(r.family.short || r.id); }
+  if (V2.votes) return V2.votes; if (typeof TL === 'undefined' || !TL.loaded || !EL.rows) return null;
+  V2.F = TL.strats; const v = {}; V2.pub = {};
+  for (const r of V2.F) { const S = tlSelect(r.family, r.variant || {}); if (S.na) continue; for (const t of S.top) { (v[t] ||= []).push(r.family.short); if (r.elite.is_public) V2.pub[t] = (V2.pub[t] || 0) + 1; } }
   return V2.votes = v;
 }
+const V2_MIN = 2;                                           // elite rule from the November 2026 picks (v2-picks v4); before: 4 of 21 families
+const v2Elite = p => (p?.rule || '').startsWith('elite');
 // ---- the live record: chain each month's marks (the last mark of a closed month is its final result) ----
 function v2Record() {
-  const P = V2.P || [], M = V2.M || []; let kp = 1, ku = 1, ks = 1, ka = 1, kc = 1; const pts = [], months = [];
+  const P = V2.P || [], M = V2.M || []; let kp = 1, ku = 1, ks = 1, ka = 1, kc = 1, ko = 1; const pts = [], months = [];
   for (const p of P) {
     const m = M.filter(x => x.pick_id === p.id && x.picks_ret != null);
     for (const x of m) pts.push({d: x.date, pk: kp * (1 + x.picks_ret) - 1, uni: ku * (1 + (x.uni_ret ?? 0)) - 1, spy: ks * (1 + (x.spy_ret ?? 0)) - 1});
     const z = m[m.length - 1];
     months.push({p, last: z || null, open: !z?.final});
-    if (z) { kp *= 1 + z.picks_ret; ku *= 1 + (z.uni_ret ?? 0); ks *= 1 + (z.spy_ret ?? 0); ka *= 1 + (z.a20_ret ?? 0); kc *= 1 + (z.c20_ret ?? 0); }
+    if (z) { kp *= 1 + z.picks_ret; ku *= 1 + (z.uni_ret ?? 0); ks *= 1 + (z.spy_ret ?? 0); ka *= 1 + (z.a20_ret ?? 0); kc *= 1 + (z.c20_ret ?? 0); if (p.shadow?.OLD4) ko *= 1 + (z.old_ret ?? 0); }
   }
-  return {pts, months, pk: kp - 1, uni: ku - 1, spy: ks - 1, a20: ka - 1, c20: kc - 1, start: P[0]?.as_of || null, shadowStart: P.find(p => p.shadow)?.as_of || null};
+  return {pts, months, pk: kp - 1, uni: ku - 1, spy: ks - 1, a20: ka - 1, c20: kc - 1, old: ko - 1, start: P[0]?.as_of || null, shadowStart: P.find(p => p.shadow)?.as_of || null,
+    oldStart: P.find(p => p.shadow?.OLD4)?.as_of || null};
 }
 function v2Chart(pts) {
   if (pts.length < 2) return '';
@@ -6252,7 +6298,7 @@ function v2Chart(pts) {
 async function v2Load() {
   if (V2.busy) return; V2.busy = true;
   try { [V2.P, V2.M] = await Promise.all([sb('v2_picks?select=id,as_of,picks,strategies,rule,votes_hist,shadow&order=as_of'),
-    sb('v2_pick_marks?select=pick_id,date,picks_ret,uni_ret,spy_ret,n_picks,n_uni,a20_ret,c20_ret,final&order=date')]); V2.err = null; }
+    sb('v2_pick_marks?select=pick_id,date,picks_ret,uni_ret,spy_ret,n_picks,n_uni,a20_ret,c20_ret,old_ret,final&order=date')]); V2.err = null; }
   catch (e) { V2.err = e.message; }
   V2.busy = false; v2Render(); if (HERO.last) v2Hero(HERO.last);
 }
@@ -6266,7 +6312,7 @@ function v2Render() {
   if (V2.err) { el.innerHTML = `<p class="note">Could not load this month's picks: ${esc(V2.err)}</p>`; return; }
   if (!V2.P) { el.innerHTML = '<p class="note">Loading this month\'s picks…</p>'; return; }
   if (!V2.P.length) { el.innerHTML = '<p class="note">The first picks are made on the first trading day of the month.</p>'; return; }
-  const cur = V2.P[V2.P.length - 1], R = v2Record(), nS = cur.strategies.length, live = R.pts.length;
+  const cur = V2.P[V2.P.length - 1], R = v2Record(), nS = cur.strategies.length, live = R.pts.length, E = v2Elite(cur);
   const mo = Math.max(0, (Date.now() - Date.parse(R.start + 'T21:00:00Z')) / (30.44 * 864e5));
   const lead = R.pk - R.uni;
   const stat = (v, l, cls = '') => `<div class="v2-st ${cls}"><b>${live ? v2Pc(v) : '–'}</b><span>${l}</span></div>`;
@@ -6280,38 +6326,45 @@ function v2Render() {
       <div class="v2-sts">${stat(R.pk, 'our picks', 'v2-main')}${stat(R.uni, 'average S&amp;P 500 stock')}${stat(R.spy, 'S&amp;P 500 index (SPY)')}</div>
       ${v2Chart(R.pts)}
       ${live ? `<p class="v2-lead">${lead >= 0 ? 'Ahead of' : 'Behind'} the average stock by <b>${Math.abs(lead * 100).toFixed(1)} points</b>.</p>` : ''}
-      <p class="v2-honest"><b>${mo < 12 ? 'Too early to tell' : 'Judge it now'}</b> · ${mo < 12 ? `${mo < 1 ? 'less than 1' : Math.floor(mo)} of 12 months. ` : ''}In the 2016-26 backtest, stocks held by 4 or more of these strategies rose
-        <b>+1.75%</b> a month on average, against <b>+1.01%</b> for stocks none of them held, and were higher after a month 57.9% vs 55.3% of the time.
-        That edge is modest, so a single month says little: it takes about a year live before skill can be told apart from luck. The strategies were
+      <p class="v2-honest"><b>${mo < 12 ? 'Too early to tell' : 'Judge it now'}</b> · ${mo < 12 ? `${mo < 1 ? 'less than 1' : Math.floor(mo)} of 12 months. ` : ''}${E
+        ? `Since November 2026 a pick is a stock that ${V2_MIN} or more of our ${nS} top strategies hold (each has a Sharpe of 1.2 or more, or 25%+ a year, after our own re-checks).
+        Each strategy was tested on its own, but this combined rule has no backtest of its own: the live record is its only test. The old rule (4 or more of 21 families) keeps running in the background for comparison.`
+        : `In the 2016-26 backtest, stocks held by 4 or more of these strategies rose <b>+1.75%</b> a month on average, against <b>+1.01%</b> for stocks none of them held,
+        and were higher after a month 57.9% vs 55.3% of the time.`}
+        The edge is modest, so a single month says little: it takes about a year live before skill can be told apart from luck. The strategies were
         chosen knowing the whole backtest, so this live record is the real test. Every month is frozen when it is made and never edited.
         <br><span class="v2-disc">Disclosure: Finny's own paper accounts (simulated money) may hold some of these stocks. Not personal advice.</span></p>
     </div>
-    <div class="v2-lh"><b>${v2Day(cur.as_of)}: ${cur.picks.length} stocks</b><span>held by 4+ of ${nS} proven strategies · equal weight · one month · tap one for its odds</span></div>
+    <div class="v2-lh"><b>${v2Day(cur.as_of)}: ${cur.picks.length} stocks</b><span>held by ${E ? V2_MIN : 4}+ of ${nS} ${E ? 'top' : 'best-tested'} strategies · equal weight · one month · tap one for its odds</span></div>
     <div class="v2-list">${cur.picks.slice(0, V2.shown).map(row).join('')}</div>
     ${cur.picks.length > V2.shown ? `<button class="nw-more" id="v2-more">Show all ${cur.picks.length}</button>` : ''}
     ${hist ? `<details class="about"><summary>Month by month</summary><table class="v2-t"><tr><th>Month</th><th>Picks</th><th>Avg stock</th><th>SPY</th><th>Stocks</th></tr>${hist}</table></details>` : ''}
-    <details class="about"><summary>How the picks are made</summary><p>Each of our ${nS} significant strategy families (the best-tested variant of each: it passed every check in our research,
+    <details class="about"><summary>How the picks are made</summary><p>${E ? `Our ${nS} top strategies each pick from today's S&amp;P 500: four stock-picking rules run exactly as in their
+      backtests, VX09 holds its fixed list until its next rebalance, and the R18L26 swing signal counts the stocks it entered in the last 5 trading days.
+      Only strategies with a backtest Sharpe of 1.2 or more (or 25%+ a year) that held up in both 2016-20 and 2021-26 are included. A stock that ${V2_MIN} or more of them hold is a pick.`
+      : `Each of our ${nS} significant strategy families (the best-tested variant of each: it passed every check in our research,
       including a backtest Sharpe above the market's and a both-halves stability test) picks its stocks from today's S&amp;P 500, exactly as in the backtests.
-      A stock that 4 or more of them would buy is a pick. Equal weight, held one month, then replaced. Returns include dividends and splits; the
+      A stock that 4 or more of them would buy is a pick.`} Equal weight, held one month, then replaced. Returns include dividends and splits; the
       benchmark is every S&amp;P 500 member on the pick date, equally weighted, because the signal ranks stocks against each other.</p>
       <p class="v2-strats">${cur.strategies.slice().sort((a, b) => b.sharpe - a.sharpe).map(s => `<span>${esc(s.name)} <i>${(+s.sharpe).toFixed(2)}</i></span>`).join('')}</p>
       <p>History and research, not advice. Past results, in backtests or live, do not guarantee future returns.</p></details>`;
   el.querySelectorAll('.v2-pk').forEach(b => b.onclick = () => odGo(b.dataset.t));
   const more = document.getElementById('v2-more'); if (more) more.onclick = () => { V2.shown = 999; v2Render(); };
 }
-// ---- hero: proven-strategy agreement first, weekly odds as background ----
+// ---- hero: top-strategy agreement first, weekly odds as background ----
 function v2Hero(A) {
   if (!A?.sym || HERO.demo) return;
-  const V = v2Votes(), nS = V2.F?.length || 21, n = V?.[A.sym]?.length || 0, S = esc(A.sym);
+  const V = v2Votes(), nS = V2.F?.length || '…', n = V?.[A.sym]?.length || 0, np = V2.pub?.[A.sym] || 0, S = esc(A.sym);
   const pick = (V2.P?.[V2.P.length - 1]?.picks || []).find(p => p.t === A.sym);
   const k = document.getElementById('h-k'), v = document.getElementById('h-v');
-  if (k) k.textContent = 'PROVEN STRATEGIES';
-  if (v) { v.textContent = !A.member ? 'S&P 500 only' : V ? `${n} of ${nS}` : '…'; v.classList.toggle('v2-hv-lo', !A.member || n < 4); }
+  if (k) k.textContent = 'TOP STRATEGIES';
+  if (v) { v.textContent = !A.member ? 'S&P 500 only' : V ? `${n} of ${nS}` : '…'; v.classList.toggle('v2-hv-lo', !A.member || np < V2_MIN); }
   const box = document.querySelector('.hero-stats'); if (!box || box.children.length < 3) return;
   const t0 = box.children[0], t1 = box.children[1], w = A.H?.[0]?.head?.v;
   t0.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg><b>${!A.member ? '–' : V ? n + '/' + nS : '…'}</b>
-    <span class="hs-l">${A.member ? `proven strategies would buy ${S} today` : `${S} is not in the S&amp;P 500`}</span>
-    <span class="hs-s">${!A.member ? 'the strategies pick from S&amp;P 500 stocks' : pick ? `in this month's picks (${pick.votes} on ${v2Day(V2.P[V2.P.length - 1].as_of)})` : n >= 4 ? 'top group: 4+ rose +1.75% vs +1.01% a month, 2016-26' : '4 or more makes a monthly pick'}</span>`;
+    <span class="hs-l">${A.member ? `top strategies hold ${S} today` : `${S} is not in the S&amp;P 500`}</span>
+    <span class="hs-s">${!A.member ? 'the strategies pick from S&amp;P 500 stocks' : pick ? `in this month's picks (${pick.votes} on ${v2Day(V2.P[V2.P.length - 1].as_of)})`
+      : np >= V2_MIN ? `${V2_MIN}+ of the public ones: a pick if it still holds at the next monthly snapshot` : `Sharpe 1.2+ after re-checks · ${V2_MIN} or more of the public ones make a monthly pick`}</span>`;
   t0.title = V?.[A.sym]?.length ? 'Would buy it: ' + V[A.sym].join(', ') : '';
   t1.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><b>${w == null ? '…' : Math.round(w * 100) + '%'}</b>
     <span class="hs-l">of past weeks ${S} ended higher</span><span class="hs-s">${A.H?.[0]?.head?.edge ? 'tested swing signal active: its record' : 'background, not a forecast: past 1-week calls were about a coin flip'}</span>`;
@@ -6329,7 +6382,8 @@ const v1mvRender = mvRender; mvRender = function () {
 };
 const v1akContext = akContext; akContext = function () {
   const c = v1akContext(); if (!c) return c; const V = v2Votes(), pick = (V2.P?.[V2.P.length - 1]?.picks || []).find(p => p.t === c.symbol);
-  return {...c, proven_strategies_that_would_buy_it_today: V && c.sp500_member ? {count: (V[c.symbol] || []).length, of: V2.F.length, names: V[c.symbol] || []} : null,
+  return {...c, top_strategies_holding_it_today: V && c.sp500_member ? {count: (V[c.symbol] || []).length, of: V2.F.length, names: V[c.symbol] || [],
+      meaning: 'our strategies with backtest Sharpe 1.2+ (or 25%+ a year) after re-checks; backtests, not a forecast'} : null,
     in_this_months_picks: pick ? {since: V2.P[V2.P.length - 1].as_of, votes: pick.votes} : false,
     note_on_weekly_odds: 'weekly odds are the stock\'s own base rate (background), not a forecast'};
 };
@@ -6367,6 +6421,8 @@ async function v2Board() {
     if (R.start) rows.push({name: "v2 monthly picks", since: R.start, ret: R.pts.length ? R.pk : null, spy: R.pts.length ? R.spy : null, dd: null, mo: (Date.now() - Date.parse(R.start)) / (30.44 * 864e5), uni: R.pts.length ? R.uni : null});
     if (R.shadowStart) for (const [nm, k, d] of [["Shadow: top 20, equal votes", "a20", "the method in use"], ["Shadow: top 20, weighted votes", "c20", "weights by t vs luck (Bible 6.77)"]])
       rows.push({name: nm, acc: d, since: R.shadowStart, ret: R.pts.length ? R[k] : null, spy: R.pts.length ? R.spy : null, dd: null, mo: (Date.now() - Date.parse(R.shadowStart)) / (30.44 * 864e5)});
+    if (R.oldStart) rows.push({name: 'Shadow: old rule, 4+ of 21', acc: 'the picks rule until October 2026', since: R.oldStart, ret: R.pts.length ? R.old : null, spy: R.pts.length ? R.spy : null, dd: null,
+      mo: (Date.now() - Date.parse(R.oldStart)) / (30.44 * 864e5)});
     const verdict = r => r.mo < 12 ? `<span class="v2-tag">too early · ${Math.max(0, Math.floor(r.mo))}/12 months</span>` : r.ret - (r.spy ?? 0) > 0 ? '<span class="v2-tag ok">ahead of SPY</span>' : '<span class="v2-tag bad">behind SPY</span>';
     el.innerHTML = `<table class="v2-t v2-bt"><tr><th>Strategy</th><th>Live since</th><th>Return</th><th>SPY</th><th>Ahead</th><th>Worst drop</th><th></th></tr>${rows.map(r => `<tr>
       <td><b>${esc(r.name)}</b>${r.acc ? `<small class="v2-acc">${esc(r.acc)}</small>` : ''}</td><td>${v2Day(r.since)}</td><td class="${(r.ret ?? 0) >= 0 ? 'pos' : 'neg'}">${v2Pc(r.ret)}</td><td>${v2Pc(r.spy)}</td>
