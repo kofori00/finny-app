@@ -507,7 +507,7 @@
   @keyframes vtPulse{0%,100%{opacity:1}50%{opacity:.35}}
   body.v-analyze .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="analyze"]){display:none!important}
   body.v-accounts .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="accounts"]){display:none!important}
-  body.v-analyze #ux-bar,body.v-accounts #ux-bar{display:none!important} body.v-research .wrap > [data-view]{display:none!important}
+  body.v-analyze #ux-bar > :not(#ux-jump),body.v-accounts #ux-bar > :not(#ux-jump){display:none!important} body.v-analyze #ux-jump,body.v-accounts #ux-jump{margin-left:auto;flex:0 1 auto!important;max-width:70vw!important} body.v-research .wrap > [data-view]{display:none!important}
   body:not(.v-analyze):not(.v-accounts):not(.v-research) .wrap > [data-view]{display:none!important}
   @media (max-width:760px){
     .vt{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:120;width:auto;margin:0;justify-content:stretch;
@@ -2305,14 +2305,28 @@ function syncTopbar() {
     <button class="linkbtn" id="ux-fold" title="Collapse all folded sections">Collapse all</button>`;
   document.body.prepend(bar);
   const jump = bar.querySelector('#ux-jump');
-  const panels = [...document.querySelectorAll('.panel')].filter(p => p.id !== 'login-panel' && !p.closest('[hidden]'));
-  panels.forEach((p, i) => { const t = p.querySelector('.panel-title, .chart-title'); if (!t) return; p.dataset.uxIdx = i;
-    const o = document.createElement('option'); o.value = i; o.textContent = t.textContent.trim().replace(/\s+/g, ' ').slice(0, 48); jump.appendChild(o); });
-  jump.onfocus = jump.onmousedown = () => [...jump.options].forEach(o => { const p = o.value && document.querySelector(`[data-ux-idx="${o.value}"]`); if (p) o.hidden = getComputedStyle(p).display === 'none'; });
-  const fo = document.createElement('option'); fo.value = '__fold'; fo.textContent = 'Collapse all sections'; jump.appendChild(fo);
+  // the list is rebuilt from what the current tab shows each time it is opened (all tabs since 2026-10-26, Bible 6.98): Research's panels,
+  // Analyze's and Accounts' sections (v2 panels title with .ak-h), skipping hidden ones; "Collapse all sections" only where folds exist
+  const T_SEL = '.panel-title, .chart-title, .ak-h, .sec-h, h2, h3';
+  const vis = el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+  let targets = [];
+  function fill() {
+    const seen = new Set(); targets = [];
+    for (const p of document.querySelectorAll('.hero, .panel, .sec')) {
+      if (p.id === 'login-panel' || !vis(p)) continue;
+      const t = p.classList.contains('hero') ? 'Top' : (p.querySelector(T_SEL)?.textContent || '').trim().replace(/\s+/g, ' ').replace(/\.$/, '');
+      if (!t || seen.has(t)) continue; seen.add(t); targets.push([t.length > 44 ? t.slice(0, 43) + '…' : t, p]);
+    }
+    jump.innerHTML = '<option value="">Jump to…</option>' + targets.map(([t], i) => `<option value="${i}">${esc(t)}</option>`).join('')
+      + (document.querySelector('details.fold') && document.body.classList.contains('v-research') ? '<option value="__fold">Collapse all sections</option>' : '');
+  }
+  ['pointerdown', 'focus', 'keydown'].forEach(k => jump.addEventListener(k, fill));
+  document.addEventListener('click', e => { if (e.target.closest?.('#view-tabs, [data-view-btn], nav')) setTimeout(fill, 400); });
+  setTimeout(fill, 1500);
   jump.onchange = () => { if (jump.value === '__fold') { jump.value = ''; document.querySelectorAll('details.fold[open]').forEach(d => { d.open = false; }); return; }
-    const p = document.querySelector(`[data-ux-idx="${jump.value}"]`); jump.value = '';
-    if (!p) return; if (p.tagName === 'DETAILS') p.open = true; p.scrollIntoView({behavior: 'smooth', block: 'start'}); };
+    const p = targets[+jump.value]?.[1]; jump.value = '';
+    if (!p) return; if (p.tagName === 'DETAILS') p.open = true;
+    const y = p.getBoundingClientRect().top + window.scrollY - (bar.offsetHeight + 8); window.scrollTo({top: Math.max(0, y), behavior: 'smooth'}); };
   bar.querySelector('#ux-range').onchange = e => { const src = document.getElementById('range-preset'); src.value = e.target.value; src.dispatchEvent(new Event('change')); };
   bar.querySelector('#ux-fold').onclick = () => document.querySelectorAll('details.fold[open]').forEach(d => { d.open = false; });
   syncTopbar();
