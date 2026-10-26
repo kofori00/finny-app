@@ -551,6 +551,7 @@
   .od-lb{height:5px;border-radius:3px;background:color-mix(in srgb, var(--muted) 14%, transparent);overflow:hidden} .od-lb i{display:block;height:100%;border-radius:3px} .od-lb i.up{background:var(--good)} .od-lb i.dn{background:var(--bad)}
   .od-swing{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px} .od-swing>span{font-size:12px;color:var(--muted);margin-right:4px} .od-swing em{font-style:normal;font-size:12px;color:var(--muted)}
   .od-chip{padding:5px 12px;border-radius:999px;border:1px solid color-mix(in srgb, var(--lime) 55%, transparent);background:var(--accent-soft);color:var(--ink);font:700 12.5px var(--font-ui);cursor:pointer}
+  .od-chip small{margin-left:6px;font:600 10.5px var(--font-ui);color:var(--muted)}
   .od-sig{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 14px} .od-sigl{font-size:12.5px;color:var(--muted);margin-right:4px}
   .od-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:6px 0 14px}
   .od-tk{font:800 30px var(--font-display);letter-spacing:-.01em;color:var(--ink)} .od-nm{font-size:13px;color:var(--muted)}
@@ -4837,6 +4838,10 @@ const tlEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<':
 const tlPct = (v, d = 1) => v == null || !isFinite(v) ? '–' : (v * 100).toFixed(d) + '%';
 const tlNum = (v, d = 2) => v == null || !isFinite(v) ? '–' : (+v).toFixed(d);
 
+// swing signals shown in the lookup and the odds view; v2 adds the owner's research signals through swSigs (Bible 6.94)
+const SW_DEF = [{k: 'R18L26', code: 'R18L26', lab: 'dips in leaders', hold: 5}, {k: 'R18P12', code: 'R18P12', lab: 'leaders after a down day', hold: 5}];
+const swList = () => typeof swSigs === 'function' ? swSigs() : SW_DEF;
+
 async function tlLoad() {
   if (TL.loaded || TL.busy) return; TL.busy = true; tlRender('Loading today\'s snapshot and the validated strategies…');
   try {
@@ -5026,13 +5031,16 @@ function tlShow(ticker) {
   if (typeof heroFit === 'function') heroFit(p.ticker, score, cls.label);
   const fit = [cls.label, cls.tier >= 3 ? 'var(--accent)' : cls.tier >= 2 ? 'var(--ink)' : 'var(--muted)'];
   const chips = A.sleeves.map(s => `<span class="tl-chip" title="held since ${tlEsc(s.since)} (current target ${tlEsc(s.as_of)})">${tlEsc(s.book)} ${(s.weight * 100).toFixed(0)}%</span>`).join('');
-  // recent swing entry signals (live_signal_log, last 20 trading days); both rules hold at most 5 trading days
+  // recent swing entry signals (live_signal_log, last 20 trading days), for the signals swList shows; each holds at most its own number of days
   const tdays = (a, b) => { let n = 0; for (let d = new Date(a + 'T12:00:00Z'); d < new Date(b + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 1)) { const w = d.getUTCDay(); if (w && w < 6) n++; } return n; };
-  const mine = (TL.signals || []).filter(r => r.ticker === ticker);
+  const SW = swList(), swOf = k => SW.find(s => s.k === k) || {code: k, hold: 5};
+  const mine = (TL.sigAll || TL.signals || []).filter(r => r.ticker === ticker && SW.some(s => s.k === r.strategy));
   const lastSig = mine[0]; const ago = lastSig ? tdays(lastSig.as_of, TL.asof) : null;
-  const banner = !lastSig ? '' : `<div class="tl-alert ${ago <= 5 ? 'tl-alert-on' : ''}"><div><b>${tlEsc(lastSig.strategy)} entry</b> · ${ago === 0 ? 'today' : ago + (ago > 1 ? ' days' : ' day') + ' ago'} · ${ago <= 5 ? 'window open' : 'window closed'}</div>
-     <div class="tl-alert-sub">${tlEsc(lastSig.as_of)} close${lastSig.info?.close ? ' $' + (+lastSig.info.close).toFixed(2) : ''} · holds up to 5 trading days${mine.length > 1 ? ' · ' + mine.length + ' signals in 20 days' : ''}</div></div>`;
-  const swing = g.R18L26 || g.R18P12 ? `<span class="tl-chip tl-chip-on">Swing buy signal today: ${g.R18L26 ? 'R18L26' : 'R18P12'}</span>` : '';
+  const lastK = lastSig ? [...new Set(mine.filter(x => x.as_of === lastSig.as_of).map(x => x.strategy))] : [], hd = Math.max(0, ...lastK.map(k => swOf(k).hold));
+  const onNow = SW.filter(s => g[s.k] || mine.some(x => x.strategy === s.k && x.as_of === TL.asof));
+  const banner = !lastSig ? '' : `<div class="tl-alert ${ago <= hd ? 'tl-alert-on' : ''}"><div><b>${tlEsc(lastK.map(k => swOf(k).code).join(' + '))} entry</b> · ${ago === 0 ? 'today' : ago + (ago > 1 ? ' days' : ' day') + ' ago'} · ${ago <= hd ? 'window open' : 'window closed'}</div>
+     <div class="tl-alert-sub">${tlEsc(lastSig.as_of)} close${lastSig.info?.close ? ' $' + (+lastSig.info.close).toFixed(2) : ''} · holds up to ${hd} trading days${mine.length > 1 ? ' · ' + mine.length + ' signals in 20 days' : ''}</div></div>`;
+  const swing = onNow.length ? `<span class="tl-chip tl-chip-on">Swing buy signal today: ${onNow.map(s => s.code).join(', ')}</span>` : '';
   // strategy list: the best-performing families (by backtest Sharpe) that would buy the stock or have it within 2x the cut-off; else the 5 best families
   const SF = A.fams.map(F => ({F, p: tlPerf(F)})).filter(x => isFinite(x.p)).sort((a, b) => b.p - a.p).map(x => (x.F.perf = x.p, x.F));
   const winLab = TL_WIN[TL.win || 'sharpe'][0];
@@ -5064,19 +5072,20 @@ function tlShow(ticker) {
     <details class="cx-fold tl-fold"><summary><b>Strategy map</b><span>${TOP_N} best by ${winLab === 'Backtest Sharpe' ? 'backtest Sharpe' : 'last ' + winLab.toLowerCase()} · tap a dot for details</span></summary><div id="tl-map" class="tl-plot"></div></details>
     <details class="cx-fold tl-fold"><summary><b>Factor profile</b><span>${tlEsc(p.ticker)} vs what our 50 best strategies hold</span></summary><div id="tl-radar" class="tl-plot"></div></details>
     <details class="cx-fold tl-fold"><summary><b>Score across the S&amp;P 500</b><span>where ${tlEsc(p.ticker)} sits when the ${TL_K} best strategies vote</span></summary><div id="tl-hist" class="tl-plot-s"></div></details>
-    <details class="cx-fold tl-fold"><summary><b>Swing setup</b><span>${g.R18L26 || g.R18P12 ? 'buy signal' : 'no signal'} at the ${tlEsc(TL.asof)} close${mine.length ? ' · ' + mine.length + ' signal' + (mine.length > 1 ? 's' : '') + ' in 20 days' : ''}</span></summary>${bars || '<p class="note">No swing data.</p>'}<div id="tl-timeline" class="tl-plot-t"></div></details>
+    <details class="cx-fold tl-fold"><summary><b>Swing setup</b><span>${onNow.length ? 'buy signal' : 'no signal'} at the ${tlEsc(TL.asof)} close${mine.length ? ' · ' + mine.length + ' signal' + (mine.length > 1 ? 's' : '') + ' in 20 days' : ''}</span></summary>${bars || '<p class="note">No swing data.</p>'}<div id="tl-timeline" class="tl-plot-t"></div></details>
     <details class="about tl-about"><summary>About the fit score</summary><p class="tl-foot">${(TL.win || 'sharpe') !== 'sharpe' ? `Window view: how each strategy's <b>current picks</b> moved over the last ${winLab.toLowerCase()}, not its track record (momentum strategies lead long windows by construction). ` : ''}Fit with our backtested strategies, not a return forecast (Bible §6.53–6.57). The voting score always uses backtest Sharpe. Data ${tlEsc(TL.asof)} · SEC filings + Alpaca.</p></details>
     </div>`;
   el.querySelectorAll('details.tl-fold').forEach(d => d.addEventListener('toggle', () => { if (d.open) d.querySelectorAll('.js-plotly-plot').forEach(q => { try { Plotly.Plots.resize(q); } catch (e) {} }); }));
   const accent = tlCV('--accent'), muted = tlCV('--muted'), ink2 = tlCV('--ink-2'), border = tlCV('--border');
   // timeline of this stock's entry signals over the last 20 trading days
   const tl0 = new Date(new Date(TL.asof + 'T12:00:00Z').getTime() - 30 * 864e5).toISOString().slice(0, 10);
-  Plotly.react('tl-timeline', [['R18L26', 'R18L26 · dips in leaders'], ['R18P12', 'R18P12 · leaders after a down day']].map(([k, lab]) => {
+  const tlRows = SW.map(s => [s.k, s.code, s.code + ' · ' + s.lab]);
+  Plotly.react('tl-timeline', tlRows.map(([k, code, lab]) => {
     const r = mine.filter(x => x.strategy === k);
-    return {type: 'scatter', mode: 'markers', name: lab, x: r.map(x => x.as_of), y: r.map(() => lab), hovertemplate: '%{x}: ' + k + ' entry signal<extra></extra>',
+    return {type: 'scatter', mode: 'markers', name: lab, x: r.map(x => x.as_of), y: r.map(() => lab), hovertemplate: '%{x}: ' + code + ' entry signal<extra></extra>',
       marker: {size: 13, symbol: 'diamond', color: accent, line: {width: 0}}}; }),
-    plotBase({height: 110, showlegend: false, margin: {l: 190, r: 10, t: 6, b: 28}, xaxis: {type: 'date', range: [tl0, TL.asof], gridcolor: border, tickfont: {color: muted, size: 10}},
-      yaxis: {categoryorder: 'array', categoryarray: ['R18P12 · leaders after a down day', 'R18L26 · dips in leaders'], tickfont: {color: ink2, size: 11}, gridcolor: border},
+    plotBase({height: 50 + 30 * tlRows.length, showlegend: false, margin: {l: 190, r: 10, t: 6, b: 28}, xaxis: {type: 'date', range: [tl0, TL.asof], gridcolor: border, tickfont: {color: muted, size: 10}},
+      yaxis: {categoryorder: 'array', categoryarray: tlRows.map(x => x[2]).reverse(), tickfont: {color: ink2, size: 11}, gridcolor: border},
       shapes: [{type: 'rect', xref: 'x', yref: 'paper', x0: new Date(new Date(TL.asof + 'T12:00:00Z').getTime() - 7 * 864e5).toISOString().slice(0, 10), x1: TL.asof, y0: 0, y1: 1, fillcolor: withAlpha(accent, 0.08), line: {width: 0}}]}), PLOT_CFG);
   const C = tlScores().cut;
   // histogram of everyone's score, this stock marked
@@ -5547,6 +5556,8 @@ function odShowA(A) {
   } else if (A.member) pl.push(`<li><b>Today from the open:</b> the odds appear after about 09:35 New York time on trading days.</li>`);
   if (R) pl.push(`<li><b>Next week:</b> a proven swing buy signal (${w.sig}) fired. Stocks with this signal were higher a week later ${odP(R['2021-26'].up)} of the time, versus ${odP(R.all_members_spy_up.up)} for any stock.</li>`);
   else pl.push(`<li><b>Next weeks and months:</b> no tested signal says anything about ${esc(A.sym)} right now.${w.ow?.all ? ` Normally it has been higher a week later ${odP(w.ow.all.up)} of the time and a month later ${odP(m.ow?.all?.up)}: that is just how it usually behaves, not a forecast.` : ''}</li>`);
+  const rsw = swList().filter(s => !SW_DEF.some(d => d.k === s.k) && (A.g[s.k] || (TL.sigAll || []).some(x => x.ticker === A.sym && x.strategy === s.k && x.as_of === TL.asof)));
+  if (rsw.length) pl.push(`<li><b>Research swing signal${rsw.length > 1 ? 's' : ''}:</b> ${rsw.map(s => `${s.code} (${esc(s.lab)})`).join(', ')} fired at the ${esc(TL.asof)} close. Backtested only, not proven live yet (its forward test runs since 26 Oct); ${rsw.length > 1 ? 'they hold' : 'it holds'} up to ${Math.max(...rsw.map(s => s.hold))} trading days.</li>`);
   const cx = OD.ctx[A.sym]; if (cx?.recent?.['1m']) { const r1 = cx.recent['1m']; const p = [['the overall market', r1.market], ['its sector', r1.sector], ['its own news and results', r1.specific]].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
     pl.push(`<li><b>Why it moved:</b> over the last month ${odPct1(r1.total)}, driven mostly by ${p[0][0]} (${odPct1(p[0][1])}).${cx.next_earnings_estimate ? ` Next earnings expected around ${esc(cx.next_earnings_estimate)}.` : ''}</li>`); }
   if (A.own?.season) pl.push(`<li><b>Calendar and time of day:</b> ${A.own.season.consistent ? `${A.own.season.consistent} pattern${A.own.season.consistent > 1 ? 's' : ''} held up for this stock (see below), but` : 'nothing reliable;'} calendar effects have mostly disappeared, so the odds ignore them.</li>`);
@@ -5626,8 +5637,11 @@ function odSignals() {                                 // the two things with a 
     html += `<div class="od-board">${nx ? `<div class="od-next">${esc(nx)} Showing the last trading day.</div>` : ''}<div class="od-bh"><b>${lab} from the open</b><span>chance to close above the open · typical ${odP(base)}</span></div>
       <div class="od-cols"><div><div class="od-ch">Best odds</div>${r.slice(0, 5).map(row).join('')}</div><div><div class="od-ch">Weakest</div>${r.slice(-5).reverse().map(row).join('')}</div></div></div>`;
   } else html += `<div class="od-board od-empty"><b>Today from the open</b><span>Odds for every S&amp;P 500 stock appear at about 09:35 New York time on trading days.</span></div>`;
-  const s = TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => [r.ticker, r.sig.R18L26 ? 'R18L26' : 'R18P12']);
-  html += `<div class="od-swing"><span>Swing buy signals</span>${s.length ? s.map(([t, k]) => `<button class="od-chip" data-t="${esc(t)}" title="${k}">${esc(t)}</button>`).join('')
+  const SW = swList(), sm = new Map(), add = (t, c) => sm.set(t, [...new Set([...(sm.get(t) || []), c])]);
+  for (const sw of SW) TL.prof.forEach(r => { if (r.sig?.[sw.k]) add(r.ticker, sw.code); });                      // S&P 500 signals from today's snapshot
+  for (const x of TL.sigAll || TL.signals || []) { const sw = SW.find(q => q.k === x.strategy); if (sw?.etf && x.as_of === TL.asof) add(x.ticker, sw.code); }   // ETF signals from the log
+  const s = [...sm], tag = SW.length > 2;                                                                               // more than the two public signals: name them on the chip
+  html += `<div class="od-swing"><span>Swing buy signals</span>${s.length ? s.map(([t, k]) => `<button class="od-chip" data-t="${esc(t)}" title="${esc(k.join(', '))}">${esc(t)}${tag ? `<small>${esc(k.join(' '))}</small>` : ''}</button>`).join('')
     : `<em>none at the ${esc(TL.asof)} close${TL.prof[0]?.sig?.spy_above_200d === false ? ' (market below its 200-day average)' : ''}</em>`}</div>`;
   el.innerHTML = html;
   el.querySelectorAll('button[data-t]').forEach(b => b.onclick = () => odGo(b.dataset.t));
