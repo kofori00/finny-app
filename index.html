@@ -6602,9 +6602,9 @@ async function fwdMenu(el) {
     try {
       const j = await fwdApi(body); close();
       const a = j.added || [], src = a[0] ? ` · ${a[0].src.split(' ')[0].toUpperCase()} trade ${fwdTime(a[0].at)}` : '';
-      fwdToast(T.kind === 'ticker' ? (a.length ? `<b>${esc(T.t)}</b> started at $${a[0].p.toFixed(2)}${src}` : `${esc(T.t)} is already in that book`)
-        : `<b>${esc(T.name)}</b>: ${a.length} bought${j.closed?.length ? `, ${j.closed.length} sold` : ''}${src}`);
-      await fwdLoad(true); document.getElementById('fwd-panel')?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+      fwdToast((T.kind === 'ticker' ? (a.length ? `<b>${esc(T.t)}</b> started at $${a[0].p.toFixed(2)}${src}` : `${esc(T.t)} is already in that book`)
+        : `<b>${esc(T.name)}</b>: ${a.length} bought${j.closed?.length ? `, ${j.closed.length} sold` : ''}${src}`) + (VIEW.cur !== fwdView() ? ' · see <b>Accounts</b>' : ''));
+      await fwdLoad(true); if (VIEW.cur === fwdView()) document.getElementById('fwd-panel')?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
     } catch (err) { close(); fwdToast('Could not start it: ' + esc(err.message), true); }
   });
 }
@@ -6635,7 +6635,7 @@ async function fwdLoad(force) {
 async function fwdQuotes() { try { const j = await fwdApi({action: 'quotes'}); FWD.px = j.px; FWD.at = j.at; } catch (e) { /* keep the last prices */ } }
 function fwdTick() {
   clearInterval(FWD.timer); if (!FWD.pos?.some(p => !p.exit_at)) return;
-  FWD.timer = setInterval(async () => { if (document.visibilityState !== 'visible' || (typeof VIEW !== 'undefined' && VIEW.cur !== 'analyze')) return; await fwdQuotes(); fwdRender(); }, 60e3);
+  FWD.timer = setInterval(async () => { if (document.visibilityState !== 'visible' || (typeof VIEW !== 'undefined' && VIEW.cur !== fwdView())) return; await fwdQuotes(); fwdRender(); }, 60e3);
 }
 function fwdVal(p) {                                       // [value, same money in SPY] now (open) or at exit (closed)
   const px = p.exit_at ? p.exit_price : FWD.px?.[p.ticker]?.p, sp = p.exit_at ? p.spy_exit : FWD.px?.SPY?.p;
@@ -6685,7 +6685,14 @@ function fwdRender() {
     b.disabled = true; try { await fwdApi({action: 'close', book_id: k.id}); fwdToast(`"${esc(k.name)}" ended; its record stays under Ended tests`); } catch (e) { fwdToast('Could not end it: ' + esc(e.message), true); }
     fwdLoad(true); });
 }
-const v2viewSetFwd = viewSet; viewSet = function (v, push) { v2viewSetFwd(v, push); if (VIEW.cur === 'analyze') fwdLoad(); };
+// the owner's forward tests live in the Accounts tab, after the scoreboard (user, 2026-10-26); customers have no Accounts tab, so theirs stay in Analyze
+const fwdView = () => document.getElementById('fwd-panel')?.dataset.view || 'analyze';
+function fwdPlace() {
+  const p = document.getElementById('fwd-panel'); if (!p) return;
+  const own = document.body.classList.contains('role-owner'), want = own ? 'accounts' : 'analyze'; if (p.dataset.view === want) return;
+  p.dataset.view = want; if (own) document.getElementById('v2-board-p')?.after(p);
+}
+const v2viewSetFwd = viewSet; viewSet = function (v, push) { v2viewSetFwd(v, push); fwdPlace(); if (VIEW.cur === fwdView()) fwdLoad(); };
 
 // ---------------- strategy -> research links (2026-10-25, Bible 6.87) ----------------
 // Wherever a strategy appears (strategy fit detail, this month's picks, the high-Sharpe strategies, the scoreboard, forward-test books, the

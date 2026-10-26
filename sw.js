@@ -1,6 +1,6 @@
 // Finny app service worker: network-first for the page (always the newest published dashboard), cached copy only when offline.
 // Data never goes through this cache: Supabase requests are not intercepted.
-const CACHE = 'finny-shell-202610252143';
+const CACHE = 'finny-shell-202610260650';
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './manifest.webmanifest', './icon-192.png', './icon-512.png']))); });
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
