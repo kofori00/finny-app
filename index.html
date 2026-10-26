@@ -1002,6 +1002,9 @@
   body:not(.role-owner) .owner-only{display:none!important}
   .hs-line{margin:10px 2px 0;padding:9px 12px;border-radius:14px;background:var(--glass);border:1px dashed var(--glass-line);font-size:12.5px;color:var(--ink-2)} .hs-line b{color:var(--ink)}
   .hs-k{display:block;font:700 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .hs-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:14px 0 2px;padding:4px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .hs-tabs button{padding:9px 10px;border:0;border-radius:14px;background:transparent;color:var(--ink-2);text-align:left;cursor:pointer;min-width:0} .hs-tabs b{display:block;font:700 14px var(--font-ui)}
+  .hs-tabs small{display:block;font-size:11px;color:var(--muted);line-height:1.3;margin-top:2px} .hs-tabs button.on{background:var(--accent-soft);color:var(--ink);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent)}
   .hs-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 4px} .hs-sum>div{padding:12px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)}
   .hs-sum b{display:block;font:800 22px var(--font-display);color:var(--ink)} .hs-sum b i{font:600 13px var(--font-ui);font-style:normal;color:var(--muted)} .hs-sum span{font-size:11.5px;color:var(--muted);line-height:1.3;display:block;margin-top:2px}
   .hs-sum>div:first-child b{color:var(--accent)}
@@ -1124,7 +1127,7 @@
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C7 16.5 3.2 13 3.2 9 3.2 6 5.5 4 8 4.3 10.2 4.6 10.9 7 9.4 8.1 8.3 8.9 6.9 8.1 7.3 6.9"/><path d="M12 21C17 16.5 20.8 13 20.8 9 20.8 6 18.5 4 16 4.3 13.8 4.6 13.1 7 14.6 8.1 15.7 8.9 17.1 8.1 16.7 6.9"/><path d="M12 21V12.5"/></svg>
     <span class="hero-kick"><i></i>High-Sharpe group · you only</span>
     <h2 class="ak-h">What our strongest <em>strategies hold.</em></h2>
-    <p class="ak-sub">The 14 strategies with a backtest Sharpe of 1.3+ and 20%+ a year, re-tested. A separate ranking, never mixed into the monthly picks.</p>
+    <p class="ak-sub" id="hs-sub">The 14 strategies with a backtest Sharpe of 1.3+ and 20%+ a year, re-tested. They hold a basket picked every six months. A separate ranking, never mixed into the monthly picks.</p>
     <div id="hs-body"><p class="note">Loading…</p></div>
   </section>
 
@@ -6314,7 +6317,7 @@ const v1tlLoad = tlLoad; let tlLoadP = null;                // one shared load: 
 tlLoad = function () { if (TL.loaded) return Promise.resolve(); return tlLoadP ||= tlLoadOnce().finally(() => { tlLoadP = null; }); };
 async function tlLoadOnce() {
   if (TL.loaded || TL.busy) return;
-  const ep = sb('v2_elite?select=key,label,kind,is_public,spec,holdings,holdings_as_of,components,metrics,notes,sort&order=sort').catch(e => { EL.err = e.message; return null; });
+  const ep = sb('v2_elite?select=key,label,kind,is_public,spec,holdings,holdings_as_of,components,metrics,notes,sort,research_key&order=sort').catch(e => { EL.err = e.message; return null; });
   await v1tlLoad(); EL.rows = await ep; if (!TL.loaded) return;
   TL.sigAll = TL.signals || []; TL.signals = TL.sigAll.filter(x => x.strategy === 'R18L26' || x.strategy === 'R18P12');   // TL.signals: the public two (strategy fit's own list); the lookup and odds read TL.sigAll via swList (6.94)
   TL.strats = (EL.rows || []).map(elStrat); TL.cache = TL.scores = TL.ideal = null; V2.votes = V2.F = null;
@@ -6528,6 +6531,7 @@ function hsRender() {
   const nm = t => { const p = typeof TL !== 'undefined' && TL.prof?.find(r => r.ticker === t); return p ? (typeof tlTitle === 'function' ? tlTitle(p.name) : p.name) : ''; };
   const LBL = {SXG4_V38_SPY200_TBill: 'SXG4 (your Account 1)', NB069_SX25_V38: 'SX25 + V38', VX09_Deterministic_Drawdown_Stop_Circuit: 'VX09', ZX18_Volume_Adjusted_Moving_Average_VAMA: 'ZX18', SX30_Cross_Sleeve_Momentum_Shifter: 'SX30'};
   const short = r => LBL[r.name] || r.name.replace(/^(NB\d+|SXG\d+)_/, '').replace(/_/g, ' ').replace(/^SX25 Multi Sleeve Triple Parity$/, 'SX25').replace(/Deterministic Drawdown Stop Circuit/, '').trim();
+  hsTabs(); if (HS.tab === 'swing') return hsSwing(el);
   const dots = x => Array.from({length: x.okOf}, (_, i) => `<i class="${i < x.ok ? 'on' : ''}"></i>`).join('');
   const card = x => `<button class="v2-pk hs-pk" data-t="${esc(x.t)}" title="${esc(x.held.map(r => r.name).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
       <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${x.n} of ${x.of} strategies · ${x.fam} of ${x.fams} families</small></span>
@@ -6535,7 +6539,7 @@ function hsRender() {
   const strat = r => { const v = r.validation, e = v?.equal; return `<div class="hs-s" data-hs="${esc(r.key)}" data-hs-name="${esc(short(r) || r.name)}" data-rs="${esc(r.key)}" role="button" tabindex="0" title="Open its research"><div><b>${esc(short(r) || r.name)} ›</b><small>${esc(r.family)}</small></div>
       <div class="hs-sn"><span>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</span><i>→</i><b>${e ? e.sharpe.toFixed(2) : '–'}</b></div>
       <span class="v2-tag ${v?.verdict === 'holds up' ? 'ok' : v?.verdict === 'weak' ? 'bad' : ''}">${esc(v?.verdict || '')}</span></div>`; };
-  el.innerHTML = `
+  el.innerHTML = `${hsTabBar()}
     <div class="hs-sum">
       <div><b>${okN.length}<i>/${HS.rows.length}</i></b><span>hold up after re-testing</span></div>
       <div><b>${fams}</b><span>strategy families</span></div>
@@ -6550,6 +6554,50 @@ function hsRender() {
       SXG4 uses Account 1's actual SX25 targets. Visible to you only.</p></details>`;
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
   const m = document.getElementById('hs-more'); if (m) m.onclick = () => { HS.all = true; hsRender(); };
+}
+// swing vs longer term (user, 2026-10-26, Bible 6.96): the 14 above hold a basket chosen every six months; the swing tab shows the swing rows of
+// v2_elite (R18L26 + the 8 research rows of 6.91), the stocks and ETFs they have an open signal on, and the strategies themselves (tap: research, long-press: follow)
+try { HS.tab = localStorage.getItem('hs-tab') === 'swing' ? 'swing' : 'long'; } catch (e) { HS.tab = 'long'; }
+const hsSw = () => (EL.rows || []).filter(e => e.kind === 'signal').sort((a, b) => (b.metrics?.sharpe || 0) - (a.metrics?.sharpe || 0));
+function hsTabBar() {
+  const n = hsSw().length;
+  return `<div class="hs-tabs" role="tablist"><button role="tab" data-hst="long" class="${HS.tab === 'long' ? 'on' : ''}"><b>Longer term</b><small>${HS.rows?.length || 14} strategies · new basket every 6 months</small></button>
+    <button role="tab" data-hst="swing" class="${HS.tab === 'swing' ? 'on' : ''}"><b>Swing</b><small>${n || 9} strategies · held 2-10 days</small></button></div>`;
+}
+function hsTabs() {
+  const sub = document.getElementById('hs-sub'); if (!sub) return;
+  sub.textContent = HS.tab === 'swing' ? 'Our swing strategies buy on a signal at the close and sell within 2 to 10 trading days. What they hold now, ranked by how many of them agree.'
+    : 'The 14 strategies with a backtest Sharpe of 1.3+ and 20%+ a year, re-tested. They hold a basket picked every six months. A separate ranking, never mixed into the monthly picks.';
+}
+document.addEventListener('click', e => { const b = e.target.closest?.('[data-hst]'); if (!b) return; HS.tab = b.dataset.hst; try { localStorage.setItem('hs-tab', HS.tab); } catch (x) {} hsRender(); });
+function hsSwing(el) {
+  if (!TL.loaded || !EL.rows) { el.innerHTML = hsTabBar() + '<p class="note">Loading the swing signals…</p>'; tlLoad().then(() => { if (HS.tab === 'swing') hsRender(); }); return; }
+  const SR = hsSw(), H = new Map(), last = (sg, t) => (TL.sigAll || []).filter(x => x.strategy === sg && x.ticker === t).reduce((m, x) => x.as_of > m ? x.as_of : m, '');
+  for (const e of SR) for (const t of elHeld(e)) { const d = last(e.spec?.signal || e.key, t), h = H.get(t) || {t, by: [], d: ''}; h.by.push(e); if (d > h.d) h.d = d; H.set(t, h); }
+  const all = [...H.values()].sort((a, b) => b.by.length - a.by.length || b.d.localeCompare(a.d) || a.t.localeCompare(b.t));
+  const nm = t => { const p = TL.prof?.find(r => r.ticker === t); return p ? tlTitle(p.name) : ''; };
+  const day = d => d ? new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : '';
+  const card = x => `<button class="v2-pk hs-pk" data-t="${esc(x.t)}" title="${esc(x.by.map(e => e.label).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
+      <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${esc(x.by.map(e => e.key).join(' · '))} · signal ${esc(day(x.d))}</small></span>
+      <span class="hs-ok"><em>${x.by.length}/${SR.length}</em></span></button>`;
+  const strat = e => { const m = e.metrics || {}, ok = e.key === 'R18L26', n = H.size ? [...H.values()].filter(h => h.by.includes(e)).length : 0;
+    return `<div class="hs-s" data-sw="${esc(e.key)}" data-rs="${esc(e.key)}" role="button" tabindex="0" title="Tap: its research · long-press: follow it in a forward test"><div><b>${esc(e.label)} ›</b>
+      <small>holds up to ${e.spec?.hold || 5} days · ${n ? n + ' open now' : 'nothing open'}${m.cagr != null ? ' · ' + Math.round(m.cagr * 100) + '% a year' : ''}</small></div>
+      <div class="hs-sn"><span>Sharpe</span><i></i><b>${m.sharpe != null ? (+m.sharpe).toFixed(2) : '–'}</b></div>
+      <span class="v2-tag ${ok ? 'ok' : ''}">${ok ? 'luck-tested' : 'research'}</span></div>`; };
+  el.innerHTML = `${hsTabBar()}
+    <div class="hs-sum">
+      <div><b>${all.length}</b><span>stocks and ETFs with an open signal</span></div>
+      <div><b>${SR.filter(e => all.some(h => h.by.includes(e))).length}<i>/${SR.length}</i></b><span>strategies with a position</span></div>
+      <div><b>${esc(day(TL.asof))}</b><span>signals as of · updated every evening</span></div>
+    </div>
+    <div class="v2-lh"><b>What the swing strategies hold now</b><span>signals still inside their holding window · the number = how many of the ${SR.length} have it · tap for its odds</span></div>
+    <div class="v2-list">${all.map(card).join('') || `<p class="note">No open swing signals at the ${esc(day(TL.asof))} close.</p>`}</div>
+    <div class="v2-lh"><b>The ${SR.length} swing strategies</b><span>tap for its research · long-press to follow it in a forward test</span></div>
+    <div class="hs-strats">${SR.map(strat).join('')}</div>
+    <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. Only R18L26 has passed the luck tests (placebos, plateau, 2016-20 out of sample); the other 8 are research candidates, being forward-tested since 26 Oct 2026.
+      The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks. "Open" means the signal is inside its holding window; a position can already have been sold earlier by the strategy's own exit rule or stop. Visible to you only.</p>`;
+  el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
 }
 const v2HeroBase = v2Hero; v2Hero = function (A) {
   v2HeroBase(A); const box = document.querySelector('.hero-stats'); let line = document.getElementById('hs-line');
@@ -6584,6 +6632,7 @@ function fwdTarget(el) {
     const S = tlSelect(s.family, s.variant || {});
     return {kind: 'strategy', key: 'elite:' + id, name: s.family.short, tickers: S.na ? [] : [...S.top], follow: s.elite?.spec?.signal ? id : null, spec: s.elite?.spec};   // swing rows can be followed (6.91)
   }
+  if (el.dataset.sw) { const e = (EL.rows || []).find(x => x.key === el.dataset.sw); return e && {kind: 'strategy', key: 'elite:' + e.key, name: e.label, tickers: elHeld(e), follow: e.key, spec: e.spec}; }   // swing tab (6.96)
   if (el.dataset.hs) { const r = (HS.rows || []).find(x => x.key === el.dataset.hs); return r && {kind: 'strategy', key: 'hs:' + r.key, name: el.dataset.hsName || r.name, tickers: r.picks}; }
   if (el.dataset.set === 'picks') { const c = V2.P?.[V2.P.length - 1]; return c && {kind: 'strategy', key: 'picks', name: `Monthly picks (${v2Day(c.as_of)})`, tickers: c.picks.map(p => p.t)}; }
   const t = el.dataset.t || el.dataset.od; return t && {kind: 'ticker', t};
@@ -6640,7 +6689,7 @@ async function fwdMenu(el) {
 }
 // ---- long press / right-click anywhere ----
 (function () {
-  const SEL = '[data-t],[data-od],.tl-li,[data-hs],[data-set]'; let tm = null, sx = 0, sy = 0, fired = false;
+  const SEL = '[data-t],[data-od],.tl-li,[data-hs],[data-sw],[data-set]'; let tm = null, sx = 0, sy = 0, fired = false;
   const cancel = () => { if (tm) { clearTimeout(tm); tm = null; } };
   const fire = () => { fired = true; };                      // the click that ends this press is swallowed (also when it lands on the sheet's backdrop)
   document.addEventListener('pointerdown', e => {
