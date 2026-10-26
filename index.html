@@ -6282,7 +6282,8 @@ function elStrat(e) {
 }
 function elHeld(e) {
   if (e.kind === 'static') return e.holdings || [];
-  if (e.kind === 'signal') return [...new Set((TL.signals || []).filter(x => x.strategy === e.key && elTd(x.as_of, TL.asof) < 5).map(x => x.ticker))];
+  if (e.kind === 'signal') { const sg = e.spec?.signal || e.key, hd = e.spec?.hold || 5;          // swing rows (6.91): their own signal and holding window
+    return [...new Set((TL.sigAll || TL.signals || []).filter(x => x.strategy === sg && elTd(x.as_of, TL.asof) < hd).map(x => x.ticker))]; }
   if (e.kind === 'spec') { const S = tlSelect({...e.spec.family, short: e.label}, e.spec.variant || {}); return S.na ? [] : [...S.top]; }
   const latest = {}; for (const t of TL.targets || []) for (const [bk, w] of Object.entries(t.books || {})) if (!latest[bk] || t.id > latest[bk].id) latest[bk] = {id: t.id, w};
   return [...new Set((e.components || []).flatMap(c => latest[c] ? Object.keys(latest[c].w) : (r => r ? elHeld(r) : [])(EL.rows.find(x => x.key === c))))];
@@ -6300,6 +6301,7 @@ async function tlLoadOnce() {
   if (TL.loaded || TL.busy) return;
   const ep = sb('v2_elite?select=key,label,kind,is_public,spec,holdings,holdings_as_of,components,metrics,notes,sort&order=sort').catch(e => { EL.err = e.message; return null; });
   await v1tlLoad(); EL.rows = await ep; if (!TL.loaded) return;
+  TL.sigAll = TL.signals || []; TL.signals = TL.sigAll.filter(x => x.strategy === 'R18L26' || x.strategy === 'R18P12');   // research signals (6.91) only feed the elite rows
   TL.strats = (EL.rows || []).map(elStrat); TL.cache = TL.scores = TL.ideal = null; V2.votes = V2.F = null;
   tlRender(EL.err ? 'Could not load the strategies: ' + EL.err : undefined); if (HERO.last) v2Hero(HERO.last);
   const inp = document.getElementById('od-input');             // typed while it was loading: show the suggestions now
@@ -6559,7 +6561,8 @@ function fwdToast(msg, bad) {
 function fwdTarget(el) {
   if (el.matches('.tl-li')) {
     const id = el.dataset.fid.split('|')[0], s = TL.strats.find(x => x.family.id === id); if (!s) return null;
-    const S = tlSelect(s.family, s.variant || {}); return {kind: 'strategy', key: 'elite:' + id, name: s.family.short, tickers: S.na ? [] : [...S.top]};
+    const S = tlSelect(s.family, s.variant || {});
+    return {kind: 'strategy', key: 'elite:' + id, name: s.family.short, tickers: S.na ? [] : [...S.top], follow: s.elite?.spec?.signal ? id : null, spec: s.elite?.spec};   // swing rows can be followed (6.91)
   }
   if (el.dataset.hs) { const r = (HS.rows || []).find(x => x.key === el.dataset.hs); return r && {kind: 'strategy', key: 'hs:' + r.key, name: el.dataset.hsName || r.name, tickers: r.picks}; }
   if (el.dataset.set === 'picks') { const c = V2.P?.[V2.P.length - 1]; return c && {kind: 'strategy', key: 'picks', name: `Monthly picks (${v2Day(c.as_of)})`, tickers: c.picks.map(p => p.t)}; }
@@ -6577,6 +6580,11 @@ async function fwdMenu(el) {
       : `<button class="fwd-o fwd-main" data-act="add"><b>Start a forward test</b><span>$1,000 at the live price now · tracked against SPY</span></button>`)
       + `<button class="fwd-o" data-act="new"><b>Add to a new book…</b><span>keep this test apart from the others</span></button>`
       + (typeof odGo === 'function' ? `<button class="fwd-o fwd-lite" data-act="odds"><b>Open its odds</b></button>` : '');
+  } else if (T.follow) {                                            // a swing strategy: follow its signals and exits automatically (6.91)
+    const ex = open.find(b => b.strategy_key === 'swing:' + T.follow), sp = T.spec || {};
+    opts = ex ? `<p class="note">Already followed in <b>${esc(ex.name)}</b>. It trades every evening at the close.</p>`
+      : `<button class="fwd-o fwd-main" data-act="follow"><b>Follow this strategy automatically</b><span>every evening at the close: buys its new signals (up to ${sp.max_pos || 10}), sells by its own rules (${sp.hold || 5} days max, stop, exit signal) · $10,000 virtual</span></button>`;
+    opts += T.tickers.length ? `<button class="fwd-o" data-act="strat"><b>Or buy today's ${T.tickers.length} stocks as a fixed basket</b><span>$10,000 split equally at the live price; no automatic exits</span></button>` : '';
   } else {
     const ex = open.find(b => b.kind === 'strategy' && b.strategy_key === T.key);
     opts = !T.tickers.length ? '<p class="note">This strategy holds no stocks today.</p>'
@@ -6598,10 +6606,12 @@ async function fwdMenu(el) {
     if (act === 'new') { const n = prompt('Name for the new book', `${T.t} test`); if (!n) return; body = {action: 'add', tickers: [T.t], new_book: {name: n.trim().slice(0, 80)}}; }
     if (act === 'strat') body = {action: 'add', tickers: T.tickers, new_book: {name: T.name, kind: 'strategy', strategy_key: T.key}};
     if (act === 'rebal') body = {action: 'rebalance', book_id: +b.dataset.book, tickers: T.tickers};
+    if (act === 'follow') body = {action: 'follow', key: T.follow};
     sh.querySelectorAll('button').forEach(x => x.disabled = true); b.classList.add('busy');
     try {
       const j = await fwdApi(body); close();
       const a = j.added || [], src = a[0] ? ` · ${a[0].src.split(' ')[0].toUpperCase()} trade ${fwdTime(a[0].at)}` : '';
+      if (act === 'follow') { fwdToast(`<b>${esc(j.book?.name || T.name)}</b> ${j.existing ? 'is already followed' : 'is now followed: its first trades happen at tonight\'s close'}` + (VIEW.cur !== fwdView() ? ' · see <b>Accounts</b>' : '')); await fwdLoad(true); return; }
       fwdToast((T.kind === 'ticker' ? (a.length ? `<b>${esc(T.t)}</b> started at $${a[0].p.toFixed(2)}${src}` : `${esc(T.t)} is already in that book`)
         : `<b>${esc(T.name)}</b>: ${a.length} bought${j.closed?.length ? `, ${j.closed.length} sold` : ''}${src}`) + (VIEW.cur !== fwdView() ? ' · see <b>Accounts</b>' : ''));
       await fwdLoad(true); if (VIEW.cur === fwdView()) document.getElementById('fwd-panel')?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
@@ -6662,7 +6672,7 @@ function fwdRender() {
         <td>${now ? '$' + (+now).toFixed(2) : '–'}${p.exit_at ? `<small>sold ${esc(fwdTime(p.exit_at))}</small>` : ''}</td><td class="${r >= 0 ? 'pos' : 'neg'}">${fwdPc(r)}</td><td class="${d >= 0 ? 'pos' : 'neg'}">${fwdPc(d)}</td>
         <td>${p.exit_at ? '' : `<button class="fwd-sell" data-sell="${p.id}" aria-label="Sell ${esc(p.ticker)} at the live price" title="Sell at the live price">×</button>`}</td></tr>`; };
     return `<div class="fwd-b${b.closed_at ? ' fwd-done' : ''}" data-book="${b.id}">
-      <div class="fwd-bh"><div>${b.kind === 'strategy' && b.strategy_key !== 'picks' ? `<button type="button" class="rs-name" data-rs="${esc(b.strategy_key)}" title="Open its research"><b>${esc(b.name)}</b> ›</button>` : `<b>${esc(b.name)}</b>`}<small>${b.kind === 'strategy' ? 'strategy' : 'your picks'} · since ${esc(v2Day(b.created_at.slice(0, 10)))} · ${days} day${days === 1 ? '' : 's'} · ${O.length} open${C.length ? `, ${C.length} sold` : ''}${b.closed_at ? ' · closed' : ''}</small></div>${fwdSpark(b.id)}</div>
+      <div class="fwd-bh"><div>${b.kind === 'strategy' && b.strategy_key !== 'picks' ? `<button type="button" class="rs-name" data-rs="${esc(b.strategy_key)}" title="Open its research"><b>${esc(b.name)}</b> ›</button>` : `<b>${esc(b.name)}</b>`}<small>${b.state?.auto ? 'follows its strategy automatically' : b.kind === 'strategy' ? 'strategy' : 'your picks'} · since ${esc(v2Day(b.created_at.slice(0, 10)))} · ${days} day${days === 1 ? '' : 's'} · ${O.length} open${C.length ? `, ${C.length} sold` : ''}${b.closed_at ? ' · closed' : ''}</small></div>${fwdSpark(b.id)}</div>
       <div class="fwd-st"><div class="${ret >= 0 ? 'pos' : 'neg'}"><b>${fwdPc(ret)}</b><span>this test</span></div><div><b>${fwdPc(spy)}</b><span>same money in SPY</span></div>
         <div class="${lead >= 0 ? 'pos' : 'neg'}"><b>${fwdPc(lead)}</b><span>${lead >= 0 ? 'ahead' : 'behind'}</span></div></div>
       <details class="fwd-d"${FWD.open[b.id] ? ' open' : ''}><summary>${P.length} position${P.length === 1 ? '' : 's'}</summary>
@@ -6702,7 +6712,7 @@ const v2viewSetFwd = viewSet; viewSet = function (v, push) { v2viewSetFwd(v, pus
 // rsKey turns elite keys (v2_elite.research_key), research keys, account keys and signal codes into a strategies.key.
 const RS_CODES = {R18L26: 'sxswing_audited|R18L26', R18P12: 'sxswing_audited|R18P12'};
 function rsKey(x) {
-  if (!x) return null; x = String(x).replace(/^(elite|hs):/, '');
+  if (!x) return null; x = String(x).replace(/^(elite|hs|swing):/, '');
   const has = k => typeof STRATEGY_ROWS !== 'undefined' && STRATEGY_ROWS.some(r => r.key === k);
   if (SI_ACCOUNTS[x] || has(x)) return x;
   const e = (typeof EL !== 'undefined' && EL.rows || []).find(r => r.key === x || r.label === x); if (e?.research_key && has(e.research_key)) return e.research_key;
