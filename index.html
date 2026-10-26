@@ -1011,6 +1011,7 @@
   .hs-s b{font:600 13px var(--font-ui);color:var(--ink)} .hs-s small{display:block;font-size:11px;color:var(--muted)} .hs-sn{font:600 12.5px var(--font-ui);color:var(--muted);white-space:nowrap} .hs-sn i{font-style:normal;margin:0 4px} .hs-sn b{font:800 14px var(--font-display);color:var(--ink)}
   .hs-t tr[data-t]{cursor:pointer} .hs-bar{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--glass-2);overflow:hidden;vertical-align:middle} .hs-bar i{display:block;height:100%;background:var(--accent)}
   [data-t],[data-od],.tl-li,[data-hs],[data-set]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .fwd-live{margin:4px 2px 12px;font-size:12.5px;line-height:1.5;color:var(--muted)} .fwd-live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:7px;vertical-align:1px}
   .fwd-empty{margin:12px 2px 2px;font-size:13.5px;line-height:1.6;color:var(--ink-2)} .fwd-empty b{color:var(--ink)}
   .fwd-b{margin:12px 0 0;padding:14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line)} .fwd-b.fwd-done{opacity:.8}
   .fwd-bh{display:flex;justify-content:space-between;align-items:center;gap:10px} .fwd-bh b{font:700 14.5px var(--font-ui);color:var(--ink)} .fwd-bh small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
@@ -6657,15 +6658,18 @@ async function fwdLoad(force) {
   if (FWD.busy || (FWD.books && !force)) return; FWD.busy = true;
   try {
     [FWD.books, FWD.pos, FWD.marks] = await Promise.all([sb('fwd_books?select=*&order=created_at.desc'), sb('fwd_positions?select=*&order=entry_at'), sb('fwd_marks?select=*&order=date')]);
-    FWD.err = null; if (FWD.pos.some(p => !p.exit_at)) await fwdQuotes();
+    FWD.err = null; FWD.loadedAt = Date.now(); if (FWD.pos.some(p => !p.exit_at)) await fwdQuotes();
   } catch (e) { FWD.err = e.message; }
   FWD.busy = false; fwdRender(); fwdTick();
 }
 async function fwdQuotes() { try { const j = await fwdApi({action: 'quotes'}); FWD.px = j.px; FWD.at = j.at; } catch (e) { /* keep the last prices */ } }
-function fwdTick() {
-  clearInterval(FWD.timer); if (!FWD.pos?.some(p => !p.exit_at)) return;
-  FWD.timer = setInterval(async () => { if (document.visibilityState !== 'visible' || (typeof VIEW !== 'undefined' && VIEW.cur !== fwdView())) return; await fwdQuotes(); fwdRender(); }, 60e3);
-}
+// while the panel is on screen: live prices every minute, the books and positions themselves every 10 minutes and whenever the app comes back
+// to the front after 2+ minutes (the evening run buys and sells, so a session left open would otherwise keep yesterday's positions) (6.95)
+const fwdShown = () => document.visibilityState === 'visible' && (typeof VIEW === 'undefined' || VIEW.cur === fwdView());
+const fwdStale = ms => !FWD.loadedAt || Date.now() - FWD.loadedAt > ms;
+async function fwdRefresh(ms) { if (!fwdShown()) return; if (fwdStale(ms)) return fwdLoad(true); if (FWD.pos?.some(p => !p.exit_at)) { await fwdQuotes(); fwdRender(); } }
+function fwdTick() { clearInterval(FWD.timer); FWD.timer = setInterval(() => fwdRefresh(600e3), 60e3); }
+document.addEventListener('visibilitychange', () => fwdRefresh(120e3));
 function fwdVal(p) {                                       // [value, same money in SPY] now (open) or at exit (closed)
   const px = p.exit_at ? p.exit_price : FWD.px?.[p.ticker]?.p, sp = p.exit_at ? p.spy_exit : FWD.px?.SPY?.p;
   return px && sp ? [p.notional * px / p.entry_price, p.notional * sp / p.spy_entry] : [p.notional, p.notional];
@@ -6699,7 +6703,9 @@ function fwdRender() {
         ${b.closed_at ? '' : `<div class="fwd-acts">${b.kind === 'strategy' ? '<span class="fwd-hint">Long-press the strategy again to update it to its current holdings.</span>' : ''}<button class="fwd-end" data-end="${b.id}">End this test</button></div>`}</details></div>`;
   };
   const open = FWD.books.filter(b => !b.closed_at), done = FWD.books.filter(b => b.closed_at), feed = Object.values(FWD.px || {})[0]?.src;
-  el.innerHTML = `${open.map(card).join('') || '<p class="note">No open tests.</p>'}
+  const live = `<p class="fwd-live"><i></i>${FWD.at ? `Prices from ${esc(fwdTime(FWD.at))}, updated every minute while this tab is open.` : 'Prices update every minute while this tab is open.'}
+    The automatic tests buy and sell once a day, at the US close (the evening run after 23:00 our time), so their positions change overnight, not during the day.</p>`;
+  el.innerHTML = `${live}${open.map(card).join('') || '<p class="note">No open tests.</p>'}
     ${done.length ? `<details class="about"><summary>Ended tests (${done.length})</summary>${done.map(card).join('')}</details>` : ''}
     <p class="v2-note">${howto} Prices: ${feed === 'iex' ? 'live trades on the IEX exchange (close to, not exactly, the consolidated price)' : 'live trades'}${FWD.at ? `, checked ${esc(fwdTime(FWD.at))}` : ''}; every evening each test is also marked at the official close.
       Price returns, dividends not included. 12 months is the minimum before a result says much.</p>`;
@@ -6721,7 +6727,7 @@ function fwdPlace() {
   const own = document.body.classList.contains('role-owner'), want = own ? 'accounts' : 'analyze'; if (p.dataset.view === want) return;
   p.dataset.view = want; if (own) document.getElementById('v2-board-p')?.after(p);
 }
-const v2viewSetFwd = viewSet; viewSet = function (v, push) { v2viewSetFwd(v, push); fwdPlace(); if (VIEW.cur === fwdView()) fwdLoad(); };
+const v2viewSetFwd = viewSet; viewSet = function (v, push) { v2viewSetFwd(v, push); fwdPlace(); if (VIEW.cur === fwdView()) fwdLoad(fwdStale(120e3)); };
 
 // ---------------- strategy -> research links (2026-10-25, Bible 6.87) ----------------
 // Wherever a strategy appears (strategy fit detail, this month's picks, the high-Sharpe strategies, the scoreboard, forward-test books, the
