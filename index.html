@@ -6355,18 +6355,18 @@ AK_LOOK.strategy_performance = async function ({period} = {}) {
   const [acc, eq, dep, books, marks] = await Promise.all([
     own ? sb('live_accounts?select=id,label&order=id').catch(() => []) : [], own ? sb(`live_equity?select=account_id,date,equity,pnl,spy_close&date=gte.${since}&order=date`).catch(() => []) : [],
     own ? sb('live_deployments?select=account_id,strategy_key,created_at&status=eq.active').catch(() => []) : [],
-    sb('fwd_books?select=id,name,created_at,closed_at').catch(() => []), sb('fwd_marks?select=book_id,date,value,cost,spy_value&order=date').catch(() => [])]);
+    sb('fwd_books?select=id,name,strategy_key,created_at,closed_at').catch(() => []), sb('fwd_marks?select=book_id,date,value,cost,spy_value&order=date').catch(() => [])]);
   for (const a of acc) {                                       // the strategy running now, from its own start (as the scoreboard)
     const d = dep.find(x => x.account_id === a.id), st = d ? d.created_at.slice(0, 10) : '', e = eq.filter(r => r.account_id === a.id && r.equity > 0 && r.date >= st);
     const s0 = e.find(r => r.spy_close > 0); let g = 1, sp = 1; const pts = e.length ? [{d: e[0].date, a: 1, s: 1}] : [];
     for (let i = 1; i < e.length; i++) { g *= 1 + (e[i].pnl != null ? e[i].pnl / e[i - 1].equity : e[i].equity / e[i - 1].equity - 1); sp = s0 && e[i].spy_close > 0 ? e[i].spy_close / s0.spy_close : sp; pts.push({d: e[i].date, a: g, s: sp}); }
-    put((d ? d.strategy_key.split('|').pop().replace(/_/g, ' ') : a.label), 'paper account (' + a.label + ')', akIdx(pts, period));
+    put((d ? d.strategy_key.split('|').pop().replace(/_/g, ' ') : a.label), 'paper account (' + a.label + '), a long-term stock book, not a swing strategy', akIdx(pts, period));
   }
   for (const b of books.filter(b => !b.closed_at)) {          // chained so that money added later is not counted as gain
     const M = marks.filter(m => m.book_id === b.id && m.cost > 0); if (!M.length) continue;
     const pts = [{d: b.created_at.slice(0, 10), a: 1, s: 1}]; let g = M[0].value / M[0].cost, sp = M[0].spy_value / M[0].cost; pts.push({d: M[0].date, a: g, s: sp});
     for (let i = 1; i < M.length; i++) { const p = M[i - 1], m = M[i], dc = m.cost - p.cost; g *= 1 + (m.value - p.value - dc) / p.value; sp *= 1 + (m.spy_value - p.spy_value - dc) / p.spy_value; pts.push({d: m.date, a: g, s: sp}); }
-    put(b.name, 'forward test', akIdx(pts, period));
+    put(b.name, /^swing:/.test(b.strategy_key || '') ? 'swing strategy, automatic forward test' : 'forward test (long-term or your own picks, not swing)', akIdx(pts, period));
   }
   if (typeof v2Record === 'function') {
     if (!V2.P && !V2.busy) await v2Load().catch(() => {}); const R = v2Record();
@@ -6444,6 +6444,24 @@ Object.assign(AK_LOOK, {
     if (!b) return {error: 'no forward test matches "' + test + '"', tests: B.filter(x => !x.closed_at).map(x => x.name)};
     const r = akBook(b); r.positions = r.positions.slice(0, 20); return r;
   },
+  async swing_strategies() {                                  // the swing set (6.113): exactly the v2_elite signal rows this user may see
+    await tlLoad(); if (typeof EL === 'undefined' || !EL.rows) throw new Error('strategies not loaded');
+    const SW = EL.rows.filter(e => e.kind === 'signal'); let books = [];
+    if (typeof fwdLoad === 'function') { try { await akFwd(); books = FWD.books.filter(b => !b.closed_at && /^swing:/.test(b.strategy_key || '')); } catch (e) {} }
+    const pct = x => x == null ? null : akPc(x);
+    const list = SW.map(e => { const m = e.metrics || {}, b = books.find(x => x.strategy_key === 'swing:' + e.key), f = b ? akBook(b) : null;
+      return {code: e.key, name: e.label, holds_up_to_trading_days: e.spec?.hold || 5,
+        backtest: {sharpe: m.sharpe ?? null, basis: m.basis || '', cagr_pct: pct(m.cagr), max_drawdown_pct: pct(m.maxdd), sharpe_2016_20: m.sh_1620 ?? null},
+        status: e.key === 'R18L26' ? 'passed the luck tests (the only proven swing strategy)' : 'research candidate: no test gate passed, being forward-tested',
+        open_signals_now: elHeld(e).slice(0, 10),
+        forward_test: f ? {since: f.started, return_pct: f.return_pct, spy_same_money_pct: f.spy_same_money_pct, open_positions: f.open_positions} : null}; });
+    let sleeves = null;
+    if (akOwn()) { const [cfg, pos] = await Promise.all([sb('live_swing_cfg?select=account_id,sleeve,share,max_pos,mode,started_at').catch(() => []), sb('live_swing_pos?select=account_id,sleeve,symbol,status').catch(() => [])]);
+      sleeves = cfg.map(c => ({sleeve: c.sleeve, account: c.account_id, mode: c.mode === 'live' ? 'live orders' : 'preview: virtual trades, no orders', share_of_account_pct: akPc(c.share), since: c.started_at.slice(0, 10),
+        trades: pos.filter(x => x.account_id === c.account_id && x.sleeve === c.sleeve).length, open: pos.filter(x => x.account_id === c.account_id && x.sleeve === c.sleeve && x.status === 'open').map(x => x.symbol)})); }
+    return {what_swing_means: 'Swing strategies buy short-term dips at the close and sell within 2 to 10 trading days. The paper accounts (SXG4, BLTRUE/BLMOM/K10, BOOK5/Q04), SX25 and the monthly picks are long-term books, NOT swing strategies.',
+      swing_strategies: list, swing_sleeves_in_paper_accounts: sleeves, signals_as_of_close: TL.asof};
+  },
   async where_do_i_hold({symbol} = {}) {
     const s = await akSym(symbol), out = {symbol: s, paper_accounts: null, forward_tests: null};
     if (akOwn()) { const [acc, eq] = await Promise.all([sb('live_accounts?select=id,label'), sb(`live_equity?select=account_id,date,equity,positions&date=gte.${new Date(Date.now() - 10 * 864e5).toISOString().slice(0, 10)}&order=date.desc`)]);
@@ -6454,7 +6472,7 @@ Object.assign(AK_LOOK, {
     return out;
   }
 });
-const AK_LABEL = {account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
+const AK_LABEL = {swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
   top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', todays_signals: () => "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
@@ -6540,7 +6558,7 @@ function akGoFromLookups(calls) {                             // the natural pla
   for (const c of calls) { const a = c.args || {}, S = String(a.symbol || '').toUpperCase();
     if (c.name === 'stock_odds') out.push({id: 'odds', t: S}); else if (c.name === 'strategy_fit') out.push({id: 'strategy_fit', t: S});
     else if (c.name === 'top_movers') out.push({id: 'movers'}); else if (c.name === 'latest_news') out.push({id: 'news'});
-    else if (c.name === 'todays_signals') out.push({id: 'swing'});
+    else if (c.name === 'todays_signals' || c.name === 'swing_strategies') out.push({id: 'swing'});
     else if (c.name === 'strategy_performance') out.push({id: 'scoreboard'}, {id: 'forward_tests'});
     else if (c.name === 'account_details') out.push({id: 'accounts'}); else if (/^forward_test/.test(c.name)) out.push({id: 'forward_tests'});
     else if (c.name === 'where_do_i_hold') out.push({id: 'forward_tests'}); }
