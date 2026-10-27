@@ -5891,7 +5891,8 @@ function lhRender() {
   el.innerHTML = `<div class="lh-total"><span>All paper accounts</span><b>${money(tot)}</b></div><div class="lh-grid">` + LH.cards.map(c => c.empty
     ? `<div class="lh-card"><div class="lh-name">${esc(c.a.label)}</div><p class="note">No equity history yet.</p></div>`
     : `<button class="lh-card" data-acc="${esc(c.a.id)}" title="Open ${esc(c.a.label)} in Paper trading below">
-        <div class="lh-row"><span class="lh-name">${esc(c.a.label)}</span>${c.check ? `<span class="lh-light ${c.check.green ? 'ok' : 'err'}">${c.check.green ? 'invested' : 'in T-bills'}</span>` : ''}</div>
+        <div class="lh-row"><span class="lh-name">${esc(c.a.label)}</span>${c.check && 'green' in c.check ? `<span class="lh-light ${c.check.green ? 'ok' : 'err'}">${c.check.green ? 'invested' : 'in T-bills'}</span>`
+          : c.check?.gross ? `<span class="lh-light ok">invested · ${(+c.check.gross).toFixed(1)}×</span>` : ''}</div>
         <div class="lh-eq">${money(c.equity)}</div>
         <div class="lh-row"><span class="${c.day >= 0 ? 'pos' : 'neg'}">${lhPct(c.day)} today</span><span class="muted">${day(c.date)}</span></div>
         ${lhSpark(c.curve, c.total >= 0)}
