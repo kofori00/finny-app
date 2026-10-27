@@ -981,6 +981,9 @@
   .ak-live span i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px color-mix(in srgb, var(--lime) 25%, transparent)}
   .ak-live em{font:600 12px var(--font-ui);font-style:normal;padding:3px 10px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink-2)}
   .ak-foot{font-size:11px;color:var(--muted);margin:12px 0 0}
+  .ak-who .ak-new{margin-left:auto;padding:6px 12px;border-radius:999px;border:1px solid var(--glass-line);background:transparent;color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer;white-space:nowrap} .ak-who .ak-new:hover{border-color:var(--accent);color:var(--ink)}
+  .ak-hist{margin-top:12px;border-top:1px solid var(--glass-line);padding-top:8px} .ak-hist summary{cursor:pointer;font:600 12.5px var(--font-ui);color:var(--muted)}
+  .ak-hq{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--glass)} .ak-hq b{display:block;font:600 13px var(--font-ui);color:var(--ink);margin-bottom:4px} .ak-hq p{margin:0;font-size:13px;line-height:1.5;color:var(--ink-2)}
   .ak-think{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13px;padding:6px 2px} .ak-think i{width:6px;height:6px;border-radius:50%;background:#7598c4;animation:akB 1s infinite ease-in-out}
   .ak-think i:nth-child(2){animation-delay:.15s} .ak-think i:nth-child(3){animation-delay:.3s} .ak-think span{margin-left:6px} @keyframes akB{0%,100%{opacity:.25}50%{opacity:1}}
   @media (max-width:640px){ .ask-panel{padding:22px 16px 16px;border-radius:22px} .ak-h{font-size:24px} .ak-chips{margin:0 -16px 14px;padding:2px 16px 4px} .ak-wm{width:96px;height:96px} }
@@ -6215,7 +6218,10 @@ function custInit() { custLoad(); if (!CU.timer) CU.timer = setInterval(() => { 
 // notes / strategy texts / FAQ (built-in gte-small embeddings) and Gemini writes a short answer with [n] citations. History, not advice.
 // Live lookups (v4): Gemini may ask for another stock's odds or strategy fit, today's movers, news or signals. The function pauses and this
 // page runs each lookup with the SAME code that draws the screen (and the signed-in user's own rights), then sends the results back.
-const AK = {busy: false};
+const AK = {busy: false, hist: []};
+// the conversation (6.103): the last questions and answers go with each new question; kept for this browser tab only
+try { AK.hist = JSON.parse(sessionStorage.getItem('ak-hist') || '[]'); if (!Array.isArray(AK.hist)) AK.hist = []; } catch (e) { AK.hist = []; }
+function akSave() { try { sessionStorage.setItem('ak-hist', JSON.stringify(AK.hist)); } catch (e) {} }
 const akPc = x => x == null || !isFinite(x) ? null : Math.round(x * 1000) / 10;
 function akNums(A) {                                         // the odds checker's numbers for one analysed stock (odAnalyse result)
   const w = A.H?.[0], m = A.H?.[2], wf = A.own?.wf?.['1y'], pc = akPc;
@@ -6468,7 +6474,8 @@ async function akAsk() {
     const ctx = akContext(), token = await getToken(), used = [];
     const post = b => fetch(`${SB_URL}/functions/v1/ask-finny`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(b)})
       .then(r => r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})));
-    let j = await post({question: q, symbol: ctx?.symbol || null, context: ctx});
+    const history = AK.hist.slice(-4).map(h => ({q: h.q, a: h.a.slice(0, 1500)}));   // the conversation so far, so follow-ups ("why did that…") make sense (6.103)
+    let j = await post({question: q, symbol: ctx?.symbol || null, context: ctx, history});
     for (let round = 0; j.ok && j.pending && round < 3; round++) {        // Gemini asked for live numbers: run them here, send them back
       const need = j.need || []; need.forEach(c => used.push(akLabel(c)));
       out.innerHTML = `<div class="ak-think"><i></i><i></i><i></i><span>Checking ${esc(need.map(akLabel).join(', '))}…</span></div>`;
@@ -6477,10 +6484,15 @@ async function akAsk() {
     }
     if (!j.ok) throw new Error(j.error || 'no answer');
     const logo = document.querySelector('.brand-mark img')?.src || '', src = akSources(j.answer || '', j.sources || []);
-    out.innerHTML = `<div class="ak-card"><div class="ak-who">${logo ? `<img src="${logo}" alt="">` : ''}<div><b>Finny</b><span>from our research${ctx ? ' · ' + esc(ctx.symbol) : ''}</span></div></div>
+    const earlier = AK.hist.slice(-4);
+    AK.hist.push({q, a: src.text}); AK.hist = AK.hist.slice(-6); akSave(); if (box) box.value = '';
+    out.innerHTML = `<div class="ak-card"><div class="ak-who">${logo ? `<img src="${logo}" alt="">` : ''}<div><b>Finny</b><span>from our research${ctx ? ' · ' + esc(ctx.symbol) : ''}</span></div>
+        <button type="button" class="ak-new" title="Forget this conversation and start fresh">New conversation</button></div>
       <div class="ak-q">${esc(q)}</div><div class="ak-a"><p>${akFmt(src.text)}</p></div>`
       + (used.length ? `<div class="ak-live"><span><i></i>Checked live</span>${[...new Set(used)].map(x => `<em>${esc(x)}</em>`).join('')}</div>` : '') + src.html
-      + `<p class="ak-foot">AI answer (${esc((j.model || 'Gemini').replace(' (cached)', ''))}) from Finny's research only. It can make mistakes; history, not investment advice.</p></div>`;
+      + `<p class="ak-foot">AI answer (${esc((j.model || 'Gemini').replace(' (cached)', ''))}) from Finny's research only. It can make mistakes; history, not investment advice.${earlier.length ? ` Follow-up questions use this conversation (${earlier.length + 1} questions so far).` : ' Ask a follow-up: Finny remembers this conversation.'}</p>
+      ${earlier.length ? `<details class="ak-hist"><summary>Earlier in this conversation (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><p>${akFmt(h.a)}</p></div>`).join('')}</details>` : ''}</div>`;
+    out.querySelector('.ak-new')?.addEventListener('click', () => { AK.hist = []; akSave(); out.innerHTML = '<p class="note">New conversation: Finny has forgotten the earlier questions.</p>'; box?.focus(); });
   } catch (e) { out.innerHTML = `<p class="note">Ask Finny could not answer: ${esc(e.message)}</p>`; }
   AK.busy = false; btn.disabled = false;
 }
