@@ -997,6 +997,21 @@
   .ak-open{flex:1;min-width:0;padding:9px 12px;border:0;background:none;text-align:left;cursor:pointer;color:var(--ink)} .ak-open b{display:block;font:600 13.5px var(--font-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ak-open small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px} .ak-del{flex:none;width:40px;border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;border-radius:0 14px 14px 0} .ak-del:hover{color:var(--bad)}
   .ak-pastl>.ak-delall{align-self:flex-start;margin-top:6px;padding:0;border:0;background:none;color:var(--muted);font:600 12px var(--font-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  /* layout (6.109): Explore tiles in a grid; on wide screens home + Ask side by side, open sections and the Accounts panels two per row */
+  .an-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 14px} .an-grid[hidden]{display:none!important}
+  .an-grid .an-bar{flex-direction:column;align-items:flex-start;gap:8px;margin:0;padding:14px;min-height:118px;position:relative}
+  .an-grid .an-t b{white-space:normal;font-size:14px;line-height:1.25} .an-grid .an-t small{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35}
+  .an-grid .an-chev{position:absolute;top:16px;right:12px} .an-grid .an-bar.on{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:var(--accent-soft)}
+  .an-grid .an-bar.on .an-chev{transform:rotate(90deg);stroke:var(--accent)}
+  @media (min-width:900px){
+    .an-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    body.v-analyze .wrap,body.v-accounts .wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:20px;align-items:start}
+    body.v-analyze .wrap>*,body.v-accounts .wrap>*{grid-column:1/-1;min-width:0}
+    body.v-analyze .wrap>#an-hero{grid-column:1;margin-top:0} body.v-analyze .wrap>#ask-panel{grid-column:2;margin-top:0}
+    body.v-analyze .wrap>.an-open{grid-column:auto}
+    body.v-accounts .wrap>#v2-board-p,body.v-accounts .wrap>#fwd-panel{grid-column:auto}
+    .sb-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  }
   .an-col{display:none!important} body.v-analyze #an-pulse{display:none!important}
   .an-explore{margin:22px 4px 8px} .an-explore b{display:block;font:800 18px var(--font-display);color:var(--ink)} .an-explore span{font-size:12.5px;color:var(--muted)} .an-explore[hidden]{display:none!important}
   .an-bar{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 8px;padding:12px 14px;border-radius:18px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);text-align:left;cursor:pointer;font:inherit}
@@ -1304,7 +1319,7 @@
     <div id="cust-body"><p class="note">Loading…</p></div>
   </div>
 
-  <div class="sec" id="acc-head" data-view="accounts"><span class="pt-ic pt-chain" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="11.5" height="9" rx="4.5"/><rect x="10" y="7.5" width="11.5" height="9" rx="4.5"/></svg></span><div><b>Forward tests</b><span>Our strategies trading pretend money in real time, measured against the market. Nkonsonkonson, the chain link: separate strategies joined in one portfolio.</span></div></div>
+  <div class="sec" id="acc-head" data-view="accounts"><span class="pt-ic pt-chain" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="11.5" height="9" rx="4.5"/><rect x="10" y="7.5" width="11.5" height="9" rx="4.5"/></svg></span><div><b>Paper trading</b><span>Our strategies trading pretend money in real time, measured against the market. Nkonsonkonson, the chain link: separate strategies joined in one portfolio.</span></div></div>
   <section class="panel v2-panel v2-board-p" id="v2-board-p" data-view="accounts">
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12C9 7 4 9 6 13s6 1 6-1zM12 12c5-3 3-8-1-6s-1 6 1 6zM12 12c3 5 8 3 6-1s-6-1-6 1zM12 12c-5 3-3 8 1 6s1-6-1-6z"/></svg>
     <span class="hero-kick"><i></i>Scoreboard · paper money</span>
@@ -6986,37 +7001,40 @@ const v2viewSetHS = viewSet; viewSet = function (v, push) { v2viewSetHS(v, push)
 // research links and any code that scrolls to a section open it first (anOpen; scrollIntoView is wrapped). Folded again on every app load.
 const AN_KEEP = new Set(['an-hero', 'ask-panel']);
 const AN_SUB = {'v2-panel': 'The stocks our best strategies agree on this month', 'fwd-panel': 'Try a stock or strategy with pretend money',
-  'hs-panel': 'What our strongest strategies own right now', 'od-panel': 'How often a stock rose before, and what moves it', 'nw-panel': "Today's headlines and biggest movers"};
+  'hs-panel': 'What our strongest strategies own right now', 'od-panel': 'How often a stock rose before, and what moves it',
+  'tl-panel': 'Which of our strategies would buy a stock today', 'nw-panel': "Today's headlines with their usual effect", 'mv-fold': "Today's biggest risers and fallers"};
 const AN_IC = {'v2-panel': '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>', 'fwd-panel': '<path d="M3 12h13"/><path d="M12 7l5 5-5 5"/><path d="M20 5v14"/>',
   'hs-panel': '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>', 'od-panel': '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/>',
-  'nw-panel': '<rect x="3" y="5" width="14" height="15" rx="2"/><path d="M17 9h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 13h6"/>'};
+  'nw-panel': '<rect x="3" y="5" width="14" height="15" rx="2"/><path d="M17 9h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 13h6"/>',
+  'tl-panel': '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>', 'mv-fold': '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'};
 const anPanels = () => [...document.querySelectorAll('.wrap > [data-view]')].filter(el => el.id && AN_SUB[el.id]);
-function anTitle(el) { return (el.querySelector('.ak-h, .panel-title, h2')?.textContent || el.id).trim().replace(/\s+/g, ' ').replace(/\.$/, ''); }
+function anTitle(el) { const c = el.querySelector('.ak-h, .panel-title, h2')?.cloneNode(true); c?.querySelectorAll('.ib, button, small').forEach(x => x.remove()); return (c?.textContent || el.id).trim().replace(/\s+/g, ' ').replace(/\.$/, ''); }
 function anInit() {
   const wrap = document.querySelector('.wrap'); if (!wrap || document.getElementById('an-explore')) return;
   const first = anPanels()[0]; if (!first) return;
-  first.insertAdjacentHTML('beforebegin', `<div class="an-explore" id="an-explore" data-view="analyze"><b>Explore</b><span>Ask Finny above, or tap a topic to open it.</span></div>`);
+  first.insertAdjacentHTML('beforebegin', `<div class="an-explore" id="an-explore" data-view="analyze"><b>Explore</b><span>Ask Finny above, or tap a topic to open it.</span></div><div class="an-grid" id="an-grid" data-view="analyze"></div>`);
+  const grid = document.getElementById('an-grid');               // tiles side by side (6.109): 2 per row on a phone, 4 on a wide screen
   for (const el of anPanels()) {
     el.classList.add('an-col');
     const bar = document.createElement('button'); bar.type = 'button'; bar.className = 'an-bar' + (el.classList.contains('owner-only') ? ' owner-only' : ''); bar.dataset.for = el.id; bar.dataset.view = 'analyze';
     bar.innerHTML = `<span class="an-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${AN_IC[el.id]}</svg></span><span class="an-t"><b>${esc(anTitle(el))}</b><small>${esc(AN_SUB[el.id])}</small></span><svg class="an-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
-    bar.onclick = () => anOpen(el, true); el.before(bar);
+    bar.onclick = () => anOpen(el, true); grid.appendChild(bar);
     const hide = document.createElement('button'); hide.type = 'button'; hide.className = 'an-hide'; hide.textContent = 'Hide'; hide.onclick = () => anClose(el); el.prepend(hide);
   }
   anSync();
 }
 function anOpen(el, scroll) {
   const p = el?.closest?.('.an-col'); if (!p) return;
-  p.classList.remove('an-col'); p.classList.add('an-open'); anSync();
+  p.classList.remove('an-col'); p.classList.add('an-open'); if (p.tagName === 'DETAILS') p.open = true; anSync();
   requestAnimationFrame(() => { window.dispatchEvent(new Event('resize')); if (scroll) { const y = p.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({top: Math.max(0, y), behavior: 'smooth'}); } });
 }
-function anClose(el) { el.classList.add('an-col'); el.classList.remove('an-open'); anSync(); const b = document.querySelector(`.an-bar[data-for="${el.id}"]`); if (b) { const y = b.getBoundingClientRect().top + window.scrollY - 80; window.scrollTo({top: Math.max(0, y)}); } }
+function anClose(el) { el.classList.add('an-col'); el.classList.remove('an-open'); anSync(); const g = document.getElementById('an-grid'); if (g) { const y = g.getBoundingClientRect().top + window.scrollY - 90; window.scrollTo({top: Math.max(0, y)}); } }
 function anSync() {                                          // bars follow their panel (fwd-panel moves to Accounts for the owner) and show the stock on screen
   for (const b of document.querySelectorAll('.an-bar')) { const el = document.getElementById(b.dataset.for);
     if (el && el.dataset.view !== 'analyze') { el.classList.remove('an-col', 'an-open'); el.querySelector(':scope > .an-hide')?.remove(); }   // moved to another tab: never folded there
-    b.hidden = !el || el.dataset.view !== 'analyze' || !el.classList.contains('an-col');
+    b.hidden = !el || el.dataset.view !== 'analyze'; b.classList.toggle('on', !!el && !el.classList.contains('an-col'));   // an open section keeps its tile, marked
     if (el?.id === 'od-panel') b.querySelector('small').textContent = typeof OD !== 'undefined' && OD.ticker ? `Full analysis for ${OD.ticker}: odds, strategy fit, catalysts` : AN_SUB['od-panel']; }
-  const any = [...document.querySelectorAll('.an-bar')].some(b => !b.hidden && getComputedStyle(b).display !== 'none'); const ex = document.getElementById('an-explore'); if (ex) ex.hidden = !any;
+  const any = [...document.querySelectorAll('.an-bar')].some(b => !b.hidden && getComputedStyle(b).display !== 'none'); const ex = document.getElementById('an-explore'), g = document.getElementById('an-grid'); if (ex) ex.hidden = !any; if (g) g.hidden = !any;
 }
 { const siv = Element.prototype.scrollIntoView; Element.prototype.scrollIntoView = function (o) { try { if (this.closest?.('.an-col')) anOpen(this); } catch (e) {} return siv.call(this, o); }; }
 const v2odGoAn = odGo; odGo = async function (t) { const r = await v2odGoAn(t); try { anSync(); } catch (e) {} return r; };
