@@ -981,6 +981,16 @@
   .ak-live span i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px color-mix(in srgb, var(--lime) 25%, transparent)}
   .ak-live em{font:600 12px var(--font-ui);font-style:normal;padding:3px 10px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink-2)}
   .ak-foot{font-size:11px;color:var(--muted);margin:12px 0 0}
+  .an-col{display:none!important} body.v-analyze #an-pulse{display:none!important}
+  .an-explore{margin:22px 4px 8px} .an-explore b{display:block;font:800 18px var(--font-display);color:var(--ink)} .an-explore span{font-size:12.5px;color:var(--muted)} .an-explore[hidden]{display:none!important}
+  .an-bar{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 8px;padding:12px 14px;border-radius:18px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);text-align:left;cursor:pointer;font:inherit}
+  .an-bar[hidden]{display:none!important} .an-bar:hover{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+  .an-ic{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:color-mix(in srgb,var(--accent) 14%,transparent)}
+  .an-ic svg{width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .an-t{flex:1;min-width:0} .an-t b{display:block;font:700 15px var(--font-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .an-t small{display:block;font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .an-chev{flex:none;width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .an-open{position:relative} .an-hide{position:absolute;top:12px;right:12px;z-index:4;padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:color-mix(in srgb,var(--surface) 80%,transparent);color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer}
+  .an-col .an-hide{display:none}
   .ak-go{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px} .ak-go>span{font:700 11px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
   .ak-go button{display:inline-flex;align-items:center;gap:4px;padding:7px 10px 7px 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:var(--accent-soft);color:var(--ink);font:600 12.5px var(--font-ui);cursor:pointer}
   .ak-go button svg{width:14px;height:14px;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round} .ak-go button:hover{border-color:var(--accent)}
@@ -2357,7 +2367,8 @@ function syncTopbar() {
   function fill() {
     const seen = new Set(); targets = [];
     for (const p of document.querySelectorAll('.hero, .panel, .sec')) {
-      if (p.id === 'login-panel' || p.closest('#ux-js') || !vis(p)) continue;
+      const folded = p.classList.contains('an-col') && vis(document.querySelector(`.an-bar[data-for="${p.id}"]`) || document.createElement('i'));   // minimal Analyze: folded sections count
+      if (p.id === 'login-panel' || p.closest('#ux-js') || (!vis(p) && !folded)) continue;
       const t = p.classList.contains('hero') ? 'Top' : (p.querySelector(T_SEL)?.textContent || '').trim().replace(/\s+/g, ' ').replace(/\.$/, '');
       if (!t || seen.has(t)) continue; seen.add(t); targets.push([t.length > 44 ? t.slice(0, 43) + '…' : t, p]);
     }
@@ -2396,7 +2407,7 @@ function syncTopbar() {
   sh.addEventListener('click', e => {
     if (e.target.closest('.ux-js-bg')) return close();
     if (e.target.closest('.ux-js-fold')) { document.querySelectorAll('details.fold[open]').forEach(d => { d.open = false; }); return close(); }
-    const b = e.target.closest('.ux-js-i'); if (!b) return; const p = targets[+b.dataset.i]?.[1]; close(); if (!p) return;
+    const b = e.target.closest('.ux-js-i'); if (!b) return; const p = targets[+b.dataset.i]?.[1]; close(); if (!p) return; if (typeof anOpen === 'function') anOpen(p);
     if (p.tagName === 'DETAILS') p.open = true;
     const y = p.getBoundingClientRect().top + window.scrollY - (appView() ? 64 : bar.offsetHeight + 8); window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
   });
@@ -6511,6 +6522,7 @@ async function akGo(id, t) {
   const v = el.closest('[data-view]')?.dataset.view || 'research';
   if (typeof viewSet === 'function' && typeof VIEW !== 'undefined' && VIEW.cur !== v) viewSet(v);
   if (id === 'swing' || id === 'strongest') { if (typeof HS !== 'undefined') { HS.tab = id === 'swing' ? 'swing' : 'long'; try { localStorage.setItem('hs-tab', HS.tab); } catch (e) {} if (typeof hsLoad === 'function') hsLoad(); if (typeof hsRender === 'function') hsRender(); } }
+  if (typeof anOpen === 'function') anOpen(el);                // minimal Analyze: open a folded section first (6.105)
   if (t && (id === 'odds' || id === 'strategy_fit') && typeof odGo === 'function') odGo(t);
   await new Promise(r => setTimeout(r, 120)); el = document.querySelector(d[1]); if (!el) return;
   if (el.tagName === 'DETAILS') el.open = true;
@@ -6911,6 +6923,48 @@ const v2HeroBase = v2Hero; v2Hero = function (A) {
   line.innerHTML = `<span class="hs-k">High-Sharpe group · you only</span><b>${c.n}/${c.of}</b> strategies · <b>${c.fam}/${c.fams}</b> families hold ${esc(A.sym)}${c.n ? ': ' + esc([...new Set(c.held.map(r => r.family))].join(', ')) : ''}`;
 };
 const v2viewSetHS = viewSet; viewSet = function (v, push) { v2viewSetHS(v, push); if (VIEW.cur === 'analyze') hsLoad(); };
+
+// ---------------- minimal Analyze (2026-10-27, Bible 6.105): only the home section and Ask Finny are open ----------------
+// Every other Analyze section is folded into a slim row (tap to open, "Hide" to fold again). Ask Finny's "Go to" buttons, "Jump to",
+// research links and any code that scrolls to a section open it first (anOpen; scrollIntoView is wrapped). Folded again on every app load.
+const AN_KEEP = new Set(['an-hero', 'ask-panel']);
+const AN_SUB = {'v2-panel': "This month's picks and their live record", 'fwd-panel': 'Your forward tests at live prices',
+  'hs-panel': 'What our strongest strategies hold: longer term and swing', 'od-panel': 'Odds and strategy fit for any stock', 'nw-panel': 'Latest news and top movers'};
+const AN_IC = {'v2-panel': '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>', 'fwd-panel': '<path d="M3 12h13"/><path d="M12 7l5 5-5 5"/><path d="M20 5v14"/>',
+  'hs-panel': '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>', 'od-panel': '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/>',
+  'nw-panel': '<rect x="3" y="5" width="14" height="15" rx="2"/><path d="M17 9h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 13h6"/>'};
+const anPanels = () => [...document.querySelectorAll('.wrap > [data-view]')].filter(el => el.id && AN_SUB[el.id]);
+function anTitle(el) { return (el.querySelector('.ak-h, .panel-title, h2')?.textContent || el.id).trim().replace(/\s+/g, ' ').replace(/\.$/, ''); }
+function anInit() {
+  const wrap = document.querySelector('.wrap'); if (!wrap || document.getElementById('an-explore')) return;
+  const first = anPanels()[0]; if (!first) return;
+  first.insertAdjacentHTML('beforebegin', `<div class="an-explore" id="an-explore" data-view="analyze"><b>More in Finny</b><span>Ask above and Finny takes you there, or open a section:</span></div>`);
+  for (const el of anPanels()) {
+    el.classList.add('an-col');
+    const bar = document.createElement('button'); bar.type = 'button'; bar.className = 'an-bar' + (el.classList.contains('owner-only') ? ' owner-only' : ''); bar.dataset.for = el.id; bar.dataset.view = 'analyze';
+    bar.innerHTML = `<span class="an-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${AN_IC[el.id]}</svg></span><span class="an-t"><b>${esc(anTitle(el))}</b><small>${esc(AN_SUB[el.id])}</small></span><svg class="an-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
+    bar.onclick = () => anOpen(el, true); el.before(bar);
+    const hide = document.createElement('button'); hide.type = 'button'; hide.className = 'an-hide'; hide.textContent = 'Hide'; hide.onclick = () => anClose(el); el.prepend(hide);
+  }
+  anSync();
+}
+function anOpen(el, scroll) {
+  const p = el?.closest?.('.an-col'); if (!p) return;
+  p.classList.remove('an-col'); p.classList.add('an-open'); anSync();
+  requestAnimationFrame(() => { window.dispatchEvent(new Event('resize')); if (scroll) { const y = p.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({top: Math.max(0, y), behavior: 'smooth'}); } });
+}
+function anClose(el) { el.classList.add('an-col'); el.classList.remove('an-open'); anSync(); const b = document.querySelector(`.an-bar[data-for="${el.id}"]`); if (b) { const y = b.getBoundingClientRect().top + window.scrollY - 80; window.scrollTo({top: Math.max(0, y)}); } }
+function anSync() {                                          // bars follow their panel (fwd-panel moves to Accounts for the owner) and show the stock on screen
+  for (const b of document.querySelectorAll('.an-bar')) { const el = document.getElementById(b.dataset.for);
+    if (el && el.dataset.view !== 'analyze') { el.classList.remove('an-col', 'an-open'); el.querySelector(':scope > .an-hide')?.remove(); }   // moved to another tab: never folded there
+    b.hidden = !el || el.dataset.view !== 'analyze' || !el.classList.contains('an-col');
+    if (el?.id === 'od-panel') b.querySelector('small').textContent = typeof OD !== 'undefined' && OD.ticker ? `Full analysis for ${OD.ticker}: odds, strategy fit, catalysts` : AN_SUB['od-panel']; }
+  const any = [...document.querySelectorAll('.an-bar')].some(b => !b.hidden && getComputedStyle(b).display !== 'none'); const ex = document.getElementById('an-explore'); if (ex) ex.hidden = !any;
+}
+{ const siv = Element.prototype.scrollIntoView; Element.prototype.scrollIntoView = function (o) { try { if (this.closest?.('.an-col')) anOpen(this); } catch (e) {} return siv.call(this, o); }; }
+const v2odGoAn = odGo; odGo = async function (t) { const r = await v2odGoAn(t); try { anSync(); } catch (e) {} return r; };
+const v2viewSetAn = viewSet; viewSet = function (v, push) { v2viewSetAn(v, push); anInit(); setTimeout(anSync, 0); };
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { anInit(); setTimeout(anSync, 0); }); else { anInit(); setTimeout(anSync, 0); }
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
 // Long press (or right-click) on any element with a ticker (data-t / data-od: odds lists, movers, news, picks, high-Sharpe cards) or a strategy
