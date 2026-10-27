@@ -385,7 +385,7 @@
   @media (max-width:640px){
     body{padding-inline:16px} .wrap{padding-block:10px 56px}
     #ux-bar{flex-wrap:nowrap;gap:8px;padding:6px 16px;margin-inline:-16px} #ux-bar select{max-width:none;min-width:0;font-size:13px;padding:6px 6px}
-    #ux-range{flex:1 1 40%} #ux-jump{flex:0 1 30%} .ux-dates,#ux-fold,.ux-spacer{display:none}
+    #ux-range{flex:1 1 40%} #ux-jump{flex:0 1 46%} .ux-dates,#ux-fold,.ux-spacer{display:none}
     .ux-regime{flex:0 1 auto;min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .rg-more{display:none}
     .ux-regime.open{position:absolute;left:16px;right:16px;top:100%;white-space:normal;background:var(--surface);border:1px solid var(--border);
       border-radius:10px;padding:8px 10px;box-shadow:var(--shadow-lg)} .ux-regime.open .rg-more{display:inline}
@@ -507,7 +507,32 @@
   @keyframes vtPulse{0%,100%{opacity:1}50%{opacity:.35}}
   body.v-analyze .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="analyze"]){display:none!important}
   body.v-accounts .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="accounts"]){display:none!important}
-  body.v-analyze #ux-bar > :not(#ux-jump),body.v-accounts #ux-bar > :not(#ux-jump){display:none!important} body.v-analyze #ux-jump,body.v-accounts #ux-jump{margin-left:auto;flex:0 1 auto!important;max-width:70vw!important} body.v-research .wrap > [data-view]{display:none!important}
+  body.v-analyze #ux-bar > :not(#ux-jump),body.v-accounts #ux-bar > :not(#ux-jump){display:none!important}
+  body.v-analyze #ux-bar,body.v-accounts #ux-bar{background:transparent!important;border-bottom:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;justify-content:flex-end;pointer-events:none}
+  body.v-analyze #ux-jump,body.v-accounts #ux-jump{pointer-events:auto;margin-left:auto;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+  .ux-jb{display:inline-flex;align-items:center;gap:7px;min-width:0;max-width:70vw;height:38px;padding:0 12px 0 11px;border-radius:999px;cursor:pointer;
+    background:color-mix(in srgb,var(--surface) 72%,transparent);-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%);
+    border:1px solid var(--glass-line);color:var(--ink);font:600 13px var(--font-ui)}
+  .ux-jb svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round} .ux-jb .ux-jb-v{width:14px;height:14px;stroke:var(--muted)}
+  .ux-jb-l{flex:none;color:var(--ink-2)} .ux-jb.has .ux-jb-l::after{content:'·';margin-left:7px;color:var(--muted)} .ux-jb-c{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+  .ux-jb:hover,.ux-jb[aria-expanded=true]{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+  #ux-js{position:fixed;inset:0;z-index:1000} #ux-js[hidden]{display:none}
+  .ux-js-bg{position:absolute;inset:0;background:rgba(5,10,8,.45);opacity:0;transition:opacity .2s} #ux-js.on .ux-js-bg{opacity:1}
+  .ux-js-card{position:absolute;left:0;right:0;bottom:0;max-height:78vh;display:flex;flex-direction:column;padding:8px 14px calc(16px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;
+    background:linear-gradient(170deg,color-mix(in srgb,var(--accent) 10%,var(--surface)),var(--surface) 60%);border:1px solid var(--glass-line);box-shadow:0 -18px 50px rgba(0,0,0,.35);
+    transform:translateY(100%);transition:transform .22s cubic-bezier(.2,.8,.2,1)} #ux-js.on .ux-js-card{transform:none}
+  .ux-js-grab{width:40px;height:4px;border-radius:2px;background:var(--glass-line);margin:4px auto 12px}
+  .ux-js-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 6px 10px} .ux-js-h b{font:800 22px var(--font-display);color:var(--ink)} .ux-js-h span{font-size:12px;color:var(--muted)}
+  .ux-js-list{overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:2px}
+  .ux-js-i{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:16px;border:1px solid transparent;background:var(--glass-2);color:var(--ink);text-align:left;cursor:pointer;font:600 14.5px var(--font-ui)}
+  .ux-js-i:hover,.ux-js-i:focus-visible{border-color:var(--glass-line);outline:none} .ux-js-i.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+  .ux-js-ic{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:color-mix(in srgb,var(--accent) 14%,transparent)}
+  .ux-js-ic svg{width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .ux-js-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .ux-js-i em{flex:none;font:600 11px var(--font-ui);font-style:normal;color:var(--accent)}
+  .ux-js-f:empty{display:none} .ux-js-fold{margin-top:10px;width:100%;padding:10px;border-radius:14px;border:1px dashed var(--glass-line);background:transparent;color:var(--ink-2);font:600 13px var(--font-ui);cursor:pointer}
+  .ux-js-e{color:var(--muted);font-size:13px;padding:6px}
+  @media (min-width:761px){ .ux-js-card{left:auto;right:16px;top:58px;bottom:auto;width:380px;max-height:70vh;border-radius:22px;transform:translateY(-8px);opacity:0;transition:transform .18s,opacity .18s} #ux-js.on .ux-js-card{opacity:1} }
+  @media (prefers-reduced-motion:reduce){ .ux-js-card,.ux-js-bg{transition:none} }
   body:not(.v-analyze):not(.v-accounts):not(.v-research) .wrap > [data-view]{display:none!important}
   @media (max-width:760px){
     .vt{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:120;width:auto;margin:0;justify-content:stretch;
@@ -2189,32 +2214,63 @@ function syncTopbar() {
   const bar = document.createElement('div'); bar.id = 'ux-bar';
   bar.innerHTML = `<select id="ux-range" aria-label="Date range"></select><span id="ux-dates" class="ux-dates"></span>
     <span id="ux-busy" class="ux-busy" hidden>updating…</span><span id="ux-regime" class="ux-regime" title="Market regime from SPY: V38 volatility switch and the 200-day average (decided at the prior close)"></span><span class="ux-spacer"></span>
-    <select id="ux-jump" aria-label="Jump to section"><option value="">Jump to…</option></select>
+    <button type="button" id="ux-jump" class="ux-jb" aria-haspopup="dialog" aria-label="Jump to section"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/></svg><span class="ux-jb-l">Jump to</span><span class="ux-jb-c"></span><svg class="ux-jb-v" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <button class="linkbtn" id="ux-fold" title="Collapse all folded sections">Collapse all</button>`;
   document.body.prepend(bar);
   const jump = bar.querySelector('#ux-jump');
-  // the list is rebuilt from what the current tab shows each time it is opened (all tabs since 2026-10-26, Bible 6.98): Research's panels,
-  // Analyze's and Accounts' sections (v2 panels title with .ak-h), skipping hidden ones; "Collapse all sections" only where folds exist
+  // "Jump to" (all tabs since 6.98; a pill + sheet since 6.99): the list is rebuilt from what the current tab shows each time it opens (Research's panels,
+  // Analyze's and Accounts' sections; hidden ones skipped); the pill names the section on screen; "Collapse all sections" on Research only
   const T_SEL = '.panel-title, .chart-title, .ak-h, .sec-h, h2, h3';
   const vis = el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
-  let targets = [];
+  const IC = [[/^top$/i, '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>'], [/pick/i, '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'],
+    [/forward/i, '<path d="M3 12h13"/><path d="M12 7l5 5-5 5"/><path d="M20 5v14"/>'], [/strongest|strateg|fit/i, '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>'],
+    [/odds/i, '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/>'], [/ask/i, '<path d="M4 5h16v11H9l-5 4z"/>'], [/news/i, '<rect x="3" y="5" width="14" height="15" rx="2"/><path d="M17 9h3v9a2 2 0 0 1-2 2"/><path d="M7 9h6M7 13h6"/>'],
+    [/working|score/i, '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>'], [/customer/i, '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>'],
+    [/account|paper|trading/i, '<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10.5h18"/><circle cx="16.5" cy="15" r="1.2"/>'],
+    [/mover|return|chart|curve|equity/i, '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'], [/./, '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8.5"/>']];
+  const icon = t => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC.find(([r]) => r.test(t))[1]}</svg>`;
+  const tabName = () => document.body.classList.contains('v-accounts') ? 'Accounts' : document.body.classList.contains('v-research') ? 'Research' : 'Analyze';
+  let targets = [], cur = -1;
   function fill() {
     const seen = new Set(); targets = [];
     for (const p of document.querySelectorAll('.hero, .panel, .sec')) {
-      if (p.id === 'login-panel' || !vis(p)) continue;
+      if (p.id === 'login-panel' || p.closest('#ux-js') || !vis(p)) continue;
       const t = p.classList.contains('hero') ? 'Top' : (p.querySelector(T_SEL)?.textContent || '').trim().replace(/\s+/g, ' ').replace(/\.$/, '');
       if (!t || seen.has(t)) continue; seen.add(t); targets.push([t.length > 44 ? t.slice(0, 43) + '…' : t, p]);
     }
-    jump.innerHTML = '<option value="">Jump to…</option>' + targets.map(([t], i) => `<option value="${i}">${esc(t)}</option>`).join('')
-      + (document.querySelector('details.fold') && document.body.classList.contains('v-research') ? '<option value="__fold">Collapse all sections</option>' : '');
+    spy();
   }
-  ['pointerdown', 'focus', 'keydown'].forEach(k => jump.addEventListener(k, fill));
+  function spy() {                                            // the section whose top is last above the bar's bottom edge
+    const y = bar.getBoundingClientRect().bottom + 24; let i = -1;
+    targets.forEach(([, p], k) => { if (p.getBoundingClientRect().top <= y) i = k; });
+    if (i === cur && jump.dataset.n) return; cur = i; jump.dataset.n = '1';
+    const c = jump.querySelector('.ux-jb-c'); c.textContent = i >= 0 ? targets[i][0] : ''; jump.classList.toggle('has', i >= 0);
+  }
+  let rq = 0; window.addEventListener('scroll', () => { if (!rq) rq = requestAnimationFrame(() => { rq = 0; spy(); }); }, {passive: true});
+  const sh = document.createElement('div'); sh.id = 'ux-js'; sh.hidden = true;
+  sh.innerHTML = '<div class="ux-js-bg"></div><div class="ux-js-card" role="dialog" aria-modal="true" aria-label="Jump to section"><div class="ux-js-grab"></div><div class="ux-js-h"><b>Jump to</b><span></span></div><div class="ux-js-list"></div><div class="ux-js-f"></div></div>';
+  document.body.appendChild(sh);
+  function close() { sh.classList.remove('on'); setTimeout(() => { if (!sh.classList.contains('on')) sh.hidden = true; }, 220); jump.setAttribute('aria-expanded', 'false'); }
+  function open() {
+    fill(); sh.querySelector('.ux-js-h span').textContent = `${tabName()} · ${targets.length} section${targets.length === 1 ? '' : 's'}`;
+    sh.querySelector('.ux-js-list').innerHTML = targets.map(([t], i) => `<button type="button" class="ux-js-i${i === cur ? ' on' : ''}" data-i="${i}"><span class="ux-js-ic">${icon(t)}</span><span class="ux-js-t">${esc(t)}</span>${i === cur ? '<em>you are here</em>' : ''}</button>`).join('')
+      || '<p class="ux-js-e">Nothing to jump to on this tab.</p>';
+    const fold = document.body.classList.contains('v-research') && document.querySelector('details.fold');
+    sh.querySelector('.ux-js-f').innerHTML = fold ? '<button type="button" class="ux-js-fold">Collapse all sections</button>' : '';
+    sh.hidden = false; requestAnimationFrame(() => sh.classList.add('on')); jump.setAttribute('aria-expanded', 'true');
+    sh.querySelector('.ux-js-i.on, .ux-js-i')?.focus({preventScroll: true});
+  }
+  jump.onclick = () => sh.classList.contains('on') ? close() : open();
+  sh.addEventListener('click', e => {
+    if (e.target.closest('.ux-js-bg')) return close();
+    if (e.target.closest('.ux-js-fold')) { document.querySelectorAll('details.fold[open]').forEach(d => { d.open = false; }); return close(); }
+    const b = e.target.closest('.ux-js-i'); if (!b) return; const p = targets[+b.dataset.i]?.[1]; close(); if (!p) return;
+    if (p.tagName === 'DETAILS') p.open = true;
+    const y = p.getBoundingClientRect().top + window.scrollY - (bar.offsetHeight + 8); window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sh.classList.contains('on')) close(); });
   document.addEventListener('click', e => { if (e.target.closest?.('#view-tabs, [data-view-btn], nav')) setTimeout(fill, 400); });
   setTimeout(fill, 1500);
-  jump.onchange = () => { if (jump.value === '__fold') { jump.value = ''; document.querySelectorAll('details.fold[open]').forEach(d => { d.open = false; }); return; }
-    const p = targets[+jump.value]?.[1]; jump.value = '';
-    if (!p) return; if (p.tagName === 'DETAILS') p.open = true;
-    const y = p.getBoundingClientRect().top + window.scrollY - (bar.offsetHeight + 8); window.scrollTo({top: Math.max(0, y), behavior: 'smooth'}); };
   bar.querySelector('#ux-range').onchange = e => { const src = document.getElementById('range-preset'); src.value = e.target.value; src.dispatchEvent(new Event('change')); };
   bar.querySelector('#ux-fold').onclick = () => document.querySelectorAll('details.fold[open]').forEach(d => { d.open = false; });
   syncTopbar();
