@@ -507,9 +507,13 @@
   @keyframes vtPulse{0%,100%{opacity:1}50%{opacity:.35}}
   body.v-analyze .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="analyze"]){display:none!important}
   body.v-accounts .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="accounts"]){display:none!important}
-  body.v-analyze #ux-bar > :not(#ux-jump),body.v-accounts #ux-bar > :not(#ux-jump){display:none!important}
-  body.v-analyze #ux-bar,body.v-accounts #ux-bar{background:transparent!important;border-bottom:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;justify-content:flex-end;pointer-events:none}
-  body.v-analyze #ux-jump,body.v-accounts #ux-jump{pointer-events:auto;margin-left:auto;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+  body.v-analyze #ux-bar,body.v-accounts #ux-bar{display:none!important} body.v-research #ux-jh,body.v-research #ux-jf,body:not(.v-analyze):not(.v-accounts) #ux-jf{display:none!important}
+  header .ux-jh{color:var(--ink-2)} header .ux-jh:hover{color:var(--accent)}
+  .ux-jf{position:fixed;z-index:60;top:calc(env(safe-area-inset-top) + 10px);right:16px;max-width:calc(100vw - 32px);box-shadow:0 10px 28px rgba(0,0,0,.32);
+    transform:translateY(-160%);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s}
+  .ux-jf.show{transform:none;opacity:1;pointer-events:auto} .ux-jf .ux-jb-l{display:none} .ux-jf.has .ux-jb-c{font-weight:700}
+  .ux-jf:not(.has) .ux-jb-l{display:inline}
+  @media (prefers-reduced-motion:reduce){ .ux-jf{transition:none} }
   .ux-jb{display:inline-flex;align-items:center;gap:7px;min-width:0;max-width:70vw;height:38px;padding:0 12px 0 11px;border-radius:999px;cursor:pointer;
     background:color-mix(in srgb,var(--surface) 72%,transparent);-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%);
     border:1px solid var(--glass-line);color:var(--ink);font:600 13px var(--font-ui)}
@@ -2352,11 +2356,20 @@ function syncTopbar() {
     }
     spy();
   }
-  function spy() {                                            // the section whose top is last above the bar's bottom edge
-    const y = bar.getBoundingClientRect().bottom + 24; let i = -1;
+  // Analyze / Accounts (6.100): no bar; a round button in the header next to the account and theme buttons, and a pill that slides in at the top
+  // once the header has scrolled away, naming the section on screen. Research keeps the pill in its bar (with the date range).
+  const jh = document.createElement('button'); jh.type = 'button'; jh.id = 'ux-jh'; jh.className = 'theme-toggle ux-jh'; jh.setAttribute('aria-label', 'Jump to section');
+  jh.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  const hd = document.querySelector('header'), ab = document.getElementById('account-btns') || document.getElementById('theme-toggle'); if (ab) ab.before(jh); else hd?.appendChild(jh);
+  const jf = jump.cloneNode(true); jf.id = 'ux-jf'; jf.classList.add('ux-jf'); document.body.appendChild(jf);
+  const appView = () => document.body.classList.contains('v-analyze') || document.body.classList.contains('v-accounts');
+  function spy() {                                            // the section whose top is last above the top controls' bottom edge
+    const top = appView() ? (jf.classList.contains('show') ? jf.getBoundingClientRect().bottom : 0) : bar.getBoundingClientRect().bottom;
+    jf.classList.toggle('show', appView() && !!hd && hd.getBoundingClientRect().bottom < 0);
+    const y = top + 24; let i = -1;
     targets.forEach(([, p], k) => { if (p.getBoundingClientRect().top <= y) i = k; });
     if (i === cur && jump.dataset.n) return; cur = i; jump.dataset.n = '1';
-    const c = jump.querySelector('.ux-jb-c'); c.textContent = i >= 0 ? targets[i][0] : ''; jump.classList.toggle('has', i >= 0);
+    for (const b of [jump, jf]) { b.querySelector('.ux-jb-c').textContent = i >= 0 ? targets[i][0] : ''; b.classList.toggle('has', i >= 0); }
   }
   let rq = 0; window.addEventListener('scroll', () => { if (!rq) rq = requestAnimationFrame(() => { rq = 0; spy(); }); }, {passive: true});
   const sh = document.createElement('div'); sh.id = 'ux-js'; sh.hidden = true;
@@ -2372,13 +2385,13 @@ function syncTopbar() {
     sh.hidden = false; requestAnimationFrame(() => sh.classList.add('on')); jump.setAttribute('aria-expanded', 'true');
     sh.querySelector('.ux-js-i.on, .ux-js-i')?.focus({preventScroll: true});
   }
-  jump.onclick = () => sh.classList.contains('on') ? close() : open();
+  jump.onclick = jh.onclick = jf.onclick = () => sh.classList.contains('on') ? close() : open();
   sh.addEventListener('click', e => {
     if (e.target.closest('.ux-js-bg')) return close();
     if (e.target.closest('.ux-js-fold')) { document.querySelectorAll('details.fold[open]').forEach(d => { d.open = false; }); return close(); }
     const b = e.target.closest('.ux-js-i'); if (!b) return; const p = targets[+b.dataset.i]?.[1]; close(); if (!p) return;
     if (p.tagName === 'DETAILS') p.open = true;
-    const y = p.getBoundingClientRect().top + window.scrollY - (bar.offsetHeight + 8); window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
+    const y = p.getBoundingClientRect().top + window.scrollY - (appView() ? 64 : bar.offsetHeight + 8); window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && sh.classList.contains('on')) close(); });
   document.addEventListener('click', e => { if (e.target.closest?.('#view-tabs, [data-view-btn], nav')) setTimeout(fill, 400); });
