@@ -6276,7 +6276,59 @@ const AK_LOOK = {
       from_the_open: o.length ? {date: OD.open.as_of, is_today: OD.open.as_of === odEtToday(), typical_chance_pct: akPc(base), best: o.slice(0, 5).map(row), weakest: o.slice(-5).reverse().map(row)} : 'not available yet today (appears about 09:35 New York time)'};
   }
 };
-const AK_LABEL = {stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
+// strategy_performance (2026-10-27, Bible 6.101): live results over a period, ranked, each against the same money in SPY. Every row is chained from
+// daily closes: paper accounts (live_equity, owner only by RLS), the user's own forward tests (fwd_marks; new money does not count as gain),
+// the monthly picks (v2_pick_marks); plus, as a check and clearly not a track record, what each top strategy's CURRENT holdings did over the
+// last 5 trading days (live_profile ret_5d; customers see the public rows only). Periods end at the latest close.
+function akIdx(pts, period) {                                 // pts [{d, a, s}] = cumulative index of the strategy and of SPY, oldest first
+  if (pts.length < 2) return null; const L = pts[pts.length - 1], ld = new Date(L.d + 'T12:00:00Z');
+  let b = null;
+  if (period === 'last_5_days') b = pts[Math.max(0, pts.length - 6)];
+  else if (period === 'since_start') b = pts[0];
+  else { const st = new Date(ld); if (period === 'this_month') st.setUTCDate(1); else st.setUTCDate(st.getUTCDate() - ((st.getUTCDay() + 6) % 7));
+    const S = st.toISOString().slice(0, 10); b = [...pts].reverse().find(x => x.d < S) || pts[0]; }
+  if (!b || b === L) return null;
+  return {ret: L.a / b.a - 1, spy: L.s / b.s - 1, from_close: b.d, to_close: L.d, closes: pts.filter(x => x.d > b.d).length, started_in_period: b === pts[0] && period !== 'since_start'};
+}
+AK_LOOK.strategy_performance = async function ({period} = {}) {
+  period = ['this_week', 'last_5_days', 'this_month', 'since_start'].includes(period) ? period : 'this_week';
+  const own = typeof v2Owner === 'function' && v2Owner(), rows = [], pc = akPc;
+  const put = (name, kind, r, extra = {}) => { if (r) rows.push({name, kind, return_pct: pc(r.ret), spy_pct: pc(r.spy), ahead_of_spy_pct: pc(r.ret - r.spy), from_close: r.from_close, to_close: r.to_close,
+    trading_days: r.closes, ...(r.started_in_period ? {note: 'started during this period'} : {}), ...extra}); };
+  const since = period === 'since_start' ? '2000-01-01' : new Date(Date.now() - 45 * 864e5).toISOString().slice(0, 10);
+  const [acc, eq, dep, books, marks] = await Promise.all([
+    own ? sb('live_accounts?select=id,label&order=id').catch(() => []) : [], own ? sb(`live_equity?select=account_id,date,equity,pnl,spy_close&date=gte.${since}&order=date`).catch(() => []) : [],
+    own ? sb('live_deployments?select=account_id,strategy_key,created_at&status=eq.active').catch(() => []) : [],
+    sb('fwd_books?select=id,name,created_at,closed_at').catch(() => []), sb('fwd_marks?select=book_id,date,value,cost,spy_value&order=date').catch(() => [])]);
+  for (const a of acc) {                                       // the strategy running now, from its own start (as the scoreboard)
+    const d = dep.find(x => x.account_id === a.id), st = d ? d.created_at.slice(0, 10) : '', e = eq.filter(r => r.account_id === a.id && r.equity > 0 && r.date >= st);
+    const s0 = e.find(r => r.spy_close > 0); let g = 1, sp = 1; const pts = e.length ? [{d: e[0].date, a: 1, s: 1}] : [];
+    for (let i = 1; i < e.length; i++) { g *= 1 + (e[i].pnl != null ? e[i].pnl / e[i - 1].equity : e[i].equity / e[i - 1].equity - 1); sp = s0 && e[i].spy_close > 0 ? e[i].spy_close / s0.spy_close : sp; pts.push({d: e[i].date, a: g, s: sp}); }
+    put((d ? d.strategy_key.split('|').pop().replace(/_/g, ' ') : a.label), 'paper account (' + a.label + ')', akIdx(pts, period));
+  }
+  for (const b of books.filter(b => !b.closed_at)) {          // chained so that money added later is not counted as gain
+    const M = marks.filter(m => m.book_id === b.id && m.cost > 0); if (!M.length) continue;
+    const pts = [{d: b.created_at.slice(0, 10), a: 1, s: 1}]; let g = M[0].value / M[0].cost, sp = M[0].spy_value / M[0].cost; pts.push({d: M[0].date, a: g, s: sp});
+    for (let i = 1; i < M.length; i++) { const p = M[i - 1], m = M[i], dc = m.cost - p.cost; g *= 1 + (m.value - p.value - dc) / p.value; sp *= 1 + (m.spy_value - p.spy_value - dc) / p.spy_value; pts.push({d: m.date, a: g, s: sp}); }
+    put(b.name, 'forward test', akIdx(pts, period));
+  }
+  if (typeof v2Record === 'function') {
+    if (!V2.P && !V2.busy) await v2Load().catch(() => {}); const R = v2Record();
+    if (R.start && R.pts.length) put('Monthly picks', 'monthly picks (published)', akIdx([{d: R.start, a: 1, s: 1}, ...R.pts.map(x => ({d: x.d, a: 1 + x.pk, s: 1 + x.spy}))], period));
+  }
+  rows.sort((a, b) => (b.return_pct ?? -1e9) - (a.return_pct ?? -1e9));
+  let holdings = null;
+  if (typeof EL !== 'undefined' && typeof elHeld === 'function') {
+    await tlLoad(); const P = new Map((TL.prof || []).map(r => [r.ticker, r.f?.ret_5d]));
+    holdings = (EL.rows || []).filter(e => own || e.is_public).map(e => { const h = elHeld(e).filter(t => isFinite(P.get(t))); return h.length ? {strategy: e.label, holdings_counted: h.length, avg_move_last_5_trading_days_pct: pc(h.reduce((x, t) => x + P.get(t), 0) / h.length)} : null; })
+      .filter(Boolean).sort((a, b) => b.avg_move_last_5_trading_days_pct - a.avg_move_last_5_trading_days_pct).slice(0, 10);
+  }
+  return {period, ranked_live_results: rows.slice(0, 14), more_rows_not_shown: Math.max(0, rows.length - 14),
+    current_holdings_check: holdings && holdings.length ? {as_of_close: TL.asof, note: "What each top strategy's CURRENT holdings did over the last 5 trading days, equal weight. Not the strategy's own trades or track record.", rows: holdings} : null,
+    caution: 'Periods end at the latest close. A week or a month says almost nothing about a strategy: normal ups and downs are bigger than any edge; Finny judges a strategy only after 12 months live.',
+    ...(own ? {} : {note: 'Only your own forward tests and the public monthly picks are included.'})};
+};
+const AK_LABEL = {strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
   top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', todays_signals: () => "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
