@@ -6216,7 +6216,77 @@ AK_LOOK.strategy_performance = async function ({period} = {}) {
     caution: 'Periods end at the latest close. A week or a month says almost nothing about a strategy: normal ups and downs are bigger than any edge; Finny judges a strategy only after 12 months live.',
     ...(own ? {} : {note: 'Only your own forward tests and the public monthly picks are included.'})};
 };
-const AK_LABEL = {strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
+// account and forward-test lookups (2026-10-27, Bible 6.101): the owner's paper accounts (RLS: owner only) and the user's own forward tests,
+// with live prices for open forward-test positions (the fwd function's quotes, as the Forward tests panel)
+const akOwn = () => typeof v2Owner === 'function' && v2Owner();
+const akR = x => x == null || !isFinite(x) ? null : Math.round(x * 100) / 100;
+async function akAcc(q) {
+  const acc = await sb('live_accounts?select=id,label&order=id'); const t = String(q || '').toLowerCase(), n = (t.match(/\d/) || [])[0];
+  const dep = await sb('live_deployments?select=account_id,strategy_key,created_at&status=eq.active');
+  if (!t) return {a: null, acc, dep};
+  const a = acc.find(x => x.id === t || x.label.toLowerCase() === t) || (n && acc.find(x => x.id === 'acc' + n))
+    || acc.find(x => dep.some(d => d.account_id === x.id && d.strategy_key.toLowerCase().includes(t.replace(/\s+/g, '_'))));
+  return {a, acc, dep};
+}
+async function akFwd() { if (typeof fwdLoad !== 'function') throw new Error('forward tests are not in this version of the app');
+  if (!FWD.books || Date.now() - (FWD.loadedAt || 0) > 120e3) await fwdLoad(true); if (FWD.err || !FWD.books) throw new Error(FWD.err || 'forward tests not loaded yet, try again');
+  if (FWD.pos.some(p => !p.exit_at) && (!FWD.at || Date.now() - Date.parse(FWD.at) > 60e3)) await fwdQuotes(); }
+function akBook(b) {                                          // one forward test now: totals at live prices, positions
+  const P = FWD.pos.filter(p => p.book_id === b.id); let v = 0, s = 0, c = 0;
+  const pos = P.map(p => { const [x, y] = fwdVal(p); v += x; s += y; c += +p.notional; const now = p.exit_at ? +p.exit_price : FWD.px?.[p.ticker]?.p;
+    return {symbol: p.ticker, status: p.exit_at ? 'sold' : 'open', bought: p.entry_at.slice(0, 10), entry_price: akR(+p.entry_price), price_now_or_exit: akR(now), sold: p.exit_at ? p.exit_at.slice(0, 10) : undefined,
+      sell_reason: p.exit_note || undefined, return_pct: akPc(x / p.notional - 1), vs_spy_pct: akPc(x / p.notional - y / p.notional)}; });
+  return {name: b.name, kind: b.state?.auto ? 'follows its strategy automatically (buys and sells at the close)' : b.kind === 'strategy' ? 'strategy basket' : 'your picks',
+    started: b.created_at.slice(0, 10), ended: b.closed_at ? b.closed_at.slice(0, 10) : undefined, money_in: Math.round(c), value_now: Math.round(v),
+    return_pct: akPc(c ? v / c - 1 : 0), spy_same_money_pct: akPc(c ? s / c - 1 : 0), ahead_of_spy_pct: akPc(c ? (v - s) / c : 0), open_positions: pos.filter(x => x.status === 'open').length, positions: pos};
+}
+Object.assign(AK_LOOK, {
+  async account_details({account} = {}) {
+    if (!akOwn()) return {error: 'Paper accounts are only visible to the owner.'};
+    const {a, acc, dep} = await akAcc(account); if (!a) return {error: 'no such account', accounts: acc.map(x => x.label)};
+    const d = dep.find(x => x.account_id === a.id), st = d ? d.created_at.slice(0, 10) : '2000-01-01';
+    const [eq, mg, runs, fills, sw] = await Promise.all([sb(`live_equity?select=date,equity,cash,positions,pnl,spy_close&account_id=eq.${a.id}&order=date`),
+      sb(`live_margin?select=at,gross,cushion,fall_to_call,status,action&account_id=eq.${a.id}&order=at.desc&limit=1`).catch(() => []),
+      sb(`live_runs?select=ran_at,kind,status,message&account_id=eq.${a.id}&order=ran_at.desc&limit=3`).catch(() => []),
+      sb(`live_fills?select=symbol,side,filled_qty,filled_avg_price,status,filled_at&account_id=eq.${a.id}&order=submitted_at.desc&limit=10`).catch(() => []),
+      sb(`live_swing_pos?select=sleeve,symbol,entry_date,entry_px,stop,status,exit_date,exit_px,exit_reason,preview&account_id=eq.${a.id}&order=created_at.desc&limit=12`).catch(() => [])]);
+    const e = eq.filter(r => r.equity > 0 && r.date >= st), L = eq[eq.length - 1] || {}, P = Array.isArray(L.positions) ? L.positions : [];
+    let g = 1, pk = 1, dd = 0; for (let i = 1; i < e.length; i++) { g *= 1 + (e[i].pnl != null ? e[i].pnl / e[i - 1].equity : e[i].equity / e[i - 1].equity - 1); pk = Math.max(pk, g); dd = Math.min(dd, g / pk - 1); }
+    const s0 = e.find(r => r.spy_close > 0), s1 = [...e].reverse().find(r => r.spy_close > 0), prev = eq[eq.length - 2];
+    const pl = P.map(x => ({symbol: x.symbol, value: Math.round(x.value), weight_pct: akPc(L.equity ? x.value / L.equity : null), open_gain_usd: Math.round(x.pl), open_gain_pct: akPc(x.value - x.pl ? x.pl / (x.value - x.pl) : null)}));
+    return {account: a.label, strategy: d ? d.strategy_key.split('|').pop() : 'none active', strategy_since: d ? st : null, as_of_close: L.date, equity_usd: Math.round(L.equity), cash_usd: Math.round(L.cash),
+      last_day_change_pct: prev && L.pnl != null ? akPc(L.pnl / prev.equity) : null,
+      since_strategy_start: {return_pct: akPc(g - 1), spy_pct: s0 && s1 ? akPc(s1.spy_close / s0.spy_close - 1) : null, worst_drop_pct: akPc(dd), closes: e.length},
+      positions: P.length, largest: [...pl].sort((x, y) => y.value - x.value).slice(0, 6), best_open: [...pl].sort((x, y) => y.open_gain_usd - x.open_gain_usd).slice(0, 3), worst_open: [...pl].sort((x, y) => x.open_gain_usd - y.open_gain_usd).slice(0, 3),
+      margin: mg[0] ? {checked: mg[0].at, gross_exposure_x: akR(mg[0].gross), cushion_pct: akPc(mg[0].cushion), market_fall_before_margin_call_pct: akPc(mg[0].fall_to_call), status: mg[0].status} : null,
+      last_runs: runs.map(r => ({at: r.ran_at, kind: r.kind, status: r.status, message: String(r.message || '').slice(0, 120)})),
+      recent_fills: fills.slice(0, 8).map(f => ({at: f.filled_at, symbol: f.symbol, side: f.side, qty: akR(+f.filled_qty), price: akR(+f.filled_avg_price), status: f.status})),
+      swing_sleeve: sw.length ? sw.map(x => ({sleeve: x.sleeve, symbol: x.symbol, status: x.status, entry: x.entry_date, entry_price: akR(x.entry_px), stop: akR(x.stop), exit: x.exit_date || undefined, exit_reason: x.exit_reason || undefined, preview_only: !!x.preview})) : 'none',
+      note: 'Paper money. A strategy is judged only after 12 months live.'};
+  },
+  async forward_tests_overview() {
+    await akFwd(); const open = FWD.books.filter(b => !b.closed_at).map(akBook).map(({positions, ...b}) => b).sort((x, y) => y.return_pct - x.return_pct);
+    return {prices: FWD.at ? 'live trades at ' + FWD.at : 'last close', open_tests: open, ended_tests: FWD.books.filter(b => b.closed_at).length,
+      note: 'Virtual money at real prices, no orders. Automatic tests trade once a day at the close. Weeks say little; 12 months is the minimum.'};
+  },
+  async forward_test_details({test} = {}) {
+    await akFwd(); const t = String(test || '').toLowerCase().trim(), B = FWD.books;
+    const b = B.find(x => x.name.toLowerCase() === t) || B.find(x => !x.closed_at && (x.name.toLowerCase().includes(t) || String(x.strategy_key || '').toLowerCase().includes(t)))
+      || B.find(x => x.name.toLowerCase().includes(t)) || (t && B.find(x => !x.closed_at && FWD.pos.some(p => p.book_id === x.id && p.ticker.toLowerCase() === t)));
+    if (!b) return {error: 'no forward test matches "' + test + '"', tests: B.filter(x => !x.closed_at).map(x => x.name)};
+    const r = akBook(b); r.positions = r.positions.slice(0, 20); return r;
+  },
+  async where_do_i_hold({symbol} = {}) {
+    const s = await akSym(symbol), out = {symbol: s, paper_accounts: null, forward_tests: null};
+    if (akOwn()) { const [acc, eq] = await Promise.all([sb('live_accounts?select=id,label'), sb(`live_equity?select=account_id,date,equity,positions&date=gte.${new Date(Date.now() - 10 * 864e5).toISOString().slice(0, 10)}&order=date.desc`)]);
+      out.paper_accounts = acc.map(a => { const L = eq.find(r => r.account_id === a.id), x = (L?.positions || []).find(p => p.symbol === s);
+        return x ? {account: a.label, value_usd: Math.round(x.value), weight_pct: akPc(x.value / L.equity), open_gain_usd: Math.round(x.pl), as_of: L.date} : null; }).filter(Boolean); }
+    if (typeof fwdLoad === 'function') { await akFwd(); out.forward_tests = FWD.pos.filter(p => p.ticker === s && !p.exit_at).map(p => { const b = FWD.books.find(x => x.id === p.book_id), [x, y] = fwdVal(p);
+      return {test: b?.name, bought: p.entry_at.slice(0, 10), entry_price: akR(+p.entry_price), return_pct: akPc(x / p.notional - 1), vs_spy_pct: akPc((x - y) / p.notional)}; }); }
+    return out;
+  }
+});
+const AK_LABEL = {account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
   top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', todays_signals: () => "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
