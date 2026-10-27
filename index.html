@@ -988,6 +988,15 @@
   .ak-live span i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px color-mix(in srgb, var(--lime) 25%, transparent)}
   .ak-live em{font:600 12px var(--font-ui);font-style:normal;padding:3px 10px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink-2)}
   .ak-foot{font-size:11px;color:var(--muted);margin:12px 0 0}
+  .ak-tools{display:flex;justify-content:flex-end;margin:6px 8px 0} .ak-tools .ak-new{margin:0;padding:0;border:0;background:none;color:var(--muted);font:600 12px var(--font-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .ak-meta .ak-past{margin-left:auto} .ak-meta .ak-past+.ak-fresh{margin-left:0}
+  .ak-saved{margin:0 0 12px;padding:8px 12px;border-radius:12px;background:var(--glass);font-size:12px;line-height:1.45;color:var(--muted)}
+  .ak-pastl{display:flex;flex-direction:column;gap:6px} .ak-pasth{display:flex;align-items:baseline;gap:10px;margin:2px 2px 6px} .ak-pasth b{font:800 17px var(--font-display);color:var(--ink)}
+  .ak-pasth span{flex:1;min-width:0;font-size:12px;color:var(--muted)} .ak-pasth .ak-new{margin:0;padding:0;border:0;background:none;color:var(--muted);font:600 12px var(--font-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .ak-pr{display:flex;align-items:stretch;gap:4px;border-radius:14px;background:var(--glass-2);border:1px solid var(--glass-line)} .ak-pr.on{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+  .ak-open{flex:1;min-width:0;padding:9px 12px;border:0;background:none;text-align:left;cursor:pointer;color:var(--ink)} .ak-open b{display:block;font:600 13.5px var(--font-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ak-open small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px} .ak-del{flex:none;width:40px;border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;border-radius:0 14px 14px 0} .ak-del:hover{color:var(--bad)}
+  .ak-pastl>.ak-delall{align-self:flex-start;margin-top:6px;padding:0;border:0;background:none;color:var(--muted);font:600 12px var(--font-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
   .an-col{display:none!important} body.v-analyze #an-pulse{display:none!important}
   .an-explore{margin:22px 4px 8px} .an-explore b{display:block;font:800 18px var(--font-display);color:var(--ink)} .an-explore span{font-size:12.5px;color:var(--muted)} .an-explore[hidden]{display:none!important}
   .an-bar{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 8px;padding:12px 14px;border-radius:18px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);text-align:left;cursor:pointer;font:inherit}
@@ -6241,10 +6250,11 @@ function custInit() { custLoad(); if (!CU.timer) CU.timer = setInterval(() => { 
 // notes / strategy texts / FAQ (built-in gte-small embeddings) and Gemini writes a short answer with [n] citations. History, not advice.
 // Live lookups (v4): Gemini may ask for another stock's odds or strategy fit, today's movers, news or signals. The function pauses and this
 // page runs each lookup with the SAME code that draws the screen (and the signed-in user's own rights), then sends the results back.
-const AK = {busy: false, hist: []};
-// the conversation (6.103): the last questions and answers go with each new question; kept for this browser tab only
-try { AK.hist = JSON.parse(sessionStorage.getItem('ak-hist') || '[]'); if (!Array.isArray(AK.hist)) AK.hist = []; } catch (e) { AK.hist = []; }
-function akSave() { try { sessionStorage.setItem('ak-hist', JSON.stringify(AK.hist)); } catch (e) {} }
+const AK = {busy: false, chat: null, turns: [], past: null};
+// the conversation (6.103) and saved conversations (6.107): every answered question is saved by ask-finny in public.ask_chats (the user's own);
+// AK.chat is the open conversation, AK.turns its turns {q, a, sources, lookups, model, at}; this tab remembers which one is open
+try { AK.chat = sessionStorage.getItem('ak-chat') || null; AK.turns = JSON.parse(sessionStorage.getItem('ak-turns') || '[]'); if (!Array.isArray(AK.turns)) AK.turns = []; } catch (e) { AK.turns = []; }
+function akSave() { try { sessionStorage.setItem('ak-turns', JSON.stringify(AK.turns.slice(-10))); if (AK.chat) sessionStorage.setItem('ak-chat', AK.chat); else sessionStorage.removeItem('ak-chat'); } catch (e) {} }
 const akPc = x => x == null || !isFinite(x) ? null : Math.round(x * 1000) / 10;
 function akNums(A) {                                         // the odds checker's numbers for one analysed stock (odAnalyse result)
   const w = A.H?.[0], m = A.H?.[2], wf = A.own?.wf?.['1y'], pc = akPc;
@@ -6537,42 +6547,80 @@ async function akGo(id, t) {
 }
 document.addEventListener('click', e => { const b = e.target.closest?.('[data-go]'); if (!b) return; e.preventDefault(); akGo(b.dataset.go, b.dataset.goT); });
 
+function akTurn(t) {                                          // one saved turn -> text, sources and Go-to buttons
+  const gp = akGoParse(t.a || ''), src = akSources(gp.body, t.sources || []);
+  return {text: src.text, html: src.html, go: akGoHtml([...gp.go, ...akGoFromLookups(t.lookups || [])]), live: [...new Set((t.lookups || []).map(akLabel))], model: String(t.model || 'Gemini').replace(' (cached)', '')};
+}
+const akWhen = iso => { try { return new Date(iso).toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); } catch (e) { return ''; } };
+function akShow(note) {                                       // the open conversation: the latest turn in full, earlier ones folded
+  const out = document.getElementById('ak-out'), T = AK.turns; if (!out) return; if (!T.length) { out.innerHTML = ''; return; }
+  const t = T[T.length - 1], r = akTurn(t), earlier = T.slice(0, -1).slice(-8), logo = document.querySelector('.brand-mark img')?.src || '';
+  out.innerHTML = `<div class="ak-card">${note ? `<p class="ak-saved">${note}</p>` : ''}
+    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="">` : ''}<div><p>${akFmt(r.text)}</p></div></div>${r.go}
+    <div class="ak-meta">${r.live.length ? `<span title="${esc(r.live.join(', '))}"><i></i>Live data</span>` : ''}${r.html}
+      <span class="ak-dis" title="AI answer (${esc(r.model)}) from Finny's research only${t.at ? ', ' + esc(akWhen(t.at)) : ''}">AI · can be wrong · not advice</span>
+      ${earlier.length ? `<details class="ak-hist"><summary>Earlier (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><p>${akFmt(akTurn(h).text)}</p></div>`).join('')}</details>` : ''}
+      <button type="button" class="ak-new ak-past">Past chats</button><button type="button" class="ak-new ak-fresh" title="Start a new conversation (this one stays saved)">New chat</button></div></div>`;
+}
+function akNew() { AK.chat = null; AK.turns = []; akSave(); const out = document.getElementById('ak-out'); if (out) out.innerHTML = ''; document.getElementById('ak-q')?.focus(); }
+async function akPast() {                                     // the user's saved conversations (RLS: own rows only)
+  const out = document.getElementById('ak-out'); if (!out) return;
+  out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Loading your past chats…</span></div>';
+  try { AK.past = await sb('ask_chats?select=id,title,updated_at,turns&order=updated_at.desc&limit=30'); }
+  catch (e) { out.innerHTML = `<p class="note">Could not load your past chats: ${esc(e.message)}</p>`; return; }
+  out.innerHTML = `<div class="ak-pastl"><div class="ak-pasth"><b>Past chats</b><span>${AK.past.length ? 'Tap one to continue it' : 'Nothing saved yet: every question you ask is saved here'}</span>
+      <button type="button" class="ak-new ak-close">Close</button></div>
+    ${AK.past.map(c => `<div class="ak-pr${c.id === AK.chat ? ' on' : ''}"><button type="button" class="ak-open" data-chat="${esc(c.id)}"><b>${esc(c.title)}</b><small>${esc(akWhen(c.updated_at))} · ${(c.turns || []).length} question${(c.turns || []).length === 1 ? '' : 's'}${c.id === AK.chat ? ' · open now' : ''}</small></button>
+      <button type="button" class="ak-del" data-del="${esc(c.id)}" aria-label="Delete this chat" title="Delete this chat">×</button></div>`).join('')}
+    ${AK.past.length > 1 ? '<button type="button" class="ak-new ak-delall">Delete all chats</button>' : ''}</div>`;
+}
+async function akDelete(filter) {
+  const token = await getToken(), r = await fetch(`${SB_URL}/rest/v1/ask_chats?${filter}`, {method: 'DELETE', headers: {apikey: SB_KEY, Authorization: 'Bearer ' + token}});
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest?.('.ak-past, .ak-fresh, .ak-close, .ak-open, .ak-del, .ak-delall'); if (!t || AK.busy) return;
+  if (t.classList.contains('ak-past')) return akPast();
+  if (t.classList.contains('ak-fresh')) return akNew();
+  if (t.classList.contains('ak-close')) return AK.turns.length ? akShow() : (document.getElementById('ak-out').innerHTML = '');
+  if (t.classList.contains('ak-open')) { const c = (AK.past || []).find(x => x.id === t.dataset.chat); if (!c) return;
+    AK.chat = c.id; AK.turns = (c.turns || []).slice(-10); akSave();
+    akShow(`Saved chat · ${esc(akWhen(c.updated_at))}. The numbers are as they were then; ask a follow-up to continue with fresh numbers.`); document.getElementById('ak-q')?.focus(); return; }
+  try {
+    if (t.classList.contains('ak-del')) { await akDelete('id=eq.' + encodeURIComponent(t.dataset.del)); if (t.dataset.del === AK.chat) { AK.chat = null; AK.turns = []; akSave(); } return akPast(); }
+    if (t.classList.contains('ak-delall') && confirm('Delete all your saved chats? This cannot be undone.')) { await akDelete('id=not.is.null'); AK.chat = null; AK.turns = []; akSave(); return akPast(); }
+  } catch (err) { if (typeof fwdToast === 'function') fwdToast('Could not delete: ' + esc(err.message), true); }
+});
+
 async function akAsk() {
   const box = document.getElementById('ak-q'), out = document.getElementById('ak-out'), q = (box?.value || '').trim(); if (!q || AK.busy) return;
   AK.busy = true; const btn = document.getElementById('ak-go'); btn.disabled = true;
   out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Reading Finny\'s research…</span></div>';
   try {
-    const ctx = akContext(), token = await getToken(), used = [];
+    const ctx = akContext(), token = await getToken(), calls = [];
     const post = b => fetch(`${SB_URL}/functions/v1/ask-finny`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(b)})
       .then(r => r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})));
-    const history = AK.hist.slice(-4).map(h => ({q: h.q, a: h.a.slice(0, 1500)}));   // the conversation so far, so follow-ups ("why did that…") make sense (6.103)
-    let j = await post({question: q, symbol: ctx?.symbol || null, context: ctx, history}); const calls = [];
+    const history = AK.turns.slice(-4).map(h => ({q: h.q, a: akGoParse(h.a || '').body.slice(0, 1500)}));   // fallback; with a saved chat the function reads its own turns
+    let j = await post({question: q, symbol: ctx?.symbol || null, context: ctx, history, chat: AK.chat});
     for (let round = 0; j.ok && j.pending && round < 3; round++) {        // Gemini asked for live numbers: run them here, send them back
-      const need = j.need || []; need.forEach(c => { used.push(akLabel(c)); calls.push(c); });
+      const need = j.need || []; need.forEach(c => calls.push(c));
       out.innerHTML = `<div class="ak-think"><i></i><i></i><i></i><span>Checking ${esc(need.map(akLabel).join(', '))}…</span></div>`;
       const results = await Promise.all(need.map((c, i) => i < 4 ? akRun(c) : {error: 'at most 4 lookups at once'}));
       j = await post({pending: j.pending, results});
     }
     if (!j.ok) throw new Error(j.error || 'no answer');
-    const gp = akGoParse(j.answer || ''), goHtml = akGoHtml([...gp.go, ...akGoFromLookups(calls)]);
-    const logo = document.querySelector('.brand-mark img')?.src || '', src = akSources(gp.body, j.sources || []);
-    const earlier = AK.hist.slice(-4);
-    AK.hist.push({q, a: src.text}); AK.hist = AK.hist.slice(-6); akSave(); if (box) box.value = '';
-    // a clean chat turn (6.106): question bubble, plain answer, Go-to buttons, then one quiet meta line; details fold away
-    const live = [...new Set(used)], model = (j.model || 'Gemini').replace(' (cached)', '');
-    out.innerHTML = `<div class="ak-card">
-      <div class="ak-q">${esc(q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="">` : ''}<div><p>${akFmt(src.text)}</p></div></div>${goHtml}
-      <div class="ak-meta">${live.length ? `<span title="${esc(live.join(', '))}"><i></i>Live data</span>` : ''}${src.html}
-        <span class="ak-dis" title="AI answer (${esc(model)}) from Finny's research only">AI · can be wrong · not advice</span>
-        ${earlier.length ? `<details class="ak-hist"><summary>Earlier (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><p>${akFmt(h.a)}</p></div>`).join('')}</details>` : ''}
-        <button type="button" class="ak-new" title="Forget this conversation and start fresh">New chat</button></div></div>`;
-    out.querySelector('.ak-new')?.addEventListener('click', () => { AK.hist = []; akSave(); out.innerHTML = '<p class="note">New conversation: Finny has forgotten the earlier questions.</p>'; box?.focus(); });
+    if (j.chat) AK.chat = j.chat;
+    AK.turns.push({q, a: j.answer || '', sources: j.sources || [], lookups: j.lookups?.length ? j.lookups : calls, model: j.model, at: new Date().toISOString()});
+    AK.turns = AK.turns.slice(-10); akSave(); if (box) box.value = '';
+    akShow();
   } catch (e) { out.innerHTML = `<p class="note">Ask Finny could not answer: ${esc(e.message)}</p>`; }
   AK.busy = false; btn.disabled = false;
 }
 function akInit() {
   const f = document.getElementById('ak-form'); if (!f || f.dataset.wired) return; f.dataset.wired = '1';
   f.onsubmit = e => { e.preventDefault(); akAsk(); }; akChips();
+  f.insertAdjacentHTML('afterend', '<div class="ak-tools"><button type="button" class="ak-new ak-past">Past chats</button></div>');   // saved conversations (6.107)
+  if (AK.turns.length) akShow();
 }
 
 // ---------------- Finny v2 (2026-10-24; the live app since 2026-10-24, v1 archived at /v1/) ----------------
