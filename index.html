@@ -981,6 +981,9 @@
   .ak-live span i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px color-mix(in srgb, var(--lime) 25%, transparent)}
   .ak-live em{font:600 12px var(--font-ui);font-style:normal;padding:3px 10px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink-2)}
   .ak-foot{font-size:11px;color:var(--muted);margin:12px 0 0}
+  .ak-go{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px} .ak-go>span{font:700 11px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+  .ak-go button{display:inline-flex;align-items:center;gap:4px;padding:7px 10px 7px 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:var(--accent-soft);color:var(--ink);font:600 12.5px var(--font-ui);cursor:pointer}
+  .ak-go button svg{width:14px;height:14px;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round} .ak-go button:hover{border-color:var(--accent)}
   .ak-who .ak-new{margin-left:auto;padding:6px 12px;border-radius:999px;border:1px solid var(--glass-line);background:transparent;color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer;white-space:nowrap} .ak-who .ak-new:hover{border-color:var(--accent);color:var(--ink)}
   .ak-hist{margin-top:12px;border-top:1px solid var(--glass-line);padding-top:8px} .ak-hist summary{cursor:pointer;font:600 12.5px var(--font-ui);color:var(--muted)}
   .ak-hq{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--glass)} .ak-hq b{display:block;font:600 13px var(--font-ui);color:var(--ink);margin-bottom:4px} .ak-hq p{margin:0;font-size:13px;line-height:1.5;color:var(--ink-2)}
@@ -1147,6 +1150,16 @@
     <div class="hero-disc" id="hero-disc" hidden><div class="hd-h"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg><b>History, not a promise</b></div><div class="hd-body"></div></div>
   </section>
 
+  <section class="panel ask-panel" id="ask-panel" data-view="analyze">
+    <div class="kente" aria-hidden="true"></div><svg class="adk-wm ak-wm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12C9 7 4 9 6 13s6 1 6-1zM12 12c5-3 3-8-1-6s-1 6 1 6zM12 12c3 5 8 3 6-1s-6-1-6 1zM12 12c-5 3-3 8 1 6s1-6-1-6z"/></svg>
+    <span class="hero-kick"><i></i>AI · Ask Finny <b class="ak-beta">beta</b></span>
+    <h2 class="ak-h">Ask anything about a <em>stock or a strategy.</em></h2>
+    <p class="ak-sub">Answers come only from Finny's own research and the numbers on screen, with sources. History, not advice.</p>
+    <div class="ak-chips" id="ak-chips"></div>
+    <form id="ak-form" class="ak-form"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+      <input id="ak-q" maxlength="600" placeholder="Ask about a stock, a strategy or the research…" autocomplete="off"><button id="ak-go" type="submit">Ask</button></form>
+    <div id="ak-out" class="ak-out"></div>
+  </section>
   <section class="panel v2-panel" id="v2-panel" data-view="analyze">
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg>
     <span class="hero-kick"><i></i>Top strategies · tracked live</span>
@@ -1230,16 +1243,7 @@
 
   </details>
 
-  <section class="panel ask-panel" id="ask-panel" data-view="analyze">
-    <div class="kente" aria-hidden="true"></div><svg class="adk-wm ak-wm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12C9 7 4 9 6 13s6 1 6-1zM12 12c5-3 3-8-1-6s-1 6 1 6zM12 12c3 5 8 3 6-1s-6-1-6 1zM12 12c-5 3-3 8 1 6s1-6-1-6z"/></svg>
-    <span class="hero-kick"><i></i>AI · Ask Finny <b class="ak-beta">beta</b></span>
-    <h2 class="ak-h">Ask anything about a <em>stock or a strategy.</em></h2>
-    <p class="ak-sub">Answers come only from Finny's own research and the numbers on screen, with sources. History, not advice.</p>
-    <div class="ak-chips" id="ak-chips"></div>
-    <form id="ak-form" class="ak-form"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-      <input id="ak-q" maxlength="600" placeholder="Ask about a stock, a strategy or the research…" autocomplete="off"><button id="ak-go" type="submit">Ask</button></form>
-    <div id="ak-out" class="ak-out"></div>
-  </section>
+  
 
   <div class="sec" id="an-pulse" data-view="analyze"><span class="pt-ic pt-pulse" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12h4l3-8 4 16 3-8h6"/></svg></span><div><b>Market pulse</b><span>Today's headlines and biggest movers, with what usually happened next.</span></div></div>
   <div class="panel nw-panel" id="nw-panel" data-view="analyze">
@@ -6456,7 +6460,7 @@ function akChips() {                                          // suggestions fol
     if (isFinite(A.f?.vol20)) Q.push(`Is ${S} more volatile than the market, and what does that mean for me?`);
     if (A.op) Q.push(`What does today-from-the-open say about ${S}?`);
     Q.push(`Explain all of ${S}'s numbers in simple words`);
-  } else Q.push('Which stocks have a swing buy signal today?', "What are today's biggest gainers, and what are their odds?", 'Which strategies passed every test?',
+  } else Q.push('Which stocks have a swing buy signal today?', "What are today's biggest gainers, and what are their odds?", 'Where in the app do I see if the strategies work live?', 'Which strategies passed every test?',
     'How does Strategy fit pick strategies?', 'Why do most weekly odds look like a coin flip?');
   const IC = {odds: ['pt-odds', '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/><circle cx="12" cy="16" r="1.4"/>'], fit: ['pt-fit', '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>'],
     hit: ['pt-news', '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>'], vol: ['pt-movers', '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4M17 8l4 4-4 4"/>'],
@@ -6466,6 +6470,54 @@ function akChips() {                                          // suggestions fol
   el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { document.getElementById('ak-q').value = b.dataset.q; akAsk(); });
   const inp = document.getElementById('ak-q'); if (inp) inp.placeholder = S ? `Ask anything about ${S} or its strategies…` : 'Ask about a stock, a strategy or the research…';
 }
+// ---- sections Finny can send you to (2026-10-27, Bible 6.104): the answer ends with "GO: id[:TICKER], ..." and becomes buttons; lookups add
+// their natural section too. Ids match the list in ask-finny's SYSTEM prompt. Sections the user cannot see (owner-only, v1) are left out.
+const AK_SEC = {
+  top: ['Home and stock search', '#an-hero'], picks: ["This month's picks", '#v2-panel'], forward_tests: ['Your forward tests', '#fwd-panel'],
+  strongest: ['What our strongest strategies hold', '#hs-panel'], swing: ['Swing strategies', '#hs-panel'], odds: ['Odds checker', '#od-panel'],
+  strategy_fit: ['Strategy fit', '#tl-panel'], news: ['Latest news', '#nw-panel'], movers: ['Top movers', '#mv-fold'], ask: ['Ask Finny', '#ask-panel'],
+  scoreboard: ['Scoreboard: is it working live?', '#v2-board-p'], accounts: ['Paper accounts', '#lh-panel'], paper_trading: ['Paper trading', '#live-panel'],
+  customers: ['Customers', '#cust-panel'], research: ['Research: strategies and charts', '#controls-panel'], outlook: ['Outlook (Monte Carlo)', '#ol-panel'],
+  events: ['Market events on the charts', '#ev-panel']};
+function akCan(id) {                                          // the section exists for this user (owner-only panels are never shown to customers)
+  const d = AK_SEC[id], el = d && document.querySelector(d[1]); if (!el) return false;
+  if (el.classList.contains('owner-only') && !document.body.classList.contains('role-owner')) return false;
+  if (['accounts', 'scoreboard', 'paper_trading', 'customers'].includes(id) && document.body.classList.contains('role-customer')) return false;
+  return !(['forward_tests', 'swing', 'strongest', 'picks'].includes(id) && typeof v2Owner !== 'function');
+}
+function akGoParse(text) {                                    // "GO: odds:MPC, scoreboard" -> [{id, t}]
+  const m = String(text || '').match(/^\s*GO:\s*(.+)$/im); const body = m ? text.replace(m[0], '').trim() : text;
+  const go = m ? m[1].split(/[,;]+/).map(x => x.trim().replace(/[`*]/g, '')).map(x => { const [id, t] = x.split(':'); return {id: (id || '').toLowerCase().replace(/[^a-z_]/g, ''), t: (t || '').toUpperCase().replace(/[^A-Z0-9.\-]/g, '')}; }) : [];
+  return {body, go};
+}
+function akGoFromLookups(calls) {                             // the natural place for what was looked up
+  const out = [];
+  for (const c of calls) { const a = c.args || {}, S = String(a.symbol || '').toUpperCase();
+    if (c.name === 'stock_odds') out.push({id: 'odds', t: S}); else if (c.name === 'strategy_fit') out.push({id: 'strategy_fit', t: S});
+    else if (c.name === 'top_movers') out.push({id: 'movers'}); else if (c.name === 'latest_news') out.push({id: 'news'});
+    else if (c.name === 'todays_signals') out.push({id: 'swing'});
+    else if (c.name === 'strategy_performance') out.push({id: 'scoreboard'}, {id: 'forward_tests'});
+    else if (c.name === 'account_details') out.push({id: 'accounts'}); else if (/^forward_test/.test(c.name)) out.push({id: 'forward_tests'});
+    else if (c.name === 'where_do_i_hold') out.push({id: 'forward_tests'}); }
+  return out;
+}
+function akGoHtml(go) {
+  const seen = new Set(), ok = go.filter(g => AK_SEC[g.id] && akCan(g.id)).filter(g => { const k = g.id + ':' + (['odds', 'strategy_fit'].includes(g.id) ? g.t : ''); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 4);
+  if (!ok.length) return '';
+  return `<div class="ak-go"><span>Go to</span>${ok.map(g => `<button type="button" data-go="${esc(g.id)}" data-go-t="${esc(['odds', 'strategy_fit'].includes(g.id) ? g.t : '')}">${esc(AK_SEC[g.id][0])}${['odds', 'strategy_fit'].includes(g.id) && g.t ? ' · ' + esc(g.t) : ''}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div>`;
+}
+async function akGo(id, t) {
+  const d = AK_SEC[id]; if (!d) return; let el = document.querySelector(d[1]); if (!el) return;
+  const v = el.closest('[data-view]')?.dataset.view || 'research';
+  if (typeof viewSet === 'function' && typeof VIEW !== 'undefined' && VIEW.cur !== v) viewSet(v);
+  if (id === 'swing' || id === 'strongest') { if (typeof HS !== 'undefined') { HS.tab = id === 'swing' ? 'swing' : 'long'; try { localStorage.setItem('hs-tab', HS.tab); } catch (e) {} if (typeof hsLoad === 'function') hsLoad(); if (typeof hsRender === 'function') hsRender(); } }
+  if (t && (id === 'odds' || id === 'strategy_fit') && typeof odGo === 'function') odGo(t);
+  await new Promise(r => setTimeout(r, 120)); el = document.querySelector(d[1]); if (!el) return;
+  if (el.tagName === 'DETAILS') el.open = true;
+  const y = el.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
+}
+document.addEventListener('click', e => { const b = e.target.closest?.('[data-go]'); if (!b) return; e.preventDefault(); akGo(b.dataset.go, b.dataset.goT); });
+
 async function akAsk() {
   const box = document.getElementById('ak-q'), out = document.getElementById('ak-out'), q = (box?.value || '').trim(); if (!q || AK.busy) return;
   AK.busy = true; const btn = document.getElementById('ak-go'); btn.disabled = true;
@@ -6475,20 +6527,21 @@ async function akAsk() {
     const post = b => fetch(`${SB_URL}/functions/v1/ask-finny`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(b)})
       .then(r => r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})));
     const history = AK.hist.slice(-4).map(h => ({q: h.q, a: h.a.slice(0, 1500)}));   // the conversation so far, so follow-ups ("why did that…") make sense (6.103)
-    let j = await post({question: q, symbol: ctx?.symbol || null, context: ctx, history});
+    let j = await post({question: q, symbol: ctx?.symbol || null, context: ctx, history}); const calls = [];
     for (let round = 0; j.ok && j.pending && round < 3; round++) {        // Gemini asked for live numbers: run them here, send them back
-      const need = j.need || []; need.forEach(c => used.push(akLabel(c)));
+      const need = j.need || []; need.forEach(c => { used.push(akLabel(c)); calls.push(c); });
       out.innerHTML = `<div class="ak-think"><i></i><i></i><i></i><span>Checking ${esc(need.map(akLabel).join(', '))}…</span></div>`;
       const results = await Promise.all(need.map((c, i) => i < 4 ? akRun(c) : {error: 'at most 4 lookups at once'}));
       j = await post({pending: j.pending, results});
     }
     if (!j.ok) throw new Error(j.error || 'no answer');
-    const logo = document.querySelector('.brand-mark img')?.src || '', src = akSources(j.answer || '', j.sources || []);
+    const gp = akGoParse(j.answer || ''), goHtml = akGoHtml([...gp.go, ...akGoFromLookups(calls)]);
+    const logo = document.querySelector('.brand-mark img')?.src || '', src = akSources(gp.body, j.sources || []);
     const earlier = AK.hist.slice(-4);
     AK.hist.push({q, a: src.text}); AK.hist = AK.hist.slice(-6); akSave(); if (box) box.value = '';
     out.innerHTML = `<div class="ak-card"><div class="ak-who">${logo ? `<img src="${logo}" alt="">` : ''}<div><b>Finny</b><span>from our research${ctx ? ' · ' + esc(ctx.symbol) : ''}</span></div>
         <button type="button" class="ak-new" title="Forget this conversation and start fresh">New conversation</button></div>
-      <div class="ak-q">${esc(q)}</div><div class="ak-a"><p>${akFmt(src.text)}</p></div>`
+      <div class="ak-q">${esc(q)}</div><div class="ak-a"><p>${akFmt(src.text)}</p></div>${goHtml}`
       + (used.length ? `<div class="ak-live"><span><i></i>Checked live</span>${[...new Set(used)].map(x => `<em>${esc(x)}</em>`).join('')}</div>` : '') + src.html
       + `<p class="ak-foot">AI answer (${esc((j.model || 'Gemini').replace(' (cached)', ''))}) from Finny's research only. It can make mistakes; history, not investment advice.${earlier.length ? ` Follow-up questions use this conversation (${earlier.length + 1} questions so far).` : ' Ask a follow-up: Finny remembers this conversation.'}</p>
       ${earlier.length ? `<details class="ak-hist"><summary>Earlier in this conversation (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><p>${akFmt(h.a)}</p></div>`).join('')}</details>` : ''}</div>`;
