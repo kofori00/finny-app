@@ -6865,6 +6865,33 @@ async function v2Board() {
       rows.push({name: nm, acc: d, grp: 'picks', since: R.shadowStart, ret: R.pts.length ? R[k] : null, spy: R.pts.length ? R.spy : null, dd: null, mo: (Date.now() - Date.parse(R.shadowStart)) / (30.44 * 864e5)});
     if (R.oldStart) rows.push({name: 'Shadow: old rule, 4+ of 21', acc: 'the picks rule until October 2026', grp: 'picks', since: R.oldStart, ret: R.pts.length ? R.old : null, spy: R.pts.length ? R.spy : null, dd: null,
       mo: (Date.now() - Date.parse(R.oldStart)) / (30.44 * 864e5)});
+    // swing strategies (user, 2026-10-27, Bible 6.112): the automatic forward tests (fwd_marks, chained so money added later is not gain) and the
+    // preview sleeves inside Accounts 1 and 3 (virtual trades in live_swing_pos at the last close, SPY from the account's own closes); no costs
+    try {
+      const [bks, cfg, sp] = await Promise.all([sb('fwd_books?select=id,name,strategy_key,created_at,state&closed_at=is.null&strategy_key=like.swing:*'),
+        sb('live_swing_cfg?select=account_id,sleeve,share,max_pos,mode,started_at').catch(() => []), sb('live_swing_pos?select=account_id,sleeve,symbol,entry_date,entry_px,exit_px,status,preview').catch(() => [])]);
+      const mk = bks.length ? await sb(`fwd_marks?select=book_id,date,value,cost,spy_value&book_id=in.(${bks.map(b => b.id).join(',')})&order=date`) : [];
+      const syms = [...new Set(sp.filter(x => x.status === 'open').map(x => x.symbol))];
+      const px = syms.length ? Object.fromEntries((await sb(`live_profile?select=ticker,price:f->>price&ticker=in.(${syms.map(encodeURIComponent).join(',')})`)).map(r => [r.ticker, +r.price])) : {};
+      for (const c of cfg) {
+        const T = sp.filter(x => x.account_id === c.account_id && x.sleeve === c.sleeve), st = c.started_at.slice(0, 10); if (!T.length) continue;
+        const ret = T.reduce((m, x) => { const p = x.status === 'open' ? px[x.symbol] : +x.exit_px; return m + (p && x.entry_px ? p / x.entry_px - 1 : 0); }, 0) / (c.max_pos || 10);
+        const E = eq.filter(r => r.account_id === c.account_id && r.spy_close > 0 && r.date >= st), a = acc.find(x => x.id === c.account_id);
+        rows.push({name: c.sleeve + ' swing sleeve', acc: `${a?.label || c.account_id} · ${c.mode === 'live' ? 'live' : 'preview, virtual trades'} · ${T.length} trade${T.length === 1 ? '' : 's'}, ${T.filter(x => x.status === 'open').length} open`,
+          grp: 'swing', since: st, ret, spy: E.length > 1 ? E[E.length - 1].spy_close / E[0].spy_close - 1 : null, dd: null, mo: (Date.now() - Date.parse(st)) / (30.44 * 864e5)});
+      }
+      const fw = [];
+      for (const b of bks) {
+        const M = mk.filter(m => m.book_id === b.id && m.cost > 0), d0 = b.created_at.slice(0, 10), pts = [{d: d0, a: 1, s: 1}];
+        if (M.length) { let g = M[0].value / M[0].cost, q = M[0].spy_value / M[0].cost; pts.push({d: M[0].date, a: g, s: q});
+          for (let i = 1; i < M.length; i++) { const p = M[i - 1], m = M[i], dc = m.cost - p.cost; g *= 1 + (m.value - p.value - dc) / p.value; q *= 1 + (m.spy_value - p.spy_value - dc) / p.spy_value; pts.push({d: m.date, a: g, s: q}); } }
+        let pk = 1, dd = 0; for (const x of pts) { pk = Math.max(pk, x.a); dd = Math.min(dd, x.a / pk - 1); }
+        const L = pts[pts.length - 1];
+        fw.push({name: b.name.replace(/\s*\(auto\)\s*$/, ''), acc: M.length ? 'automatic forward test · closing prices' : 'automatic forward test · no trade yet', grp: 'swing', since: d0,
+          ret: L.a - 1, spy: L.s - 1, dd: pts.length > 2 ? dd : null, ser: pts.length > 2 ? [pts.map(x => x.a - 1), pts.map(x => x.s - 1)] : null, mo: (Date.now() - Date.parse(d0)) / (30.44 * 864e5)});
+      }
+      rows.push(...fw.sort((x, y) => y.ret - x.ret));
+    } catch (e) { console.warn('swing cards', e); }
     // cards in the style of the home page (user, 2026-10-26, Bible 6.97): big return, gap to SPY, a small chart against SPY, months to the verdict
     const ahead = r => r.ret != null && r.spy != null ? r.ret - r.spy : null;
     const mon = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {month: 'short', year: 'numeric'});
@@ -6880,7 +6907,7 @@ async function v2Board() {
         <div class="sb-mid"><span>SPY <b>${v2Pc(r.spy)}</b></span>${d == null ? '' : `<span class="sb-pill ${d >= 0 ? 'ok' : 'bad'}">${v2Pc(d)} ${d >= 0 ? 'ahead' : 'behind'}</span>`}${r.dd != null ? `<span>worst drop <b>${v2Pc(r.dd)}</b></span>` : ''}</div>
         <div class="sb-prog"><i style="width:${Math.min(100, m / 12 * 100).toFixed(1)}%"></i></div>
         <div class="sb-pl"><span>since ${esc(v2Day(r.since))}</span><span>${done ? (d ?? 0) >= 0 ? 'verdict: ahead of SPY' : 'verdict: behind SPY' : `${Math.floor(m)} of 12 months · verdict ${esc(mon(due(r)))}`}</span></div></div>`; };
-    const acc2 = rows.filter(r => r.grp !== 'picks'), pk = rows.filter(r => r.grp === 'picks'), up = rows.filter(r => (ahead(r) ?? -1) >= 0).length;
+    const acc2 = rows.filter(r => !r.grp), pk = rows.filter(r => r.grp === 'picks'), sw = rows.filter(r => r.grp === 'swing'), up = rows.filter(r => (ahead(r) ?? -1) >= 0).length;
     const first = rows.map(due).sort()[0];
     el.innerHTML = `
       <div class="hs-sum sb-sum">
@@ -6891,6 +6918,7 @@ async function v2Board() {
       <div class="v2-lh"><b>Paper accounts</b><span>a strategy runs each one, with paper money · line = the account, dotted = SPY</span></div>
       <div class="sb-list">${acc2.map(card).join('')}</div>
       ${pk.length ? `<div class="v2-lh"><b>Monthly picks and their shadows</b><span>the picks as published, and the same picks under other rules</span></div><div class="sb-list">${pk.map(card).join('')}</div>` : ''}
+      ${sw.length ? `<div class="v2-lh"><b>Swing strategies</b><span>the automatic forward tests and the preview sleeves in Accounts 1 and 3 · closing prices, no trading costs</span></div><div class="sb-list">${sw.map(card).join('')}</div>` : ''}
       ${earlier.length ? `<details class="about"><summary>Earlier strategies in these accounts</summary><p class="v2-note">Replaced before the current ones started: ${earlier.map(r => `${esc(r.acc)} ${v2Day(r.since)} to ${v2Day(r.to)}: ${v2Pc(r.ret)} vs SPY ${v2Pc(r.spy)}, worst drop ${v2Pc(r.dd)}`).join('; ')}. They lost to the market, which is part of why they were replaced; that history stays visible here.</p></details>` : ''}
       <p class="v2-note">A strategy is judged only after 12 months live: before that, normal ups and downs are bigger than any edge we expect. Backtests are the hypothesis; this is the test. Paper money, not real trades.</p>`;
   } catch (e) { el.innerHTML = `<p class="note">Could not load the scoreboard: ${esc(e.message)}</p>`; }
