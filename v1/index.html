@@ -507,6 +507,7 @@
   @keyframes vtPulse{0%,100%{opacity:1}50%{opacity:.35}}
   body.v-analyze .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="analyze"]){display:none!important}
   body.v-accounts .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="accounts"]){display:none!important}
+  body.v-research .wrap > [data-view]{display:none!important}   /* Research shows only research (restored 6.111: lost in 6.100) */
   body.v-analyze #ux-bar,body.v-accounts #ux-bar{display:none!important} body.v-research #ux-jh,body.v-research #ux-jf,body:not(.v-analyze):not(.v-accounts) #ux-jf{display:none!important}
   header .ux-jh{color:var(--ink-2);margin-left:auto} header .ux-jh:hover{color:var(--accent)}
   .ux-jf{position:fixed;z-index:60;top:calc(env(safe-area-inset-top) + 10px);right:16px;max-width:calc(100vw - 32px);box-shadow:0 10px 28px rgba(0,0,0,.32);
@@ -1012,7 +1013,7 @@
     body.v-accounts .wrap>#v2-board-p,body.v-accounts .wrap>#fwd-panel{grid-column:auto}
     .sb-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
   }
-  body.an-empty #tl-panel.an-open{display:block!important} body.v-analyze #tl-panel.an-open .tl-row{display:flex}   /* Strategy fit opened from its tile: visible with its own search box (6.110) */
+  body.v-analyze.an-empty #tl-panel.an-open{display:block!important} body.v-analyze #tl-panel.an-open .tl-row{display:flex}   /* Strategy fit opened from its tile: visible with its own search box (6.110) */
   .an-col{display:none!important} body.v-analyze #an-pulse{display:none!important}
   .an-explore{margin:22px 4px 8px} .an-explore b{display:block;font:800 18px var(--font-display);color:var(--ink)} .an-explore span{font-size:12.5px;color:var(--muted)} .an-explore[hidden]{display:none!important}
   .an-bar{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 8px;padding:12px 14px;border-radius:18px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);text-align:left;cursor:pointer;font:inherit}
