@@ -606,6 +606,7 @@
   .od-drt i.pos{background:var(--good)} .od-drt i.neg{background:var(--bad)}
   .od-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;font-size:12.5px;color:var(--ink-2)}
   .od-badge{display:inline-block;margin-left:8px;font:700 10.5px var(--font-ui);padding:2px 7px;border-radius:999px;vertical-align:6px;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--ink-2);letter-spacing:.02em}
+  .tv-link{display:inline-block;margin-left:8px;font:600 11px var(--font-ui);padding:2px 8px;border-radius:999px;vertical-align:middle;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--accent);text-decoration:none;letter-spacing:.02em;transition:all .15s} .tv-link:hover{background:var(--accent);color:#0a1210}
   .od-chart{margin:4px 0 12px} .od-spark{width:100%;height:54px;display:block} .od-chs{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px}
   .od-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px} @media (max-width:760px){.od-tiles{grid-template-columns:repeat(2,minmax(0,1fr))} .od-tiles>.od-t:first-child{grid-column:1 / -1}}
   .od-oprow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%;margin-top:6px} .od-pup span{color:var(--good);margin-left:4px} .od-pdn span{color:var(--bad);margin-left:4px}
@@ -5306,7 +5307,7 @@ function tlShow(ticker) {
     : `None of our ${SF.length} validated strategy families would buy ${tlEsc(p.ticker)} today${rel.length ? `; ${rel.length} have it close to their buy line` : ''}.`;
   el.innerHTML = `${banner}
     <div class="cx2 tlx"><div class="tl-top">
-      <div class="tl-id"><div class="tl-tk">${tlEsc(p.ticker)}</div><div class="tl-name">${tlEsc(tlTitle(p.name || ''))}</div><div class="tl-sub">${tlEsc(p.sector || '')} · $${f.mc ? (f.mc / 1e9).toFixed(0) : '–'}bn · 12m ${tlPct(f.mom12m, 0)}</div>
+      <div class="tl-id"><div class="tl-tk">${tlEsc(p.ticker)}<a class="tv-link" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(p.ticker)}" target="_blank" rel="noopener" title="Open ${tlEsc(p.ticker)} chart on TradingView">TV ↗</a></div><div class="tl-name">${tlEsc(tlTitle(p.name || ''))}</div><div class="tl-sub">${tlEsc(p.sector || '')} · $${f.mc ? (f.mc / 1e9).toFixed(0) : '–'}bn · 12m ${tlPct(f.mom12m, 0)}</div>
         <div class="tl-chips">${chips}${swing}</div></div>
       <div class="tl-score"><div class="tl-ring" style="--p:${Math.min(100, score).toFixed(1)}"><span>${score.toFixed(0)}</span></div>
         <div><div class="tl-fit" style="color:${fit[1]}">${fit[0]}</div><div class="tl-sub">voting score · beats ${cls.pct.toFixed(0)}% of S&amp;P 500</div>
@@ -5812,7 +5813,7 @@ function odShowA(A) {
   const sc = A.member && TL.scores ? TL.scores.sc[A.sym] : null, cls = sc != null ? tlClass(sc) : null;
   const inCmp = OD.cmp.includes(A.sym);
   el.innerHTML = `
-    <div class="od-head"><div class="od-hl"><div class="od-tk">${esc(A.sym)}${A.member ? '<span class="od-badge">S&amp;P 500</span>' : A.etf ? '<span class="od-badge">ETF</span>' : A.own?.asset?.exchange ? `<span class="od-badge">${esc(A.own.asset.exchange)}</span>` : ''}</div>
+    <div class="od-head"><div class="od-hl"><div class="od-tk">${esc(A.sym)}<a class="tv-link" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(A.sym)}" target="_blank" rel="noopener" title="Open ${esc(A.sym)} chart on TradingView">TV ↗</a>${A.member ? '<span class="od-badge">S&amp;P 500</span>' : A.etf ? '<span class="od-badge">ETF</span>' : A.own?.asset?.exchange ? `<span class="od-badge">${esc(A.own.asset.exchange)}</span>` : ''}</div>
         <div class="od-nm">${esc(tlTitle(A.name || ''))}${A.p?.sector ? ' · ' + esc(A.p.sector) : ''}</div></div>
       <div class="od-px">$${isFinite(A.f.price) ? (+A.f.price).toFixed(2) : '–'}<span class="${today >= 0 ? 'pos' : 'neg'}">${odS(today, 2)}</span></div></div>
     ${A.own?.spark ? `<div class="od-chart">${odSpark(A.own.spark, 320, 54)}<div class="od-chs"><span>1 year</span><span>${odS(A.f.mom12m ?? A.own.f?.mom12m)}</span></div></div>` : ''}
@@ -7131,7 +7132,8 @@ async function fwdMenu(el) {
     opts = (man.length ? man.map(b => `<button class="fwd-o" data-act="add" data-book="${b.id}"><b>Add to ${esc(b.name)}</b><span>${FWD.pos.filter(p => p.book_id === b.id && !p.exit_at).length} open · $1,000 at the live price</span></button>`).join('')
       : `<button class="fwd-o fwd-main" data-act="add"><b>Start a forward test</b><span>$1,000 at the live price now · tracked against SPY</span></button>`)
       + `<button class="fwd-o" data-act="new"><b>Add to a new book…</b><span>keep this test apart from the others</span></button>`
-      + (typeof odGo === 'function' ? `<button class="fwd-o fwd-lite" data-act="odds"><b>Open its odds</b></button>` : '');
+      + (typeof odGo === 'function' ? `<button class="fwd-o fwd-lite" data-act="odds"><b>Open its odds</b></button>` : '')
+      + `<a class="fwd-o fwd-lite" data-act="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(T.t)}" target="_blank" rel="noopener" style="text-decoration:none"><b>Open chart on TradingView ↗</b><span>interactive chart in a new tab</span></a>`;
   } else if (T.follow) {                                            // a swing strategy: follow its signals and exits automatically (6.91)
     const ex = open.find(b => b.strategy_key === 'swing:' + T.follow), sp = T.spec || {};
     opts = ex ? `<p class="note">Already followed in <b>${esc(ex.name)}</b>. It trades every evening at the close.</p>`
@@ -7152,6 +7154,7 @@ async function fwdMenu(el) {
   sh.addEventListener('click', async e => {
     if (e.target === sh) return close(); const b = e.target.closest('[data-act]'); if (!b) return; const act = b.dataset.act;
     if (act === 'x') return close();
+    if (act === 'tv') return close();
     if (act === 'odds') { close(); return odGo(T.t); }
     let body;
     if (act === 'add') body = {action: 'add', tickers: [T.t], ...(b.dataset.book ? {book_id: +b.dataset.book} : {new_book: {name: 'My forward tests'}})};
