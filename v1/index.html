@@ -6351,7 +6351,7 @@ Object.assign(AK_LOOK, {
     return {what_swing_means: 'Swing strategies buy short-term dips at the close and sell within 2 to 10 trading days. The paper accounts (SXG4, BLTRUE/BLMOM/K10, BOOK5/Q04), SX25 and the monthly picks are long-term books, NOT swing strategies.',
       swing_strategies: list, swing_sleeves_in_paper_accounts: sleeves, signals_as_of_close: TL.asof};
   },
-  async signal_history({signal, year, month} = {}) {        // why a swing signal had good or bad periods (6.120): after the fact, not a forecast
+  async signal_history({signal, year, month, symbol} = {}) {        // why a swing signal had good or bad periods (6.120): after the fact, not a forecast
     if (!AK.why) AK.why = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_why,signal_why_owner)')).map(r => r.data));   // research signals: owner row (RLS)
     const MAP = {R18L26: 'R18L26', R18P12: 'R18P12', HB: 'HB', S4P23: 'HB', S14L19: 'HB', S14A10: 'HB', S14L08: 'HB', HBV: 'HBV', S7P21: 'HBV', S1L20: 'S1L20', S3A09: 'S3A09', S12P15: 'S12P15'};
     const k = MAP[String(signal || 'R18L26').toUpperCase().replace(/[^A-Z0-9]/g, '')], pub = ['R18L26', 'R18P12'];
@@ -6365,6 +6365,10 @@ Object.assign(AK_LOOK, {
     return {signal: k, name: w.label, strategy: w.strategy, judged_after_days: w.hold, signals: w.n, hit_pct: akPc(w.hit),
       when_sp500_rose_same_days_pct: akPc(w.hit_mkt_up), when_sp500_fell_same_days_pct: akPc(w.hit_mkt_down), yearly_hit_vs_market_correlation: w.corr_years,
       typical_year_pct: [akPc(w.typical_low), akPc(w.typical_high)],
+      stock_own_record: symbol ? await (async () => { if (!AK.tick) AK.tick = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_ticker,signal_ticker_owner)')).map(r => r.data));
+        const s = String(symbol).toUpperCase(), T = AK.tick[k], r = T?.stocks?.[s]; if (!r) return `no ${k} signals on ${s} since 2016`;
+        return {symbol: s, signals: r[0], higher_after_hold: r[1], hit_pct: akPc(r[1] / r[0]), calm_markets: `${r[3]} of ${r[2]}`, fearful_markets: `${r[5]} of ${r[4]}`, last_signal: r[6],
+          all_stocks_hit_pct: akPc(T.base), note: 'History, not odds: with few signals per stock the range is wide. Tested (Bible 6.122): a stock\'s own record, shrunk or by regime, predicted its next signals WORSE than the plain average, so the app keeps the plain odds.'}; })() : undefined,
       real_trades_with_own_exits: w.trade ? {trades: w.trade.trades, profitable_pct: akPc(w.trade.win), avg_return_after_costs_pct: Math.round(w.trade.avg * 10000) / 100, max_days: w.trade.hold_max} : null,
       a_priori_note: 'Three test rounds (stock profile, crowding, regime, calendar, market state) found no a-priori condition that beats the plain average out of sample; the market\'s next-week direction drives the outcome and could not be predicted (AUC 0.48).',
       requested_year: ys ? Y.find(x => x.year === ys) || 'no signals that year' : undefined, months_of_requested_year: ys ? M.filter(x => x.month.startsWith(String(ys))) : undefined,

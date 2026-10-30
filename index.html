@@ -1136,6 +1136,7 @@
   .lc-sp{width:120px;height:34px;flex:none} .lc-sp .b{fill:var(--accent-soft);stroke:none} .lc-sp .bar{stroke:var(--muted);stroke-dasharray:3 3;stroke-width:1;vector-effect:non-scaling-stroke}
   .lc-sp .m{fill:none;stroke:var(--accent);stroke-width:2;vector-effect:non-scaling-stroke} .lc-sp .l{fill:none;stroke:var(--ink-2);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.7}
   .lc-range{display:block;margin-top:6px;font-size:12.5px;color:var(--ink-2)}
+  .lc-own{display:block;margin-top:4px;font-size:12.5px;color:var(--ink-2)} .lc-own b{color:var(--ink)}
   .lc-tw{overflow-x:auto} .lc-t{white-space:nowrap} .lc-t small{display:block;font-size:10.5px;color:var(--muted)}
   .rs-inline{font:inherit;font-weight:700;background:none;border:0;padding:0;color:var(--accent);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
   @media (max-width:560px){ .v2-panel{padding:20px 16px 14px} .v2-st b{font-size:17px} .v2-list{grid-template-columns:1fr} .fwd-st b{font-size:16px} }
@@ -6465,7 +6466,7 @@ Object.assign(AK_LOOK, {
     return {what_swing_means: 'Swing strategies buy short-term dips at the close and sell within 2 to 10 trading days. The paper accounts (SXG4, BLTRUE/BLMOM/K10, BOOK5/Q04), SX25 and the monthly picks are long-term books, NOT swing strategies.',
       swing_strategies: list, swing_sleeves_in_paper_accounts: sleeves, signals_as_of_close: TL.asof};
   },
-  async signal_history({signal, year, month} = {}) {        // why a swing signal had good or bad periods (6.120): after the fact, not a forecast
+  async signal_history({signal, year, month, symbol} = {}) {        // why a swing signal had good or bad periods (6.120): after the fact, not a forecast
     if (!AK.why) AK.why = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_why,signal_why_owner)')).map(r => r.data));   // research signals: owner row (RLS)
     const MAP = {R18L26: 'R18L26', R18P12: 'R18P12', HB: 'HB', S4P23: 'HB', S14L19: 'HB', S14A10: 'HB', S14L08: 'HB', HBV: 'HBV', S7P21: 'HBV', S1L20: 'S1L20', S3A09: 'S3A09', S12P15: 'S12P15'};
     const k = MAP[String(signal || 'R18L26').toUpperCase().replace(/[^A-Z0-9]/g, '')], pub = ['R18L26', 'R18P12'];
@@ -6479,6 +6480,10 @@ Object.assign(AK_LOOK, {
     return {signal: k, name: w.label, strategy: w.strategy, judged_after_days: w.hold, signals: w.n, hit_pct: akPc(w.hit),
       when_sp500_rose_same_days_pct: akPc(w.hit_mkt_up), when_sp500_fell_same_days_pct: akPc(w.hit_mkt_down), yearly_hit_vs_market_correlation: w.corr_years,
       typical_year_pct: [akPc(w.typical_low), akPc(w.typical_high)],
+      stock_own_record: symbol ? await (async () => { if (!AK.tick) AK.tick = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_ticker,signal_ticker_owner)')).map(r => r.data));
+        const s = String(symbol).toUpperCase(), T = AK.tick[k], r = T?.stocks?.[s]; if (!r) return `no ${k} signals on ${s} since 2016`;
+        return {symbol: s, signals: r[0], higher_after_hold: r[1], hit_pct: akPc(r[1] / r[0]), calm_markets: `${r[3]} of ${r[2]}`, fearful_markets: `${r[5]} of ${r[4]}`, last_signal: r[6],
+          all_stocks_hit_pct: akPc(T.base), note: 'History, not odds: with few signals per stock the range is wide. Tested (Bible 6.122): a stock\'s own record, shrunk or by regime, predicted its next signals WORSE than the plain average, so the app keeps the plain odds.'}; })() : undefined,
       real_trades_with_own_exits: w.trade ? {trades: w.trade.trades, profitable_pct: akPc(w.trade.win), avg_return_after_costs_pct: Math.round(w.trade.avg * 10000) / 100, max_days: w.trade.hold_max} : null,
       a_priori_note: 'Three test rounds (stock profile, crowding, regime, calendar, market state) found no a-priori condition that beats the plain average out of sample; the market\'s next-week direction drives the outcome and could not be predicted (AUC 0.48).',
       requested_year: ys ? Y.find(x => x.year === ys) || 'no signals that year' : undefined, months_of_requested_year: ys ? M.filter(x => x.month.startsWith(String(ys))) : undefined,
@@ -7369,7 +7374,8 @@ async function lcLoad(force) {
   if (LC.busy || (LC.days && !force)) return; LC.busy = true;
   try { LC.days = await sb('odds_calls_daily?select=kind,grp,day,n,ups,beats,ret,spy_ret,p_prior,base&order=day'); LC.err = null; } catch (e) { LC.err = e.message; }
   try { LC.ranges = (await sb('live_models?select=data&key=eq.signal_ranges'))[0]?.data || null; } catch (e) { LC.ranges = null; }   // yearly spread per signal (6.118)
-  try { LC.why = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_why,signal_why_owner)')).map(r => r.data)); } catch (e) { LC.why = null; }   // why good and bad years (6.120); the _owner row only reaches the owner (RLS)
+  try { LC.why = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_why,signal_why_owner)')).map(r => r.data)); } catch (e) { LC.why = null; }
+  try { LC.tick = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_ticker,signal_ticker_owner)')).map(r => r.data)); } catch (e) { LC.tick = null; }   // per-stock record (6.122)   // why good and bad years (6.120); the _owner row only reaches the owner (RLS)
   await lcLive(); LC.busy = false; lcSafe();
   clearInterval(LC.timer); LC.timer = setInterval(async () => { if (document.visibilityState === 'visible' && VIEW.cur === 'analyze' && lcMarketOpen()) { await lcLive(); lcSafe(); } }, 60e3);
 }
@@ -7416,11 +7422,22 @@ function lcWhy(k, named) {
   return `<span class="lc-range lc-why">${named ? `<b>${esc(w.strategy)}:</b> ` : ''}If the S&amp;P 500 rises over the next ${w.hold} days, history says about ${lcP(w.hit_mkt_up)} of these signals end higher; if it falls, about ${lcP(w.hit_mkt_down)}. Nobody knows the market's next week, so the single odds above stay the honest a-priori number.</span>${tr}
     <span class="lc-range">Why some periods were better: best year ${hi ? yr(hi) : '–'}, weakest ${lo ? yr(lo) : '–'}. That explains the past; it does not say what the market does next.</span>`;
 }
+// each stock's own record with every swing signal, calm vs fearful markets (6.122): history with a 95% range, not odds
+const LC_CODE = {R18L26: 'R18L26', R18P12: 'R18P12', HB: 'S4P23', HBV: 'S7P21', S1L20: 'S1L20', S3A09: 'S3A09', S12P15: 'S12P15'};
+function lcWilson(k, n) { if (!n) return [0, 1]; const z = 1.96, p = k / n, d = 1 + z * z / n, c = (p + z * z / (2 * n)) / d, h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d; return [Math.max(0, c - h), Math.min(1, c + h)]; }
+function lcOwnRecord(sym) {
+  if (!LC.tick || !sym) return '';
+  const parts = Object.keys(LC_CODE).filter(k => LC.tick[k]?.stocks?.[sym]).map(k => {
+    const T = LC.tick[k], [n, u, nc, uc, nf, uf] = T.stocks[sym], [lo, hi] = lcWilson(u, n);
+    return `<span class="lc-own"><b>${LC_CODE[k]}</b>: ${u} of ${n} higher after ${T.hold} days (${lcP(u / n)}${n >= 10 ? `, likely ${lcP(lo)} to ${lcP(hi)}` : ', too few to read much'}) · calm markets ${uc} of ${nc} · fearful ${uf} of ${nf}; all stocks ${lcP(T.base)}</span>`; });
+  return parts.length ? `<li class="lc-ownli"><b>${esc(sym)}'s own record with our swing signals</b> (history, not odds; 2016-2026):${parts.join('')}</li>` : '';
+}
 function lcPaint() {
   const el = document.getElementById('od-body'); if (!el || !LC.days || !OD.ticker) return;
   el.querySelectorAll('.lc, .lc-all').forEach(x => x.remove());
   const A = OD.lastA; if (!A || A.sym !== OD.ticker) return;
   const lis = [...el.querySelectorAll('.od-plain li')];
+  const ul = el.querySelector('.od-plain ul'); if (ul && !ul.querySelector('.lc-ownli')) { const t = lcOwnRecord(A.sym); if (t) ul.insertAdjacentHTML('beforeend', t); }
   const sw = A.H?.[0]?.sig && String(A.H[0].sig).match(/R18(L26|P12)/)?.[0], liS = lis.find(li => /swing buy signal/.test(li.textContent));
   if (sw && liS) { const P = lcPost(sw, sw); if (P) liS.insertAdjacentHTML('beforeend', lcBlock(P, lcRunningSwing(sw))); }
   const rg = sw && LC.ranges?.[sw];                              // one number hides how much it varies: the typical-year range (6.118)
