@@ -6465,6 +6465,27 @@ Object.assign(AK_LOOK, {
     return {what_swing_means: 'Swing strategies buy short-term dips at the close and sell within 2 to 10 trading days. The paper accounts (SXG4, BLTRUE/BLMOM/K10, BOOK5/Q04), SX25 and the monthly picks are long-term books, NOT swing strategies.',
       swing_strategies: list, swing_sleeves_in_paper_accounts: sleeves, signals_as_of_close: TL.asof};
   },
+  async signal_history({signal, year, month} = {}) {        // why a swing signal had good or bad periods (6.120): after the fact, not a forecast
+    if (!AK.why) AK.why = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_why,signal_why_owner)')).map(r => r.data));   // research signals: owner row (RLS)
+    const MAP = {R18L26: 'R18L26', R18P12: 'R18P12', HB: 'HB', S4P23: 'HB', S14L19: 'HB', S14A10: 'HB', S14L08: 'HB', HBV: 'HBV', S7P21: 'HBV', S1L20: 'S1L20', S3A09: 'S3A09', S12P15: 'S12P15'};
+    const k = MAP[String(signal || 'R18L26').toUpperCase().replace(/[^A-Z0-9]/g, '')], pub = ['R18L26', 'R18P12'];
+    if (!k) return {error: 'unknown signal', known: Object.keys(MAP)};
+    if (!pub.includes(k) && !akOwn()) return {error: 'that research signal is only visible to the owner'};
+    const w = AK.why[k]; if (!w) return {error: 'no history stored for ' + k};
+    const Y = Object.entries(w.years || {}).map(([y, v]) => ({year: +y, hit_pct: akPc(v[0]), signals: v[1], sp500_rose_in_pct_of_windows: akPc(v[2]), sp500_avg_move_pct: akPc(v[3]), signal_avg_move_pct: akPc(v[4])}));
+    const M = Object.entries(w.months || {}).map(([m, v]) => ({month: m, hit_pct: akPc(v[0]), signals: v[1], sp500_rose_in_pct_of_windows: akPc(v[2]), sp500_avg_move_pct: akPc(v[3])}));
+    const want = String(month || '').slice(0, 7), ys = year ? +year : (want ? +want.slice(0, 4) : null), big = M.filter(x => x.signals >= 20).sort((a, b) => a.hit_pct - b.hit_pct);
+    const tab = t => (t || []).map(([g, n, h, d, clear]) => ({group: g, signals: n, hit_pct: akPc(h), vs_rest_pts: d == null ? null : Math.round(d * 1000) / 10, clearly_different: clear}));
+    return {signal: k, name: w.label, strategy: w.strategy, judged_after_days: w.hold, signals: w.n, hit_pct: akPc(w.hit),
+      when_sp500_rose_same_days_pct: akPc(w.hit_mkt_up), when_sp500_fell_same_days_pct: akPc(w.hit_mkt_down), yearly_hit_vs_market_correlation: w.corr_years,
+      typical_year_pct: [akPc(w.typical_low), akPc(w.typical_high)],
+      requested_year: ys ? Y.find(x => x.year === ys) || 'no signals that year' : undefined, months_of_requested_year: ys ? M.filter(x => x.month.startsWith(String(ys))) : undefined,
+      requested_month: want.length === 7 ? M.find(x => x.month === want) || 'fewer than 1 signal that month' : undefined,
+      all_years: ys ? undefined : Y, weakest_months: big.slice(0, 3), strongest_months: big.slice(-3).reverse(),
+      calendar: {month_of_year: tab(w.month), weekday: tab(w.weekday), turn_of_month: tab(w.turn), earnings_season: tab(w.season)},
+      own_earnings: w.earnings ? tab(w.earnings) : 'not applicable (ETFs)', own_news_on_signal_day: w.news ? tab(w.news) : 'not applicable (ETFs)',
+      note: 'After-the-fact explanation from 2016-2026 signals: mostly the S&P 500\'s own move over the holding days. With many calendar comparisons, a few "clearly different" groups are expected by chance (Wednesday is likely one). Not a forecast.'};
+  },
   async where_do_i_hold({symbol} = {}) {
     const s = await akSym(symbol), out = {symbol: s, paper_accounts: null, forward_tests: null};
     if (akOwn()) { const [acc, eq] = await Promise.all([sb('live_accounts?select=id,label'), sb(`live_equity?select=account_id,date,equity,positions&date=gte.${new Date(Date.now() - 10 * 864e5).toISOString().slice(0, 10)}&order=date.desc`)]);
@@ -6475,7 +6496,7 @@ Object.assign(AK_LOOK, {
     return out;
   }
 });
-const AK_LABEL = {swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
+const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
   top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', todays_signals: () => "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
@@ -7228,7 +7249,7 @@ function fwdRender() {
     const ret = c ? v / c - 1 : 0, spy = c ? s / c - 1 : 0, lead = Math.abs(ret - spy) < 5e-5 ? 0 : ret - spy, days = Math.max(0, Math.floor((Date.now() - Date.parse(b.created_at)) / 864e5));
     const row = p => { const [x, y] = fwdVal(p), r = x / p.notional - 1, d = r - (y / p.notional - 1), now = p.exit_at ? p.exit_price : FWD.px?.[p.ticker]?.p;
       return `<tr class="${p.exit_at ? 'fwd-cl' : ''}"><td><button class="fwd-tk" data-t="${esc(p.ticker)}">${esc(p.ticker)}</button></td><td>$${(+p.entry_price).toFixed(2)}<small>${esc(fwdTime(p.entry_at))}</small></td>
-        <td>${now ? '$' + (+now).toFixed(2) : '–'}${p.exit_at ? `<small>sold ${esc(fwdTime(p.exit_at))}</small>` : ''}</td><td class="${r >= 0 ? 'pos' : 'neg'}">${fwdPc(r)}</td><td class="${d >= 0 ? 'pos' : 'neg'}">${fwdPc(d)}</td>
+        <td>${now ? '$' + (+now).toFixed(2) : '–'}${p.exit_at ? `<small>sold ${esc(fwdTime(p.exit_at))}</small>` : ''}</td><td class="${r >= 0 ? 'pos' : 'neg'}">${fwdPc(r)}<small title="SPY over the same holding period: most of a swing trade's result is the market (6.120)">market ${fwdPc(y / p.notional - 1)}</small></td><td class="${d >= 0 ? 'pos' : 'neg'}">${fwdPc(d)}</td>
         <td>${p.exit_at ? '' : `<button class="fwd-sell" data-sell="${p.id}" aria-label="Sell ${esc(p.ticker)} at the live price" title="Sell at the live price">×</button>`}</td></tr>`; };
     return `<div class="fwd-b${b.closed_at ? ' fwd-done' : ''}" data-book="${b.id}">
       <div class="fwd-bh"><div>${b.kind === 'strategy' && b.strategy_key !== 'picks' ? `<button type="button" class="rs-name" data-rs="${esc(b.strategy_key)}" title="Open its research"><b>${esc(b.name)}</b> ›</button>` : `<b>${esc(b.name)}</b>`}<small>${b.state?.auto ? 'follows its strategy automatically' : b.kind === 'strategy' ? 'strategy' : 'your picks'} · since ${esc(v2Day(b.created_at.slice(0, 10)))} · ${days} day${days === 1 ? '' : 's'} · ${O.length} open${C.length ? `, ${C.length} sold` : ''}${b.closed_at ? ' · closed' : ''}</small></div>${fwdSpark(b.id)}</div>
@@ -7346,6 +7367,7 @@ async function lcLoad(force) {
   if (LC.busy || (LC.days && !force)) return; LC.busy = true;
   try { LC.days = await sb('odds_calls_daily?select=kind,grp,day,n,ups,beats,ret,spy_ret,p_prior,base&order=day'); LC.err = null; } catch (e) { LC.err = e.message; }
   try { LC.ranges = (await sb('live_models?select=data&key=eq.signal_ranges'))[0]?.data || null; } catch (e) { LC.ranges = null; }   // yearly spread per signal (6.118)
+  try { LC.why = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_why,signal_why_owner)')).map(r => r.data)); } catch (e) { LC.why = null; }   // why good and bad years (6.120); the _owner row only reaches the owner (RLS)
   await lcLive(); LC.busy = false; lcSafe();
   clearInterval(LC.timer); LC.timer = setInterval(async () => { if (document.visibilityState === 'visible' && VIEW.cur === 'analyze' && lcMarketOpen()) { await lcLive(); lcSafe(); } }, 60e3);
 }
@@ -7383,6 +7405,13 @@ function lcRunningOpen(grp) {
   return `<span class="lc-run">Today so far: ${g.up} of ${g.n} such calls are above their open.</span>`;
 }
 // ---- into the odds view: under the swing and open-to-close sentences of "What this means", and one summary for all calls ----
+// why a signal had good and bad years (6.120): after the fact, mostly the market's own move over the holding days; not a forecast
+function lcWhy(k, named) {
+  const w = LC.why?.[k]; if (!w || !w.n || w.hit_mkt_up == null) return '';
+  const ys = Object.entries(w.years || {}).filter(([, v]) => v[1] >= 20), lo = ys.reduce((m, x) => (!m || x[1][0] < m[1][0] ? x : m), null), hi = ys.reduce((m, x) => (!m || x[1][0] > m[1][0] ? x : m), null);
+  const yr = ([y, v]) => `${y} ${lcP(v[0])} (the S&amp;P 500 rose in ${lcP(v[2])} of those ${w.hold}-day windows)`;
+  return `<span class="lc-range lc-why">${named ? `<b>${esc(w.strategy)}:</b> ` : ''}Why some periods were better: when the S&amp;P 500 rose over the same ${w.hold} days, ${lcP(w.hit_mkt_up)} of these signals were up; when it fell, ${lcP(w.hit_mkt_down)}. Best year ${hi ? yr(hi) : '–'}, weakest ${lo ? yr(lo) : '–'}. That explains the past; it does not say what the market does next.</span>`;
+}
 function lcPaint() {
   const el = document.getElementById('od-body'); if (!el || !LC.days || !OD.ticker) return;
   el.querySelectorAll('.lc, .lc-all').forEach(x => x.remove());
@@ -7393,6 +7422,10 @@ function lcPaint() {
   const rg = sw && LC.ranges?.[sw];                              // one number hides how much it varies: the typical-year range (6.118)
   if (rg && liS && !liS.querySelector('.lc-range')) { const yrs = Object.entries(rg.years || {}), wk = yrs.reduce((m, x) => (!m || x[1][0] < m[1][0] ? x : m), null);
     liS.insertAdjacentHTML('beforeend', `<span class="lc-range">How much it varies: in a typical year ${lcP(rg.typical_low)} to ${lcP(rg.typical_high)} of these signals were higher a week later${wk ? `; the weakest year was ${wk[0]} (${lcP(wk[1][0])})` : ''}.</span>`); }
+  if (sw && liS && !liS.querySelector('.lc-why')) { const t = lcWhy(sw); if (t) liS.insertAdjacentHTML('beforeend', t); }
+  const liR = lis.find(li => /Research swing signal/.test(li.textContent));      // the owner's research signals (6.94): the same explanation per signal
+  if (liR && !liR.querySelector('.lc-why') && LC.why) { const codes = {S4P23: 'HB', S7P21: 'HBV', S1L20: 'S1L20', S3A09: 'S3A09', S12P15: 'S12P15'};
+    const t = Object.entries(codes).filter(([c]) => liR.textContent.includes(c)).map(([, k]) => lcWhy(k, true)).filter(Boolean).join(''); if (t) liR.insertAdjacentHTML('beforeend', t); }
   const liO = lis.find(li => /from the open to the close/.test(li.textContent));
   if (A.op && liO) { const g = A.op.p_up > 0.515 ? 'up' : A.op.p_up < 0.495 ? 'down' : 'flat'; const P = g !== 'flat' && lcPost('open', g); if (P) liO.insertAdjacentHTML('beforeend', lcBlock(P, lcRunningOpen(g))); }
   const rows = [['R18L26', 'R18L26', 'Swing signal R18L26', 'higher after 5 days'], ['R18P12', 'R18P12', 'Swing signal R18P12', 'higher after 5 days'],

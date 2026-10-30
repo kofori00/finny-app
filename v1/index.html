@@ -6351,6 +6351,27 @@ Object.assign(AK_LOOK, {
     return {what_swing_means: 'Swing strategies buy short-term dips at the close and sell within 2 to 10 trading days. The paper accounts (SXG4, BLTRUE/BLMOM/K10, BOOK5/Q04), SX25 and the monthly picks are long-term books, NOT swing strategies.',
       swing_strategies: list, swing_sleeves_in_paper_accounts: sleeves, signals_as_of_close: TL.asof};
   },
+  async signal_history({signal, year, month} = {}) {        // why a swing signal had good or bad periods (6.120): after the fact, not a forecast
+    if (!AK.why) AK.why = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_why,signal_why_owner)')).map(r => r.data));   // research signals: owner row (RLS)
+    const MAP = {R18L26: 'R18L26', R18P12: 'R18P12', HB: 'HB', S4P23: 'HB', S14L19: 'HB', S14A10: 'HB', S14L08: 'HB', HBV: 'HBV', S7P21: 'HBV', S1L20: 'S1L20', S3A09: 'S3A09', S12P15: 'S12P15'};
+    const k = MAP[String(signal || 'R18L26').toUpperCase().replace(/[^A-Z0-9]/g, '')], pub = ['R18L26', 'R18P12'];
+    if (!k) return {error: 'unknown signal', known: Object.keys(MAP)};
+    if (!pub.includes(k) && !akOwn()) return {error: 'that research signal is only visible to the owner'};
+    const w = AK.why[k]; if (!w) return {error: 'no history stored for ' + k};
+    const Y = Object.entries(w.years || {}).map(([y, v]) => ({year: +y, hit_pct: akPc(v[0]), signals: v[1], sp500_rose_in_pct_of_windows: akPc(v[2]), sp500_avg_move_pct: akPc(v[3]), signal_avg_move_pct: akPc(v[4])}));
+    const M = Object.entries(w.months || {}).map(([m, v]) => ({month: m, hit_pct: akPc(v[0]), signals: v[1], sp500_rose_in_pct_of_windows: akPc(v[2]), sp500_avg_move_pct: akPc(v[3])}));
+    const want = String(month || '').slice(0, 7), ys = year ? +year : (want ? +want.slice(0, 4) : null), big = M.filter(x => x.signals >= 20).sort((a, b) => a.hit_pct - b.hit_pct);
+    const tab = t => (t || []).map(([g, n, h, d, clear]) => ({group: g, signals: n, hit_pct: akPc(h), vs_rest_pts: d == null ? null : Math.round(d * 1000) / 10, clearly_different: clear}));
+    return {signal: k, name: w.label, strategy: w.strategy, judged_after_days: w.hold, signals: w.n, hit_pct: akPc(w.hit),
+      when_sp500_rose_same_days_pct: akPc(w.hit_mkt_up), when_sp500_fell_same_days_pct: akPc(w.hit_mkt_down), yearly_hit_vs_market_correlation: w.corr_years,
+      typical_year_pct: [akPc(w.typical_low), akPc(w.typical_high)],
+      requested_year: ys ? Y.find(x => x.year === ys) || 'no signals that year' : undefined, months_of_requested_year: ys ? M.filter(x => x.month.startsWith(String(ys))) : undefined,
+      requested_month: want.length === 7 ? M.find(x => x.month === want) || 'fewer than 1 signal that month' : undefined,
+      all_years: ys ? undefined : Y, weakest_months: big.slice(0, 3), strongest_months: big.slice(-3).reverse(),
+      calendar: {month_of_year: tab(w.month), weekday: tab(w.weekday), turn_of_month: tab(w.turn), earnings_season: tab(w.season)},
+      own_earnings: w.earnings ? tab(w.earnings) : 'not applicable (ETFs)', own_news_on_signal_day: w.news ? tab(w.news) : 'not applicable (ETFs)',
+      note: 'After-the-fact explanation from 2016-2026 signals: mostly the S&P 500\'s own move over the holding days. With many calendar comparisons, a few "clearly different" groups are expected by chance (Wednesday is likely one). Not a forecast.'};
+  },
   async where_do_i_hold({symbol} = {}) {
     const s = await akSym(symbol), out = {symbol: s, paper_accounts: null, forward_tests: null};
     if (akOwn()) { const [acc, eq] = await Promise.all([sb('live_accounts?select=id,label'), sb(`live_equity?select=account_id,date,equity,positions&date=gte.${new Date(Date.now() - 10 * 864e5).toISOString().slice(0, 10)}&order=date.desc`)]);
@@ -6361,7 +6382,7 @@ Object.assign(AK_LOOK, {
     return out;
   }
 });
-const AK_LABEL = {swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
+const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
   top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', todays_signals: () => "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
