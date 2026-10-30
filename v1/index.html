@@ -6365,6 +6365,8 @@ Object.assign(AK_LOOK, {
     return {signal: k, name: w.label, strategy: w.strategy, judged_after_days: w.hold, signals: w.n, hit_pct: akPc(w.hit),
       when_sp500_rose_same_days_pct: akPc(w.hit_mkt_up), when_sp500_fell_same_days_pct: akPc(w.hit_mkt_down), yearly_hit_vs_market_correlation: w.corr_years,
       typical_year_pct: [akPc(w.typical_low), akPc(w.typical_high)],
+      real_trades_with_own_exits: w.trade ? {trades: w.trade.trades, profitable_pct: akPc(w.trade.win), avg_return_after_costs_pct: Math.round(w.trade.avg * 10000) / 100, max_days: w.trade.hold_max} : null,
+      a_priori_note: 'Three test rounds (stock profile, crowding, regime, calendar, market state) found no a-priori condition that beats the plain average out of sample; the market\'s next-week direction drives the outcome and could not be predicted (AUC 0.48).',
       requested_year: ys ? Y.find(x => x.year === ys) || 'no signals that year' : undefined, months_of_requested_year: ys ? M.filter(x => x.month.startsWith(String(ys))) : undefined,
       requested_month: want.length === 7 ? M.find(x => x.month === want) || 'fewer than 1 signal that month' : undefined,
       all_years: ys ? undefined : Y, weakest_months: big.slice(0, 3), strongest_months: big.slice(-3).reverse(),

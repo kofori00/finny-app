@@ -6479,6 +6479,8 @@ Object.assign(AK_LOOK, {
     return {signal: k, name: w.label, strategy: w.strategy, judged_after_days: w.hold, signals: w.n, hit_pct: akPc(w.hit),
       when_sp500_rose_same_days_pct: akPc(w.hit_mkt_up), when_sp500_fell_same_days_pct: akPc(w.hit_mkt_down), yearly_hit_vs_market_correlation: w.corr_years,
       typical_year_pct: [akPc(w.typical_low), akPc(w.typical_high)],
+      real_trades_with_own_exits: w.trade ? {trades: w.trade.trades, profitable_pct: akPc(w.trade.win), avg_return_after_costs_pct: Math.round(w.trade.avg * 10000) / 100, max_days: w.trade.hold_max} : null,
+      a_priori_note: 'Three test rounds (stock profile, crowding, regime, calendar, market state) found no a-priori condition that beats the plain average out of sample; the market\'s next-week direction drives the outcome and could not be predicted (AUC 0.48).',
       requested_year: ys ? Y.find(x => x.year === ys) || 'no signals that year' : undefined, months_of_requested_year: ys ? M.filter(x => x.month.startsWith(String(ys))) : undefined,
       requested_month: want.length === 7 ? M.find(x => x.month === want) || 'fewer than 1 signal that month' : undefined,
       all_years: ys ? undefined : Y, weakest_months: big.slice(0, 3), strongest_months: big.slice(-3).reverse(),
@@ -7410,7 +7412,9 @@ function lcWhy(k, named) {
   const w = LC.why?.[k]; if (!w || !w.n || w.hit_mkt_up == null) return '';
   const ys = Object.entries(w.years || {}).filter(([, v]) => v[1] >= 20), lo = ys.reduce((m, x) => (!m || x[1][0] < m[1][0] ? x : m), null), hi = ys.reduce((m, x) => (!m || x[1][0] > m[1][0] ? x : m), null);
   const yr = ([y, v]) => `${y} ${lcP(v[0])} (the S&amp;P 500 rose in ${lcP(v[2])} of those ${w.hold}-day windows)`;
-  return `<span class="lc-range lc-why">${named ? `<b>${esc(w.strategy)}:</b> ` : ''}Why some periods were better: when the S&amp;P 500 rose over the same ${w.hold} days, ${lcP(w.hit_mkt_up)} of these signals were up; when it fell, ${lcP(w.hit_mkt_down)}. Best year ${hi ? yr(hi) : '–'}, weakest ${lo ? yr(lo) : '–'}. That explains the past; it does not say what the market does next.</span>`;
+  const tr = w.trade ? `<span class="lc-range">Traded with the strategy's own exits (stop, early exit, at most ${w.trade.hold_max} days): ${lcP(w.trade.win)} of ${w.trade.trades.toLocaleString()} trades ended in profit, ${w.trade.avg >= 0 ? '+' : '−'}${Math.abs(w.trade.avg * 100).toFixed(2)}% on average after costs.</span>` : '';
+  return `<span class="lc-range lc-why">${named ? `<b>${esc(w.strategy)}:</b> ` : ''}If the S&amp;P 500 rises over the next ${w.hold} days, history says about ${lcP(w.hit_mkt_up)} of these signals end higher; if it falls, about ${lcP(w.hit_mkt_down)}. Nobody knows the market's next week, so the single odds above stay the honest a-priori number.</span>${tr}
+    <span class="lc-range">Why some periods were better: best year ${hi ? yr(hi) : '–'}, weakest ${lo ? yr(lo) : '–'}. That explains the past; it does not say what the market does next.</span>`;
 }
 function lcPaint() {
   const el = document.getElementById('od-body'); if (!el || !LC.days || !OD.ticker) return;
