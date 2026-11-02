@@ -727,6 +727,12 @@
   #mv-panel .mv-all{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:0 0 4px} #mv-panel .mv-all input{width:14px;height:14px;accent-color:var(--accent)}
   #mv-panel .mv-age{font-size:11px;margin:10px 0 0} #mv-panel .mv-hid{font-size:12px;margin:10px 0 0}
   #mv-panel .mv-scope{margin:0 0 8px} #mv-panel .mv-scope button{font-size:12px;padding:5px 12px} #mv-panel .mv-c-spx{background:var(--accent-soft);color:var(--ink-2)}
+  #mv-panel .mv-c-mp{background:rgba(217,119,6,.13);color:#b45309} #mv-panel .mv-c-mpall{background:rgba(217,119,6,.28);font-weight:700}
+  .mp-box{margin:12px 0 0;padding:12px 14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line);font-size:13px;color:var(--ink-2)}
+  .mp-box summary{cursor:pointer;line-height:1.45} .mp-box summary b{color:var(--ink)} .mp-warn{margin:8px 0;font-size:12px;color:#b45309;line-height:1.45}
+  .mp-f{margin:8px 0 4px;line-height:1.5} .mp-r{margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--glass-line)}
+  .mp-rh{display:flex;justify-content:space-between;gap:8px} .mp-rh b{color:var(--ink)} .mp-rh .mp-all{color:#b45309;font-weight:700}
+  .mp-r ul{list-style:none;margin:4px 0 0;padding:0} .mp-r li{margin:2px 0;line-height:1.4} .mp-r li.ok{color:var(--good)} .mp-r li.no{color:var(--muted)}
   .mv-list{display:flex;flex-direction:column}
   .mv-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--glass-line)}
   .mv-row:last-child{border-bottom:0} .mv-row.mv-link{cursor:pointer} .mv-row.mv-link:hover{background:var(--glass)}
@@ -7154,6 +7160,59 @@ function anSync() {                                          // bars follow thei
 const v2odGoAn = odGo; odGo = async function (t) { const r = await v2odGoAn(t); try { anSync(); setTimeout(anSync, 2500); } catch (e) {} return r; };   // strategy fit follows ~0.4 s later
 const v2viewSetAn = viewSet; viewSet = function (v, push) { v2viewSetAn(v, push); anInit(); setTimeout(anSync, 0); };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { anInit(); setTimeout(anSync, 0); }); else { anInit(); setTimeout(anSync, 0); }
+
+// ---------------- mover check (2026-11-02, Bible 6.143): the top 10 gainers and losers OUTSIDE the S&P 500 are checked against our swing
+// rules every 15 minutes by the mover-profile worker (live_mover_profile): features ranked against today's S&P 500 and each rule's
+// conditions. The rules were tested on S&P 500 stocks only, so this is information for the user's own judgement, never a signal.
+const MP = {rows: null, busy: null, at: 0};
+function mpLoad(force) {
+  if (MP.busy) return MP.busy; if (MP.rows && !force && Date.now() - MP.at < 5 * 60e3) return Promise.resolve(MP.rows);
+  MP.busy = sb('live_mover_profile?select=ticker,as_of,at,list,pct,f,rules&order=as_of.desc,at.desc&limit=80').then(rs => {
+    const o = {}; for (const r of rs || []) if (!o[r.ticker]) o[r.ticker] = r; MP.rows = o; MP.at = Date.now(); return o;
+  }).catch(() => (MP.rows ||= {})).finally(() => { MP.busy = null; });
+  return MP.busy;
+}
+const mpBest = r => Object.values(r?.rules || {}).sort((a, b) => (b.all - a.all) || (b.met / b.of - a.met / a.of))[0] || null;
+const mpPc = (x, d = 0) => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(d) + '%';
+const v2mvRenderMP = mvRender; mvRender = function () {
+  v2mvRenderMP(); if (MV.scope !== 'all') return;
+  if (!MP.rows || Date.now() - MP.at > 5 * 60e3) { if (!MP.busy) mpLoad(true).then(() => { if (MV.scope === 'all') mvRender(); }); if (!MP.rows) return; }
+  document.querySelectorAll('#mv-body .mv-row').forEach(row => {
+    const r = MP.rows[row.dataset.od], b = mpBest(r); if (!b || row.querySelector('.mv-c-mp')) return;
+    const tip = `${b.name}: ${b.met} of ${b.of} conditions met (${b.conds.filter(c => !c.ok).map(c => 'missing: ' + c.t).join('; ') || 'all met'}). Our swing rules were tested on S&P 500 stocks only: untested here, not a signal.`;
+    row.querySelector('.mv-tags')?.insertAdjacentHTML('afterbegin', `<span class="mv-chip mv-c-mp${b.all ? ' mv-c-mpall' : ''}" title="${esc(tip)}">${esc(b.name)} ${b.met}/${b.of}</span>`);
+  });
+};
+const v2HeroMP = v2Hero; v2Hero = function (A) {
+  v2HeroMP(A); let box = document.getElementById('mp-box');
+  if (!A?.sym || HERO.demo || A.member) { if (box) box.remove(); return; }
+  if (!MP.rows || Date.now() - MP.at > 5 * 60e3) { if (!MP.busy) mpLoad(true).then(() => { if (HERO.last?.sym === A.sym) v2Hero(A); }); if (!MP.rows) return; }
+  const r = MP.rows[A.sym], hs = document.querySelector('.hero-stats'); if (!r || !hs) { if (box) box.remove(); return; }
+  const b = mpBest(r), S = esc(A.sym), f = r.f || {}, t0 = hs.children[0];
+  if (b && t0) {
+    const v = t0.querySelector('b'); if (v) v.textContent = `${b.met}/${b.of}`;
+    const l = t0.querySelector('.hs-l'), s = t0.querySelector('.hs-s');
+    if (l) l.textContent = `of ${b.name}'s rules met by ${A.sym} today`; if (s) s.textContent = 'untested outside the S&P 500: see the mover check below';
+  }
+  const when = new Date(r.at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  const beat = x => x == null ? '' : ` (beats ${Math.round(x * 100)}% of S&amp;P 500 stocks)`;
+  const body = !r.rules ? `<p class="mp-warn">${f.too_new ? `Only ${f.days} days of trading: too little history to check the rules.` : 'No trade data for today yet: checked again within 15 minutes.'}</p>`
+    : `<p class="mp-f">120-day return <b>${mpPc(f.ret120)}</b>${beat(f.rank120)} · 60-day <b>${mpPc(f.ret60)}</b>${beat(f.rank60)} · beta ${f.beta60 == null ? '–' : f.beta60.toFixed(1)}
+       · today's close in its range (IBS) ${f.ibs == null ? '–' : f.ibs.toFixed(2)} · ${f.days} days of history</p>
+       ${Object.values(r.rules).sort((p, q) => (q.all - p.all) || (q.met / q.of - p.met / p.of)).map(x => `<div class="mp-r"><div class="mp-rh"><b>${esc(x.name)}</b><span class="${x.all ? 'mp-all' : ''}">${x.met}/${x.of}${x.all ? ' · all met' : ''}</span></div>
+         <ul>${x.conds.map(c => `<li class="${c.ok ? 'ok' : 'no'}">${c.ok ? '✓' : '✗'} ${esc(c.t.replace('(members: within their sector)', '(S&P 500 stocks are ranked within their sector)'))}</li>`).join('')}</ul></div>`).join('')}`;
+  const html = `<details class="mp-box" id="mp-box" open><summary><b>Mover check</b> · ${S} is a top ${r.list === 'losers' ? 'loser' : 'gainer'} outside the S&amp;P 500 · ${when}</summary>
+    <p class="mp-warn"><b>Untested here.</b> Our swing rules were tested on S&amp;P 500 stocks only; small, fast-moving stocks behave differently
+    (in our research, lottery-like spikes like these had the weakest returns afterwards). Information for your own judgement, not a signal.
+    During the session the day's range and close are approximate.</p>${body}</details>`;
+  if (box) box.outerHTML = html; else (document.getElementById('hs-line') || hs).insertAdjacentHTML('afterend', html);
+};
+const v2akContextMP = akContext; akContext = function () {
+  const c = v2akContextMP(); if (!c || c.sp500_member) return c; const r = MP.rows?.[c.symbol]; if (!r?.rules) return c;
+  return {...c, mover_check_untested_outside_sp500: {as_of: r.as_of, list: r.list, rank120_vs_sp500: r.f?.rank120, rank60_vs_sp500: r.f?.rank60,
+    rules: Object.values(r.rules).map(x => ({rule: x.name, met: x.met, of: x.of, missing: x.conds.filter(k => !k.ok).map(k => k.t)})),
+    note: 'our swing rules applied to a stock outside the S&P 500: never tested on such stocks; information, not a signal'}};
+};
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
 // Long press (or right-click) on any element with a ticker (data-t / data-od: odds lists, movers, news, picks, high-Sharpe cards) or a strategy
