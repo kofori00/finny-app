@@ -6937,10 +6937,11 @@ async function v2Board() {
       const syms = [...new Set(sp.filter(x => x.status === 'open').map(x => x.symbol))];
       const px = syms.length ? Object.fromEntries((await sb(`live_profile?select=ticker,price:f->>price&ticker=in.(${syms.map(encodeURIComponent).join(',')})`)).map(r => [r.ticker, +r.price])) : {};
       for (const c of cfg) {
-        const T = sp.filter(x => x.account_id === c.account_id && x.sleeve === c.sleeve), st = c.started_at.slice(0, 10); if (!T.length) continue;
+        const T = sp.filter(x => x.account_id === c.account_id && x.sleeve === c.sleeve && (c.mode === 'live' ? !x.preview : !!x.preview)), st = c.started_at.slice(0, 10);   // live sleeves count only real paper trades (6.140)
+        if (!T.length && c.mode !== 'live') continue;
         const ret = T.reduce((m, x) => { const p = x.status === 'open' ? px[x.symbol] : +x.exit_px; return m + (p && x.entry_px ? p / x.entry_px - 1 : 0); }, 0) / (c.max_pos || 10);
         const E = eq.filter(r => r.account_id === c.account_id && r.spy_close > 0 && r.date >= st), a = acc.find(x => x.id === c.account_id);
-        rows.push({name: c.sleeve + ' swing sleeve', acc: `${a?.label || c.account_id} · ${c.mode === 'live' ? 'live' : 'preview, virtual trades'} · ${T.length} trade${T.length === 1 ? '' : 's'}, ${T.filter(x => x.status === 'open').length} open`,
+        rows.push({name: ({R18L26: 'Leader Dip', S4P23: 'High-Beta Leader Dip'}[c.sleeve] || c.sleeve) + ' swing sleeve', acc: `${a?.label || c.account_id} · ${c.mode === 'live' ? 'live' : 'preview, virtual trades'} · ${T.length} trade${T.length === 1 ? '' : 's'}, ${T.filter(x => x.status === 'open').length} open`,
           grp: 'swing', since: st, ret, spy: E.length > 1 ? E[E.length - 1].spy_close / E[0].spy_close - 1 : null, dd: null, mo: (Date.now() - Date.parse(st)) / (30.44 * 864e5)});
       }
       const fw = [];
