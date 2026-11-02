@@ -7213,6 +7213,20 @@ const v2akContextMP = akContext; akContext = function () {
     rules: Object.values(r.rules).map(x => ({rule: x.name, met: x.met, of: x.of, missing: x.conds.filter(k => !k.ok).map(k => k.t)})),
     note: 'our swing rules applied to a stock outside the S&P 500: never tested on such stocks; information, not a signal'}};
 };
+// Ask Finny's strategy_fit lookup (runs here, in the app): for a stock outside the S&P 500 it also returns the mover check (6.143)
+const v2akFitMP = AK_LOOK.strategy_fit; AK_LOOK.strategy_fit = async function (a) {
+  const out = await v2akFitMP(a); if (!out || out.sp500_member !== false) return out;
+  await mpLoad().catch(() => {}); const r = MP.rows?.[out.symbol];
+  const why = 'Our swing rules were tested on S&P 500 stocks only; applied to this stock they are UNTESTED: information for the user\'s own judgement, never a signal. In our research, lottery-like spikes among top movers had the weakest returns afterwards.';
+  if (!r) return {...out, mover_check: {checked: false, note: 'The mover check covers only the top 10 gainers and top 10 losers outside the S&P 500 (every 15 minutes in market hours); this stock is not among them now.'}};
+  if (!r.rules) return {...out, mover_check: {checked: true, as_of: r.as_of, rules_checked: false, days_of_history: r.f?.days,
+    note: r.f?.too_new ? `Only ${r.f.days} days of trading: too little history to check the swing rules.` : 'No trade data for today yet; checked again within 15 minutes.'}};
+  return {...out, mover_check: {checked: true, as_of: r.as_of, checked_at: r.at, list: r.list === 'losers' ? 'top loser' : 'top gainer', untested_outside_sp500: why,
+    return_120d: r.f?.ret120, beats_pct_of_sp500_120d: r.f?.rank120 == null ? null : Math.round(r.f.rank120 * 100),
+    return_60d: r.f?.ret60, beats_pct_of_sp500_60d: r.f?.rank60 == null ? null : Math.round(r.f.rank60 * 100), beta_60d: r.f?.beta60, ibs_today: r.f?.ibs, days_of_history: r.f?.days,
+    rules: Object.values(r.rules).sort((p, q) => (q.all - p.all) || (q.met / q.of - p.met / p.of)).map(x => ({rule: x.name, conditions_met: x.met, of: x.of, all_met: x.all,
+      met: x.conds.filter(k => k.ok).map(k => k.t), missing: x.conds.filter(k => !k.ok).map(k => k.t)}))}};
+};
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
 // Long press (or right-click) on any element with a ticker (data-t / data-od: odds lists, movers, news, picks, high-Sharpe cards) or a strategy
