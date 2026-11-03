@@ -965,7 +965,7 @@
   .ask-panel .hero-kick{color:#7598c4;background:color-mix(in srgb, #7598c4 14%, transparent);border-color:color-mix(in srgb, #7598c4 30%, transparent)} .ask-panel .hero-kick i{background:#7598c4}
   .ak-beta{font-weight:800;opacity:.75;margin-left:2px}
   .ak-h{font:800 27px/1.12 var(--font-display);letter-spacing:-.03em;margin:14px 0 8px;color:var(--ink);max-width:16ch}
-  .ak-h em{font-style:normal;background:linear-gradient(95deg,#7598c4,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .ak-h em{font-style:normal;color:var(--accent);-webkit-text-fill-color:currentColor;background:none}   /* solid (6.166): the gradient text drew an empty box on the owner's phone */
   .ak-sub{font-size:13.5px;line-height:1.55;color:var(--ink-2);margin:0 0 16px;max-width:46ch} .ak-sub i{font-style:normal;color:var(--ink)}
   .ak-chips{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -22px 14px;padding:2px 22px 4px}
   .ak-chips::-webkit-scrollbar{display:none}
@@ -6245,6 +6245,44 @@ const AK_LOOK = {
       strongest_that_would_buy: held.slice(0, 3).map(x => ({name: x.fam.short, rule: x.fam.name || '', backtest_sharpe: x.best.m?.sharpe ?? null})),
       swing_signal_today: p.sig?.R18L26 ? 'R18L26' : p.sig?.R18P12 ? 'R18P12' : 'none', snapshot_date: TL.asof};
   },
+  // compare_stocks (6.166, user: "compare APA to all other signals ... catalyst, good fundamentals"): one lookup for up to 10 stocks with the
+  // fundamentals and price behaviour already in the daily S&P 500 snapshot (live_profile.f, from SEC filings and prices), each with its
+  // S&P 500 percentile, plus today's swing signals and strategy fit. No new data; nothing owner-only.
+  async compare_stocks({symbols = [], with_todays_signals = false} = {}) {
+    await tlLoad(); if (!TL.loaded) throw new Error('strategy data not loaded');
+    if (with_todays_signals) {                                 // "compare X to all the other signals": add every stock with a swing signal today (the user's own list first)
+      const ks = (typeof swSigs === 'function' ? swSigs() : SW_DEF).map(g => g.k);
+      symbols = [...(symbols || []), ...TL.prof.filter(r => ks.some(k => r.sig?.[k])).sort((a, b) => ks.filter(k => b.sig?.[k]).length - ks.filter(k => a.sig?.[k]).length).map(r => r.ticker)];
+    }
+    const P = TL.prof.filter(r => r.f), col = {}, pct = (k, v) => { const xs = col[k] || (col[k] = P.map(r => r.f[k]).filter(Number.isFinite).sort((a, b) => a - b));
+      if (!Number.isFinite(v) || !xs.length) return null; let lo = 0, hi = xs.length; while (lo < hi) { const m = (lo + hi) >> 1; if (xs[m] <= v) lo = m + 1; else hi = m; } return Math.round(100 * lo / xs.length); };
+    const F = [['ey', 'earnings yield EBIT/EV (higher = cheaper)', '%'], ['ey_avg3', '3-year average earnings yield ("normal earnings")', '%'], ['ep', 'earnings / price', '%'],
+      ['roe', 'return on equity', '%'], ['roa', 'return on assets', '%'], ['gp_a', 'profitability, EBIT / assets', '%'], ['ocf_ta', 'operating cash flow / assets', '%'],
+      ['ni_g3', 'net income growth over 3 years', '%'], ['rev_g', 'revenue growth', '%'], ['sloan_accrual', 'accruals (lower = cleaner earnings)', '%'],
+      ['debt_to_equity', 'debt / equity', 'x'], ['debt_to_ebit', 'debt / EBIT', 'x'], ['current_ratio', 'current ratio', 'x'], ['share_g', 'share count change (negative = buybacks)', '%']];
+    const M = [['mom1m', '1-month return', '%'], ['mom3m', '3-month return', '%'], ['mom12m', '12-month return', '%'], ['dist_52w_high', 'distance from 52-week high', '%'],
+      ['vol20', 'volatility, 20 days (annualised)', '%'], ['beta252', 'beta to the market (1 year)', 'x']];
+    const val = (v, u) => u === '%' ? +(100 * v).toFixed(1) : +v.toFixed(2);
+    const GOOD = [['ey', 'cheap on earnings (EBIT/EV)', '%', 1], ['roe', 'return on equity', '%', 1], ['ocf_ta', 'cash flow / assets', '%', 1], ['gp_a', 'profitability (EBIT / assets)', '%', 1],
+      ['ni_g3', 'net income growth over 3 years', '%', 1], ['rev_g', 'revenue growth', '%', 1], ['sloan_accrual', 'accruals', '%', 0], ['debt_to_equity', 'debt / equity', 'x', 0], ['current_ratio', 'current ratio', 'x', 1]];
+    const pack = (r, L) => Object.fromEntries(L.filter(([k]) => Number.isFinite(r.f[k])).map(([k, lab, u]) => [lab, `${val(r.f[k], u)}${u === '%' ? '%' : 'x'} (p${pct(k, r.f[k])})`]));
+    const sigs = (typeof swSigs === 'function' ? swSigs() : SW_DEF), sc = tlScores().sc, out = [];
+    for (const x of [...new Set(symbols.map(String))].slice(0, 10)) {
+      const sym = await akSym(x), r = TL.prof.find(p => p.ticker === sym);
+      if (!r) { out.push({symbol: sym, note: 'not in the S&P 500 snapshot: no fundamentals here (try strategy_fit for its mover check)'}); continue; }
+      if (!Object.keys(r.f || {}).length) { out.push({symbol: sym, name: r.name, sector: r.sector, swing_signals_today: sigs.filter(g => r.sig?.[g.k]).map(g => `${g.k} (${g.lab})`),
+        note: 'NO fundamentals in our snapshot for this stock: the SEC data we use has no usable EBIT or share count for it (common for banks, insurers and REITs, and a few large companies). Say so; do not guess its fundamentals.'}); continue; }
+      const A = tlAnalyse(sym), fams = A.fams.filter(f => isFinite(f.best.m?.sharpe)), held = fams.filter(f => f.best.out.status === 'held');
+      const flags = {strong: [], weak: []};                     // plain reading of the extremes (top / bottom 15%), so no model has to interpret percentiles
+      for (const [k, lab, u, hi] of GOOD) { const v = r.f[k]; if (!Number.isFinite(v)) continue; const q = pct(k, v), good = hi ? q >= 85 : q <= 15, bad = hi ? q <= 15 : q >= 85;
+        if (good) flags.strong.push(`${lab} ${val(v, u)}${u === '%' ? '%' : 'x'} (better than ${hi ? q : 100 - q}% of the S&P 500)`);
+        if (bad) flags.weak.push(`${lab} ${val(v, u)}${u === '%' ? '%' : 'x'} (worse than ${hi ? 100 - q : q}% of the S&P 500)`); }
+      out.push({symbol: sym, name: r.name, sector: r.sector, price_usd: r.f.price ?? r.sig?.close ?? null, stands_out: flags, market_cap_usd_bn: Number.isFinite(r.f.mc) ? +(r.f.mc / 1e9).toFixed(1) : null,
+        swing_signals_today: sigs.filter(g => r.sig?.[g.k]).map(g => `${g.k} (${g.lab})`), strategy_fit_score: Math.round(sc[sym] || 0),
+        long_term_families_that_would_buy: `${held.length} of ${fams.length}`, fundamentals: pack(r, F), price_behaviour: pack(r, M)});
+    }
+    return {snapshot_date: TL.asof, note: 'Each value is followed by (pNN) = its S&P 500 percentile, the share of S&P 500 stocks with a LOWER value (100 = highest; for accruals, debt and volatility lower is usually better). Fundamentals: latest SEC filings. For news / catalysts use latest_news; for odds use stock_odds.', stocks: out};
+  },
   async top_movers({list}) {
     const k = list === 'losers' ? 'losers' : list === 'most_active' ? 'actives' : 'gainers';
     const r = (await sb('live_movers?select=at,last_updated,gainers,losers,actives&order=at.desc&limit=1'))[0]; if (!r) return {note: 'no movers snapshot yet today'};
@@ -6456,7 +6494,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
