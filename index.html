@@ -6411,6 +6411,14 @@ const AK_LOOK = {
     }
     return {snapshot_date: TL.asof, note: 'Each value is followed by (pNN) = its S&P 500 percentile, the share of S&P 500 stocks with a LOWER value (100 = highest; for accruals, debt and volatility lower is usually better). Fundamentals: latest SEC filings. For news / catalysts use latest_news; for odds use stock_odds.', stocks: out};
   },
+  async stock_price({symbols = []} = {}) {                    // 6.167: live price + previous close (odds-live action quote; SIP, IEX fallback)
+    const S = []; for (const x of [...new Set((Array.isArray(symbols) ? symbols : [symbols]).map(String))].slice(0, 10)) S.push(await akSym(x));
+    const token = await getToken();
+    const r = await fetch(`${SB_URL}/functions/v1/odds-live`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({action: 'quote', symbols: S})});
+    const j = await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})); if (!j.ok) throw new Error(j.error || 'no quote');
+    for (const q of j.quotes || []) if (q.last_trade_at && Date.now() - Date.parse(q.last_trade_at) > 5 * 864e5) { q.stale = true; q.note = `last trade ${q.last_trade_at.slice(0, 10)}: not a current price (delisted or unknown ticker?)`; }
+    delete j.ok; return {...j, note: 'last trade price in US dollars; when the market is closed it is the last trade before the close (or after-hours).'};
+  },
   async top_movers({list}) {
     const k = list === 'losers' ? 'losers' : list === 'most_active' ? 'actives' : 'gainers';
     const r = (await sb('live_movers?select=at,last_updated,gainers,losers,actives&order=at.desc&limit=1'))[0]; if (!r) return {note: 'no movers snapshot yet today'};
@@ -6622,7 +6630,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
@@ -6698,7 +6706,8 @@ function akCan(id) {                                          // the section exi
   return !(['forward_tests', 'swing', 'strongest', 'picks'].includes(id) && typeof v2Owner !== 'function');
 }
 function akGoParse(text) {                                    // "GO: odds:MPC, scoreboard" -> [{id, t}]
-  const m = String(text || '').match(/^\s*GO:\s*(.+)$/im); const body = m ? text.replace(m[0], '').trim() : text;
+  const m = String(text || '').match(/^\s*GO:\s*(.+)$/im) || String(text || '').match(/[ \t]GO:\s*((?:[a-z_]+(?::[A-Za-z0-9.\-]+)?\s*,?\s*){1,4})\s*$/);   // own line, or at the very end (6.167)
+  const body = m ? String(text).replace(m[0], '').trim() : text;
   const go = m ? m[1].split(/[,;]+/).map(x => x.trim().replace(/[`*]/g, '')).map(x => { const [id, t] = x.split(':'); return {id: (id || '').toLowerCase().replace(/[^a-z_]/g, ''), t: (t || '').toUpperCase().replace(/[^A-Z0-9.\-]/g, '')}; }) : [];
   return {body, go};
 }
