@@ -6259,6 +6259,10 @@ const AK_LOOK = {
   },
   async prepare_order(a = {}) {                               // 6.165: owner only; makes a DRAFT (never an order): the card's Confirm button is the only way to send it
     if (!document.body.classList.contains('role-owner')) return {error: 'Placing orders from the chat is not available.'};
+    // the amount must come from the user's own words, never from the model (it once filled in "100" for "buy some NVDA")
+    const q = String(AK.q || ''), nums = (q.match(/\d+(?:[.,]\d+)?/g) || []).map(x => +x.replace(',', '.')), has = v => v > 0 && nums.some(n => Math.abs(n - v) < 1e-9);
+    const sellAll = a.side === 'sell' && a.all && /\b(all|everything|whole|entire|alles|allemaal)\b/i.test(q);
+    if (!sellAll && !has(+a.amount_eur) && !has(+a.quantity)) return {error: 'no amount in the question: ask the user how much (in euros or shares). No order card was made.'};
     const r = await akT212({op: 'prepare', side: a.side, symbol: a.symbol, eur: a.amount_eur, quantity: a.quantity, all: !!a.all});
     AK.draft = r.ok ? {...r, at: Date.now()} : null; return r;
   },
@@ -6636,6 +6640,7 @@ document.addEventListener('click', async e => {
 
 async function akAsk() {
   const box = document.getElementById('ak-q'), out = document.getElementById('ak-out'), q = (box?.value || '').trim(); if (!q || AK.busy) return;
+  AK.q = q; AK.draft = null;                                  // prepare_order checks the amount against these words (6.165)
   AK.busy = true; const btn = document.getElementById('ak-go'); btn.disabled = true;
   out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Reading Finny\'s research…</span></div>';
   try {
