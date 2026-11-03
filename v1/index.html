@@ -1012,7 +1012,7 @@
   .ask-panel.ak-compact{padding:18px 18px 14px;border-radius:22px} .ak-compact .ak-sub,.ak-compact .ak-chips,.ak-compact .ak-wm{display:none!important}
   .ak-compact .hero-kick{margin-bottom:8px} .ak-compact .ak-h{font-size:21px;line-height:1.2;margin:0 0 12px}
   .ak-compact:not(.ak-live) .ak-out{display:none} .ak-compact .ak-tools{margin-top:8px;gap:16px} .ak-resume[hidden]{display:none!important}
-  .ask-panel:not(.ak-compact) .ak-resume{display:none}
+  .ask-panel:not(.ak-compact) .ak-resume{display:none} .ask-panel:not(.ak-compact) .ak-h-tab,.ak-compact .ak-h:not(.ak-h-tab){display:none}
   .ak-tools{display:flex;justify-content:flex-end;margin:6px 8px 0} .ak-tools .ak-new{margin:0;padding:0;border:0;background:none;color:var(--muted);font:600 12px var(--font-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
   .ak-meta .ak-past{margin-left:auto} .ak-meta .ak-past+.ak-fresh{margin-left:0}
   .ak-saved{margin:0 0 12px;padding:8px 12px;border-radius:12px;background:var(--glass);font-size:12px;line-height:1.45;color:var(--muted)}
@@ -6246,7 +6246,22 @@ const AK_LOOK = {
     const j = await r.json(); if (!j.ok) throw new Error(j.error || 'HTTP ' + r.status);
     return {symbol: s || 'market-wide', items: (j.news || []).slice(0, 8).map(n => ({at: n.at, headline: odTxt(n.headline), symbols: (n.symbols || []).slice(0, 4), tone: n.tone > 0 ? 'positive' : n.tone < 0 ? 'negative' : 'neutral'}))};
   },
-  async todays_signals() {
+  async todays_signals(a = {}) {
+    // a past day (6.164, user: "Also yesterday?"): read the daily swing-signal log (live_signal_log, written at each close by live-profile).
+    // Customers get the two public signals only (as everywhere in the app); the owner also gets the research signals (SW_RES).
+    if (a.date) {
+      const codes = (typeof swSigs === 'function' ? swSigs() : SW_DEF).map(x => x.k), lab = Object.fromEntries((typeof swSigs === 'function' ? swSigs() : SW_DEF).map(x => [x.k, x.lab]));
+      const ds = [...new Set((await sb('live_signal_log?select=as_of&order=as_of.desc&limit=400')).map(r => r.as_of))];
+      let d = String(a.date).trim().toLowerCase();
+      if (d === 'previous' || d === 'yesterday') d = ds[1]; else if (d === 'latest' || d === 'today') d = ds[0];
+      else if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return {error: 'date must be YYYY-MM-DD, "previous" or "latest"', closes_on_record: ds.slice(0, 15)};
+      else d = ds.find(x => x <= d);                            // a weekend or holiday -> the close before it
+      if (!d) return {note: 'no signal log that far back', first_close_on_record: ds[ds.length - 1]};
+      const rows = await sb(`live_signal_log?select=ticker,strategy&as_of=eq.${d}&strategy=in.(${codes.join(',')})&order=ticker`);
+      const by = {}; for (const r of rows) (by[r.ticker] = by[r.ticker] || []).push(r.strategy);
+      return {signals_at_close_of: d, latest_close_on_record: ds[0], swing_buy_signals: Object.entries(by).map(([symbol, st]) => ({symbol, signals: st.map(c => `${c} (${lab[c] || c})`)})),
+        note: 'Signals fire at the close; the swing strategies buy at that close and hold about 5-10 trading days. Earlier closes: ' + ds.slice(0, 10).join(', ')};
+    }
     await Promise.all([tlLoad(), odLoad()]); const base = OD.openMeta?.base_up ?? 0.505;
     const o = OD.open?.rows?.slice().sort((a, b) => b.p_up - a.p_up) || [], row = x => ({symbol: x.ticker, chance_close_above_open_pct: akPc(x.p_up)});
     return {swing_buy_signals: TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => ({symbol: r.ticker, signal: r.sig.R18L26 ? 'R18L26' : 'R18P12'})), swing_signals_as_of_close: TL.asof,
@@ -6421,7 +6436,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', todays_signals: () => "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
