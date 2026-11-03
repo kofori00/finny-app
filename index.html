@@ -727,6 +727,16 @@
   #mv-panel .mv-all{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:0 0 4px} #mv-panel .mv-all input{width:14px;height:14px;accent-color:var(--accent)}
   #mv-panel .mv-age{font-size:11px;margin:10px 0 0} #mv-panel .mv-hid{font-size:12px;margin:10px 0 0}
   #mv-panel .mv-scope{margin:0 0 8px} #mv-panel .mv-scope button{font-size:12px;padding:5px 12px} #mv-panel .mv-c-spx{background:var(--accent-soft);color:var(--ink-2)}
+  .lib-bar{display:flex;flex-direction:column;gap:10px;margin:14px 0 10px} .lib-bar input{padding:11px 14px;border-radius:12px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);font:inherit}
+  .lib-f{flex-wrap:wrap} .lib-f button{font-size:12px;padding:6px 12px}
+  .lib-card{border:1px solid var(--glass-line);border-radius:16px;padding:12px 14px;margin:10px 0;background:var(--glass-2);cursor:pointer}
+  .lib-card h3{margin:0;font:600 15px var(--font-ui);color:var(--ink);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .lib-src{font-size:12px;color:var(--muted);margin:3px 0 6px} .lib-one{font-size:13.5px;color:var(--ink-2);margin:0;line-height:1.45}
+  .lib-v{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;flex:none}
+  .lib-v.edge{background:rgba(22,163,74,.15);color:#15803d} .lib-v.promising{background:rgba(13,148,136,.15);color:#0f766e} .lib-v.unproven{background:rgba(217,119,6,.15);color:#b45309}
+  .lib-v.no_edge{background:rgba(220,38,38,.13);color:#b91c1c} .lib-v.no_better{background:rgba(100,116,139,.15);color:#475569}
+  .lib-more{margin-top:10px;font-size:13px;color:var(--ink-2);line-height:1.5} .lib-more p{margin:6px 0} .lib-more b{color:var(--ink)}
+  .lib-link{margin-top:6px;font-size:13px} .lib-ask{margin-top:6px} .lib-note{font-size:11.5px;color:var(--muted);margin:10px 0 0}
   #mv-panel .mv-eu-d{grid-column:1/-1;margin:0 0 4px} #mv-panel .mv-eu-d .mp-box{margin:0}
   #mv-panel .mv-c-mp{background:rgba(217,119,6,.13);color:#b45309} #mv-panel .mv-c-mpall{background:rgba(217,119,6,.28);font-weight:700}
   .mp-box{margin:12px 0 0;padding:12px 14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line);font-size:13px;color:var(--ink-2)}
@@ -1385,7 +1395,19 @@
     <div class="lg-btns"><button type="button" class="lg-sec" id="pending-out">Sign out</button></div>
   </div>
 
-  <div class="panel" id="controls-panel">
+  
+  <section class="panel v2-panel lib-panel" id="lib-panel">
+    <div class="kente" aria-hidden="true"></div>
+    <span class="hero-kick"><i></i>Tested strategies · library</span>
+    <h2 class="ak-h">Does it <em>really</em> work?</h2>
+    <p class="ak-sub">Famous trading methods and our own strategies, each tested with fixed rules, real costs and a luck check. Most popular methods show no edge; the few that pass are marked.</p>
+    <div class="lib-bar"><input id="lib-q" type="search" placeholder="Search a strategy, a person or a book" aria-label="Search the library">
+      <div id="lib-f" class="mv-seg lib-f"><button class="on" data-v="">All</button><button data-v="edge">Has an edge</button><button data-v="promising,unproven">Not proven</button><button data-v="no_edge,no_better">No edge</button></div></div>
+    <div id="lib-body"><p class="note">Loading…</p></div>
+    <button type="button" class="nw-more lib-ask" id="lib-ask">Does my strategy have an edge? Ask Finny</button>
+    <p class="lib-note">History and research, not advice. Backtests of chosen strategies overstate what real trading earns.</p>
+  </section>
+<div class="panel" id="controls-panel">
     <div class="fld-l">Strategies <button type="button" class="ib" aria-label="About choosing strategies" data-tip="Choose up to 12 strategies or paper accounts to compare; their curves appear in every chart below. Sections that show one strategy at a time (trade replay, monthly returns, robustness checks) have their own 'Showing' switch with an About button.">i</button></div>
     <details class="picker" id="br-picker">
       <summary><span id="br-summary-text">Choose strategies</span></summary>
@@ -7276,6 +7298,43 @@ function euRender() {
 }
 const v2mvRenderEU = mvRender; mvRender = function () { if (MV.scope === 'eu') { if (!v2Owner()) { MV.scope = 'all'; } else return euRender(); } return v2mvRenderEU(); };
 const v2mvAgeEU = mvAge; mvAge = function () { if (MV.scope !== 'eu') v2mvAgeEU(); };
+
+// ---------------- Tested strategies library (2026-11-03, Bible 6.159): public.strategy_library cards at the top of Research. The point of the app:
+// people check whether a method (or their own) has an edge. Cards link to the research-log report when there is one.
+const LIB = {rows: null, v: '', q: '', open: null};
+const LIB_V = {edge: 'Has an edge', promising: 'Promising', unproven: 'Not proven', no_edge: 'No edge', no_better: 'No better than simple sizing'};
+async function libLoad() {
+  if (LIB.rows) return libRender();
+  try { LIB.rows = await sb('strategy_library?select=id,name,source,category,verdict,one_line,rules,how_tested,result,limits,experiment_id,sort&order=sort'); }
+  catch (e) { const el = document.getElementById('lib-body'); if (el) el.innerHTML = `<p class="note">Could not load the library: ${esc(e.message)}</p>`; return; }
+  libRender();
+}
+function libRender() {
+  const el = document.getElementById('lib-body'); if (!el || !LIB.rows) return;
+  const q = LIB.q.toLowerCase(), vs = LIB.v ? LIB.v.split(',') : null;
+  const R = LIB.rows.filter(r => (!vs || vs.includes(r.verdict)) && (!q || [r.name, r.source, r.category, r.one_line].join(' ').toLowerCase().includes(q)));
+  el.innerHTML = R.length ? R.map(r => `<div class="lib-card" data-lib="${esc(r.id)}" role="button" tabindex="0">
+      <h3><span>${esc(r.name)}</span><span class="lib-v ${esc(r.verdict)}">${esc(LIB_V[r.verdict] || r.verdict)}</span></h3>
+      <div class="lib-src">${esc(r.source || '')}${r.category ? ' · ' + esc(r.category) : ''}</div><p class="lib-one">${esc(r.one_line || '')}</p>
+      ${LIB.open === r.id ? `<div class="lib-more"><p><b>Rules.</b> ${esc(r.rules || '')}</p><p><b>How we tested it.</b> ${esc(r.how_tested || '')}</p>
+        <p><b>Result.</b> ${esc(r.result || '')}</p><p><b>Limits.</b> ${esc(r.limits || '')}</p>
+        ${r.experiment_id ? `<div class="lib-link"><a href="#" data-exp="${esc(r.experiment_id)}">Full research report</a></div>` : ''}</div>` : ''}</div>`).join('')
+    : '<p class="note">Nothing matches. Ask Finny below whether your strategy has been tested.</p>';
+  el.querySelectorAll('[data-lib]').forEach(c => c.onclick = e => { if (e.target.closest('a')) return; LIB.open = LIB.open === c.dataset.lib ? null : c.dataset.lib; libRender(); });
+  el.querySelectorAll('[data-exp]').forEach(a => a.onclick = async e => {
+    e.preventDefault(); const f = document.getElementById('rl-body')?.closest('details'); if (f) f.open = true;
+    if (typeof rlLoad === 'function' && !RL.list) await rlLoad(); if (typeof rlOpen === 'function' && RL.open !== a.dataset.exp) await rlOpen(a.dataset.exp);
+    document.querySelector(`#rl-body [data-id="${CSS.escape(a.dataset.exp)}"]`)?.scrollIntoView({block: 'start'}) || document.getElementById('rl-body')?.scrollIntoView({block: 'start'});
+  });
+}
+function libInit() {
+  const root = document.getElementById('lib-panel'); if (!root || root.dataset.ready) return; root.dataset.ready = '1';
+  root.querySelectorAll('#lib-f button').forEach(b => b.onclick = () => { LIB.v = b.dataset.v; root.querySelectorAll('#lib-f button').forEach(x => x.classList.toggle('on', x === b)); libRender(); });
+  const qi = document.getElementById('lib-q'); if (qi) qi.oninput = () => { LIB.q = qi.value; libRender(); };
+  const ask = document.getElementById('lib-ask');
+  if (ask) ask.onclick = () => { viewSet('analyze'); const i = document.getElementById('ak-q'); if (i) { i.value = 'Does my strategy have an edge? My rules: '; i.focus(); i.scrollIntoView({block: 'center'}); } };
+}
+const v2viewSetLIB = viewSet; viewSet = function (v, push) { v2viewSetLIB(v, push); if (VIEW.cur === 'research') { libInit(); libLoad(); } };
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
 // Long press (or right-click) on any element with a ticker (data-t / data-od: odds lists, movers, news, picks, high-Sharpe cards) or a strategy
