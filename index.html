@@ -727,6 +727,7 @@
   #mv-panel .mv-all{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:0 0 4px} #mv-panel .mv-all input{width:14px;height:14px;accent-color:var(--accent)}
   #mv-panel .mv-age{font-size:11px;margin:10px 0 0} #mv-panel .mv-hid{font-size:12px;margin:10px 0 0}
   #mv-panel .mv-scope{margin:0 0 8px} #mv-panel .mv-scope button{font-size:12px;padding:5px 12px} #mv-panel .mv-c-spx{background:var(--accent-soft);color:var(--ink-2)}
+  #mv-panel .mv-eu-d{grid-column:1/-1;margin:0 0 4px} #mv-panel .mv-eu-d .mp-box{margin:0}
   #mv-panel .mv-c-mp{background:rgba(217,119,6,.13);color:#b45309} #mv-panel .mv-c-mpall{background:rgba(217,119,6,.28);font-weight:700}
   .mp-box{margin:12px 0 0;padding:12px 14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line);font-size:13px;color:var(--ink-2)}
   .mp-box summary{cursor:pointer;line-height:1.45} .mp-box summary b{color:var(--ink)} .mp-warn{margin:8px 0;font-size:12px;color:#b45309;line-height:1.45}
@@ -1318,7 +1319,7 @@
       #mv-panel tr.mv-new td{background:rgba(59,130,246,.06)}#mv-panel label{font-size:13px;color:var(--ink-2)}
     </style>
     <div id="mv-panel">
-      <div id="mv-scope" class="mv-seg mv-scope" role="group" aria-label="Which stocks"><button class="on" data-s="all">All US stocks</button><button data-s="sp500">S&amp;P 500 only</button></div>
+      <div id="mv-scope" class="mv-seg mv-scope" role="group" aria-label="Which stocks"><button class="on" data-s="all">All US stocks</button><button data-s="sp500">S&amp;P 500 only</button><button data-s="eu" class="owner-only" title="Euronext Amsterdam (Yahoo Finance, owner only)">Amsterdam</button></div>
       <div class="mv-bar"><div id="mv-tabs" class="mv-seg"><button class="on" data-t="gainers">Gainers</button><button data-t="losers">Losers</button><button data-t="actives">Active</button></div>
         <button class="mv-ref" id="mv-refresh" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
       <div id="mv-body"><div class="nw-skel s"></div><div class="nw-skel s"></div><div class="nw-skel s"></div></div>
@@ -7227,6 +7228,54 @@ const v2akFitMP = AK_LOOK.strategy_fit; AK_LOOK.strategy_fit = async function (a
     rules: Object.values(r.rules).sort((p, q) => (q.all - p.all) || (q.met / q.of - p.met / p.of)).map(x => ({rule: x.name, conditions_met: x.met, of: x.of, all_met: x.all,
       met: x.conds.filter(k => k.ok).map(k => k.t), missing: x.conds.filter(k => !k.ok).map(k => k.t)}))}};
 };
+
+// ---------------- Amsterdam movers (2026-11-03, Bible 6.147, OWNER ONLY): Euronext Amsterdam's top gainers / losers / most active from
+// Yahoo Finance (eu-movers worker every 15 min, table live_movers_eu, readable by the owner only), each top-10 gainer and loser with its own
+// weekly odds and the swing rules' conditions (AEX as the market). Never tested on European stocks. A tap opens the details in the list
+// (the Analyze page's odds come from US-only data).
+MV.eu = null; MV.euOpen = null; MV.euBusy = false;
+async function euLoad() {
+  if (MV.euBusy) return; MV.euBusy = true;
+  try { const r = await sb('live_movers_eu?select=at,gainers,losers,actives,profiles,index_state&order=at.desc&limit=1'); MV.eu = r[0] || {}; MV.euAt = Date.now(); }
+  catch (e) { MV.eu = {error: e.message}; } finally { MV.euBusy = false; }
+}
+function euDetail(sym, p) {
+  if (!p) return '<div class="mp-box"><p class="mp-warn">Only the top 10 gainers and top 10 losers are checked.</p></div>';
+  const f = p.f || {}, o = p.odds || {}, beat = x => x == null ? '' : ` (beats ${Math.round(x * 100)}% of S&amp;P 500 stocks)`;
+  const odds = o.up_1w == null ? '' : `<p class="mp-f">Its own record since ${esc(o.since)}: higher one week later on <b>${Math.round(o.up_1w * 100)}%</b> of ${o.days_1w} trading days`
+    + (o.up_1m == null ? '' : `, one month later on <b>${Math.round(o.up_1m * 100)}%</b>`) + '. History, not a forecast.</p>';
+  const body = !p.rules ? `<p class="mp-warn">Only ${f.days} days of trading: too little history to check the rules.</p>`
+    : `<p class="mp-f">120-day return <b>${mpPc(f.ret120)}</b>${beat(f.rank120)} · 60-day <b>${mpPc(f.ret60)}</b>${beat(f.rank60)} · beta vs the AEX ${f.beta60 == null ? '–' : f.beta60.toFixed(1)}
+       · today's close in its range (IBS) ${f.ibs == null ? '–' : f.ibs.toFixed(2)}</p>`
+      + Object.values(p.rules).sort((a, b) => (b.all - a.all) || (b.met / b.of - a.met / a.of)).map(x => `<div class="mp-r"><div class="mp-rh"><b>${esc(x.name)}</b><span class="${x.all ? 'mp-all' : ''}">${x.met}/${x.of}${x.all ? ' · all met' : ''}</span></div>
+         <ul>${x.conds.map(c => `<li class="${c.ok ? 'ok' : 'no'}">${c.ok ? '✓' : '✗'} ${esc(c.t)}</li>`).join('')}</ul></div>`).join('');
+  return `<div class="mp-box"><p class="mp-warn"><b>Untested here.</b> Our swing rules were tested on S&amp;P 500 stocks only; for this Amsterdam stock the AEX stands in for the S&amp;P 500
+    as the market, and returns are ranked against S&amp;P 500 stocks. Information for your own judgement, not a signal. Data: Yahoo Finance (owner only).</p>${odds}${body}</div>`;
+}
+function euRender() {
+  const c = MV.eu; if (!c || Date.now() - (MV.euAt || 0) > 3 * 60e3) { if (!MV.euBusy) euLoad().then(() => { if (MV.scope === 'eu') mvRender(); }); if (!c) { mvBody('<p class="note">Loading Amsterdam …</p>'); return; } }
+  if (c.error || !c.at) { mvBody(`<p class="note">${c.error ? 'Could not load Amsterdam movers: ' + esc(c.error) : 'No Amsterdam snapshot yet: the feed runs every 15 minutes in Euronext hours (09:00-17:30 CET).'}</p>`); return; }
+  const list = c[MV.tab] || [], P = c.profiles || {}, pctCls = x => x == null ? '' : x >= 0 ? 'mv-up' : 'mv-dn';
+  const rows = list.slice(0, MV.shown).map(r => { const p = P[r.symbol], b = mpBest(p), o = p?.odds, S = r.symbol.replace(/\.AS$/, '');
+    const chips = (b ? `<span class="mv-chip mv-c-mp${b.all ? ' mv-c-mpall' : ''}" title="Untested on European stocks">${esc(b.name)} ${b.met}/${b.of}</span>` : '')
+      + (o?.up_1w != null ? `<span class="mv-chip" title="Its own record since ${esc(o.since)}: higher one week later">up ${Math.round(o.up_1w * 100)}% of past weeks</span>` : '')
+      + (p?.f?.too_new ? '<span class="mv-chip mv-f-warn">too new</span>' : '') + (r.price != null && r.price < 1 ? '<span class="mv-chip mv-f-warn">under €1</span>' : '');
+    const right2 = MV.tab === 'actives' ? (r.volume != null ? (r.volume >= 1e6 ? (r.volume / 1e6).toFixed(1) + 'M' : Math.round(r.volume / 1e3) + 'k') + ' vol' : '') : (r.change == null ? '' : (r.change >= 0 ? '+' : '−') + '€' + Math.abs(r.change).toFixed(2));
+    return `<div class="mv-row mv-link" data-eu="${esc(r.symbol)}" role="button" tabindex="0" title="Show the mover check">
+      <span class="nw-av" style="--h:${typeof nwHue === 'function' ? nwHue(S) : 200}" aria-hidden="true">${esc(S.slice(0, 4))}</span>
+      <div class="mv-id"><div class="mv-sym"><span class="mv-nmx">${esc(r.name || S)}</span></div><div class="mv-tags">${chips}</div></div>
+      <div class="mv-q"><span class="mv-pct ${pctCls(r.pct)}">${r.pct == null ? '–' : (r.pct >= 0 ? '+' : '') + r.pct.toFixed(1) + '%'}</span><div class="mv-px">€${r.price == null ? '–' : r.price.toFixed(2)}<span>${right2}</span></div></div>
+      ${MV.euOpen === r.symbol ? `<div class="mv-eu-d">${euDetail(S, p)}</div>` : ''}</div>`; }).join('');
+  const m = Math.max(0, Math.round((Date.now() - Date.parse(c.at)) / 60000)), ix = c.index_state || {};
+  mvBody(`<div class="mv-list">${rows || '<p class="note">Nothing in this list.</p>'}</div>
+    ${list.length > MV.shown ? '<button class="nw-more" id="mv-more">Show more</button>' : MV.shown > 6 && list.length > 6 ? '<button class="nw-more" id="mv-less">Show less</button>' : ''}`);
+  const el = document.getElementById('mv-age'); if (el) { el.textContent = `Yahoo Finance · Euronext Amsterdam · ${m < 1 ? 'just now' : m + ' min ago'} · AEX ${ix.above_200d ? 'above' : 'below'} its 200-day average · owner only`; el.className = 'mv-age' + (m > 30 ? ' mv-stale' : ''); }
+  document.querySelectorAll('#mv-body [data-eu]').forEach(x => x.onclick = () => { MV.euOpen = MV.euOpen === x.dataset.eu ? null : x.dataset.eu; euRender(); });
+  const mo = document.getElementById('mv-more'), le = document.getElementById('mv-less');
+  if (mo) mo.onclick = () => { MV.shown += 10; euRender(); }; if (le) le.onclick = () => { MV.shown = 6; euRender(); };
+}
+const v2mvRenderEU = mvRender; mvRender = function () { if (MV.scope === 'eu') { if (!v2Owner()) { MV.scope = 'all'; } else return euRender(); } return v2mvRenderEU(); };
+const v2mvAgeEU = mvAge; mvAge = function () { if (MV.scope !== 'eu') v2mvAgeEU(); };
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
 // Long press (or right-click) on any element with a ticker (data-t / data-od: odds lists, movers, news, picks, high-Sharpe cards) or a strategy
