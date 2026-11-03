@@ -6958,7 +6958,7 @@ async function v2Board() {
         if (!T.length && c.mode !== 'live') continue;
         const ret = T.reduce((m, x) => { const p = x.status === 'open' ? px[x.symbol] : +x.exit_px; return m + (p && x.entry_px ? p / x.entry_px - 1 : 0); }, 0) / (c.max_pos || 10);
         const E = eq.filter(r => r.account_id === c.account_id && r.spy_close > 0 && r.date >= st), a = acc.find(x => x.id === c.account_id);
-        rows.push({name: ({R18L26: 'Leader Dip', S4P23: 'High-Beta Leader Dip'}[c.sleeve] || c.sleeve) + ' swing sleeve', acc: `${a?.label || c.account_id} · ${c.mode === 'live' ? 'live' : 'preview, virtual trades'} · ${T.length} trade${T.length === 1 ? '' : 's'}, ${T.filter(x => x.status === 'open').length} open`,
+        rows.push({name: ({R18L26: 'Leader Dip', S4P23: 'High-Beta Leader Dip', S14L08: 'Portfolio B · High-Beta 2-Day', S59L14: 'Portfolio B · Smash-Day Reversal', R15L04: 'Portfolio B · Gap-Down Rebound', R18P21: 'Portfolio B · Volume-Spike Dip', S47P19: 'Portfolio B · Landry Pullback'}[c.sleeve] || c.sleeve) + ' swing sleeve', acc: `${a?.label || c.account_id} · ${c.mode === 'live' ? 'live' : 'preview, virtual trades'} · ${T.length} trade${T.length === 1 ? '' : 's'}, ${T.filter(x => x.status === 'open').length} open`,
           grp: 'swing', since: st, ret, spy: E.length > 1 ? E[E.length - 1].spy_close / E[0].spy_close - 1 : null, dd: null, mo: (Date.now() - Date.parse(st)) / (30.44 * 864e5)});
       }
       const fw = [];
