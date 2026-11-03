@@ -7167,22 +7167,114 @@ function anInit() {
 }
 function anOpen(el, scroll) {
   const p = el?.closest?.('.an-col'); if (!p) return;
+  if (p.dataset.ln) return lnOpen(p, scroll);                     // Research / Accounts tile (6.161): may open a group
   p.classList.remove('an-col'); p.classList.add('an-open'); if (p.tagName === 'DETAILS') p.open = true; anSync();
   requestAnimationFrame(() => { window.dispatchEvent(new Event('resize')); p.querySelectorAll('.js-plotly-plot').forEach(q => { try { Plotly.Plots.resize(q); } catch (e) {} }); if (scroll) { const y = p.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({top: Math.max(0, y), behavior: 'smooth'}); } });
 }
 function anClose(el) { el.classList.add('an-col'); el.classList.remove('an-open'); anSync(); const g = document.getElementById('an-grid'); if (g) { const y = g.getBoundingClientRect().top + window.scrollY - 90; window.scrollTo({top: Math.max(0, y)}); } }
 function anSync() {                                          // bars follow their panel (fwd-panel moves to Accounts for the owner) and show the stock on screen
-  for (const b of document.querySelectorAll('.an-bar')) { const el = document.getElementById(b.dataset.for);
-    if (el && el.dataset.view !== 'analyze') { el.classList.remove('an-col', 'an-open'); el.querySelector(':scope > .an-hide')?.remove(); }   // moved to another tab: never folded there
+  for (const b of document.querySelectorAll('#an-grid .an-bar')) { const el = document.getElementById(b.dataset.for);
+    if (el && el.dataset.view !== 'analyze' && !el.dataset.ln) { el.classList.remove('an-col', 'an-open'); el.querySelector(':scope > .an-hide')?.remove(); }   // moved to another tab: never folded there
     b.hidden = !el || el.dataset.view !== 'analyze'; b.classList.toggle('on', !!el && !el.classList.contains('an-col'));   // an open section keeps its tile, marked
     if (el?.id === 'tl-panel') b.querySelector('small').textContent = typeof TL !== 'undefined' && TL.lastFit?.ticker ? `${TL.lastFit.ticker}: ${TL.lastFit.label}, ${TL.lastFit.held} of ${TL.lastFit.of} strategies would buy it` : AN_SUB['tl-panel'];
     if (el?.id === 'od-panel') b.querySelector('small').textContent = typeof OD !== 'undefined' && OD.ticker ? `Full analysis for ${OD.ticker}: odds, strategy fit, catalysts` : AN_SUB['od-panel']; }
-  const any = [...document.querySelectorAll('.an-bar')].some(b => !b.hidden && getComputedStyle(b).display !== 'none'); const ex = document.getElementById('an-explore'), g = document.getElementById('an-grid'); if (ex) ex.hidden = !any; if (g) g.hidden = !any;
+  const any = [...document.querySelectorAll('#an-grid .an-bar')].some(b => !b.hidden && getComputedStyle(b).display !== 'none'); const ex = document.getElementById('an-explore'), g = document.getElementById('an-grid'); if (ex) ex.hidden = !any; if (g) g.hidden = !any;
+  if (typeof lnSync === 'function') lnSync();
 }
 { const siv = Element.prototype.scrollIntoView; Element.prototype.scrollIntoView = function (o) { try { if (this.closest?.('.an-col')) anOpen(this); } catch (e) {} return siv.call(this, o); }; }
 const v2odGoAn = odGo; odGo = async function (t) { const r = await v2odGoAn(t); try { anSync(); setTimeout(anSync, 2500); } catch (e) {} return r; };   // strategy fit follows ~0.4 s later
 const v2viewSetAn = viewSet; viewSet = function (v, push) { v2viewSetAn(v, push); anInit(); setTimeout(anSync, 0); };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { anInit(); setTimeout(anSync, 0); }); else { anInit(); setTimeout(anSync, 0); }
+
+// ---------------- lean Research and Accounts (2026-11-03, Bible 6.161): the Analyze fold-into-tiles pattern on the other two tabs ----------------
+// Research keeps its hero, Ask Finny and the strategy library open; Accounts keeps its header, Ask Finny and the scoreboard open.
+// Everything else is a tile (tap to open, "Hide" to fold). One tile can open a group: Compare = strategy picker + summary + charts.
+// Research elements carry no data-view (that tab shows exactly the elements without one), Accounts elements carry data-view="accounts".
+const LN = {
+  research: {after: 'lib-panel', view: '', head: ['Explore the research', 'Tap a topic to open it. The charts follow the strategies picked in Compare.'], items: [
+    {ids: ['controls-panel', 'ps-panel', 'cg-panel'], t: 'Compare strategies', s: 'Pick strategies; see growth, drawdowns and yearly returns', ic: '<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>'},
+    {ids: ['vbt-panel'], t: 'Portfolio detail', s: "One strategy's trades, drawdowns and profit per trade", ic: '<path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/>'},
+    {ids: ['tr-panel'], t: 'Trade replay', s: 'Watch a strategy trade, day by day'},
+    {ids: ['mo-panel'], t: 'Monthly returns', s: 'Every month in one heat map'},
+    {ids: ['ev-panel'], t: 'Events & scenarios', s: 'How the strategies did in crashes and rallies'},
+    {ids: ['rb-panel'], t: 'Robustness checks', s: 'Does the result hold in other markets and periods'},
+    {ids: ['ol-panel'], t: 'Outlook', s: 'A likely range of future results'},
+    {ids: ['pb-panel'], t: 'Portfolio builder', s: 'Combine strategies into one portfolio'},
+    {ids: ['map-panel'], t: 'Strategy map', s: 'All strategies by return and risk'},
+    {ids: ['rl-panel'], t: 'Research log', s: 'Every experiment we ran, failures included'}]},
+  accounts: {after: 'v2-board-p', view: 'accounts', head: ['More about the accounts', 'Tap a topic to open it.'], items: [
+    {ids: ['lh-panel'], t: 'Paper accounts', s: 'All paper accounts at a glance'},
+    {ids: ['live-panel'], t: 'Paper trading detail', s: "One account's positions, orders and curve"},
+    {ids: ['fwd-panel'], t: 'Forward tests', s: 'Your pretend-money tests of stocks and strategies'},
+    {ids: ['cust-panel'], t: 'Customers', s: 'Sign-ups and approvals'}]}};
+const LN_ICON = '<path d="M4 5h16M4 12h16M4 19h10"/>';
+function lnIds() {                                             // a few Research panels have no id in the page: name them by their title
+  const named = [['Research log', 'rl-panel'], ['Performance Summary', 'ps-panel'], ['Monthly returns', 'mo-panel'], ['Robustness', 'rb-panel'], ['Trade Replay', 'tr-panel']];
+  for (const el of document.querySelector('.wrap')?.children || []) { if (el.id) continue;
+    if (el.classList.contains('chart-grid')) { if (!document.getElementById('cg-panel')) el.id = 'cg-panel'; continue; }
+    const t = (el.querySelector(':scope > .panel-title, :scope > summary')?.textContent || '').trim();
+    for (const [k, id] of named) if (t.startsWith(k) && !document.getElementById(id)) { el.id = id; break; } }
+}
+const lnItem = id => { for (const [v, c] of Object.entries(LN)) for (const it of c.items) if (it.ids.includes(id)) return [v, c, it]; return []; };
+const lnEls = it => it.ids.map(id => document.getElementById(id)).filter(Boolean);
+const lnHere = (c, el) => (el.dataset.view || '') === c.view;  // the panel is on this tab now (fwd-panel moves to Accounts for the owner)
+function lnFold(v, c, it) {                                    // fold a panel group once it sits on its tab; Hide goes on its first panel
+  const els = lnEls(it).filter(el => lnHere(c, el) && !el.dataset.ln); if (!els.length) return;
+  for (const el of els) { el.dataset.ln = v; el.classList.remove('an-open'); el.classList.add('an-col'); el.querySelector(':scope > .an-hide')?.remove(); }
+  const first = lnEls(it)[0]; if (first && first.dataset.ln && !first.querySelector(':scope > .an-hide')) {
+    const hide = document.createElement('button'); hide.type = 'button'; hide.className = 'an-hide'; hide.textContent = 'Hide'; hide.onclick = () => lnClose(first); first.prepend(hide); }
+}
+function lnInit() {
+  const wrap = document.querySelector('.wrap'); if (!wrap || document.getElementById('ln-grid-research')) return; lnIds();
+  for (const [v, c] of Object.entries(LN)) {
+    const a = document.getElementById(c.after); if (!a) continue; const dv = c.view ? ` data-view="${c.view}"` : '';
+    a.insertAdjacentHTML('afterend', `<div class="an-explore" id="ln-head-${v}"${dv}><b>${esc(c.head[0])}</b><span>${esc(c.head[1])}</span></div><div class="an-grid" id="ln-grid-${v}"${dv}></div>`);
+    const grid = document.getElementById('ln-grid-' + v);
+    for (const it of c.items) {
+      const ic = it.ic || lnEls(it)[0]?.querySelector('.pt-ic svg')?.innerHTML || LN_ICON;
+      const bar = document.createElement('button'); bar.type = 'button'; bar.className = 'an-bar'; bar.dataset.for = it.ids[0]; if (c.view) bar.dataset.view = c.view;
+      bar.innerHTML = `<span class="an-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${ic}</svg></span><span class="an-t"><b>${esc(it.t)}</b><small>${esc(it.s)}</small></span><svg class="an-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
+      bar.onclick = () => { const el = lnEls(it)[0]; if (el) lnOpen(el, true); }; grid.appendChild(bar);
+      lnFold(v, c, it);
+    }
+  }
+  const mo = new MutationObserver(() => lnSync());              // the loader shows the map and live panels later; fwd-panel moves tab
+  for (const id of ['map-panel', 'live-panel', 'fwd-panel']) { const el = document.getElementById(id); if (el) mo.observe(el, {attributes: true, attributeFilter: ['style', 'data-view']}); }
+  lnSync();
+}
+function lnOpen(el, scroll) {
+  const [, , it] = lnItem(el.id); const els = it ? lnEls(it).filter(x => x.dataset.ln) : [el];
+  for (const p of els) { p.classList.remove('an-col'); p.classList.add('an-open'); if (p.tagName === 'DETAILS') p.open = true; }
+  lnSync(); const top = els[0] || el;
+  requestAnimationFrame(() => { window.dispatchEvent(new Event('resize')); els.forEach(p => p.querySelectorAll('.js-plotly-plot').forEach(q => { try { Plotly.Plots.resize(q); } catch (e) {} }));
+    if (scroll) { const y = top.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({top: Math.max(0, y), behavior: 'smooth'}); } });
+}
+function lnClose(el) {
+  const [v, , it] = lnItem(el.id); for (const p of it ? lnEls(it).filter(x => x.dataset.ln) : [el]) { p.classList.add('an-col'); p.classList.remove('an-open'); }
+  lnSync(); const g = document.getElementById('ln-grid-' + v); if (g) { const y = g.getBoundingClientRect().top + window.scrollY - 90; window.scrollTo({top: Math.max(0, y)}); }
+}
+function lnSync() {
+  if (!document.getElementById('ln-grid-research')) return;
+  for (const [v, c] of Object.entries(LN)) {
+    const grid = document.getElementById('ln-grid-' + v); if (!grid) continue; let any = false;
+    for (const it of c.items) {
+      lnFold(v, c, it); const els = lnEls(it), first = els[0], bar = grid.querySelector(`[data-for="${it.ids[0]}"]`); if (!bar) continue;
+      const ok = !!first && first.dataset.ln === v && lnHere(c, first) && first.style.display !== 'none'
+        && !(first.classList.contains('owner-only') && !document.body.classList.contains('role-owner'));
+      bar.hidden = !ok; bar.classList.toggle('on', ok && els.some(p => !p.classList.contains('an-col'))); any = any || ok;
+    }
+    grid.hidden = !any; const h = document.getElementById('ln-head-' + v); if (h) h.hidden = !any;
+  }
+}
+// Ask Finny sits second on every tab (user, 2026-11-03): the one panel moves under the tab's header, so the conversation carries over
+function akPlace(v) {
+  const p = document.getElementById('ask-panel'), a = document.getElementById({analyze: 'an-hero', research: 'rs-hero', accounts: 'acc-head'}[v]); if (!p || !a) return;
+  if (v === 'research') delete p.dataset.view; else p.dataset.view = v;
+  if (a.nextElementSibling !== p) a.after(p);
+  if (typeof akInit === 'function') akInit();
+}
+const v2viewSetLN = viewSet; viewSet = function (v, push) { v2viewSetLN(v, push); try { akPlace(VIEW.cur); lnInit(); setTimeout(lnSync, 0); setTimeout(lnSync, 2500); } catch (e) { console.error('lean tabs', e); } };
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { lnInit(); }); else lnInit();
 
 // ---------------- mover check (2026-11-02, Bible 6.143): the top 10 gainers and losers OUTSIDE the S&P 500 are checked against our swing
 // rules every 15 minutes by the mover-profile worker (live_mover_profile): features ranked against today's S&P 500 and each rule's
@@ -7313,13 +7405,16 @@ function libRender() {
   const el = document.getElementById('lib-body'); if (!el || !LIB.rows) return;
   const q = LIB.q.toLowerCase(), vs = LIB.v ? LIB.v.split(',') : null;
   const R = LIB.rows.filter(r => (!vs || vs.includes(r.verdict)) && (!q || [r.name, r.source, r.category, r.one_line].join(' ').toLowerCase().includes(q)));
-  el.innerHTML = R.length ? R.map(r => `<div class="lib-card" data-lib="${esc(r.id)}" role="button" tabindex="0">
+  const cut = !LIB.all && !q && !vs && R.length > 4, show = cut ? R.slice(0, 4) : R;   // lean Research (6.161): four cards, then "Show all"
+  el.innerHTML = R.length ? show.map(r => `<div class="lib-card" data-lib="${esc(r.id)}" role="button" tabindex="0">
       <h3><span>${esc(r.name)}</span><span class="lib-v ${esc(r.verdict)}">${esc(LIB_V[r.verdict] || r.verdict)}</span></h3>
       <div class="lib-src">${esc(r.source || '')}${r.category ? ' · ' + esc(r.category) : ''}</div><p class="lib-one">${esc(r.one_line || '')}</p>
       ${LIB.open === r.id ? `<div class="lib-more"><p><b>Rules.</b> ${esc(r.rules || '')}</p><p><b>How we tested it.</b> ${esc(r.how_tested || '')}</p>
         <p><b>Result.</b> ${esc(r.result || '')}</p><p><b>Limits.</b> ${esc(r.limits || '')}</p>
         ${r.experiment_id ? `<div class="lib-link"><a href="#" data-exp="${esc(r.experiment_id)}">Full research report</a></div>` : ''}</div>` : ''}</div>`).join('')
-    : '<p class="note">Nothing matches. Ask Finny below whether your strategy has been tested.</p>';
+      + (cut ? `<button type="button" class="nw-more lib-all" id="lib-all">Show all ${R.length} tested strategies</button>` : '')
+    : '<p class="note">Nothing matches. Ask Finny above whether your strategy has been tested.</p>';
+  const all = document.getElementById('lib-all'); if (all) all.onclick = () => { LIB.all = true; libRender(); };
   el.querySelectorAll('[data-lib]').forEach(c => c.onclick = e => { if (e.target.closest('a')) return; LIB.open = LIB.open === c.dataset.lib ? null : c.dataset.lib; libRender(); });
   el.querySelectorAll('[data-exp]').forEach(a => a.onclick = async e => {
     e.preventDefault(); const f = document.getElementById('rl-body')?.closest('details'); if (f) f.open = true;
@@ -7332,7 +7427,7 @@ function libInit() {
   root.querySelectorAll('#lib-f button').forEach(b => b.onclick = () => { LIB.v = b.dataset.v; root.querySelectorAll('#lib-f button').forEach(x => x.classList.toggle('on', x === b)); libRender(); });
   const qi = document.getElementById('lib-q'); if (qi) qi.oninput = () => { LIB.q = qi.value; libRender(); };
   const ask = document.getElementById('lib-ask');
-  if (ask) ask.onclick = () => { viewSet('analyze'); const i = document.getElementById('ak-q'); if (i) { i.value = 'Does my strategy have an edge? My rules: '; i.focus(); i.scrollIntoView({block: 'center'}); } };
+  if (ask) ask.onclick = () => { const i = document.getElementById('ak-q'); if (i) { i.value = 'Does my strategy have an edge? My rules: '; i.focus(); i.scrollIntoView({block: 'center'}); } };
 }
 const v2viewSetLIB = viewSet; viewSet = function (v, push) { v2viewSetLIB(v, push); if (VIEW.cur === 'research') { libInit(); libLoad(); } };
 
