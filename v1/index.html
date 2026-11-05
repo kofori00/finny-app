@@ -6466,7 +6466,7 @@ Object.assign(AK_LOOK, {
   },
   async signal_history({signal, year, month, symbol} = {}) {        // why a swing signal had good or bad periods (6.120): after the fact, not a forecast
     if (!AK.why) AK.why = Object.assign({}, ...(await sb('live_models?select=data&key=in.(signal_why,signal_why_owner)')).map(r => r.data));   // research signals: owner row (RLS)
-    const MAP = {R18L26: 'R18L26', R18P12: 'R18P12', HB: 'HB', S4P23: 'HB', S14L19: 'HB', S14A10: 'HB', S14L08: 'HB', HBV: 'HBV', S7P21: 'HBV', S1L20: 'S1L20', S3A09: 'S3A09', S12P15: 'S12P15'};
+    const MAP = {R18L26: 'R18L26', R18P12: 'R18P12', HB: 'HB', S4P23: 'HB', S14L19: 'HB', S14A10: 'HB', S14L08: 'HB', HBV: 'HBV', S7P21: 'HBV', S1L20: 'S1L20', S3A09: 'S3A09', S12P15: 'S12P15', FB125: 'FB125', FB017: 'FB017'};
     const k = MAP[String(signal || 'R18L26').toUpperCase().replace(/[^A-Z0-9]/g, '')], pub = ['R18L26', 'R18P12'];
     if (!k) return {error: 'unknown signal', known: Object.keys(MAP)};
     if (!pub.includes(k) && !akOwn()) return {error: 'that research signal is only visible to the owner'};
