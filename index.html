@@ -7668,6 +7668,26 @@ async function fwdLoad(force) {
     FWD.err = null; FWD.loadedAt = Date.now(); if (FWD.pos.some(p => !p.exit_at)) await fwdQuotes();
   } catch (e) { FWD.err = e.message; }
   FWD.busy = false; fwdRender(); fwdTick();
+  if (!FWD.err) setTimeout(() => fwdAutoSync().catch(e => console.error('fwd sync', e)), 3000);   // after the strategy data has loaded (6.178)
+}
+// copied long-term strategy books follow their strategy (Bible 6.178, user: "none of the strategies being forward tested has a sell logic that is
+// actively running"): when the app loads, a book that copied a long-term strategy's holdings (strategy_key elite:<key>, not a swing signal row;
+// swing copies get their exits on the server every evening) is rebalanced to the strategy's current holdings if they changed: what left is
+// sold and what came in is bought at live prices (fwd rebalance). At most once a day per book; never on an empty or failed holdings list.
+async function fwdAutoSync() {
+  if (typeof TL === 'undefined' || !TL.loaded || typeof EL === 'undefined' || !EL.rows || !FWD.books) return;
+  const day = new Date().toISOString().slice(0, 10); let changed = 0;
+  for (const b of FWD.books.filter(b => !b.closed_at && b.kind === 'strategy' && String(b.strategy_key || '').startsWith('elite:'))) {
+    const key = b.strategy_key.slice(6), row = EL.rows.find(x => x.key === key); let want = null;
+    if (row) { if (row.kind === 'signal') continue; want = elHeld(row); }
+    else { const s = (TL.strats || []).find(x => x.family.id === key); if (s) { const S = tlSelect(s.family, s.variant || {}); want = S.na ? null : [...S.top]; } }
+    if (!want || want.length < 3) continue;
+    const have = new Set(FWD.pos.filter(p => p.book_id === b.id && !p.exit_at).map(p => p.ticker)), w = new Set(want);
+    if (have.size === w.size && [...w].every(t => have.has(t))) continue;
+    const k = `fwd-sync-${b.id}-${day}`; try { if (localStorage.getItem(k)) continue; localStorage.setItem(k, '1'); } catch (e) {}
+    try { const j = await fwdApi({action: 'rebalance', book_id: b.id, tickers: want}); if (j.ok) changed++; } catch (e) { console.error('fwd sync', e); }
+  }
+  if (changed) { fwdToast(`${changed} strategy book${changed > 1 ? 's' : ''} updated to the strategy's current holdings`); FWD.books = null; fwdLoad(true); }
 }
 async function fwdQuotes() { try { const j = await fwdApi({action: 'quotes'}); FWD.px = j.px; FWD.at = j.at; } catch (e) { /* keep the last prices */ } }
 // while the panel is on screen: live prices every minute, the books and positions themselves every 10 minutes and whenever the app comes back
