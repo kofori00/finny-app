@@ -725,7 +725,7 @@
   .mv-ref{width:36px;height:36px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);display:grid;place-items:center;cursor:pointer;flex:none}
   .mv-ref svg{width:17px;height:17px} .mv-ref:active svg{transform:rotate(-90deg);transition:transform .2s}
   #mv-panel .mv-all{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:0 0 4px} #mv-panel .mv-all input{width:14px;height:14px;accent-color:var(--accent)}
-  #mv-panel .mv-age{font-size:11px;margin:10px 0 0} #mv-panel .mv-hid{font-size:12px;margin:10px 0 0}
+  .hero-stats b.v2-up{color:var(--good)} .hero-stats b.v2-dn{color:var(--bad, #dc2626)} #mv-panel .mv-age{font-size:11px;margin:10px 0 0} #mv-panel .mv-sess{font-size:12px;margin:0 0 8px;padding:6px 10px;border-radius:10px;background:var(--accent-soft);color:var(--ink-2)} #mv-panel .mv-hid{font-size:12px;margin:10px 0 0}
   #mv-panel .mv-scope{margin:0 0 8px} #mv-panel .mv-scope button{font-size:12px;padding:5px 12px} #mv-panel .mv-c-spx{background:var(--accent-soft);color:var(--ink-2)}
   .lib-bar{display:flex;flex-direction:column;gap:10px;margin:14px 0 10px} .lib-bar input{padding:11px 14px;border-radius:12px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);font:inherit}
   .lib-f{flex-wrap:wrap} .lib-f button{font-size:12px;padding:6px 12px}
@@ -1240,6 +1240,7 @@
       <div id="mv-scope" class="mv-seg mv-scope" role="group" aria-label="Which stocks"><button class="on" data-s="all">All US stocks</button><button data-s="sp500">S&amp;P 500 only</button><button data-s="eu" class="owner-only" title="Euronext Amsterdam (Yahoo Finance, owner only)">Amsterdam</button></div>
       <div class="mv-bar"><div id="mv-tabs" class="mv-seg"><button class="on" data-t="gainers">Gainers</button><button data-t="losers">Losers</button><button data-t="actives">Active</button></div>
         <button class="mv-ref" id="mv-refresh" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      <p id="mv-sess" class="mv-sess" hidden></p>
       <div id="mv-body"><div class="nw-skel s"></div><div class="nw-skel s"></div><div class="nw-skel s"></div></div>
       <div id="mv-age" class="mv-age"></div>
       <details class="about mv-about"><summary>About these lists</summary><p>US stocks only (Alpaca screener; EU/UK listings are not covered). <b>1-week odds</b>: each stock's OWN record, the same number its odds checker shows: how often it was higher 5 trading days later over its full history (or, for S&amp;P 500 stocks with a tested swing signal today, that signal's record). History, not a forecast. <b>under 1y data</b> means the stock has traded for less than a year, so its odds rest on very few weeks. Across the S&amp;P 500, big up-days of 5-20% faded slightly over the next week (about 49-50% up vs 54% on any day); over a month they did fine. Small caps and SPAC paper in this list behave differently, so treat it as information, not a buy list. Tap any row for its full odds.</p><p><b>All US stocks</b> is Alpaca's whole-market list (mostly small companies on big days); rows tagged <b>S&amp;P 500</b> are members. <b>S&amp;P 500 only</b> ranks the 500 members by today's move (IEX prices, latest trade vs the previous close; Active = IEX volume, a share of the whole market's): our strategies were tested on these stocks, so each has the full analysis.</p></details>
@@ -5358,7 +5359,12 @@ const MV = {tab: 'gainers', scope: 'all', all: false, prev: null, cur: null, tim
 // scope (2026-11-02, Bible 6.142): 'all' = Alpaca's whole-market lists (unchanged, the default); 'sp500' = the same three lists for S&P 500
 // members only (live_movers.sp500, from market-movers v4). The choice is remembered on this device.
 try { if (localStorage.getItem('finny.mvScope') === 'sp500') MV.scope = 'sp500'; } catch (e) {}
-const mvList = (c, tab) => !c ? [] : MV.scope === 'sp500' ? ((c.sp500 || {})[tab] || []) : (c[tab] || []);
+// extended hours (2026-11-06, Bible 6.181): before 09:30 and after 16:00 New York the snapshot carries ext = premarket / after-hours movers
+// (consolidated feed, 15 minutes delayed); the panel shows those while they are fresh, the regular lists otherwise
+const mvExt = c => c && c.ext && c.ext.session && !c.ext.error && (Date.now() - Date.parse(c.at)) < 20 * 60 * 1000 ? c.ext : null;
+const mvList = (c, tab) => { if (!c) return []; const x = mvExt(c);
+  if (x && (MV.scope === 'all' || MV.scope === 'sp500')) return ((MV.scope === 'sp500' ? x.sp500 : x.all) || {})[tab] || [];
+  return MV.scope === 'sp500' ? ((c.sp500 || {})[tab] || []) : (c[tab] || []); };
 // per-ticker 1-week odds (2026-10-24): the SAME headline as the odds checker (the stock's own record, or a tested swing signal), fetched
 // with ticker-odds for the rows on screen only, 4 symbols per call, cached 10 minutes by odOwn; failed fetches are retried after 2 minutes
 async function mvOddsLoad(syms) {
@@ -5389,7 +5395,7 @@ function mvFlags(r) {
 }
 async function mvLoad() {
   try {
-    const rows = await sb('live_movers?select=at,last_updated,gainers,losers,actives,sp500&order=at.desc&limit=2');
+    const rows = await sb('live_movers?select=at,last_updated,gainers,losers,actives,sp500,ext&order=at.desc&limit=2');
     if (!rows.length) { mvBody('<p class="note">No snapshot yet: the feed stores one every 3 minutes on trading days (12:00-23:00 UTC).</p>'); return; }
     MV.cur = rows[0]; MV.prev = rows[1] || null; mvRender();
   } catch (e) { mvBody(`<p class="note">Could not load movers: ${esc(e.message)}</p>`); }
@@ -5397,12 +5403,15 @@ async function mvLoad() {
 function mvBody(h) { const b = document.getElementById('mv-body'); if (b) b.innerHTML = h; }
 function mvAge() {
   const el = document.getElementById('mv-age'); if (!el || !MV.cur) return;
-  const t = Date.parse(MV.cur.last_updated || MV.cur.at), m = Math.max(0, Math.round((Date.now() - t) / 60000));
-  el.textContent = `Alpaca · ${MV.scope === 'sp500' ? 'S&P 500 members' : 'all US stocks'} · ${m < 1 ? 'just now' : m + ' min ago'} · tap a stock for its odds`;
+  const x = mvExt(MV.cur), t = Date.parse(x ? MV.cur.at : (MV.cur.last_updated || MV.cur.at)), m = Math.max(0, Math.round((Date.now() - t) / 60000));
+  el.textContent = x ? `${x.session === 'pre' ? 'Premarket' : 'After hours'} · all exchanges, 15 min delayed · vs ${x.ref} · ${MV.scope === 'sp500' ? 'S&P 500 members' : 'S&P 500 + active names'} · updated ${m < 1 ? 'just now' : m + ' min ago'} · tap a stock for its odds`
+    : `Alpaca · ${MV.scope === 'sp500' ? 'S&P 500 members' : 'all US stocks'} · ${m < 1 ? 'just now' : m + ' min ago'} · tap a stock for its odds`;
   el.className = 'mv-age' + (m > 10 ? ' mv-stale' : '');
 }
 function mvRender() {
   const c = MV.cur; if (!c) return;
+  const xs = document.getElementById('mv-sess'), x = mvExt(c);
+  if (xs) { xs.hidden = !x; xs.textContent = x ? (x.session === 'pre' ? 'Premarket movers: the regular-session lists start at 9:30 New York (15:30 Amsterdam).' : 'After-hours movers since the 16:00 New York close.') : ''; }
   if (MV.scope === 'sp500' && !c.sp500) { mvBody('<p class="note">The S&amp;P 500 list arrives with the next snapshot (every 3 minutes on trading days).</p>'); mvAge(); return; }
   const list = mvList(c, MV.tab).filter(r => MV.all || (!mvJunk(r) && !(r.price != null && r.price < 1)));
   const before = new Set(mvList(MV.prev, MV.tab).map(r => r.symbol));
@@ -5419,7 +5428,7 @@ function mvRender() {
       + (o.days < 252 ? '<span class="mv-chip mv-f-warn" title="Less than a year of trading: the odds rest on very few weeks">under 1y data</span>' : ''); };
   const name = n => (n || '').replace(/\s+(Class [A-Z]|Common Stock|Ordinary Shares?|American Depositary Shares?|Inc\.?|Corporation|Corp\.?|Holdings?|Limited|Ltd\.?|plc)\b.*$/i, '').replace(/[,\s]+$/, '').trim() || n || ''; const nice = n => typeof tlTitle === 'function' ? tlTitle(name(n)) : name(n);
   const rows = list.slice(0, MV.shown).map((r, i) => { const isNew = before.size && !before.has(r.symbol), link = true;   // any US ticker opens in the odds checker
-    const right2 = MV.tab === 'actives' ? (r.volume != null ? (r.volume >= 1e6 ? (r.volume / 1e6).toFixed(1) + 'M' : Math.round(r.volume / 1e3) + 'k') + (MV.scope === 'sp500' ? ' IEX vol' : ' vol') : '') : (r.change == null ? '' : (r.change >= 0 ? '+' : '−') + '$' + Math.abs(r.change).toFixed(Math.abs(r.change) < 0.1 ? 3 : 2));
+    const right2 = MV.tab === 'actives' ? (r.volume != null ? (r.volume >= 1e6 ? (r.volume / 1e6).toFixed(1) + 'M' : Math.round(r.volume / 1e3) + 'k') + (mvExt(c) ? (mvExt(c).session === 'pre' ? ' pre vol' : ' AH vol') : MV.scope === 'sp500' ? ' IEX vol' : ' vol') : '') : (r.change == null ? '' : (r.change >= 0 ? '+' : '−') + '$' + Math.abs(r.change).toFixed(Math.abs(r.change) < 0.1 ? 3 : 2));
     return `<div class="mv-row${isNew ? ' mv-new' : ''}${link ? ' mv-link' : ''}"${link ? ` data-od="${esc(r.symbol)}" role="button" tabindex="0" title="Check the backtested odds"` : ''}>
       <span class="nw-av${spx.has(r.symbol) ? ' spx' : ''}" style="--h:${typeof nwHue === 'function' ? nwHue(r.symbol) : 200}" aria-hidden="true">${esc(r.symbol.slice(0, 4))}</span>
       <div class="mv-id"><div class="mv-sym"><span class="mv-nmx">${esc(nice(r.name) || r.symbol)}</span>${isNew ? '<span class="mv-badge">new</span>' : ''}</div>
@@ -6293,9 +6302,12 @@ const AK_LOOK = {
   },
   async top_movers({list}) {
     const k = list === 'losers' ? 'losers' : list === 'most_active' ? 'actives' : 'gainers';
-    const r = (await sb('live_movers?select=at,last_updated,gainers,losers,actives&order=at.desc&limit=1'))[0]; if (!r) return {note: 'no movers snapshot yet today'};
-    const rows = (r[k] || []).filter(x => !mvJunk(x) && !(x.price < 1)).slice(0, 8);
-    return {list, as_of: r.last_updated || r.at, note: 'warrants, units and stocks under $1 left out', items: rows.map(x => ({symbol: x.symbol, name: x.name, change_pct: x.pct, price: x.price}))};
+    const r = (await sb('live_movers?select=at,last_updated,gainers,losers,actives,ext&order=at.desc&limit=1'))[0]; if (!r) return {note: 'no movers snapshot yet today'};
+    const x = r.ext && r.ext.session && !r.ext.error && Date.now() - Date.parse(r.at) < 20 * 60 * 1000 ? r.ext : null;   // 6.181: premarket / after hours
+    const rows = ((x ? (x.all || {})[k] : r[k]) || []).filter(x => !mvJunk(x) && !(x.price < 1)).slice(0, 8);
+    return {list, session: x ? (x.session === 'pre' ? 'premarket' : 'after hours') : 'regular', as_of: x ? r.at : (r.last_updated || r.at),
+      note: (x ? `${x.session === 'pre' ? 'premarket' : 'after-hours'} moves vs ${x.ref}, all exchanges, 15 minutes delayed, S&P 500 plus recently active names; ` : '') + 'warrants, units and stocks under $1 left out',
+      items: rows.map(x => ({symbol: x.symbol, name: x.name, change_pct: x.pct, price: x.price, volume: x.volume}))};
   },
   async latest_news({symbol} = {}) {
     const s = symbol ? await akSym(symbol) : null, token = await getToken();
