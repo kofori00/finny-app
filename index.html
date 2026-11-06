@@ -7067,10 +7067,11 @@ function ssCard(A) {
     if (!r || r.error) { el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">${esc(r?.error || 'Not available for this symbol.')}</p>`; return; }
     const L = (r.strategies || []).filter(x => !x.error).sort((a, b) => (b.signal_now - a.signal_now) || ((a.tier === 'edge') ? -1 : 1));
     const n = L.filter(x => x.signal_now).length, pct = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
-    const rows = L.map(x => { const miss = x.conditions.filter(c => c.ok === false).length, rc = x.record;
+    const since = r.record_from && r.record_from > '2016-01-04' ? `since its listing (${r.first_bar})` : 'since 2016';
+    const rows = L.map(x => { const miss = x.conditions.filter(c => c.ok === false).length, wait = x.conditions.filter(c => c.ok === null).length, rc = x.record;
       return `<div class="ss-row${x.signal_now ? ' on' : ''}"><div class="ss-n"><b>${esc(x.name)}</b><span class="ss-t ${x.tier === 'edge' ? 'ss-edge' : ''}">${x.tier === 'edge' ? 'passed every test' : 'promising'}</span>${x.in_universe ? '' : '<span class="ss-t" title="Never tested outside the S&amp;P 500: shown as a what-if">outside its tested universe</span>'}</div>
-        <div class="ss-s">${x.signal_now ? `<b class="v2-up">would buy${r.live ? ' now' : ' at the last close'}</b>` : `no signal · ${miss} of ${x.conditions.length} rule${x.conditions.length > 1 ? 's' : ''} not met`}${x.open_trade ? ` · simulated trade open since ${esc(x.open_trade.entry)}` : ''}${x.last_signal && !x.signal_now ? ` · last signal ${esc(x.last_signal)}` : ''}</div>
-        <div class="ss-r">On ${esc(S)} since 2016: ${rc.trades} trade${rc.trades === 1 ? '' : 's'}${rc.trades ? `, ${Math.round(rc.win * 100)}% winners, average ${pct(rc.avg)}` : ''}</div></div>`; }).join('');
+        <div class="ss-s">${x.signal_now ? `<b class="v2-up">would buy${r.live ? ' now' : ' at the last close'}</b>` : `no signal · ${miss} of ${x.conditions.length} rule${x.conditions.length > 1 ? 's' : ''} not met${wait ? ` · ${wait} need${wait === 1 ? 's' : ''} more history (too new)` : ''}`}${x.open_trade ? ` · simulated trade open since ${esc(x.open_trade.entry)}` : ''}${x.last_signal && !x.signal_now ? ` · last signal ${esc(x.last_signal)}` : ''}</div>
+        <div class="ss-r">On ${esc(S)} ${since}: ${rc.trades} trade${rc.trades === 1 ? '' : 's'}${rc.trades ? `, ${Math.round(rc.win * 100)}% winners, average ${pct(rc.avg)}` : ''}</div></div>`; }).join('');
     el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)} <span>${n} of ${L.length} would buy${r.live ? ' at the live price' : ` (close of ${esc(r.as_of)})`}</span></div>${rows}
       <p class="ss-f">Exact strategy rules run on ${esc(S)}${r.member ? '' : ', ranked against each day\'s S&amp;P 500 as if it were a member'}. A record on one stock is a small sample, not a forecast. Not advice.</p>`;
     const t0 = document.querySelector('.hero-stats')?.children[0];
@@ -7084,11 +7085,11 @@ async function v2Outside(A, t0) {
   const S = A.sym, q0 = V2Q[S];
   const draw = q => { if (HERO.last?.sym !== S || !t0.isConnected) return;
     const ok = q && q.price_usd != null, pct = ok ? q.change_vs_previous_close_pct : null;
-    const tm = ok && q.last_trade_at ? new Date(q.last_trade_at).toLocaleString('en-US', {timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}) : '';
-    if (t0.dataset.ss) { const sub = t0.querySelector('.hs-s'); if (sub && ok) sub.textContent = `${S} ${pct == null ? '' : (pct >= 0 ? '+' : '') + pct.toFixed(1) + '% '}at $${(+q.price_usd).toFixed(2)} (last trade ${tm} New York) · not in the S&P 500: strategies ranked it against the market`; return; }
+    const tm = ok && q.last_trade_at ? new Date(q.last_trade_at).toLocaleString('en-US', {timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}) : ''; const sx = ok ? [q.session && q.session !== 'regular' ? q.session : '', /delayed/.test(q.feed || '') ? '15 min delayed' : ''].filter(Boolean).join(', ') : '', tmx = tm + ' New York' + (sx ? ` (${sx})` : '');
+    if (t0.dataset.ss) { const sub = t0.querySelector('.hs-s'); if (sub && ok) sub.textContent = `${S} ${pct == null ? '' : (pct >= 0 ? '+' : '') + pct.toFixed(1) + '% '}at $${(+q.price_usd).toFixed(2)} (last trade ${tmx}) · not in the S&P 500: strategies ranked it against the market`; return; }
     t0.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><b class="${pct == null ? '' : pct >= 0 ? 'v2-up' : 'v2-dn'}">${pct == null ? (ok ? '$' + q.price_usd : '–') : (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%'}</b>
       <span class="hs-l">${esc(S)} ${ok ? `at $${(+q.price_usd).toFixed(2)} vs the last close` : 'live price unavailable'}</span>
-      <span class="hs-s">${ok ? `last trade ${esc(tm)} New York${q.stale ? ' (old: delisted?)' : ''} · ` : ''}not in the S&amp;P 500, so our strategy holdings do not cover it; the weekly record and swing size beside still apply</span>`; };
+      <span class="hs-s">${ok ? `last trade ${esc(tmx)}${q.stale ? ' (old: delisted?)' : ''} · ` : ''}not in the S&amp;P 500, so our strategy holdings do not cover it; the weekly record and swing size beside still apply</span>`; };
   if (q0 && Date.now() - q0.at < 120000) return draw(q0.q);
   draw(null);
   try { const j = await AK_LOOK.stock_price({symbols: [S]}); const q = (j.quotes || [])[0]; V2Q[S] = {q, at: Date.now()}; draw(q); } catch (e) { /* the tile keeps the plain note */ }
