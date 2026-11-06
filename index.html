@@ -1113,6 +1113,10 @@
   .h-v.v2-hv-lo{fill:var(--ink-2)} .mv-chip.v2-mvpk{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
   .v2-badge{font:700 9.5px var(--font-ui);letter-spacing:.08em;padding:2px 7px;border-radius:999px;background:#d9a23a;color:#2a2110;margin-left:6px;vertical-align:middle}
   body:not(.role-owner) .owner-only{display:none!important}
+  .ss-card{margin:12px 2px 0;padding:12px 14px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-line)} .ss-h{font-weight:600;font-size:14px;margin:0 0 8px;color:var(--ink)} .ss-h span{display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:2px}
+  .ss-row{padding:8px 0;border-top:1px solid var(--glass-line)} .ss-row.on{border-left:3px solid var(--good);padding-left:8px} .ss-n{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+  .ss-t{font-size:11px;padding:1px 7px;border-radius:9px;background:var(--glass-line);color:var(--ink-2)} .ss-t.ss-edge{background:color-mix(in srgb, var(--good) 22%, transparent);color:var(--ink)}
+  .ss-s{font-size:12.5px;color:var(--ink-2);margin-top:3px} .ss-r{font-size:12px;color:var(--muted);margin-top:2px} .ss-f{font-size:11.5px;color:var(--muted);margin:8px 0 0}
   .hs-line{margin:10px 2px 0;padding:9px 12px;border-radius:14px;background:var(--glass);border:1px dashed var(--glass-line);font-size:12.5px;color:var(--ink-2)} .hs-line b{color:var(--ink)}
   .hs-k{display:block;font:700 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
   .hs-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:14px 0 2px;padding:4px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line)}
@@ -6420,6 +6424,17 @@ const AK_LOOK = {
     }
     return {snapshot_date: TL.asof, note: 'Each value is followed by (pNN) = its S&P 500 percentile, the share of S&P 500 stocks with a LOWER value (100 = highest; for accruals, debt and volatility lower is usually better). Fundamentals: latest SEC filings. For news / catalysts use latest_news; for odds use stock_odds.', stocks: out};
   },
+  async stock_swing_signals({symbols = []} = {}) {            // 6.182: every validated swing strategy run on any US stock in real time (stock-signals)
+    const S = []; for (const x of [...new Set((Array.isArray(symbols) ? symbols : [symbols]).map(String))].slice(0, 4)) S.push(await akSym(x));
+    const j = await ssFetch(S); const out = {};
+    for (const s of S) { const r = j[s]; if (!r || r.error) { out[s] = {error: r?.error || 'no result'}; continue; }
+      out[s] = {as_of: r.as_of, at_live_price: r.live, price: r.price, in_sp500: r.member, sector_group: r.sector,
+        strategies: (r.strategies || []).filter(x => !x.error).map(x => ({name: x.name, key: x.key, tier: x.tier === 'edge' ? 'passed every test' : 'promising (not proven)',
+          would_buy_now: x.signal_now, rules_not_met: x.conditions.filter(c => c.ok === false).map(c => c.rule), last_signal: x.last_signal,
+          open_simulated_trade: x.open_trade, record_on_this_stock_since_2016: {trades: x.record.trades, win_rate: x.record.win, avg_trade: x.record.avg, last_3y: x.record.last3y},
+          tested_on: x.tested_universe === 'both' ? 'S&P 500 stocks and ETFs' : 'S&P 500 stocks', inside_tested_universe: x.in_universe}))}; }
+    return {results: out, note: 'Our validated swing strategies run on this stock with their exact rules (ranks vs that day\'s S&P 500); would_buy_now uses the live price when the US market is open (else the last close). A record on one stock is a small sample; outside the tested universe the strategy was never tested.'};
+  },
   async stock_price({symbols = []} = {}) {                    // 6.167: live price + previous close (odds-live action quote; SIP, IEX fallback)
     const S = []; for (const x of [...new Set((Array.isArray(symbols) ? symbols : [symbols]).map(String))].slice(0, 10)) S.push(await akSym(x));
     const token = await getToken();
@@ -6642,7 +6657,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
@@ -7023,11 +7038,44 @@ function v2Hero(A) {
     <span class="hs-l">${A.member ? `top strategies hold ${S} today` : `${S} is not in the S&amp;P 500`}</span>
     <span class="hs-s">${!A.member ? 'no tested view: our strategies cover S&amp;P 500 companies only' : pick ? `in this month's picks (${pick.votes} on ${v2Day(V2.P[V2.P.length - 1].as_of)})`
       : np >= V2_MIN ? `${V2_MIN}+ of the public ones: a pick if it still holds at the next monthly snapshot` : `Sharpe 1.2+ after re-checks · ${V2_MIN} or more of the public ones make a monthly pick`}</span>`;
-  t0.title = V?.[A.sym]?.length ? 'Would buy it: ' + V[A.sym].join(', ') : '';
+  t0.title = V?.[A.sym]?.length ? 'Would buy it: ' + V[A.sym].join(', ') : ''; delete t0.dataset.ss;
   if (!A.member) v2Outside(A, t0);
+  ssCard(A);
   t1.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><b>${w == null ? '…' : Math.round(w * 100) + '%'}</b>
     <span class="hs-l">of past weeks ${S} ended higher</span><span class="hs-s">${A.H?.[0]?.head?.edge ? 'tested swing signal active: its record' : 'background, not a forecast: past 1-week calls were about a coin flip'}</span>`;
   t1.title = '';
+}
+// swing strategies on the selected stock (2026-11-06, Bible 6.182): every validated strategy in swing_registry run on ANY US stock in real time by
+// the stock-signals function (exact rules, ranks against that day's S&P 500); shared by the Analyze card, the first tile and Ask Finny
+const SS = {};
+async function ssFetch(syms) {
+  const need = syms.filter(s => !(SS[s] && Date.now() - SS[s].at < 60000)), out = {};
+  if (need.length) {
+    const token = await getToken();
+    const r = await fetch(`${SB_URL}/functions/v1/stock-signals`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({symbols: need})});
+    const j = await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})); if (!j.ok) throw new Error(j.error || 'stock-signals failed');
+    for (const [s, v] of Object.entries(j.results || {})) SS[s] = {at: Date.now(), v};
+  }
+  for (const s of syms) out[s] = SS[s]?.v; return out;
+}
+function ssCard(A) {
+  const S = A?.sym; if (!S || HERO.demo) return; let el = document.getElementById('ss-card');
+  if (!el) { const anchor = document.getElementById('hs-line') || document.querySelector('.hero-stats'); if (!anchor) return; anchor.insertAdjacentHTML('afterend', '<div id="ss-card" class="ss-card"></div>'); el = document.getElementById('ss-card'); }
+  el.dataset.sym = S; el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">Running every strategy on ${esc(S)}…</p>`;
+  ssFetch([S]).then(R => {
+    const r = R[S]; if (el.dataset.sym !== S) return;
+    if (!r || r.error) { el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">${esc(r?.error || 'Not available for this symbol.')}</p>`; return; }
+    const L = (r.strategies || []).filter(x => !x.error).sort((a, b) => (b.signal_now - a.signal_now) || ((a.tier === 'edge') ? -1 : 1));
+    const n = L.filter(x => x.signal_now).length, pct = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+    const rows = L.map(x => { const miss = x.conditions.filter(c => c.ok === false).length, rc = x.record;
+      return `<div class="ss-row${x.signal_now ? ' on' : ''}"><div class="ss-n"><b>${esc(x.name)}</b><span class="ss-t ${x.tier === 'edge' ? 'ss-edge' : ''}">${x.tier === 'edge' ? 'passed every test' : 'promising'}</span>${x.in_universe ? '' : '<span class="ss-t" title="Never tested outside the S&amp;P 500: shown as a what-if">outside its tested universe</span>'}</div>
+        <div class="ss-s">${x.signal_now ? `<b class="v2-up">would buy${r.live ? ' now' : ' at the last close'}</b>` : `no signal · ${miss} of ${x.conditions.length} rule${x.conditions.length > 1 ? 's' : ''} not met`}${x.open_trade ? ` · simulated trade open since ${esc(x.open_trade.entry)}` : ''}${x.last_signal && !x.signal_now ? ` · last signal ${esc(x.last_signal)}` : ''}</div>
+        <div class="ss-r">On ${esc(S)} since 2016: ${rc.trades} trade${rc.trades === 1 ? '' : 's'}${rc.trades ? `, ${Math.round(rc.win * 100)}% winners, average ${pct(rc.avg)}` : ''}</div></div>`; }).join('');
+    el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)} <span>${n} of ${L.length} would buy${r.live ? ' at the live price' : ` (close of ${esc(r.as_of)})`}</span></div>${rows}
+      <p class="ss-f">Exact strategy rules run on ${esc(S)}${r.member ? '' : ', ranked against each day\'s S&amp;P 500 as if it were a member'}. A record on one stock is a small sample, not a forecast. Not advice.</p>`;
+    const t0 = document.querySelector('.hero-stats')?.children[0];
+    if (t0 && !r.member && HERO.last?.sym === S) { const b = t0.querySelector('b'), l = t0.querySelector('.hs-l'); if (b && l) { t0.dataset.ss = '1'; b.textContent = `${n}/${L.length}`; b.className = n ? 'v2-up' : ''; l.textContent = `of our swing strategies would buy ${S}${r.live ? ' now' : ''}`; } }
+  }).catch(e => { if (el.dataset.sym === S) el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">Could not run them: ${esc(e.message)}</p>`; });
 }
 // stocks outside the S&P 500 (2026-11-06, Bible 6.181): the first tile shows the stock's live move (odds-live quote, the same lookup Ask Finny
 // uses) instead of an empty dash; our strategy holdings still cover S&P 500 companies only, and the tile says so
@@ -7037,6 +7085,7 @@ async function v2Outside(A, t0) {
   const draw = q => { if (HERO.last?.sym !== S || !t0.isConnected) return;
     const ok = q && q.price_usd != null, pct = ok ? q.change_vs_previous_close_pct : null;
     const tm = ok && q.last_trade_at ? new Date(q.last_trade_at).toLocaleString('en-US', {timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}) : '';
+    if (t0.dataset.ss) { const sub = t0.querySelector('.hs-s'); if (sub && ok) sub.textContent = `${S} ${pct == null ? '' : (pct >= 0 ? '+' : '') + pct.toFixed(1) + '% '}at $${(+q.price_usd).toFixed(2)} (last trade ${tm} New York) · not in the S&P 500: strategies ranked it against the market`; return; }
     t0.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><b class="${pct == null ? '' : pct >= 0 ? 'v2-up' : 'v2-dn'}">${pct == null ? (ok ? '$' + q.price_usd : '–') : (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%'}</b>
       <span class="hs-l">${esc(S)} ${ok ? `at $${(+q.price_usd).toFixed(2)} vs the last close` : 'live price unavailable'}</span>
       <span class="hs-s">${ok ? `last trade ${esc(tm)} New York${q.stale ? ' (old: delisted?)' : ''} · ` : ''}not in the S&amp;P 500, so our strategy holdings do not cover it; the weekly record and swing size beside still apply</span>`; };
@@ -7059,7 +7108,11 @@ const v1akContext = akContext; akContext = function () {
   return {...c, top_strategies_holding_it_today: V && c.sp500_member ? {count: (V[c.symbol] || []).length, of: V2.F.length, names: V[c.symbol] || [],
       meaning: 'our strategies with backtest Sharpe 1.2+ (or 25%+ a year) after re-checks; backtests, not a forecast'} : null,
     in_this_months_picks: pick ? {since: V2.P[V2.P.length - 1].as_of, votes: pick.votes} : false,
-    note_on_weekly_odds: 'weekly odds are the stock\'s own base rate (background), not a forecast'};
+    note_on_weekly_odds: 'weekly odds are the stock\'s own base rate (background), not a forecast',
+    our_swing_strategies_on_this_stock: (() => { const r = SS[c.symbol]?.v; if (!r || r.error) return null;              // 6.182: from stock-signals (same as the Analyze card)
+      return {as_of: r.as_of + (r.live ? ' live' : ' close'), outsider: !r.member, list: (r.strategies || []).filter(x => !x.error).map(x =>
+        `${x.name} (${x.tier === 'edge' ? 'passed every test' : 'promising'}): ${x.signal_now ? 'WOULD BUY' : 'no signal, ' + x.conditions.filter(q => q.ok === false).length + ' rules unmet'}; on this stock since 2016 ${x.record.trades} trades` +
+        (x.record.trades ? `, ${Math.round(x.record.win * 100)}% winners, avg ${(x.record.avg * 100).toFixed(1)}%` : '') + (x.in_universe ? '' : ', untested outside the S&P 500'))}; })()};
 };
 const v1akChips = akChips; akChips = function () {
   v1akChips(); const el = document.getElementById('ak-chips'), S = !HERO.demo && HERO.last?.sym; if (!el || !V2.P?.length) return;

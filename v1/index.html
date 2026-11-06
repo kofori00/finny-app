@@ -6292,6 +6292,17 @@ const AK_LOOK = {
     }
     return {snapshot_date: TL.asof, note: 'Each value is followed by (pNN) = its S&P 500 percentile, the share of S&P 500 stocks with a LOWER value (100 = highest; for accruals, debt and volatility lower is usually better). Fundamentals: latest SEC filings. For news / catalysts use latest_news; for odds use stock_odds.', stocks: out};
   },
+  async stock_swing_signals({symbols = []} = {}) {            // 6.182: every validated swing strategy run on any US stock in real time (stock-signals)
+    const S = []; for (const x of [...new Set((Array.isArray(symbols) ? symbols : [symbols]).map(String))].slice(0, 4)) S.push(await akSym(x));
+    const j = await ssFetch(S); const out = {};
+    for (const s of S) { const r = j[s]; if (!r || r.error) { out[s] = {error: r?.error || 'no result'}; continue; }
+      out[s] = {as_of: r.as_of, at_live_price: r.live, price: r.price, in_sp500: r.member, sector_group: r.sector,
+        strategies: (r.strategies || []).filter(x => !x.error).map(x => ({name: x.name, key: x.key, tier: x.tier === 'edge' ? 'passed every test' : 'promising (not proven)',
+          would_buy_now: x.signal_now, rules_not_met: x.conditions.filter(c => c.ok === false).map(c => c.rule), last_signal: x.last_signal,
+          open_simulated_trade: x.open_trade, record_on_this_stock_since_2016: {trades: x.record.trades, win_rate: x.record.win, avg_trade: x.record.avg, last_3y: x.record.last3y},
+          tested_on: x.tested_universe === 'both' ? 'S&P 500 stocks and ETFs' : 'S&P 500 stocks', inside_tested_universe: x.in_universe}))}; }
+    return {results: out, note: 'Our validated swing strategies run on this stock with their exact rules (ranks vs that day\'s S&P 500); would_buy_now uses the live price when the US market is open (else the last close). A record on one stock is a small sample; outside the tested universe the strategy was never tested.'};
+  },
   async stock_price({symbols = []} = {}) {                    // 6.167: live price + previous close (odds-live action quote; SIP, IEX fallback)
     const S = []; for (const x of [...new Set((Array.isArray(symbols) ? symbols : [symbols]).map(String))].slice(0, 10)) S.push(await akSym(x));
     const token = await getToken();
@@ -6514,7 +6525,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
