@@ -6220,8 +6220,13 @@ function akNums(A) {                                         // the odds checker
     odds_higher_1_week_pct: pc(w?.head?.v), odds_1_week_source: w?.head?.edge ? 'tested swing buy signal active today' : w?.head ? "stock's own history (base rate)" : 'not available',
     odds_higher_1_month_pct: pc(m?.head?.v), normal_weekly_swing_pct: isFinite(A.f?.vol20) ? pc(A.f.vol20 / Math.sqrt(52)) : null,
     today_from_open_odds_pct: A.op ? pc(A.op.p_up) : null,
-    one_week_forecasts_replayed_over_last_12_months: wf ? {number_of_1_week_forecasts: wf.n, share_right_pct: pc(wf.hit), typical_miss_of_the_1_week_move_pct: pc(wf.rmse), range_of_9_in_10_misses_pct: [pc(wf.q05), pc(wf.q95)]} : null,
-    swing_signal_today: w?.head?.edge ? (w.sig || 'yes') : 'none', return_12m_pct: pc(A.f?.mom12m ?? A.own?.f?.mom12m), history_since: A.own?.first || null};
+    one_week_forecasts_replayed_over_last_12_months: wf ? {what_this_is: 'not live calls: each past day the 1-week forecast was re-made with only the data known that day and checked 5 trading days later',
+      number_of_1_week_forecasts: wf.n, share_with_the_direction_right_pct: pc(wf.hit), share_of_those_weeks_the_stock_rose_pct: pc(wf.up_rate),
+      always_guessing_the_more_common_direction_would_be_right_pct: wf.up_rate == null ? null : pc(Math.max(wf.up_rate, 1 - wf.up_rate)),
+      how_to_read_share_right: 'only skill if clearly above always_guessing_the_more_common_direction; on a stock that mostly fell, calling down is right most weeks without any skill',
+      typical_miss_of_the_1_week_move_pct: pc(wf.rmse), typical_miss_means: 'root-mean-square of (actual minus forecast), about one standard deviation, over ALL forecasts, right and wrong alike (not only the wrong ones): about 2 in 3 missed by less',
+      range_of_9_in_10_misses_pct: [pc(wf.q05), pc(wf.q95)]} : null,
+    swing_signal_today: w?.head?.edge ? (w.sig || 'yes') : 'none', price_change_last_12_months_pct: pc(A.f?.mom12m ?? A.own?.f?.mom12m), history_since: A.own?.first || null};
 }
 function akContext() {                                       // compact numbers for the stock on screen (hero / odds checker state)
   const A = typeof HERO !== 'undefined' ? HERO.last : null; if (!A || !A.sym) return null;

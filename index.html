@@ -6352,8 +6352,13 @@ function akNums(A) {                                         // the odds checker
     odds_higher_1_week_pct: pc(w?.head?.v), odds_1_week_source: w?.head?.edge ? 'tested swing buy signal active today' : w?.head ? "stock's own history (base rate)" : 'not available',
     odds_higher_1_month_pct: pc(m?.head?.v), normal_weekly_swing_pct: isFinite(A.f?.vol20) ? pc(A.f.vol20 / Math.sqrt(52)) : null,
     today_from_open_odds_pct: A.op ? pc(A.op.p_up) : null,
-    one_week_forecasts_replayed_over_last_12_months: wf ? {number_of_1_week_forecasts: wf.n, share_right_pct: pc(wf.hit), typical_miss_of_the_1_week_move_pct: pc(wf.rmse), range_of_9_in_10_misses_pct: [pc(wf.q05), pc(wf.q95)]} : null,
-    swing_signal_today: w?.head?.edge ? (w.sig || 'yes') : 'none', return_12m_pct: pc(A.f?.mom12m ?? A.own?.f?.mom12m), history_since: A.own?.first || null};
+    one_week_forecasts_replayed_over_last_12_months: wf ? {what_this_is: 'not live calls: each past day the 1-week forecast was re-made with only the data known that day and checked 5 trading days later',
+      number_of_1_week_forecasts: wf.n, share_with_the_direction_right_pct: pc(wf.hit), share_of_those_weeks_the_stock_rose_pct: pc(wf.up_rate),
+      always_guessing_the_more_common_direction_would_be_right_pct: wf.up_rate == null ? null : pc(Math.max(wf.up_rate, 1 - wf.up_rate)),
+      how_to_read_share_right: 'only skill if clearly above always_guessing_the_more_common_direction; on a stock that mostly fell, calling down is right most weeks without any skill',
+      typical_miss_of_the_1_week_move_pct: pc(wf.rmse), typical_miss_means: 'root-mean-square of (actual minus forecast), about one standard deviation, over ALL forecasts, right and wrong alike (not only the wrong ones): about 2 in 3 missed by less',
+      range_of_9_in_10_misses_pct: [pc(wf.q05), pc(wf.q95)]} : null,
+    swing_signal_today: w?.head?.edge ? (w.sig || 'yes') : 'none', price_change_last_12_months_pct: pc(A.f?.mom12m ?? A.own?.f?.mom12m), history_since: A.own?.first || null};
 }
 function akContext() {                                       // compact numbers for the stock on screen (hero / odds checker state)
   const A = typeof HERO !== 'undefined' ? HERO.last : null; if (!A || !A.sym) return null;
@@ -7111,8 +7116,10 @@ const v1akContext = akContext; akContext = function () {
     in_this_months_picks: pick ? {since: V2.P[V2.P.length - 1].as_of, votes: pick.votes} : false,
     note_on_weekly_odds: 'weekly odds are the stock\'s own base rate (background), not a forecast',
     our_swing_strategies_on_this_stock: (() => { const r = SS[c.symbol]?.v; if (!r || r.error) return null;              // 6.182: from stock-signals (same as the Analyze card)
-      return {as_of: r.as_of + (r.live ? ' live' : ' close'), outsider: !r.member, list: (r.strategies || []).filter(x => !x.error).map(x =>
-        `${x.name} (${x.tier === 'edge' ? 'passed every test' : 'promising'}): ${x.signal_now ? 'WOULD BUY' : 'no signal, ' + x.conditions.filter(q => q.ok === false).length + ' rules unmet'}; on this stock since 2016 ${x.record.trades} trades` +
+      return {as_of: r.as_of + (r.live ? ' live' : ' close'), outsider: !r.member,
+        how_to_read: 'all rules must hold for a buy, so a 1-rule strategy with 1 unmet is NOT close to a signal; compare strategies by signal, not by unmet count. Records are what-if simulations of the exact rules on this stock (strategies were proven on S&P 500 stocks when outsider is true); under ~20 trades is too small to judge. Signals use the as_of close, not a premarket move.',
+        list: (r.strategies || []).filter(x => !x.error).map(x =>
+        `${x.name} (${x.tier === 'edge' ? 'passed every test' : 'promising'}): ${x.signal_now ? 'WOULD BUY' : `no signal: ${x.conditions.filter(q => q.ok === false).length} of its ${x.conditions.length} rule${x.conditions.length === 1 ? '' : 's'} unmet` + (x.conditions.some(q => q.ok === null) ? `, ${x.conditions.filter(q => q.ok === null).length} need more history` : '')}${x.last_signal && !x.signal_now ? ', last signal ' + x.last_signal : ''}; simulated on this stock ${r.record_from && r.record_from > '2016-01-04' ? 'since its listing ' + r.first_bar : 'since 2016'}: ${x.record.trades} trades` +
         (x.record.trades ? `, ${Math.round(x.record.win * 100)}% winners, avg ${(x.record.avg * 100).toFixed(1)}%` : '') + (x.in_universe ? '' : ', untested outside the S&P 500'))}; })()};
 };
 const v1akChips = akChips; akChips = function () {
