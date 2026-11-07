@@ -1136,6 +1136,9 @@
   .hs-sum>div:first-child b{color:var(--accent)}
   .hs-ok{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px} .hs-ok em{font:700 11px var(--font-ui);font-style:normal;color:var(--muted)}
   .hs-dots{display:flex;gap:4px} .hs-dots i{width:9px;height:9px;border-radius:50%;background:var(--glass-line);border:1px solid var(--glass-line)} .hs-dots i.on{background:var(--accent);border-color:transparent;box-shadow:0 0 0 3px var(--accent-soft)}
+  .hs-perf{margin:12px 0 6px;padding:12px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)} .hs-pt b{font:700 15px var(--font-display);color:var(--ink);margin-right:6px} .hs-pt span{font-size:11.5px;color:var(--muted)}
+  .hs-pg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px} .hs-pg b{display:block;font:800 19px var(--font-display)} .hs-pg span{display:block;font-size:11px;line-height:1.3;color:var(--muted)} .hs-perf .v2-note{margin:8px 0 0}
+  .hs-s small.hs-sp{margin-top:2px} .hs-s small.hs-sp b{font:700 11px var(--font-ui)}
   .hs-strats{display:flex;flex-direction:column;gap:6px;margin-top:8px} .hs-s{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)}
   .hs-s b{font:600 13px var(--font-ui);color:var(--ink)} .hs-s small{display:block;font-size:11px;color:var(--muted)} .hs-sn{font:600 12.5px var(--font-ui);color:var(--muted);white-space:nowrap} .hs-sn i{font-style:normal;margin:0 4px} .hs-sn b{font:800 14px var(--font-display);color:var(--ink)}
   .hs-t tr[data-t]{cursor:pointer} .hs-bar{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--glass-2);overflow:hidden;vertical-align:middle} .hs-bar i{display:block;height:100%;background:var(--accent)}
@@ -7251,7 +7254,7 @@ const SW_RES = [{k: 'HB', code: 'S4P23', lab: 'high-beta leader dip', hold: 5}, 
 function swSigs() { return v2Owner() ? [...SW_DEF, ...SW_RES] : SW_DEF; }
 async function hsLoad() {
   if (!v2Owner() || HS.busy || HS.rows) return; HS.busy = true;
-  try { HS.rows = await sb('v2_hs_holdings?select=key,name,family,as_of,picks,sharpe,cagr,maxdd,sharpe_equal_weight,source,validation&order=sharpe.desc'); } catch (e) { HS.err = e.message; }
+  try { HS.rows = await sb('v2_hs_holdings?select=key,name,family,as_of,picks,sharpe,cagr,maxdd,sharpe_equal_weight,source,validation,perf&order=sharpe.desc'); } catch (e) { HS.err = e.message; }
   HS.busy = false; hsRender(); if (HERO.last) v2Hero(HERO.last);
 }
 const hsOk = r => r.validation?.verdict === 'holds up';
@@ -7266,11 +7269,22 @@ function hsRender() {
   const LBL = {SXG4_V38_SPY200_TBill: 'SXG4 (your Account 1)', NB069_SX25_V38: 'SX25 + V38', VX09_Deterministic_Drawdown_Stop_Circuit: 'VX09', ZX18_Volume_Adjusted_Moving_Average_VAMA: 'ZX18', SX30_Cross_Sleeve_Momentum_Shifter: 'SX30'};
   const short = r => LBL[r.name] || r.name.replace(/^(NB\d+|SXG\d+)_/, '').replace(/_/g, ' ').replace(/^SX25 Multi Sleeve Triple Parity$/, 'SX25').replace(/Deterministic Drawdown Stop Circuit/, '').trim();
   hsTabs(); if (HS.tab === 'swing') return hsSwing(el);
+  // live record since the holdings date (hs-perf, Bible 6.186): equal weight from the next close, adjusted closes, no costs
+  const P0 = HS.rows.find(r => r.perf)?.perf, pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%', cls = x => x == null ? '' : x >= 0 ? 'v2-up' : 'v2-dn';
+  const pday = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'});
+  const avg = L => { const v = L.map(r => r.perf?.ret).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const stockRet = t => { for (const r of HS.rows) { const v = r.perf?.stocks?.[t]; if (v != null) return v; } return null; };
+  const rets = HS.rows.map(r => r.perf?.ret).filter(x => x != null), aOk = avg(HS.rows.filter(hsOk)), aAll = avg(HS.rows);
+  const perfBox = P0 ? `<div class="hs-perf"><div class="hs-pt"><b>Since ${esc(pday(P0.from))}</b><span>live record, up to the ${esc(pday(P0.to))} close</span></div>
+      <div class="hs-pg"><div><b class="${cls(aOk)}">${pc(aOk)}</b><span>the ${HS.rows.filter(hsOk).length} that hold up (average)</span></div>
+      <div><b class="${cls(aAll)}">${pc(aAll)}</b><span>all ${rets.length} (from ${pc(Math.min(...rets))} to ${pc(Math.max(...rets))})</span></div>
+      <div><b class="${cls(P0.spy)}">${pc(P0.spy)}</b><span>SPY, same days</span></div></div>
+      <p class="v2-note">Each basket bought in equal weight at the ${esc(pday(P0.from))} close (the day after its holdings date) and held, with split- and dividend-adjusted prices and no costs. Four months is a short, noisy stretch: it says how the baskets did, not whether the strategies work.</p></div>` : '';
   const dots = x => Array.from({length: x.okOf}, (_, i) => `<i class="${i < x.ok ? 'on' : ''}"></i>`).join('');
   const card = x => `<button class="v2-pk hs-pk" data-t="${esc(x.t)}" title="${esc(x.held.map(r => r.name).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
-      <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${x.n} of ${x.of} strategies · ${x.fam} of ${x.fams} families</small></span>
+      <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${x.n} of ${x.of} strategies · ${x.fam} of ${x.fams} families${stockRet(x.t) != null ? ` · <span class="${cls(stockRet(x.t))}">${pc(stockRet(x.t))}</span> since ${esc(pday(P0.from))}` : ''}</small></span>
       <span class="hs-ok" aria-label="${x.ok} of ${x.okOf} validated strategies"><span class="hs-dots">${dots(x)}</span><em>${x.ok}/${x.okOf}</em></span></button>`;
-  const strat = r => { const v = r.validation, e = v?.equal; return `<div class="hs-s" data-hs="${esc(r.key)}" data-hs-name="${esc(short(r) || r.name)}" data-rs="${esc(r.key)}" role="button" tabindex="0" title="Open its research"><div><b>${esc(short(r) || r.name)} ›</b><small>${esc(r.family)}</small></div>
+  const strat = r => { const v = r.validation, e = v?.equal; return `<div class="hs-s" data-hs="${esc(r.key)}" data-hs-name="${esc(short(r) || r.name)}" data-rs="${esc(r.key)}" role="button" tabindex="0" title="Open its research"><div><b>${esc(short(r) || r.name)} ›</b><small>${esc(r.family)}</small>${r.perf ? `<small class="hs-sp">since ${esc(pday(r.perf.from))}: <b class="${cls(r.perf.ret)}">${pc(r.perf.ret)}</b> · SPY ${pc(r.perf.spy)} · worst dip ${pc(r.perf.maxdd)}</small>` : ''}</div>
       <div class="hs-sn"><span>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</span><i>→</i><b>${e ? e.sharpe.toFixed(2) : '–'}</b></div>
       <span class="v2-tag ${v?.verdict === 'holds up' ? 'ok' : v?.verdict === 'weak' ? 'bad' : ''}">${esc(v?.verdict || '')}</span></div>`; };
   el.innerHTML = `${hsTabBar()}
@@ -7279,6 +7293,7 @@ function hsRender() {
       <div><b>${fams}</b><span>strategy families</span></div>
       <div><b>${new Date(asof + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'})}</b><span>holdings date · next: Jan</span></div>
     </div>
+    ${perfBox}
     <div class="v2-lh"><b>Ranked by the ${okN.length} that hold up</b><span>${esc(okN.map(short).join(' · '))} · dots = how many of them hold it · tap for its odds</span></div>
     <div class="v2-list">${all.slice(0, HS.all ? 999 : 10).map(card).join('')}</div>
     ${all.length > 10 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${all.length}</button>` : ''}
