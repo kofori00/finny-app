@@ -1171,6 +1171,9 @@
   .ss-wait summary svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round} .ss-wait summary em{margin-left:auto;font-style:normal;transition:transform .15s} .ss-wait[open] summary em{transform:rotate(90deg)} .ss-wait .ss-tiles{margin-top:8px}
   .ss-foot{display:flex;gap:6px;align-items:flex-start;font-size:11px;color:var(--muted);margin:10px 2px 0;line-height:1.4} .ss-foot svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8}
   .rp-teaser{margin:0 0 4px} .rp-tz-h{display:block} .rp-tz-h b{display:block;font:700 13.5px var(--font-ui)} .rp-tz-h span{display:block;font-size:11.5px;color:var(--muted);margin:2px 0 6px}
+  .ng-chips{display:flex;gap:6px;overflow-x:auto;padding:12px 2px 4px;scrollbar-width:none} .ng-chips::-webkit-scrollbar{display:none}
+  .ng-chip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass);color:var(--ink-2);font:600 12.5px var(--font-ui);cursor:pointer}
+  .ng-chip em{font-style:normal;font-variant-numeric:tabular-nums;min-width:18px;padding:1px 6px;border-radius:999px;background:var(--glass-2);color:var(--ink)} .ng-chip.on{background:var(--lime);color:var(--lime-ink);border-color:transparent} .ng-chip.on em{background:rgba(0,0,0,.12);color:inherit} .ng-chip.none{opacity:.55}
   .ng-box{margin:4px 0 8px} .ng-svg{display:block;width:100%;height:auto;overflow:visible}
   .ng-e{stroke:var(--muted);opacity:.35;stroke-linecap:round;animation:ngIn .4s ease both} .ng-e.on,.ng-e.up{stroke:var(--good);opacity:.9} .ng-e.dn{stroke:var(--bad,#dc2626);opacity:.7} .ng-e.wait{stroke-dasharray:3 4}
   .ng-n{cursor:pointer;animation:ngIn .4s ease both} .ng-hit{fill:transparent} .ng-c{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:r .15s}
@@ -7432,27 +7435,35 @@ function hsSwing(el) {
   const all = [...H.values()].sort((a, b) => b.by.length - a.by.length || b.d.localeCompare(a.d) || a.t.localeCompare(b.t));
   const nm = t => { const p = TL.prof?.find(r => r.ticker === t); return p ? tlTitle(p.name) : ''; };
   const day = d => d ? new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : '';
-  const card = x => `<button class="v2-pk hs-pk" data-t="${esc(x.t)}" title="${esc(x.by.map(e => e.label).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
-      <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${esc(x.by.map(e => e.key).join(' · '))} · signal ${esc(day(x.d))}</small></span>
-      <span class="hs-ok"><em>${x.by.length}/${SR.length}</em></span></button>`;
+  const card = x => `<button class="hs-st" data-t="${esc(x.t)}" title="${esc(x.by.map(e => e.label).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
+      <span class="hs-sm"><b>${esc(nm(x.t) || x.t)}</b><span class="hs-hb"><i style="width:${(x.by.length / SR.length * 100).toFixed(0)}%"></i></span><small>${x.by.length}/${SR.length} strategies</small></span>
+      <span class="hs-sr"><b>${esc(day(x.d))}</b><small>signal</small></span></button>`;
   const strat = e => { const m = e.metrics || {}, ok = e.key === 'R18L26', n = H.size ? [...H.values()].filter(h => h.by.includes(e)).length : 0;
     return `<div class="hs-s" data-sw="${esc(e.key)}" data-rs="${esc(e.key)}" role="button" tabindex="0" title="Tap: its research · long-press: follow it in a forward test"><div><b>${esc(e.label)} ›</b>
       <small>holds up to ${e.spec?.hold || 5} days · ${n ? n + ' open now' : 'nothing open'}${m.cagr != null ? ' · ' + Math.round(m.cagr * 100) + '% a year' : ''}</small></div>
       <div class="hs-sn"><span>Sharpe</span><i></i><b>${m.sharpe != null ? (+m.sharpe).toFixed(2) : '–'}</b></div>
       <span class="v2-tag ${ok ? 'ok' : ''}">${ok ? 'luck-tested' : 'research'}</span></div>`; };
+  // 6.194b (user: "where is the strategy at the centre, connected to all its signalled tickers?"): pick a strategy, see its open signals around it
+  const used = SR.filter(e => all.some(h => h.by.includes(e)));
+  if (!HS.swSel || !SR.some(e => e.key === HS.swSel)) HS.swSel = (used.slice().sort((a, b) => all.filter(h => h.by.includes(b)).length - all.filter(h => h.by.includes(a)).length)[0] || SR[0])?.key;
+  const chips = SR.map(e => { const k = all.filter(h => h.by.includes(e)).length; return `<button class="ng-chip${e.key === HS.swSel ? ' on' : ''}${k ? '' : ' none'}" data-sel="${esc(e.key)}">${esc(e.key)}<em>${k}</em></button>`; }).join('');
   el.innerHTML = `${hsTabBar()}
-    <div class="hs-sum">
-      <div><b>${all.length}</b><span>stocks and ETFs with an open signal</span></div>
-      <div><b>${SR.filter(e => all.some(h => h.by.includes(e))).length}<i>/${SR.length}</i></b><span>strategies with a position</span></div>
-      <div><b>${esc(day(TL.asof))}</b><span>signals as of · updated every evening</span></div>
-    </div>
-    <div class="v2-lh"><b>What the swing strategies hold now</b><span>signals still inside their holding window · the number = how many of the ${SR.length} have it · tap for its odds</span></div>
-    <div class="v2-list">${all.map(card).join('') || `<p class="note">No open swing signals at the ${esc(day(TL.asof))} close.</p>`}</div>
+    <div class="ng-chips" role="tablist" aria-label="Pick a swing strategy">${chips}</div>
+    <div class="ng-box" id="sw-ng"></div>
+    <div class="hs-lh2"><b>All open signals</b><span>${all.length} stocks · as of ${esc(day(TL.asof))}</span></div>
+    <div class="hs-stl">${all.map(card).join('') || `<p class="note">No open swing signals at the ${esc(day(TL.asof))} close.</p>`}</div>
     <div class="v2-lh"><b>The ${SR.length} swing strategies</b><span>tap for its research · long-press to follow it in a forward test</span></div>
     <div class="hs-strats">${SR.map(strat).join('')}</div>
     <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. Only R18L26 has passed the luck tests (placebos, plateau, 2016-20 out of sample); the other 8 are research candidates, being forward-tested since 26 Oct 2026.
       The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks. "Open" means the signal is inside its holding window; a position can already have been sold earlier by the strategy's own exit rule or stop. Visible to you only.</p>`;
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
+  const drawSel = () => { const e = SR.find(x => x.key === HS.swSel); if (!e) return; const mine = all.filter(h => h.by.includes(e));
+    ngDraw(el.querySelector('#sw-ng'), {label: e.key, sub: `${mine.length} open`, state: mine.length ? 'up' : ''}, mine.map(h => ({label: h.t, size: h.by.length, strength: h.by.length / SR.length,
+      state: 'on', tag: day(h.d), onTap: () => odGo(h.t)})), {h: mine.length > 12 ? 340 : 290,
+      legend: `<span>${esc(e.label)}</span><span>bigger dot, thicker line = more of the ${SR.length} strategies hold it · tap a stock</span>`});
+    el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel)); };
+  el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; drawSel(); });
+  drawSel();
 }
 const v2HeroBase = v2Hero; v2Hero = function (A) {
   v2HeroBase(A); const box = document.querySelector('.hero-stats'); let line = document.getElementById('hs-line');
