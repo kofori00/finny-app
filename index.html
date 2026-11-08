@@ -1142,6 +1142,26 @@
   .rp-teaser{margin:4px 0 10px;padding:10px;border-radius:14px;background:var(--surface);border:1px solid var(--glass-line)} .rp-tz-h b{display:block;font:600 13.5px var(--font-ui);color:var(--ink)} .rp-tz-h span{display:block;font-size:11.5px;color:var(--muted);margin:2px 0 6px}
   .rp-teaser .rp-svg{cursor:pointer} .rp-tz-go{width:100%;margin-top:8px;padding:10px;border-radius:12px;border:0;background:var(--lime);color:var(--lime-ink);font:700 13px var(--font-ui);cursor:pointer}
   .ss-row[data-rp]{cursor:pointer} .ss-rp{display:inline-block;margin:6px 0 2px;padding:5px 10px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--ink);font:600 12px var(--font-ui)}
+  .ss-top{display:flex;align-items:center;gap:8px;margin:0 0 10px} .ss-top b{font:700 15px var(--font-display);color:var(--ink);flex:1} .ss-ti svg,.ss-ic svg,.ss-go svg,.ss-pill svg,.ss-star svg,.ss-what svg,.rp-ri svg,.rp-tz-go svg,.rp-csv svg,.rp-tr summary svg,.rp-disc svg,.rp-sigc svg,.ss-key svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-4px}
+  .ss-ti{color:var(--ink-2)} .ss-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:999px;background:var(--glass-2);color:var(--muted);font:700 13px var(--font-ui);font-variant-numeric:tabular-nums} .ss-pill.on{background:var(--lime);color:var(--lime-ink)}
+  .ss-tiles{display:grid;gap:8px} @media(min-width:640px){.ss-tiles{grid-template-columns:1fr 1fr}}
+  .ss-tile{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:14px;border:1px solid var(--glass-line);background:var(--surface);color:var(--ink);cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+  .ss-tile:active{transform:scale(.98)} .ss-tile:hover{border-color:var(--ink-2)} .ss-tile.on{border-color:var(--good);box-shadow:inset 3px 0 0 var(--good)}
+  .ss-ic{color:var(--muted);flex:none} .ss-tile.on .ss-ic{color:var(--good)} .ss-ic svg{width:22px;height:22px}
+  .ss-mid{flex:1;min-width:0} .ss-mid b{display:block;font:600 13.5px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .ss-star{color:#c9a227;font-style:normal} .ss-star svg{width:14px;height:14px;fill:currentColor} .ss-what{color:var(--muted);font-style:normal} .ss-what svg{width:14px;height:14px}
+  .ss-dots{display:flex;gap:4px;margin-top:5px} .sd{display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--muted)} .sd.y{background:var(--good);border-color:var(--good)} .sd.w{border-style:dashed}
+  .ss-num{text-align:right;flex:none} .ss-num b{display:block;font:700 15px var(--font-ui);font-variant-numeric:tabular-nums} .ss-num small{display:block;font-size:10.5px;color:var(--muted)}
+  .ss-go{color:var(--muted);flex:none}
+  .ss-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:10px 2px 0;font-size:11px;color:var(--muted)} .ss-key .sd{vertical-align:-1px;margin-right:4px} .ss-key details{margin-left:auto} .ss-key summary{list-style:none;cursor:pointer} .ss-key summary::-webkit-details-marker{display:none} .ss-key details p{margin:6px 0 0;font-size:11.5px;line-height:1.4}
+  .rp-l2{display:flex;align-items:center;gap:6px;margin-bottom:3px} .rp-l2 b{font:600 12.5px var(--font-ui);color:var(--ink)} .rp-l2 em{margin-left:auto;font:600 11px var(--font-ui);color:var(--muted);font-style:normal;font-variant-numeric:tabular-nums}
+  .rp-ri{display:inline-flex;width:22px;height:22px;border-radius:7px;align-items:center;justify-content:center;background:var(--glass-2);color:var(--good)} .rp-ri.exit{color:var(--bad,#dc2626)} .rp-ri.regime{color:var(--ink-2)} .rp-ri svg{width:15px;height:15px}
+  .rp-leg{margin-left:auto;font-size:11px;color:var(--muted);display:flex;gap:4px;align-items:center} .rp-leg i{font-style:normal} .rp-leg .up{color:var(--good)} .rp-leg .dn{color:var(--bad,#dc2626);margin-left:6px} .rp-leg .hd{display:inline-block;width:12px;height:8px;background:var(--good);opacity:.25;border-radius:2px;margin-left:6px}
+  .rp-rh{display:flex;align-items:center;gap:8px} .rp-rh span{font-variant-numeric:tabular-nums} .rp-sigc{margin-left:auto;display:inline-flex;align-items:center;gap:3px;color:var(--good);font:700 11.5px var(--font-ui);font-style:normal} .rp-sigc svg{width:15px;height:15px}
+  .rp-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px} .rp-c{padding:3px 8px;border-radius:999px;font:600 11px var(--font-ui);background:var(--glass-2);color:var(--muted)} .rp-c.ok{color:var(--good)}
+  .rp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0} .rp-stats div{padding:10px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-line);text-align:center} .rp-stats b{display:block;font:800 18px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums} .rp-stats span{font-size:11px;color:var(--muted)}
+  .rp-disc{font-size:11px;color:var(--muted);margin:10px 0 0;display:flex;gap:6px;align-items:flex-start;line-height:1.4} .rp-disc svg{flex:none;width:15px;height:15px}
+  .rp-tz-go{display:flex;align-items:center;justify-content:center;gap:6px} .rp-tz-go svg{fill:currentColor;stroke:none} .rp-csv{display:inline-flex;align-items:center;gap:6px}
+  .rp-tz-h{display:flex;align-items:baseline;gap:8px} .rp-tz-h b{display:inline;font:700 14px var(--font-ui)} .rp-tz-h span{display:inline;margin:0 0 6px}
   .rp-sheet{position:fixed;inset:0;z-index:90;display:none} .rp-sheet.on{display:block} body.rp-lock{overflow:hidden} .rp-bg{position:absolute;inset:0;background:var(--backdrop)}
   .rp-card{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px 28px;box-shadow:var(--shadow-lg)}
   @media(min-width:760px){.rp-card{left:50%;right:auto;width:720px;transform:translateX(-50%);bottom:4vh;border-radius:22px;max-height:90vh}}
@@ -7075,6 +7095,17 @@ function v2Hero(A) {
 // swing strategies on the selected stock (2026-11-06, Bible 6.182): every validated strategy in swing_registry run on ANY US stock in real time by
 // the stock-signals function (exact rules, ranks against that day's S&P 500); shared by the Analyze card, the first tile and Ask Finny
 const SS = {};
+const IC = {                                              // 6.192b: small line icons (currentColor), shared by the strategy card and the rule chart
+  buy: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>',
+  wait: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-5 4 3 6-7"/></svg>',
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>',
+  info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg>',
+  in: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
+  out: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H7M11 8l-4 4 4 4"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg>',
+  dl: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'};
 async function ssFetch(syms) {
   const need = syms.filter(s => !(SS[s] && Date.now() - SS[s].at < 60000)), out = {};
   if (need.length) {
@@ -7094,16 +7125,22 @@ function ssCard(A) {
     if (!r || r.error) { el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">${esc(r?.error || 'Not available for this symbol.')}</p>`; return; }
     const L = (r.strategies || []).filter(x => !x.error).sort((a, b) => (b.signal_now - a.signal_now) || ((a.tier === 'edge') ? -1 : 1));
     const n = L.filter(x => x.signal_now).length, pct = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
-    const since = r.record_from && r.record_from > '2016-01-04' ? `since its listing (${r.first_bar})` : 'since 2016';
-    const rows = L.map(x => { const miss = x.conditions.filter(c => c.ok === false).length, wait = x.conditions.filter(c => c.ok === null).length, rc = x.record;
-      return `<div class="ss-row${x.signal_now ? ' on' : ''}" data-rp="${esc(x.key)}" data-rpn="${esc(x.name)}" role="button" tabindex="0"><div class="ss-n"><b>${esc(x.name)}</b><span class="ss-t ${x.tier === 'edge' ? 'ss-edge' : ''}">${x.tier === 'edge' ? 'passed every test' : 'promising'}</span>${x.in_universe ? '' : '<span class="ss-t" title="Never tested outside the S&amp;P 500: shown as a what-if">outside its tested universe</span>'}</div>
-        <div class="ss-s">${x.signal_now ? `<b class="v2-up">would buy${r.live ? ' now' : ' at the last close'}</b>` : `no signal · ${miss} of ${x.conditions.length} rule${x.conditions.length > 1 ? 's' : ''} not met${wait ? ` · ${wait} need${wait === 1 ? 's' : ''} more history (too new)` : ''}`}${x.open_trade ? ` · simulated trade open since ${esc(x.open_trade.entry)}` : ''}${x.last_signal && !x.signal_now ? ` · last signal ${esc(x.last_signal)}` : ''}</div>
-        <span class="ss-rp">Show on chart ›</span>
-        <div class="ss-r">On ${esc(S)} ${since}: ${rc.trades} trade${rc.trades === 1 ? '' : 's'}${rc.trades ? `, ${Math.round(rc.win * 100)}% winners, average ${pct(rc.avg)}` : ''}</div></div>`; }).join('');
+    const since = r.record_from && r.record_from > '2016-01-04' ? `since listing ${r.first_bar}` : 'since 2016';
+    // 6.192b (user: "less text, simple icons and interactions"): one status icon, rule dots, two numbers per strategy; details stay in the chart
+    const dots = x => x.conditions.map(c => `<i class="sd ${c.ok === true ? 'y' : c.ok === null ? 'w' : 'n'}" title="${esc(c.rule)}"></i>`).join('');
+    const rows = L.map(x => { const rc = x.record, ok = x.conditions.filter(c => c.ok === true).length;
+      return `<button class="ss-tile${x.signal_now ? ' on' : ''}" data-rp="${esc(x.key)}" data-rpn="${esc(x.name)}" aria-label="${esc(x.name)}: ${x.signal_now ? 'would buy' : 'no signal'}, ${ok} of ${x.conditions.length} rules met. Open its chart">
+        <span class="ss-ic">${x.signal_now ? IC.buy : IC.wait}</span>
+        <span class="ss-mid"><b>${esc(x.name)}${x.tier === 'edge' ? ` <em class="ss-star" title="Passed every test">${IC.star}</em>` : ''}${x.in_universe ? '' : ` <em class="ss-what" title="Tested on S&amp;P 500 stocks only: a what-if here">${IC.info}</em>`}</b>
+          <span class="ss-dots" title="${ok} of ${x.conditions.length} rules met">${dots(x)}</span></span>
+        <span class="ss-num">${rc.trades ? `<b>${Math.round(rc.win * 100)}%</b><small>${rc.trades} trades</small>` : '<small>no trades</small>'}</span>
+        <span class="ss-go">${IC.chart}</span></button>`; }).join('');
     const lead = L.find(x => x.signal_now) || [...L].sort((a, b) => (b.record?.last3y?.trades || 0) - (a.record?.last3y?.trades || 0))[0];
-    el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)} <span>${n} of ${L.length} would buy${r.live ? ' at the live price' : ` (close of ${esc(r.as_of)})`}</span></div>${lead ? `<div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}${rows}
-      <p class="ss-f">Exact strategy rules run on ${esc(S)}${r.member ? '' : ', ranked against each day\'s S&amp;P 500 as if it were a member'}. A record on one stock is a small sample, not a forecast. Not advice.</p>`;
-    el.querySelectorAll('.ss-row[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
+    el.innerHTML = `<div class="ss-top"><span class="ss-ti">${IC.chart}</span><b>Strategies on ${esc(S)}</b><span class="ss-pill${n ? ' on' : ''}">${n ? IC.buy : ''}${n}/${L.length} buy</span></div>
+      ${lead ? `<div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}<div class="ss-tiles">${rows}</div>
+      <div class="ss-key"><span><i class="sd y"></i>rule met</span><span><i class="sd n"></i>not met</span><span>% = winning trades ${esc(since)}</span>
+        <details><summary>${IC.info}</summary><p>Exact rules run on ${esc(S)}${r.member ? '' : ', ranked against the S&amp;P 500 as if a member'}. Hypothetical backtest; one stock is a small sample. Not advice.</p></details></div>`;
+    el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     const t0 = document.querySelector('.hero-stats')?.children[0];
     if (t0 && !r.member && HERO.last?.sym === S) { const b = t0.querySelector('b'), l = t0.querySelector('.hs-l'); if (b && l) { t0.dataset.ss = '1'; b.textContent = `${n}/${L.length}`; b.className = n ? 'v2-up' : ''; l.textContent = `of our swing strategies would buy ${S}${r.live ? ' now' : ''}`; } }
@@ -7706,14 +7743,18 @@ async function rpFetch(sym, key, days) {
 const RP_WORDS = {ret_rank: 'return rank vs all S&P 500 stocks', rank_in_sector: 'return rank inside its sector', max_ret: 'biggest one-day gain', ibs: 'close position in the day\'s range (0 = low, 1 = high)',
   spy_sma_ratio: 'S&P 500 vs its moving average', sma_ratio: 'price vs its moving average', beta: 'beta to the S&P 500', vol_slope: 'volume trend', squeeze: 'volatility squeeze',
   vzo: 'volume zone oscillator', swing_trend: 'swing-high trend', atr_px: 'average true range', dollar_vol: 'average dollar volume'};
-const RP_ROLE = {entry: 'Entry rule', regime: 'Market filter', exit: 'Exit rule'};
+const RP_ROLE = {entry: 'Buy rule', regime: 'Market filter', exit: 'Sell rule'};
+const RP_SHORT = {ret_rank: 'Leader vs market', rank_in_sector: 'Leader in sector', max_ret: 'Big up-day lately', ibs: 'Closed near the low', spy_sma_ratio: 'Market in uptrend',
+  sma_ratio: 'Above its average', beta: 'Moves more than market', vol_slope: 'Volume fading', squeeze: 'Calm before move', vzo: 'Volume pressure', swing_trend: 'Higher swing highs'};
+const rpShort = p => { const f = p.feature.replace(/\(.*$/, ''); return f === 'ibs' && /^>/.test(p.op) ? 'Closed near the high' : (RP_SHORT[f] || f); };
+const rpIcon = r => r === 'exit' ? IC.out : r === 'regime' ? IC.shield : IC.in;
 function rpOpen(sym, key, name) {
   let el = document.getElementById('rp-sheet');
   if (!el) { document.body.insertAdjacentHTML('beforeend', '<div id="rp-sheet" class="rp-sheet" role="dialog" aria-modal="true" aria-label="Rule chart"><div class="rp-bg"></div><div class="rp-card"></div></div>');
     el = document.getElementById('rp-sheet'); el.querySelector('.rp-bg').onclick = rpClose; document.addEventListener('keydown', e => { if (e.key === 'Escape') rpClose(); }); }
   el.classList.add('on'); document.body.classList.add('rp-lock');
   const card = el.querySelector('.rp-card'); card.dataset.k = sym + '|' + key;
-  const head = d => `<div class="rp-h"><div><b>${esc(name)} on ${esc(sym)}</b><small>Every rule, every day: the backtest you can see</small></div><button class="rp-x" aria-label="Close">×</button></div>
+  const head = d => `<div class="rp-h"><div><b>${esc(name)} · ${esc(sym)}</b><small>Each rule, each day</small></div><button class="rp-x" aria-label="Close">×</button></div>
     <div class="rp-range" role="tablist">${[[125, '6 mo'], [250, '1 yr'], [500, '2 yr'], [1250, '5 yr']].map(([n, l]) => `<button data-n="${n}" class="${n === d ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const load = days => {
     card.innerHTML = head(days) + '<p class="note">Running the strategy on ' + esc(sym) + '…</p>'; card.querySelector('.rp-x').onclick = rpClose;
@@ -7746,7 +7787,7 @@ function rpPrice(j, H) {                          // price with buys (▲), sell
   const sigDots = j.signal.map((s, i) => s ? `<circle class="rp-sig" cx="${rpX(i, n).toFixed(1)}" cy="${(H - 3).toFixed(1)}" r="1.6"/>` : '').join('');
   const mk = marks.map(m => { const x = rpX(m.i, n), yy = y(j.close[m.i]) + (m.up ? 9 : -9);
     return `<path class="${m.up ? 'rp-in' : 'rp-out'}" d="${m.up ? `M${x - 4} ${yy + 5}L${x + 4} ${yy + 5}L${x} ${yy - 2}Z` : `M${x - 4} ${yy - 5}L${x + 4} ${yy - 5}L${x} ${yy + 2}Z`}"><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></path>`; }).join('');
-  const price = `<div class="rp-p"><div class="rp-lab"><b>${esc(j.symbol)} price</b><span>▲ buy · ▼ sell · shaded = holding · dots = signal days</span></div>
+  const price = `<div class="rp-p"><div class="rp-lab rp-l2"><b>${esc(j.symbol)}</b><span class="rp-leg"><i class="up">▲</i>buy <i class="dn">▼</i>sell <i class="hd"></i>held</span></div>
     <svg viewBox="0 0 ${RP_W} ${H}" preserveAspectRatio="none" class="rp-svg" data-h="${H}">${rpBands(held, n, H, 'rp-hold')}<path class="rp-line" d="${rpPath(j.close, n, y)}"/>${mk}${sigDots}<line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${H}"/></svg></div>`;
   return price;
 }
@@ -7760,24 +7801,25 @@ function rpBody(j) {
     const thr = fixed ? `<line class="rp-thr" x1="${RP_L}" x2="${RP_R}" y1="${yy(p.threshold.find(v => v != null)).toFixed(1)}" y2="${yy(p.threshold.find(v => v != null)).toFixed(1)}"/>`
       : `<path class="rp-thr" d="${rpPath(p.threshold, n, yy)}"/>`;
     const f = p.feature.replace(/\(.*$/, ''), words = RP_WORDS[f] || f;
-    return `<div class="rp-p" data-k="${k}"><div class="rp-lab"><b>${RP_ROLE[p.role] || p.role}: ${esc(p.rule)}</b><span>${esc(words)} · dashed = ${esc(p.threshold_kind === 'fixed' ? 'threshold' : p.threshold_kind)} · holds on ${on} of ${n} days</span></div>
+    return `<div class="rp-p" data-k="${k}"><div class="rp-lab rp-l2" title="${esc(RP_ROLE[p.role] || p.role)}: ${esc(p.rule)} (${esc(words)}; dashed line = ${esc(p.threshold_kind === 'fixed' ? 'threshold' : p.threshold_kind)})"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpShort(p))}</b><em>${on}d</em></div>
       <svg viewBox="0 0 ${RP_W} ${PH}" preserveAspectRatio="none" class="rp-svg" data-h="${PH}">${rpBands(p.holds.map(Boolean), n, PH, p.role === 'exit' ? 'rp-onx' : 'rp-on')}${thr}<path class="rp-line rp-f" d="${rpPath(p.value, n, yy)}"/><line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${PH}"/></svg></div>`;
   }).join('');
   const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
   const exitTxt = Object.entries(j.exit || {}).filter(([k]) => k !== 'exit_if').map(([k, v]) => k === 'hold' ? `sell after ${v} days` : `${k.replace(/_/g, ' ')} ${v}`).join(', ');
-  return `<div class="rp-read" aria-live="polite">Tap or slide over the chart to read any day.</div>${price}${panels}
-    <div class="rp-sum">${done.length} trade${done.length === 1 ? '' : 's'} in this window${done.length ? ` · ${win} winners · average ${pc(done.reduce((a, t) => a + t.ret, 0) / done.length)}` : ''}${exitTxt ? ` · exit: ${esc(exitTxt)}` : ''}${j.member ? '' : ` · ${esc(j.symbol)} is outside the S&amp;P 500: ranked against it as if it were a member`}</div>
-    <details class="rp-tr"><summary>Every trade in this window</summary>${done.length ? `<table><tr><th>Buy</th><th>Sell</th><th>In</th><th>Out</th><th>Result</th><th>Why sold</th></tr>${done.map(t => `<tr><td>${esc(t.entry)}</td><td>${esc(t.exit)}</td><td>$${(+t.px).toFixed(2)}</td><td>$${(+t.xt).toFixed(2)}</td><td class="${t.ret >= 0 ? 'v2-up' : 'v2-dn'}">${pc(t.ret)}</td><td>${esc(t.why)}</td></tr>`).join('')}</table>` : '<p class="note">No completed trade in this window.</p>'}
-      <button class="rp-csv">Download the days and trades (CSV)</button></details>
-    <p class="v2-note">Hypothetical backtest: the strategy's exact rules run on ${esc(j.symbol)}'s split- and dividend-adjusted daily prices, entering at the close, one position at a time, no costs in this view. Past results do not predict future ones. Not advice.</p>`;
+  return `<div class="rp-read" aria-live="polite"></div>${price}${panels}
+    <div class="rp-stats"><div><b>${done.length}</b><span>trades</span></div><div><b>${done.length ? Math.round(win / done.length * 100) + '%' : '–'}</b><span>won</span></div>
+      <div><b class="${done.length && done.reduce((a, t) => a + t.ret, 0) >= 0 ? 'v2-up' : 'v2-dn'}">${done.length ? pc(done.reduce((a, t) => a + t.ret, 0) / done.length) : '–'}</b><span>avg trade</span></div></div>
+    <details class="rp-tr"><summary>${IC.chart} All trades${exitTxt ? ` · ${esc(exitTxt)}` : ''}</summary>${done.length ? `<table><tr><th>Buy</th><th>Sell</th><th>In</th><th>Out</th><th>Result</th><th>Why sold</th></tr>${done.map(t => `<tr><td>${esc(t.entry)}</td><td>${esc(t.exit)}</td><td>$${(+t.px).toFixed(2)}</td><td>$${(+t.xt).toFixed(2)}</td><td class="${t.ret >= 0 ? 'v2-up' : 'v2-dn'}">${pc(t.ret)}</td><td>${esc(t.why)}</td></tr>`).join('')}</table>` : '<p class="note">No completed trade in this window.</p>'}
+      <button class="rp-csv">${IC.dl} CSV</button></details>
+    <p class="rp-disc">${IC.info} Hypothetical backtest · adjusted daily prices · entry at the close · no costs here${j.member ? '' : ' · ranked as if in the S&amp;P 500'} · not advice</p>`;
 }
 function rpWire(card, j) {
   const n = j.days.length, read = card.querySelector('.rp-read');
   const show = i => {
     card.querySelectorAll('.rp-cur').forEach(l => { const x = rpX(i, n); l.setAttribute('x1', x); l.setAttribute('x2', x); });
     const fmt = v => v == null ? '–' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3);
-    read.innerHTML = `<b>${esc(j.days[i])}</b> · $${fmt(j.close[i])}${j.signal[i] ? ' · <b class="v2-up">signal: all entry rules hold</b>' : ''}<br>` + j.panels.map(p =>
-      `<span class="${p.holds[i] ? 'rp-ok' : 'rp-no'}">${p.holds[i] ? '✓' : p.holds[i] === null ? '·' : '✗'} ${esc(p.rule)}: ${fmt(p.value[i])} vs ${fmt(p.threshold[i])}</span>`).join('');
+    read.innerHTML = `<div class="rp-rh"><b>${esc(j.days[i])}</b><span>$${fmt(j.close[i])}</span>${j.signal[i] ? `<em class="rp-sigc">${IC.buy}signal</em>` : ''}</div><div class="rp-chips">` + j.panels.map(p =>
+      `<span class="rp-c ${p.holds[i] ? 'ok' : 'no'}" title="${esc(p.rule)}: ${fmt(p.value[i])} vs ${fmt(p.threshold[i])}">${p.holds[i] ? '✓' : p.holds[i] === null ? '·' : '✗'} ${esc(rpShort(p))}</span>`).join('') + '</div>';
   };
   card.querySelectorAll('.rp-svg').forEach(svg => {
     const at = e => { const r = svg.getBoundingClientRect(), x = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * RP_W; return Math.max(0, Math.min(n - 1, Math.round((x - RP_L) / (RP_R - RP_L) * (n - 1)))); };
@@ -7795,11 +7837,11 @@ function rpWire(card, j) {
 
 // teaser (2026-11-08): the lead strategy's trades on the stock, drawn at the top of the card so the evidence is the first thing you see
 function rpTeaser(box, sym, key, name) {
-  box.innerHTML = `<div class="rp-tz-h"><b>Proof: ${esc(name)}'s trades on ${esc(sym)}</b><span>loading the last 6 months…</span></div>`;
+  box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}</b><span>loading…</span></div>`;
   rpFetch(sym, key, 125).then(j => { if (box.dataset.k !== sym + '|' + key) return;
     const done = j.trades.filter(t => t.ret != null), on = j.open ? ' · 1 still open' : '';
-    box.innerHTML = `<div class="rp-tz-h"><b>Proof: ${esc(name)}'s trades on ${esc(sym)}</b><span>last 6 months · ${done.length} trade${done.length === 1 ? '' : 's'}${on} · ▲ buy ▼ sell</span></div>
-      ${rpPrice(j, 110)}<button class="rp-tz-go">See every rule fire on the chart ›</button>`;
+    box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}</b><span>6 mo · ${done.length} trade${done.length === 1 ? '' : 's'}${on}</span></div>
+      ${rpPrice(j, 110)}<button class="rp-tz-go">${IC.play} Watch the rules</button>`;
     box.querySelector('.rp-tz-go').onclick = () => rpOpen(sym, key, name); box.querySelector('.rp-svg').onclick = () => rpOpen(sym, key, name);
   }).catch(() => { box.innerHTML = ''; });
 }
