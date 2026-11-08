@@ -1186,6 +1186,10 @@
   .ng-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--muted);margin:2px 2px 0} .ng-k{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:2px solid var(--muted)} .ng-k.on,.ng-k.up{background:var(--good);border-color:var(--good)} .ng-k.dn{background:var(--bad,#dc2626);border-color:var(--bad,#dc2626)} .ng-k.wait{border-style:dashed}
   .hs-br[data-ng]{cursor:pointer;border-radius:6px} .hs-br[data-ng]:hover{background:var(--glass)}
   @keyframes ngIn{from{opacity:0}to{opacity:1}} @media(prefers-reduced-motion:reduce){.ng-e,.ng-n{animation:none}}
+  .rp-pr{background:transparent!important} .rp-grid{stroke:var(--glass-line);stroke-dasharray:3 5;stroke-width:1;vector-effect:non-scaling-stroke}
+  .rp-pl{stroke:var(--good);stroke-width:2.2;stroke-linecap:round} .rp-glow{fill:none;stroke:var(--good);stroke-width:5;opacity:.35} .rp-ha{opacity:1}
+  .rp-in circle{fill:var(--good)} .rp-out circle{fill:#e8957f} .rp-halo{opacity:.25} .rp-now{fill:var(--good);stroke:var(--surface);stroke-width:1.5} .rp-now-h{fill:var(--good);opacity:.2}
+  .rp-leg .up{color:var(--good)} .rp-leg .dn{color:#e8957f}
   .rp-sheet{position:fixed;inset:0;z-index:90;display:none} .rp-sheet.on{display:block} body.rp-lock{overflow:hidden} .rp-bg{position:absolute;inset:0;background:var(--backdrop)}
   .rp-card{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px 28px;box-shadow:var(--shadow-lg)}
   @media(min-width:760px){.rp-card{left:50%;right:auto;width:720px;transform:translateX(-50%);bottom:4vh;border-radius:22px;max-height:90vh}}
@@ -7877,12 +7881,31 @@ function rpPrice(j, H) {                          // price with buys (▲), sell
   for (const t of j.trades) { const a = idx[t.entry] ?? 0, b = t.exit && idx[t.exit] != null ? idx[t.exit] : n - 1; for (let i = a; i <= b; i++) held[i] = true;
     if (idx[t.entry] != null) marks.push({i: a, up: true, t}); if (t.exit && idx[t.exit] != null) marks.push({i: b, up: false, t}); }
   if (j.open && idx[j.open.entry] != null) { for (let i = idx[j.open.entry]; i < n; i++) held[i] = true; marks.push({i: idx[j.open.entry], up: true, t: {entry: j.open.entry, px: j.open.px, why: 'still open'}}); }
-  const sc = rpScale([...j.close, ...j.low.slice(), ...j.high.slice()].filter(v => v != null)); const y = v => H - 6 - (H - 12) * (v - sc[0]) / (sc[1] - sc[0]);
-  const sigDots = j.signal.map((s, i) => s ? `<circle class="rp-sig" cx="${rpX(i, n).toFixed(1)}" cy="${(H - 3).toFixed(1)}" r="1.6"/>` : '').join('');
-  const mk = marks.map(m => { const x = rpX(m.i, n), yy = y(j.close[m.i]) + (m.up ? 9 : -9);
-    return `<path class="${m.up ? 'rp-in' : 'rp-out'}" d="${m.up ? `M${x - 5} ${yy + 7}L${x + 5} ${yy + 7}L${x} ${yy - 2}Z` : `M${x - 5} ${yy - 7}L${x + 5} ${yy - 7}L${x} ${yy + 2}Z`}"><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></path>`; }).join('');
-  const price = `<div class="rp-p"><div class="rp-lab rp-l2"><b>${esc(j.symbol)}</b><span class="rp-leg"><i class="up">▲</i>buy <i class="dn">▼</i>sell <i class="hd"></i>held</span></div>
-    <svg viewBox="0 0 ${RP_W} ${H}" preserveAspectRatio="none" class="rp-svg" data-h="${H}">${rpBands(held, n, H, 'rp-hold')}<path class="rp-line" d="${rpPath(j.close, n, y)}"/>${mk}${sigDots}<line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${H}"/></svg></div>`;
+  // 6.198 (user: the backtest chart should look like the hero chart): smooth line with a soft glow and a fading sage area, dashed guide lines,
+  // buys / sells as glowing dots on the line, holding periods as a brighter stretch of the area; fixed aspect so dots stay round
+  const sc = rpScale(j.close.filter(v => v != null), 0.12); const y = v => H - 8 - (H - 16) * (v - sc[0]) / (sc[1] - sc[0]);
+  const pts = j.close.map((v, i) => v == null ? null : [rpX(i, n), y(v)]), P = pts.filter(Boolean);
+  const smooth = Q => { if (!Q.length) return ''; let d = `M${Q[0][0].toFixed(1)} ${Q[0][1].toFixed(1)}`;
+    for (let i = 1; i < Q.length; i++) { const p0 = Q[i - 2] || Q[i - 1], p1 = Q[i - 1], p2 = Q[i], p3 = Q[i + 1] || p2;
+      d += `C${(p1[0] + (p2[0] - p0[0]) / 6).toFixed(1)} ${(p1[1] + (p2[1] - p0[1]) / 6).toFixed(1)} ${(p2[0] - (p3[0] - p1[0]) / 6).toFixed(1)} ${(p2[1] - (p3[1] - p1[1]) / 6).toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`; }
+    return d; };
+  const line = smooth(P), area = P.length ? `${line}L${P[P.length - 1][0].toFixed(1)} ${H}L${P[0][0].toFixed(1)} ${H}Z` : '';
+  let heldArea = '', a = -1;                                   // brighter area under the line while a position is held
+  for (let i = 0; i <= n; i++) { const on = i < n && held[i] && pts[i]; if (on && a < 0) a = i; if (!on && a >= 0) { const Q = pts.slice(a, i).filter(Boolean);
+    if (Q.length > 1) heldArea += `<path class="rp-ha" d="${smooth(Q)}L${Q[Q.length - 1][0].toFixed(1)} ${H}L${Q[0][0].toFixed(1)} ${H}Z"/>`; a = -1; } }
+  const gid = 'g' + Math.random().toString(36).slice(2, 7);
+  const grid = [0.25, 0.5, 0.75].map(f => `<line class="rp-grid" x1="0" x2="${RP_W}" y1="${(H * f).toFixed(1)}" y2="${(H * f).toFixed(1)}"/>`).join('');
+  const mk = marks.map(m => { const x = rpX(m.i, n), yy = y(j.close[m.i] ?? sc[0]);
+    return `<g class="${m.up ? 'rp-in' : 'rp-out'}"><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="6" class="rp-halo"/><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="3"/><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></g>`; }).join('');
+  const last = P[P.length - 1];
+  const price = `<div class="rp-p"><div class="rp-lab rp-l2"><b>${esc(j.symbol)}</b><span class="rp-leg"><i class="up">●</i>buy <i class="dn">●</i>sell <i class="hd"></i>held</span></div>
+    <svg viewBox="0 0 ${RP_W} ${H}" preserveAspectRatio="none" class="rp-svg rp-pr" style="aspect-ratio:${RP_W}/${H}" data-h="${H}">
+      <defs><linearGradient id="${gid}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--good)" stop-opacity=".30"/><stop offset="1" stop-color="var(--good)" stop-opacity="0"/></linearGradient>
+        <filter id="${gid}f" x="-5%" y="-20%" width="110%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+      ${grid}<path d="${area}" fill="url(#${gid}a)" opacity=".55"/>${heldArea.replace(/class="rp-ha"/g, `class="rp-ha" fill="url(#${gid}a)"`)}
+      <path class="rp-glow" d="${line}" filter="url(#${gid}f)"/><path class="rp-line rp-pl" d="${line}"/>${mk}
+      ${last ? `<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="7" class="rp-now-h"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.5" class="rp-now"/>` : ''}
+      <line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${H}"/></svg></div>`;
   return price;
 }
 function rpBody(j) {
