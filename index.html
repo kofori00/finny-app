@@ -1190,6 +1190,13 @@
   .rp-pl{stroke:var(--good);stroke-width:2.2;stroke-linecap:round} .rp-glow{fill:none;stroke:var(--good);stroke-width:5;opacity:.35} .rp-ha{opacity:1}
   .rp-in circle{fill:var(--good)} .rp-out circle{fill:#e8957f} .rp-halo{opacity:.25} .rp-now{fill:var(--good);stroke:var(--surface);stroke-width:1.5} .rp-now-h{fill:var(--good);opacity:.2}
   .rp-leg .up{color:var(--good)} .rp-leg .dn{color:#e8957f}
+  .rp-tl{margin:6px 0 10px;padding:10px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .rp-tlh b{display:block;font:700 13px var(--font-ui);color:var(--ink)} .rp-tlh span{display:block;font-size:11px;color:var(--muted);margin:2px 0 8px}
+  .rp-row{display:flex;align-items:center;gap:8px;margin:8px 0 3px} .rp-row b{font:600 12.5px var(--font-ui);color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .rp-row em{font-style:normal;font:700 12px var(--font-ui);color:var(--muted);min-width:16px;text-align:right} .rp-row em.ok{color:var(--good)}
+  .rp-row.all{margin-top:12px;padding-top:8px;border-top:1px dashed var(--glass-line)} .rp-row.all .rp-ri svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+  .rp-strip{display:block;width:100%;height:12px} .rp-sbg{fill:var(--glass-2)} .rp-sy{fill:var(--good);opacity:.85} .rp-sx{fill:#e8957f;opacity:.85} .rp-sall{fill:var(--good)}
+  .rp-g{position:relative;width:64px;height:12px;flex:none} .rp-g i{position:absolute;top:50%} .rp-g .tr{left:0;right:0;height:3px;margin-top:-1.5px;border-radius:2px;background:var(--glass-2)} .rp-g .th{width:2px;height:12px;margin-top:-6px;background:var(--ink-2);border-radius:1px}
+  .rp-g .vv{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--muted)} .rp-g .vv.ok{background:var(--good)}
+  .rp-raw summary{cursor:pointer;font:600 12px var(--font-ui);color:var(--muted);margin:4px 0 8px}
   .rp-sheet{position:fixed;inset:0;z-index:90;display:none} .rp-sheet.on{display:block} body.rp-lock{overflow:hidden} .rp-bg{position:absolute;inset:0;background:var(--backdrop)}
   .rp-card{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px 28px;box-shadow:var(--shadow-lg)}
   @media(min-width:760px){.rp-card{left:50%;right:auto;width:720px;transform:translateX(-50%);bottom:4vh;border-radius:22px;max-height:90vh}}
@@ -7923,7 +7930,7 @@ function rpBody(j) {
   }).join('');
   const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
   const exitTxt = Object.entries(j.exit || {}).filter(([k]) => k !== 'exit_if').map(([k, v]) => k === 'hold' ? `sell after ${v} days` : `${k.replace(/_/g, ' ')} ${v}`).join(', ');
-  return `<div class="rp-read" aria-live="polite"></div>${price}${panels}
+  return `<div class="rp-read" aria-live="polite"></div>${price}${rpStrips(j)}<details class="rp-raw"><summary>Show values</summary>${panels}</details>
     <div class="rp-stats"><div><b>${done.length}</b><span>trades</span></div><div><b>${done.length ? Math.round(win / done.length * 100) + '%' : '–'}</b><span>won</span></div>
       <div><b class="${done.length && done.reduce((a, t) => a + t.ret, 0) >= 0 ? 'v2-up' : 'v2-dn'}">${done.length ? pc(done.reduce((a, t) => a + t.ret, 0) / done.length) : '–'}</b><span>avg trade</span></div></div>
     <details class="rp-tr"><summary>${IC.chart} All trades${exitTxt ? ` · ${esc(exitTxt)}` : ''}</summary>${done.length ? `<table><tr><th>Buy</th><th>Sell</th><th>In</th><th>Out</th><th>Result</th><th>Why sold</th></tr>${done.map(t => `<tr><td>${esc(t.entry)}</td><td>${esc(t.exit)}</td><td>$${(+t.px).toFixed(2)}</td><td>$${(+t.xt).toFixed(2)}</td><td class="${t.ret >= 0 ? 'v2-up' : 'v2-dn'}">${pc(t.ret)}</td><td>${esc(t.why)}</td></tr>`).join('')}</table>` : '<p class="note">No completed trade in this window.</p>'}
@@ -7971,6 +7978,25 @@ function rpCloseAll() { document.querySelectorAll('.rp-sheet.on').forEach(x => x
 window.addEventListener('popstate', rpCloseAll); window.addEventListener('hashchange', rpCloseAll);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') rpCloseAll(); });
 if (typeof viewSet === 'function') { const _rpVs = viewSet; viewSet = function (v, push) { rpCloseAll(); return _rpVs(v, push); }; }
+
+// 6.199 (user: "not intuitive or clear at all, use more clarifying plots"): the rule timeline. One strip per rule on the price chart's time axis
+// (green = met that day), a last strip where ALL buy rules are met (= the signal days, where the buys sit), and a gauge per rule: today's value vs
+// the threshold. The raw feature lines stay behind "Show values".
+function rpStrips(j) {
+  const n = j.days.length, w = (RP_R - RP_L) / Math.max(n - 1, 1), SH = 12;
+  const strip = (flags, cls) => { let r = '', a = -1;
+    flags.forEach((f, i) => { if (f && a < 0) a = i; if ((!f || i === n - 1) && a >= 0) { const b = f ? i : i - 1;
+      r += `<rect class="${cls}" x="${(rpX(a, n) - w / 2).toFixed(1)}" y="1" width="${Math.max((b - a + 1) * w, 1.2).toFixed(1)}" height="${SH - 2}" rx="2"/>`; a = -1; } });
+    return `<svg viewBox="0 0 ${RP_W} ${SH}" preserveAspectRatio="none" class="rp-strip"><rect class="rp-sbg" x="0" y="1" width="${RP_W}" height="${SH - 2}" rx="3"/>${r}</svg>`; };
+  const fmt = v => v == null ? '–' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3);
+  const gauge = p => { const v = p.value[n - 1], t = p.threshold[n - 1]; if (v == null || t == null) return '';
+    const lo = Math.min(v, t), hi = Math.max(v, t), pad = (hi - lo) * 0.6 || Math.abs(t) * 0.5 || 1, a = lo - pad, b = hi + pad, X = z => ((z - a) / (b - a) * 100).toFixed(1);
+    const ok = p.holds[n - 1]; return `<span class="rp-g" title="now ${fmt(v)}, needs ${esc(p.op)} ${fmt(t)}"><i class="tr"></i><i class="th" style="left:${X(t)}%"></i><i class="vv ${ok ? 'ok' : 'no'}" style="left:${X(v)}%"></i></span>`; };
+  const buyRules = j.panels.filter(p => p.role !== 'exit');
+  const rows = j.panels.map(p => `<div class="rp-row"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpShort(p))}</b>${gauge(p)}<em class="${p.holds[n - 1] ? 'ok' : ''}">${p.holds[n - 1] ? '✓' : '✗'}</em></div>${strip(p.holds.map(Boolean), p.role === 'exit' ? 'rp-sx' : 'rp-sy')}`).join('');
+  return `<div class="rp-tl"><div class="rp-tlh"><b>When each rule was met</b><span>green = met that day · gauge = today vs the line it must cross</span></div>${rows}
+    <div class="rp-row all"><span class="rp-ri entry">${IC.buy}</span><b>All buy rules met</b><em>${j.signal.filter(Boolean).length} days</em></div>${strip(j.signal, 'rp-sall')}</div>`;
+}
 
 // connection graph (2026-11-08, Bible 6.194; user: "the data and connections of the items most prominent rather than text"; "depending on whether I click
 // for ticker or strategy comparison the ticker or strategy should be at the centre"). One radial graph: the chosen item in the centre, the connected items
