@@ -1171,6 +1171,15 @@
   .ss-wait summary svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round} .ss-wait summary em{margin-left:auto;font-style:normal;transition:transform .15s} .ss-wait[open] summary em{transform:rotate(90deg)} .ss-wait .ss-tiles{margin-top:8px}
   .ss-foot{display:flex;gap:6px;align-items:flex-start;font-size:11px;color:var(--muted);margin:10px 2px 0;line-height:1.4} .ss-foot svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8}
   .rp-teaser{margin:0 0 4px} .rp-tz-h{display:block} .rp-tz-h b{display:block;font:700 13.5px var(--font-ui)} .rp-tz-h span{display:block;font-size:11.5px;color:var(--muted);margin:2px 0 6px}
+  .ng-box{margin:4px 0 8px} .ng-svg{display:block;width:100%;height:auto;overflow:visible}
+  .ng-e{stroke:var(--muted);opacity:.35;stroke-linecap:round;animation:ngIn .4s ease both} .ng-e.on,.ng-e.up{stroke:var(--good);opacity:.9} .ng-e.dn{stroke:var(--bad,#dc2626);opacity:.7} .ng-e.wait{stroke-dasharray:3 4}
+  .ng-n{cursor:pointer;animation:ngIn .4s ease both} .ng-hit{fill:transparent} .ng-c{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:r .15s}
+  .ng-n.on .ng-c,.ng-n.up .ng-c{fill:var(--good);stroke:var(--good)} .ng-n.dn .ng-c{fill:var(--bad,#dc2626);stroke:var(--bad,#dc2626);fill-opacity:.85} .ng-n:hover .ng-c,.ng-n:focus .ng-c{stroke:var(--ink);stroke-width:3}
+  .ng-in{fill:var(--lime-ink,#10241a);font:700 11px var(--font-ui)} .ng-l{fill:var(--ink);font:600 10.5px var(--font-ui)} .ng-t{fill:var(--muted);font:600 9.5px var(--font-ui);font-variant-numeric:tabular-nums} .ng-t.up{fill:var(--good)} .ng-t.dn{fill:var(--bad,#dc2626)}
+  .ng-cc{fill:var(--glass-2);stroke:var(--ink);stroke-width:2} .ng-ctr.up .ng-cc{stroke:var(--good);fill:var(--surface)} .ng-ctr.dn .ng-cc{stroke:var(--bad,#dc2626);fill:var(--surface)} .ng-cl{fill:var(--ink);font:800 13px var(--font-display)} .ng-cs{fill:var(--muted);font:600 9.5px var(--font-ui)}
+  .ng-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--muted);margin:2px 2px 0} .ng-k{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:2px solid var(--muted)} .ng-k.on,.ng-k.up{background:var(--good);border-color:var(--good)} .ng-k.dn{background:var(--bad,#dc2626);border-color:var(--bad,#dc2626)} .ng-k.wait{border-style:dashed}
+  .hs-br[data-ng]{cursor:pointer;border-radius:6px} .hs-br[data-ng]:hover{background:var(--glass)}
+  @keyframes ngIn{from{opacity:0}to{opacity:1}} @media(prefers-reduced-motion:reduce){.ng-e,.ng-n{animation:none}}
   .rp-sheet{position:fixed;inset:0;z-index:90;display:none} .rp-sheet.on{display:block} body.rp-lock{overflow:hidden} .rp-bg{position:absolute;inset:0;background:var(--backdrop)}
   .rp-card{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px 28px;box-shadow:var(--shadow-lg)}
   @media(min-width:760px){.rp-card{left:50%;right:auto;width:720px;transform:translateX(-50%);bottom:4vh;border-radius:22px;max-height:90vh}}
@@ -7165,10 +7174,16 @@ function ssCard(A) {
     const lead = buy.find(x => x.tier === 'edge') || buy[0] || [...L].sort((a, b) => (b.record?.trades || 0) - (a.record?.trades || 0))[0];
     el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div>
       <div class="ss-verdict${n ? ' on' : ''}"><span class="ss-vi">${n ? IC.buy : IC.wait}</span><div><b>${n} of ${L.length}</b><span>${n ? 'would buy' : 'would buy'} ${esc(S)} ${r.live ? 'now' : 'at the last close'}</span></div></div>
+      <div class="ng-box" id="ss-ng"></div>
       ${buy.length ? `<div class="ss-tiles">${buy.map(tile).join('')}</div>` : ''}
       ${lead ? `<div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}
       ${wait.length ? `<details class="ss-wait"><summary>${IC.wait}<span>${wait.length} waiting for their rules</span><em>›</em></summary><div class="ss-tiles">${wait.map(tile).join('')}</div></details>` : ''}
       <p class="ss-foot">${IC.info} Hypothetical backtests on ${esc(S)} ${esc(since)} · % = share of winning trades · not advice</p>`;
+    { const sn = t => t.replace(/^Volume-exhaustion /i, 'Vol-exh. ').replace(/^Volume-Exhaustion /, 'Vol-exh. ').replace(/^Coiled-Spring Squeeze /, 'Squeeze ').replace(/Volume zone oscillator \(13\)/, 'VZO').replace(/Williams 3-bar channel/, 'Williams').replace(/ Leader Dip$/, ' dip');
+      ngDraw(el.querySelector('#ss-ng'), {label: S, sub: `${n}/${L.length} buy`, state: n ? 'up' : ''}, L.map(x => ({label: sn(x.name), size: Math.max(1, x.record?.trades || 0),
+        strength: x.conditions.length ? x.conditions.filter(c => c.ok === true).length / x.conditions.length : 0, state: x.signal_now ? 'on' : 'wait',
+        tag: x.record?.trades ? `${Math.round(x.record.win * 100)}% won` : 'no trades', inner: x.tier === 'edge' ? '★' : '', onTap: () => rpOpen(S, x.key, x.name)})),
+        {h: 290, legend: '<span><i class="ng-k on"></i>would buy now</span><span><i class="ng-k wait"></i>waiting</span><span>thicker line = more rules met · bigger dot = more trades · tap a dot</span>'}); }   // 6.194 ticker in the centre
     el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     const t0 = document.querySelector('.hero-stats')?.children[0];
@@ -7366,13 +7381,13 @@ function hsRender() {
   const rets = HS.rows.map(r => r.perf?.ret).filter(x => x != null), aOk = avg(HS.rows.filter(hsOk)), aAll = avg(HS.rows);
   // 6.193 (user: "more visually appealing and informative"): live record first, one bar per strategy against SPY
   const mx = Math.max(0.01, ...rets.map(Math.abs), Math.abs(P0?.spy || 0)), bw = x => Math.min(50, Math.abs(x) / mx * 50);
-  const bars = HS.rows.filter(r => r.perf).sort((a, b) => b.perf.ret - a.perf.ret).map(r => `<div class="hs-br${hsOk(r) ? ' ok' : ''}" title="${esc(r.name)}"><span class="hs-bn">${esc(short(r) || r.name)}${hsOk(r) ? ' ' + IC.star : ''}</span>
+  const bars = HS.rows.filter(r => r.perf).sort((a, b) => b.perf.ret - a.perf.ret).map(r => `<div class="hs-br${hsOk(r) ? ' ok' : ''}" title="${esc(r.name)}: tap for its stocks" data-ng="${esc(r.key)}" role="button" tabindex="0"><span class="hs-bn">${esc(short(r) || r.name)}${hsOk(r) ? ' ' + IC.star : ''}</span>
       <span class="hs-bt"><i class="${r.perf.ret >= 0 ? 'p' : 'n'}" style="${r.perf.ret >= 0 ? 'left:50%' : `right:50%`};width:${bw(r.perf.ret).toFixed(1)}%"></i><em style="left:${(50 + (P0.spy >= 0 ? 1 : -1) * bw(P0.spy)).toFixed(1)}%"></em></span>
       <b class="${cls(r.perf.ret)}">${pc(r.perf.ret)}</b></div>`).join('');
   const beat = rets.filter(x => x > P0?.spy).length;
   const perfBox = P0 ? `<div class="hs-live"><div class="hs-lh"><span class="hs-badge">${IC.chart}Live since ${esc(pday(P0.from))}</span><span class="hs-lt">to ${esc(pday(P0.to))}</span></div>
       <div class="hs-big"><div><b class="${cls(aOk)}">${pc(aOk)}</b><span>${IC.star} the ${HS.rows.filter(hsOk).length} that hold up</span></div><div><b class="${cls(P0.spy)}">${pc(P0.spy)}</b><span>SPY</span></div><div><b>${beat}/${rets.length}</b><span>beat SPY</span></div></div>
-      <div class="hs-bars">${bars}<div class="hs-bk"><span><i class="sp"></i>SPY ${pc(P0.spy)}</span><span>${IC.star} holds up after re-testing</span></div></div>
+      <div class="hs-bars">${bars}<div class="hs-bk"><span><i class="sp"></i>SPY ${pc(P0.spy)}</span><span>tap a bar: its stocks</span><span>${IC.star} holds up after re-testing</span></div></div>
       <details class="hs-how"><summary>${IC.info} How this is measured</summary><p>Each basket bought in equal weight at the ${esc(pday(P0.from))} close (the day after its holdings date) and held; adjusted prices, no costs. Four months is short and noisy: it shows how the baskets did, not whether the strategies work. Next basket: January.</p></details></div>` : '';
   const dots = x => Array.from({length: x.okOf}, (_, i) => `<i class="${i < x.ok ? 'on' : ''}"></i>`).join('');
   const card = x => { const sr = stockRet(x.t);
@@ -7391,6 +7406,7 @@ function hsRender() {
       <p class="v2-note">${V ? `Re-tested ${v2Day(V.date)}: the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21) and the backtest numbers. ` : ''}"Holds up" = equal-weight Sharpe 1.2+ and 1.0+ in both 2016-20 and 2021-26; "weak" = below 1.0. The others owe much of their 1.3+ to volatility sizing.
       With equal weights none beats SPY by a statistically clear margin (t below 2): the edge is mostly a smoother ride. 11 of 14 are SX25 variants. Cash switches and stops are not applied here.
       SXG4 uses Account 1's actual SX25 targets. Visible to you only.</p></details>`;
+  el.querySelectorAll('[data-ng]').forEach(b => b.onclick = () => ngStrategy(HS.rows.find(r => r.key === b.dataset.ng)));   // 6.194 strategy in the centre
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
   const m = document.getElementById('hs-more'); if (m) m.onclick = () => { HS.all = true; hsRender(); };
 }
@@ -7876,6 +7892,48 @@ function rpTeaser(box, sym, key, name) {
     if (j.trades.filter(t => t.ret != null).length >= 2) return draw(j, 'last year');
     return rpFetch(sym, key, 500).then(k => { if (box.dataset.k === sym + '|' + key) draw(k, 'last 2 years'); });
   }).catch(() => { box.innerHTML = ''; });
+}
+
+// connection graph (2026-11-08, Bible 6.194; user: "the data and connections of the items most prominent rather than text"; "depending on whether I click
+// for ticker or strategy comparison the ticker or strategy should be at the centre"). One radial graph: the chosen item in the centre, the connected items
+// around it. Edge width = strength (0-1), solid green = active (would buy / gaining), dashed = waiting, node size = weight, node ring colour = its value.
+// Tap a node: its onTap. Pure SVG, theme colours via CSS classes.
+function ngDraw(box, center, nodes, opts = {}) {
+  const W = 340, H = opts.h || 300, cx = W / 2, cy = H / 2, n = nodes.length;
+  const R = Math.min(W, H) / 2 - 58, ring = n > 12 ? [R, R * 0.62] : [R];
+  const pos = nodes.map((_, i) => { const r = ring.length > 1 && i % 2 ? ring[1] : ring[0], a = -Math.PI / 2 + (2 * Math.PI * i) / Math.max(n, 1); return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
+  const maxW = Math.max(1e-9, ...nodes.map(d => d.size || 1));
+  const edges = nodes.map((d, i) => { const [x, y] = pos[i], w = 1 + 5 * Math.max(0, Math.min(1, d.strength ?? 0.5));
+    return `<line class="ng-e ${d.state || ''}" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke-width="${w.toFixed(1)}" style="animation-delay:${(i * 35)}ms"/>`; }).join('');
+  const dots = nodes.map((d, i) => { const [x, y] = pos[i], r = 9 + 11 * Math.sqrt((d.size || 1) / maxW), lx = x + (x < cx - 4 ? -1 : x > cx + 4 ? 1 : 0) * (r + 5), anc = x < cx - 4 ? 'end' : x > cx + 4 ? 'start' : 'middle';
+    const ly = Math.abs(x - cx) <= 4 ? y + (y < cy ? -r - 6 : r + 13) : y + 4;
+    return `<g class="ng-n ${d.state || ''}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(d.label)}${d.tag ? ', ' + esc(d.tag) : ''}" style="animation-delay:${(120 + i * 35)}ms">
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 6).toFixed(1)}" class="ng-hit"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" class="ng-c"/>
+      ${d.inner ? `<text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" class="ng-in" text-anchor="middle">${esc(d.inner)}</text>` : ''}
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="ng-l" text-anchor="${anc}">${esc(d.label)}</text>
+      ${d.tag ? `<text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" class="ng-t ${d.tagCls || ''}" text-anchor="${anc}">${esc(d.tag)}</text>` : ''}</g>`; }).join('');
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="ng-svg" role="img" aria-label="${esc(center.label)} and ${n} connected items">${edges}
+    <g class="ng-ctr ${center.state || ''}"><circle cx="${cx}" cy="${cy}" r="34" class="ng-cc"/><text x="${cx}" y="${cy - 2}" class="ng-cl" text-anchor="middle">${esc(center.label)}</text>
+      ${center.sub ? `<text x="${cx}" y="${cy + 13}" class="ng-cs" text-anchor="middle">${esc(center.sub)}</text>` : ''}</g>${dots}</svg>
+    ${opts.legend ? `<div class="ng-leg">${opts.legend}</div>` : ''}`;
+  box.querySelectorAll('.ng-n').forEach(g => { const d = nodes[+g.dataset.i]; if (!d.onTap) return; g.onclick = () => d.onTap(); g.onkeydown = e => { if (e.key === 'Enter') d.onTap(); }; });
+}
+// strategy in the centre: one long-term strategy and the stocks in its basket (from the "strongest strategies" panel)
+function ngStrategy(r) {
+  let el = document.getElementById('ng-sheet');
+  if (!el) { document.body.insertAdjacentHTML('beforeend', '<div id="ng-sheet" class="rp-sheet" role="dialog" aria-modal="true" aria-label="Strategy map"><div class="rp-bg"></div><div class="rp-card"></div></div>');
+    el = document.getElementById('ng-sheet'); el.querySelector('.rp-bg').onclick = () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); }; }
+  el.classList.add('on'); document.body.classList.add('rp-lock');
+  const card = el.querySelector('.rp-card'), P = r.perf || {}, pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+  const shared = t => (HS.rows || []).filter(x => x.picks.includes(t)).length;
+  const nodes = r.picks.map(t => { const v = P.stocks?.[t]; return {label: t, inner: '', size: shared(t), strength: shared(t) / (HS.rows || [1]).length,
+    state: v == null ? '' : v >= 0 ? 'up' : 'dn', tag: v == null ? '' : pc(v), tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn', onTap: () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); }}; });
+  const name = r.name.replace(/_/g, ' ');
+  card.innerHTML = `<div class="rp-h"><div><b>${esc(name)}</b><small>${r.picks.length} stocks · basket of ${esc(r.as_of)}${P.ret != null ? ` · ${pc(P.ret)} since ${esc(P.from)} (SPY ${pc(P.spy)})` : ''}</small></div><button class="rp-x" aria-label="Close">×</button></div>
+    <div class="ng-box"></div>`;
+  card.querySelector('.rp-x').onclick = () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); };
+  ngDraw(card.querySelector('.ng-box'), {label: name.length > 12 ? name.slice(0, 11) + '…' : name, sub: P.ret != null ? pc(P.ret) : '', state: P.ret == null ? '' : P.ret >= 0 ? 'up' : 'dn'}, nodes,
+    {h: 330, legend: '<span><i class="ng-k up"></i>gaining since the basket date</span><span><i class="ng-k dn"></i>losing</span><span>bigger dot, thicker line = more of our 14 strategies own it</span>'});
 }
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
