@@ -1162,6 +1162,15 @@
   .rp-disc{font-size:11px;color:var(--muted);margin:10px 0 0;display:flex;gap:6px;align-items:flex-start;line-height:1.4} .rp-disc svg{flex:none;width:15px;height:15px}
   .rp-tz-go{display:flex;align-items:center;justify-content:center;gap:6px} .rp-tz-go svg{fill:currentColor;stroke:none} .rp-csv{display:inline-flex;align-items:center;gap:6px}
   .rp-tz-h{display:flex;align-items:baseline;gap:8px} .rp-tz-h b{display:inline;font:700 14px var(--font-ui)} .rp-tz-h span{display:inline;margin:0 0 6px}
+  .ss-card,.ss-card *{box-sizing:border-box} .ss-top{padding-right:120px}
+  .ss-verdict{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--glass-2);margin:0 0 10px} .ss-verdict.on{background:var(--lime);color:var(--lime-ink)}
+  .ss-vi svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block} .ss-verdict b{display:block;font:800 22px var(--font-display);font-variant-numeric:tabular-nums} .ss-verdict span{font-size:13px}
+  .ss-verdict:not(.on) .ss-vi{color:var(--muted)} .ss-verdict:not(.on) b{color:var(--ink)} .ss-verdict:not(.on) span{color:var(--muted)}
+  .ss-tile .ss-mid small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px} .ss-tile .ss-go{font-size:20px;line-height:1}
+  .ss-wait{margin:10px 0 0} .ss-wait summary{display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:14px;border:1px solid var(--glass-line);cursor:pointer;list-style:none;color:var(--ink-2);font:600 13px var(--font-ui)} .ss-wait summary::-webkit-details-marker{display:none}
+  .ss-wait summary svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round} .ss-wait summary em{margin-left:auto;font-style:normal;transition:transform .15s} .ss-wait[open] summary em{transform:rotate(90deg)} .ss-wait .ss-tiles{margin-top:8px}
+  .ss-foot{display:flex;gap:6px;align-items:flex-start;font-size:11px;color:var(--muted);margin:10px 2px 0;line-height:1.4} .ss-foot svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8}
+  .rp-teaser{margin:0 0 4px} .rp-tz-h{display:block} .rp-tz-h b{display:block;font:700 13.5px var(--font-ui)} .rp-tz-h span{display:block;font-size:11.5px;color:var(--muted);margin:2px 0 6px}
   .rp-sheet{position:fixed;inset:0;z-index:90;display:none} .rp-sheet.on{display:block} body.rp-lock{overflow:hidden} .rp-bg{position:absolute;inset:0;background:var(--backdrop)}
   .rp-card{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px 28px;box-shadow:var(--shadow-lg)}
   @media(min-width:760px){.rp-card{left:50%;right:auto;width:720px;transform:translateX(-50%);bottom:4vh;border-radius:22px;max-height:90vh}}
@@ -7127,19 +7136,21 @@ function ssCard(A) {
     const n = L.filter(x => x.signal_now).length, pct = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
     const since = r.record_from && r.record_from > '2016-01-04' ? `since listing ${r.first_bar}` : 'since 2016';
     // 6.192b (user: "less text, simple icons and interactions"): one status icon, rule dots, two numbers per strategy; details stay in the chart
-    const dots = x => x.conditions.map(c => `<i class="sd ${c.ok === true ? 'y' : c.ok === null ? 'w' : 'n'}" title="${esc(c.rule)}"></i>`).join('');
-    const rows = L.map(x => { const rc = x.record, ok = x.conditions.filter(c => c.ok === true).length;
-      return `<button class="ss-tile${x.signal_now ? ' on' : ''}" data-rp="${esc(x.key)}" data-rpn="${esc(x.name)}" aria-label="${esc(x.name)}: ${x.signal_now ? 'would buy' : 'no signal'}, ${ok} of ${x.conditions.length} rules met. Open its chart">
-        <span class="ss-ic">${x.signal_now ? IC.buy : IC.wait}</span>
-        <span class="ss-mid"><b>${esc(x.name)}${x.tier === 'edge' ? ` <em class="ss-star" title="Passed every test">${IC.star}</em>` : ''}${x.in_universe ? '' : ` <em class="ss-what" title="Tested on S&amp;P 500 stocks only: a what-if here">${IC.info}</em>`}</b>
-          <span class="ss-dots" title="${ok} of ${x.conditions.length} rules met">${dots(x)}</span></span>
-        <span class="ss-num">${rc.trades ? `<b>${Math.round(rc.win * 100)}%</b><small>${rc.trades} trades</small>` : '<small>no trades</small>'}</span>
-        <span class="ss-go">${IC.chart}</span></button>`; }).join('');
-    const lead = L.find(x => x.signal_now) || [...L].sort((a, b) => (b.record?.last3y?.trades || 0) - (a.record?.last3y?.trades || 0))[0];
-    el.innerHTML = `<div class="ss-top"><span class="ss-ti">${IC.chart}</span><b>Strategies on ${esc(S)}</b><span class="ss-pill${n ? ' on' : ''}">${n ? IC.buy : ''}${n}/${L.length} buy</span></div>
-      ${lead ? `<div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}<div class="ss-tiles">${rows}</div>
-      <div class="ss-key"><span><i class="sd y"></i>rule met</span><span><i class="sd n"></i>not met</span><span>% = winning trades ${esc(since)}</span>
-        <details><summary>${IC.info}</summary><p>Exact rules run on ${esc(S)}${r.member ? '' : ', ranked against the S&amp;P 500 as if a member'}. Hypothetical backtest; one stock is a small sample. Not advice.</p></details></div>`;
+    // 6.192c (user: "too vague, a bit chaotic"): one verdict, the buying strategies first with labelled numbers, the lead strategy's chart, the rest folded
+    const tile = x => { const rc = x.record, ok = x.conditions.filter(c => c.ok === true).length;
+      return `<button class="ss-tile${x.signal_now ? ' on' : ''}" data-rp="${esc(x.key)}" data-rpn="${esc(x.name)}" aria-label="Open the chart of ${esc(x.name)}">
+        <span class="ss-mid"><b>${esc(x.name)}${x.tier === 'edge' ? ` <em class="ss-star" title="Passed every test">${IC.star}</em>` : ''}</b>
+          <small>${ok}/${x.conditions.length} rules met${x.in_universe ? '' : ' · what-if (tested on S&amp;P 500)'}</small></span>
+        <span class="ss-num">${rc.trades ? `<b>${Math.round(rc.win * 100)}%</b><small>won · ${rc.trades} trades</small>` : '<small>no trades yet</small>'}</span>
+        <span class="ss-go">›</span></button>`; };
+    const buy = L.filter(x => x.signal_now), wait = L.filter(x => !x.signal_now);
+    const lead = buy.find(x => x.tier === 'edge') || buy[0] || [...L].sort((a, b) => (b.record?.trades || 0) - (a.record?.trades || 0))[0];
+    el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div>
+      <div class="ss-verdict${n ? ' on' : ''}"><span class="ss-vi">${n ? IC.buy : IC.wait}</span><div><b>${n} of ${L.length}</b><span>${n ? 'would buy' : 'would buy'} ${esc(S)} ${r.live ? 'now' : 'at the last close'}</span></div></div>
+      ${buy.length ? `<div class="ss-tiles">${buy.map(tile).join('')}</div>` : ''}
+      ${lead ? `<div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}
+      ${wait.length ? `<details class="ss-wait"><summary>${IC.wait}<span>${wait.length} waiting for their rules</span><em>›</em></summary><div class="ss-tiles">${wait.map(tile).join('')}</div></details>` : ''}
+      <p class="ss-foot">${IC.info} Hypothetical backtests on ${esc(S)} ${esc(since)} · % = share of winning trades · not advice</p>`;
     el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     const t0 = document.querySelector('.hero-stats')?.children[0];
@@ -7786,7 +7797,7 @@ function rpPrice(j, H) {                          // price with buys (▲), sell
   const sc = rpScale([...j.close, ...j.low.slice(), ...j.high.slice()].filter(v => v != null)); const y = v => H - 6 - (H - 12) * (v - sc[0]) / (sc[1] - sc[0]);
   const sigDots = j.signal.map((s, i) => s ? `<circle class="rp-sig" cx="${rpX(i, n).toFixed(1)}" cy="${(H - 3).toFixed(1)}" r="1.6"/>` : '').join('');
   const mk = marks.map(m => { const x = rpX(m.i, n), yy = y(j.close[m.i]) + (m.up ? 9 : -9);
-    return `<path class="${m.up ? 'rp-in' : 'rp-out'}" d="${m.up ? `M${x - 4} ${yy + 5}L${x + 4} ${yy + 5}L${x} ${yy - 2}Z` : `M${x - 4} ${yy - 5}L${x + 4} ${yy - 5}L${x} ${yy + 2}Z`}"><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></path>`; }).join('');
+    return `<path class="${m.up ? 'rp-in' : 'rp-out'}" d="${m.up ? `M${x - 5} ${yy + 7}L${x + 5} ${yy + 7}L${x} ${yy - 2}Z` : `M${x - 5} ${yy - 7}L${x + 5} ${yy - 7}L${x} ${yy + 2}Z`}"><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></path>`; }).join('');
   const price = `<div class="rp-p"><div class="rp-lab rp-l2"><b>${esc(j.symbol)}</b><span class="rp-leg"><i class="up">▲</i>buy <i class="dn">▼</i>sell <i class="hd"></i>held</span></div>
     <svg viewBox="0 0 ${RP_W} ${H}" preserveAspectRatio="none" class="rp-svg" data-h="${H}">${rpBands(held, n, H, 'rp-hold')}<path class="rp-line" d="${rpPath(j.close, n, y)}"/>${mk}${sigDots}<line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${H}"/></svg></div>`;
   return price;
@@ -7837,12 +7848,14 @@ function rpWire(card, j) {
 
 // teaser (2026-11-08): the lead strategy's trades on the stock, drawn at the top of the card so the evidence is the first thing you see
 function rpTeaser(box, sym, key, name) {
-  box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}</b><span>loading…</span></div>`;
-  rpFetch(sym, key, 125).then(j => { if (box.dataset.k !== sym + '|' + key) return;
-    const done = j.trades.filter(t => t.ret != null), on = j.open ? ' · 1 still open' : '';
-    box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}</b><span>6 mo · ${done.length} trade${done.length === 1 ? '' : 's'}${on}</span></div>
-      ${rpPrice(j, 110)}<button class="rp-tz-go">${IC.play} Watch the rules</button>`;
-    box.querySelector('.rp-tz-go').onclick = () => rpOpen(sym, key, name); box.querySelector('.rp-svg').onclick = () => rpOpen(sym, key, name);
+  box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>loading…</span></div>`;
+  const draw = (j, label) => { const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
+    box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>${label} · ${done.length} trade${done.length === 1 ? '' : 's'}${done.length ? ` · ${win} won` : ''}${j.open ? ' · 1 open now' : ''}</span></div>
+      ${rpPrice(j, 120)}<button class="rp-tz-go">${IC.play} Watch the rules fire</button>`;
+    box.querySelector('.rp-tz-go').onclick = () => rpOpen(sym, key, name); box.querySelector('.rp-svg').onclick = () => rpOpen(sym, key, name); };
+  rpFetch(sym, key, 250).then(j => { if (box.dataset.k !== sym + '|' + key) return;
+    if (j.trades.filter(t => t.ret != null).length >= 2) return draw(j, 'last year');
+    return rpFetch(sym, key, 500).then(k => { if (box.dataset.k === sym + '|' + key) draw(k, 'last 2 years'); });
   }).catch(() => { box.innerHTML = ''; });
 }
 
