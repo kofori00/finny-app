@@ -6204,6 +6204,33 @@ function custRender() {
 function custInit() { custLoad(); if (!CU.timer) CU.timer = setInterval(() => { if (!document.hidden) custLoad(); }, 5 * 60 * 1000); }
 
 // 6.203: the model sometimes writes indicator names instead of the engine's features ("sma" 50,200 for a crossover): fix the common ones
+// 6.203 (review: "the LLM parser is dropping the ball on translation"): hard checks on the model's spec against the user's own words, before any
+// card is shown. Broken math is repaired (sma_ratio(50) crosses 200 -> sma_x(50,200) crosses 0), a condition the user named but the spec lacks is
+// sent back to the model as a problem (it gets one more round to fix it), and every default the user did not give is listed as an assumption.
+function akCheckSpec(spec, q) {
+  spec = akNormSpec(spec); q = String(q || '').toLowerCase();
+  const conds = [...(spec.entry || []), ...(spec.regime || [])], problems = [], assumptions = [];
+  for (const c of conds) {                                   // ratio features compared with a moving-average length: the model meant a crossover
+    const v = +c.v, m = /^(sma|ema)_ratio$/.exec(c.f);
+    if (m && /cross/.test(c.op) && Number.isInteger(v) && v >= 2) { c.f = m[1] + '_x'; c.a = `${c.a},${v}`; c.v = '0'; }
+    if (m && !/cross/.test(c.op) && Math.abs(v) >= 2) problems.push(`${c.f}(${c.a}) ${c.op} ${c.v} is impossible: ${c.f} is price / average - 1 (e.g. 0.05 = 5% above). For one average above another use {f: "${m[1]}_x", a: "fast,slow", op: ">", v: "0"}.`);
+  }
+  const has = f => conds.some(c => new RegExp('^' + f).test(c.f)), e = spec.exit || {};
+  const named = [['rsi', /\brsi\b/, 'rsi'], ['moving average', /\b(sma|ema|moving average|ma\d+|\d+\s*(-day|day)?\s*(ma|sma|ema))\b/, '(sma|ema)_'], ['MACD', /\bmacd\b/, 'macd'], ['ATR', /\batr\b/, 'atr'],
+    ['volume', /\bvolume\b/, '(vol_|dollar_vol|obv|vroc)'], ['Bollinger', /\bbollinger\b/, 'bb_'], ['stochastic', /\bstoch/, 'stoch'], ['ADX', /\badx\b/, 'adx'], ['IBS', /\bibs\b/, 'ibs']];
+  for (const [label, re, f] of named) if (re.test(q) && !has(f)) problems.push(`the user named ${label} but the spec has no ${label} condition: add it (e.g. RSI above 50 = {f: "rsi", a: "14", op: ">", v: "50"}).`);
+  const pct = x => (q.match(new RegExp('(\\d+(?:[.,]\\d+)?)\\s*%\\s*' + x)) || [])[1];
+  const sl = pct('(stop|stop[- ]loss)'), tp = pct('(take[- ]profit|target|profit)');
+  if (sl && Math.abs(+e.stop_pct - sl.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${sl}% stop loss: exit.stop_pct must be ${sl.replace(',', '.') / 100}.`);
+  if (tp && Math.abs(+e.target_pct - tp.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${tp}% take profit: exit.target_pct must be ${tp.replace(',', '.') / 100}.`);
+  if (!/\b(hold|holding|days?|weeks?|bars?)\b/.test(q.replace(/\d+\s*-?\s*day (sma|ema|ma|moving|average|high|low|return)/g, ''))) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
+  if (!/\b(s&p|sp500|spx|stocks?|etfs?|nasdaq|qqq|spy|shares)\b/.test(q)) assumptions.push('S&P 500 stocks (members at the time); say "use ETFs" to change');
+  if (!spec.max_pos) assumptions.push('up to 10 positions at once, equal size');
+  const req = (q.match(/\b(\d+)\s*-?\s*(minute|min|m|hour|hr|h)\b(?:\s*(time\s*frame|timeframe|chart|bars?|candles?))?/) || []);
+  const intraday = /\b(1|2|4|5|15|30|60)\s*-?\s*(minute|min|hour|hr|h)\b|\bhourly\b|\bintraday\b/.test(q) ? (req[1] ? `${req[1]}-${/^m/.test(req[2]) ? 'minute' : 'hour'}` : /hourly/.test(q) ? '1-hour' : 'intraday') : null;
+  if (intraday) assumptions.push(`DAILY bars instead of the ${intraday} timeframe you asked for: intraday bars cannot be tested yet, so this is a different test`);
+  return {spec, problems, assumptions, requested_timeframe: intraday};
+}
 function akNormSpec(spec) {
   const n2 = a => String(a ?? '').split(',').filter(x => x.trim() !== '').length;
   const fix = c => { if (!c || !c.f) return c; const f = String(c.f).toLowerCase().replace(/[^a-z_]/g, ''), k = n2(c.a);
@@ -6372,7 +6399,7 @@ const AK_LOOK = {
     AK.draft = r.ok ? {...r, at: Date.now()} : null; return r;
   },
   async library_search({spec = {}} = {}) {                    // 6.203: the closest already-tested strategies in the library (rules + stored results)
-    spec = akNormSpec(spec);
+    spec = akCheckSpec(spec, AK.q).spec;
     const cs = [...(spec.entry || []), ...(spec.regime || [])].filter(c => c && c.f), e = spec.exit || {};
     const feats = [...new Set(cs.map(c => c.f))], ops = [...new Set(cs.map(c => c.op).filter(Boolean))];
     const ex = ['stop_pct', 'target_pct', 'stop_atr', 'target_atr', 'trail_atr', 'exit_if'].filter(k => e[k] != null && e[k] !== '' && !(Array.isArray(e[k]) && !e[k].length));
@@ -6385,8 +6412,11 @@ const AK_LOOK = {
   },
   async test_strategy({spec = {}} = {}) {                     // 6.203: owner only; a DRAFT backtest (nothing runs until the card's Run test)
     if (!document.body.classList.contains('role-owner')) return {error: 'Testing your own strategy from the chat is not available yet.'};
-    const r = await akST({op: 'draft', spec: akNormSpec(spec), question: AK.q || '', chat: AK.chat || null});
-    AK.test = r.ok ? {...r, at: Date.now()} : null; return r;
+    const ck = akCheckSpec(spec, AK.q);
+    if (ck.problems.length) { AK.test = null; return {ok: false, error: 'the spec does not match the user\'s words yet: fix it and call test_strategy again', problems: ck.problems}; }
+    const r = await akST({op: 'draft', spec: ck.spec, question: AK.q || '', chat: AK.chat || null});
+    AK.test = r.ok ? {...r, at: Date.now(), assumptions: ck.assumptions, requested_timeframe: ck.requested_timeframe} : null;
+    return r.ok ? {...r, assumptions: ck.assumptions, requested_timeframe: ck.requested_timeframe, note: r.note + ' Name every assumption to the user.'} : r;
   },
   async strategy_test_status({id = null} = {}) {              // 6.203: one test or the latest 10 (results only when status is done)
     if (!document.body.classList.contains('role-owner')) return {error: 'not available'};
@@ -6747,6 +6777,8 @@ function akTestCard() {
   const el = document.createElement('div'); el.className = 'ak-order ak-test';
   el.innerHTML = `<div class="ak-o-h"><span class="ak-o-k">Backtest · vast.ai server</span><b>${esc(d.spec?.name || 'Your strategy')}</b></div>
     <p class="ak-o-n">${esc(d.rules_text || '')}</p>
+    ${d.requested_timeframe ? `<p class="ak-o-n ak-warn">⚠ You asked for the ${esc(d.requested_timeframe)} timeframe. This test uses <b>daily bars</b>: it is not the same strategy.</p>` : ''}
+    ${(d.assumptions || []).filter(a => !/^DAILY/.test(a)).length ? `<p class="ak-o-n"><b>Assumed (you did not say):</b> ${esc(d.assumptions.filter(a => !/^DAILY/.test(a)).join('; '))}. Reply to change any of these.</p>` : ''}
     <div class="ak-o-g"><div><span>Time</span><b>${esc(d.estimate?.minutes || '~20')} min</b></div><div><span>Cost</span><b>${esc(d.estimate?.cost_usd || '<0.05')} $</b></div><div><span>Judged on</span><b>2021+</b></div></div>
     <p class="ak-o-n">${esc(d.estimate?.data || '')}. Same tests as the library: costs, luck bar, random-entry check.</p>
     <div class="ak-o-b"><button type="button" class="ak-o-ok">Run test</button><button type="button" class="ak-o-no">Cancel</button><span class="ak-o-t"></span></div>`;
