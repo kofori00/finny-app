@@ -6316,7 +6316,7 @@ const AK_LOOK = {
   },
   async trending_strategies({window_days = 10, top = 10, only = null} = {}) {   // 6.201: which library strategies did best lately
     const token = await getToken(), w = [10, 21].includes(+window_days) ? +window_days : (+window_days > 15 ? 21 : 10);
-    const r = await fetch(`${SB_URL}/rest/v1/rpc/nightly_trending`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({wdays: w, top: Math.min(Math.max(+top || 10, 3), 25), min_signals: 5, only_class: only})});
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/nightly_trending`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({wdays: w, top: Math.min(Math.max(+top || 10, 3), 25), min_signals: 10, only_class: only})});
     const j = await r.json().catch(() => null); if (!r.ok || !j) throw new Error('trending strategies not available');
     return j;
   },
