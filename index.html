@@ -7159,9 +7159,13 @@ async function ssFetch(syms) {
 function ssCard(A) {
   const S = A?.sym; if (!S || HERO.demo) return; let el = document.getElementById('ss-card');
   if (!el) { const anchor = document.getElementById('hs-line') || document.querySelector('.hero-stats'); if (!anchor) return; anchor.insertAdjacentHTML('afterend', '<div id="ss-card" class="ss-card"></div>'); el = document.getElementById('ss-card'); }
-  el.dataset.sym = S; el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">Running every strategy on ${esc(S)}…</p>`;
+  // 6.195 (user: "the app has gotten unstable"): v2Hero runs 4-6 times while one stock loads; redraw this card only for a new stock or after 60 s,
+  // so the page no longer collapses to "Running…" and jumps each time
+  if (el.dataset.sym === S && (el.dataset.busy === '1' || Date.now() - (+el.dataset.done || 0) < 60000)) return;
+  const same = el.dataset.sym === S; el.dataset.sym = S; el.dataset.busy = '1';
+  if (!same) el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div><p class="note">Running every strategy on ${esc(S)}…</p>`;
   ssFetch([S]).then(R => {
-    const r = R[S]; if (el.dataset.sym !== S) return;
+    const r = R[S]; if (el.dataset.sym !== S) return; el.dataset.busy = ''; el.dataset.done = Date.now();
     if (!r || r.error) { el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">${esc(r?.error || 'Not available for this symbol.')}</p>`; return; }
     const L = (r.strategies || []).filter(x => !x.error).sort((a, b) => (b.signal_now - a.signal_now) || ((a.tier === 'edge') ? -1 : 1));
     const n = L.filter(x => x.signal_now).length, pct = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
@@ -7183,16 +7187,16 @@ function ssCard(A) {
       ${lead ? `<div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}
       ${wait.length ? `<details class="ss-wait"><summary>${IC.wait}<span>${wait.length} waiting for their rules</span><em>›</em></summary><div class="ss-tiles">${wait.map(tile).join('')}</div></details>` : ''}
       <p class="ss-foot">${IC.info} Hypothetical backtests on ${esc(S)} ${esc(since)} · % = share of winning trades · not advice</p>`;
-    { const sn = t => t.replace(/^Volume-exhaustion /i, 'Vol-exh. ').replace(/^Volume-Exhaustion /, 'Vol-exh. ').replace(/^Coiled-Spring Squeeze /, 'Squeeze ').replace(/Volume zone oscillator \(13\)/, 'VZO').replace(/Williams 3-bar channel/, 'Williams').replace(/ Leader Dip$/, ' dip');
+    try { const sn = t => t.replace(/^Volume-exhaustion /i, 'Vol-exh. ').replace(/^Volume-Exhaustion /, 'Vol-exh. ').replace(/^Coiled-Spring Squeeze /, 'Squeeze ').replace(/Volume zone oscillator \(13\)/, 'VZO').replace(/Williams 3-bar channel/, 'Williams').replace(/ Leader Dip$/, ' dip');
       ngDraw(el.querySelector('#ss-ng'), {label: S, sub: `${n}/${L.length} buy`, state: n ? 'up' : ''}, L.map(x => ({label: sn(x.name), size: Math.max(1, x.record?.trades || 0),
         strength: x.conditions.length ? x.conditions.filter(c => c.ok === true).length / x.conditions.length : 0, state: x.signal_now ? 'on' : 'wait',
         tag: x.record?.trades ? `${Math.round(x.record.win * 100)}% won` : 'no trades', inner: x.tier === 'edge' ? '★' : '', onTap: () => rpOpen(S, x.key, x.name)})),
-        {h: 290, legend: '<span><i class="ng-k on"></i>would buy now</span><span><i class="ng-k wait"></i>waiting</span><span>thicker line = more rules met · bigger dot = more trades · tap a dot</span>'}); }   // 6.194 ticker in the centre
+        {h: 290, legend: '<span><i class="ng-k on"></i>would buy now</span><span><i class="ng-k wait"></i>waiting</span><span>thicker line = more rules met · bigger dot = more trades · tap a dot</span>'}); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre
     el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     const t0 = document.querySelector('.hero-stats')?.children[0];
     if (t0 && !r.member && HERO.last?.sym === S) { const b = t0.querySelector('b'), l = t0.querySelector('.hs-l'); if (b && l) { t0.dataset.ss = '1'; b.textContent = `${n}/${L.length}`; b.className = n ? 'v2-up' : ''; l.textContent = `of our swing strategies would buy ${S}${r.live ? ' now' : ''}`; } }
-  }).catch(e => { if (el.dataset.sym === S) el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">Could not run them: ${esc(e.message)}</p>`; });
+  }).catch(e => { if (el.dataset.sym === S) { el.dataset.busy = ''; el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div><p class="note">Could not run them: ${esc(e.message)}</p>`; } });
 }
 // stocks outside the S&P 500 (2026-11-06, Bible 6.181): the first tile shows the stock's live move (odds-live quote, the same lookup Ask Finny
 // uses) instead of an empty dash; our strategy holdings still cover S&P 500 companies only, and the tile says so
@@ -7465,7 +7469,8 @@ function hsSwing(el) {
     if (o?.v != null) parts.push(Math.max(0, Math.min(1, (o.v - 0.40) / 0.30)));
     if (ss?.trades) { const w = (ss.win * ss.trades + 0.5 * 5) / (ss.trades + 5); parts.push(Math.max(0, Math.min(1, (w - 0.35) / 0.4))); }
     return parts.length ? parts.reduce((a, b) => a + b, 0) / parts.length : null; };
-  const drawSel = () => { const e = SR.find(x => x.key === HS.swSel); if (!e) return; const mine = all.filter(h => h.by.includes(e));
+  const drawSel = () => { try { drawSel0(); } catch (e) { console.warn('swing graph', e); } };
+  const drawSel0 = () => { const e = SR.find(x => x.key === HS.swSel); if (!e) return; const mine = all.filter(h => h.by.includes(e));
     const tag = h => { const o = MV.odds?.[h.t], ss = SS[h.t]?.v?.strategies?.find(x => x.key === e.key)?.record;
       return [o?.v != null ? `${Math.round(o.v * 100)}% odds` : '', ss?.trades ? `${Math.round(ss.win * 100)}% won` : ''].filter(Boolean).join(' · ') || day(h.d); };
     ngDraw(el.querySelector('#sw-ng'), {label: e.key, sub: `${mine.length} open`, state: mine.length ? 'up' : ''}, mine.map(h => { const sc = score(e, h.t);
@@ -7475,7 +7480,7 @@ function hsSwing(el) {
     const ts = mine.map(h => h.t), sel = HS.swSel;
     if (typeof mvOddsLoad === 'function' && ts.some(t => !MV.odds?.[t])) mvOddsLoad(ts).then(() => { if (HS.swSel === sel && HS.tab === 'swing') drawSel(); }).catch(() => {});
     const inReg = ['R18L26', 'S4P23', 'FB017', 'FB125', 'LE01', 'LE02', 'R2A03_v06', 'R2D08_v08'].includes(sel) || Object.values(SS).some(v => v.v?.strategies?.some(x => x.key === sel));
-    const reg = inReg ? ts.filter(t => !SS[t]) : null;   // past wins exist only for strategies in the real-time registry
+    const reg = inReg ? ts.filter(t => !SS[t]).slice(0, 8) : null;   // past wins exist only for strategies in the real-time registry
     if (reg && reg.length && !HS.swReg?.[sel]) { (HS.swReg ||= {})[sel] = 1;
       (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing') drawSel(); } })(); } };
   el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; drawSel(); });
@@ -7910,6 +7915,7 @@ function rpWire(card, j) {
 
 // teaser (2026-11-08): the lead strategy's trades on the stock, drawn at the top of the card so the evidence is the first thing you see
 function rpTeaser(box, sym, key, name) {
+  if (box.dataset.drawn === sym + '|' + key) return; box.dataset.drawn = sym + '|' + key;
   box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>loading…</span></div>`;
   const draw = (j, label) => { const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
     box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>${label} · ${done.length} trade${done.length === 1 ? '' : 's'}${done.length ? ` · ${win} won` : ''}${j.open ? ' · 1 open now' : ''}</span></div>
@@ -7920,6 +7926,12 @@ function rpTeaser(box, sym, key, name) {
     return rpFetch(sym, key, 500).then(k => { if (box.dataset.k === sym + '|' + key) draw(k, 'last 2 years'); });
   }).catch(() => { box.innerHTML = ''; });
 }
+
+// 6.195: a sheet left open by the back button or a view change kept the page scroll-locked; close every sheet then
+function rpCloseAll() { document.querySelectorAll('.rp-sheet.on').forEach(x => x.classList.remove('on')); document.body.classList.remove('rp-lock'); }
+window.addEventListener('popstate', rpCloseAll); window.addEventListener('hashchange', rpCloseAll);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') rpCloseAll(); });
+if (typeof viewSet === 'function') { const _rpVs = viewSet; viewSet = function (v, push) { rpCloseAll(); return _rpVs(v, push); }; }
 
 // connection graph (2026-11-08, Bible 6.194; user: "the data and connections of the items most prominent rather than text"; "depending on whether I click
 // for ticker or strategy comparison the ticker or strategy should be at the centre"). One radial graph: the chosen item in the centre, the connected items
