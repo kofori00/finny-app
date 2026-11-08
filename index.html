@@ -1174,6 +1174,7 @@
   .ng-chips{display:flex;gap:6px;overflow-x:auto;padding:12px 2px 4px;scrollbar-width:none} .ng-chips::-webkit-scrollbar{display:none}
   .ng-chip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass);color:var(--ink-2);font:600 12.5px var(--font-ui);cursor:pointer}
   .ng-chip em{font-style:normal;font-variant-numeric:tabular-nums;min-width:18px;padding:1px 6px;border-radius:999px;background:var(--glass-2);color:var(--ink)} .ng-chip.on{background:var(--lime);color:var(--lime-ink);border-color:transparent} .ng-chip.on em{background:rgba(0,0,0,.12);color:inherit} .ng-chip.none{opacity:.55}
+  .ng-grad{display:inline-block;width:26px;height:9px;border-radius:5px;margin-right:5px;vertical-align:-1px;background:linear-gradient(90deg,color-mix(in srgb,var(--good) 18%,var(--surface)),var(--good))}
   .ng-box{margin:4px 0 8px} .ng-svg{display:block;width:100%;height:auto;overflow:visible}
   .ng-e{stroke:var(--muted);opacity:.35;stroke-linecap:round;animation:ngIn .4s ease both} .ng-e.on,.ng-e.up{stroke:var(--good);opacity:.9} .ng-e.dn{stroke:var(--bad,#dc2626);opacity:.7} .ng-e.wait{stroke-dasharray:3 4}
   .ng-n{cursor:pointer;animation:ngIn .4s ease both} .ng-hit{fill:transparent} .ng-c{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:r .15s}
@@ -7457,11 +7458,26 @@ function hsSwing(el) {
     <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. Only R18L26 has passed the luck tests (placebos, plateau, 2016-20 out of sample); the other 8 are research candidates, being forward-tested since 26 Oct 2026.
       The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks. "Open" means the signal is inside its holding window; a position can already have been sold earlier by the strategy's own exit rule or stop. Visible to you only.</p>`;
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
+  // 6.194c (user: "gradient colour for tickers chosen by more strategies; bigger dots for better ticker odds and past success with that strategy"):
+  // heat = (strategies holding it - 1) / 8; size = average of the stock's 1-week odds (same source as the movers list) and, when the strategy is in the
+  // real-time registry, its win rate on that stock (shrunk to 50% with few trades). Both load after the first draw and resize the dots.
+  const score = (e, t) => { const parts = [], o = MV.odds?.[t], ss = SS[t]?.v?.strategies?.find(x => x.key === e.key)?.record;
+    if (o?.v != null) parts.push(Math.max(0, Math.min(1, (o.v - 0.40) / 0.30)));
+    if (ss?.trades) { const w = (ss.win * ss.trades + 0.5 * 5) / (ss.trades + 5); parts.push(Math.max(0, Math.min(1, (w - 0.35) / 0.4))); }
+    return parts.length ? parts.reduce((a, b) => a + b, 0) / parts.length : null; };
   const drawSel = () => { const e = SR.find(x => x.key === HS.swSel); if (!e) return; const mine = all.filter(h => h.by.includes(e));
-    ngDraw(el.querySelector('#sw-ng'), {label: e.key, sub: `${mine.length} open`, state: mine.length ? 'up' : ''}, mine.map(h => ({label: h.t, size: h.by.length, strength: h.by.length / SR.length,
-      state: 'on', tag: day(h.d), onTap: () => odGo(h.t)})), {h: mine.length > 12 ? 340 : 290,
-      legend: `<span>${esc(e.label)}</span><span>bigger dot, thicker line = more of the ${SR.length} strategies hold it · tap a stock</span>`});
-    el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel)); };
+    const tag = h => { const o = MV.odds?.[h.t], ss = SS[h.t]?.v?.strategies?.find(x => x.key === e.key)?.record;
+      return [o?.v != null ? `${Math.round(o.v * 100)}% odds` : '', ss?.trades ? `${Math.round(ss.win * 100)}% won` : ''].filter(Boolean).join(' · ') || day(h.d); };
+    ngDraw(el.querySelector('#sw-ng'), {label: e.key, sub: `${mine.length} open`, state: mine.length ? 'up' : ''}, mine.map(h => { const sc = score(e, h.t);
+      return {label: h.t, size: sc == null ? 0.5 : 0.15 + sc, strength: h.by.length / SR.length, heat: (h.by.length - 1) / Math.max(SR.length - 1, 1), tag: tag(h), onTap: () => odGo(h.t)}; }),
+      {h: mine.length > 12 ? 340 : 300, legend: `<span><i class="ng-grad"></i>darker = more of the ${SR.length} strategies hold it</span><span>bigger = better odds and past wins with ${esc(e.key)}</span><span>tap a stock</span>`});
+    el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel));
+    const ts = mine.map(h => h.t), sel = HS.swSel;
+    if (typeof mvOddsLoad === 'function' && ts.some(t => !MV.odds?.[t])) mvOddsLoad(ts).then(() => { if (HS.swSel === sel && HS.tab === 'swing') drawSel(); }).catch(() => {});
+    const inReg = ['R18L26', 'S4P23', 'FB017', 'FB125', 'LE01', 'LE02', 'R2A03_v06', 'R2D08_v08'].includes(sel) || Object.values(SS).some(v => v.v?.strategies?.some(x => x.key === sel));
+    const reg = inReg ? ts.filter(t => !SS[t]) : null;   // past wins exist only for strategies in the real-time registry
+    if (reg && reg.length && !HS.swReg?.[sel]) { (HS.swReg ||= {})[sel] = 1;
+      (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing') drawSel(); } })(); } };
   el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; drawSel(); });
   drawSel();
 }
@@ -7915,11 +7931,11 @@ function ngDraw(box, center, nodes, opts = {}) {
   const pos = nodes.map((_, i) => { const r = ring.length > 1 && i % 2 ? ring[1] : ring[0], a = -Math.PI / 2 + (2 * Math.PI * i) / Math.max(n, 1); return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
   const maxW = Math.max(1e-9, ...nodes.map(d => d.size || 1));
   const edges = nodes.map((d, i) => { const [x, y] = pos[i], w = 1 + 5 * Math.max(0, Math.min(1, d.strength ?? 0.5));
-    return `<line class="ng-e ${d.state || ''}" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke-width="${w.toFixed(1)}" style="animation-delay:${(i * 35)}ms"/>`; }).join('');
+    return `<line class="ng-e ${d.state || ''}" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke-width="${w.toFixed(1)}" style="animation-delay:${(i * 35)}ms${d.heat != null ? `;stroke:var(--good);opacity:${(0.25 + 0.7 * d.heat).toFixed(2)}` : ''}"/>`; }).join('');
   const dots = nodes.map((d, i) => { const [x, y] = pos[i], r = 9 + 11 * Math.sqrt((d.size || 1) / maxW), lx = x + (x < cx - 4 ? -1 : x > cx + 4 ? 1 : 0) * (r + 5), anc = x < cx - 4 ? 'end' : x > cx + 4 ? 'start' : 'middle';
     const ly = Math.abs(x - cx) <= 4 ? y + (y < cy ? -r - 6 : r + 13) : y + 4;
     return `<g class="ng-n ${d.state || ''}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(d.label)}${d.tag ? ', ' + esc(d.tag) : ''}" style="animation-delay:${(120 + i * 35)}ms">
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 6).toFixed(1)}" class="ng-hit"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" class="ng-c"/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 6).toFixed(1)}" class="ng-hit"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" class="ng-c"${d.heat != null ? ` style="fill:color-mix(in srgb, var(--good) ${(18 + 82 * d.heat).toFixed(0)}%, var(--surface));stroke:color-mix(in srgb, var(--good) ${(40 + 60 * d.heat).toFixed(0)}%, var(--surface))"` : ''}/>
       ${d.inner ? `<text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" class="ng-in" text-anchor="middle">${esc(d.inner)}</text>` : ''}
       <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="ng-l" text-anchor="${anc}">${esc(d.label)}</text>
       ${d.tag ? `<text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" class="ng-t ${d.tagCls || ''}" text-anchor="${anc}">${esc(d.tag)}</text>` : ''}</g>`; }).join('');
@@ -7937,14 +7953,15 @@ function ngStrategy(r) {
   el.classList.add('on'); document.body.classList.add('rp-lock');
   const card = el.querySelector('.rp-card'), P = r.perf || {}, pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
   const shared = t => (HS.rows || []).filter(x => x.picks.includes(t)).length;
-  const nodes = r.picks.map(t => { const v = P.stocks?.[t]; return {label: t, inner: '', size: shared(t), strength: shared(t) / (HS.rows || [1]).length,
-    state: v == null ? '' : v >= 0 ? 'up' : 'dn', tag: v == null ? '' : pc(v), tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn', onTap: () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); }}; });
+  const NR = (HS.rows || [1]).length;
+  const nodes = r.picks.map(t => { const v = P.stocks?.[t]; return {label: t, inner: '', size: shared(t), strength: shared(t) / NR, heat: (shared(t) - 1) / Math.max(NR - 1, 1),
+    state: '', tag: v == null ? '' : pc(v), tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn', onTap: () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); }}; });
   const name = r.name.replace(/_/g, ' ');
   card.innerHTML = `<div class="rp-h"><div><b>${esc(name)}</b><small>${r.picks.length} stocks · basket of ${esc(r.as_of)}${P.ret != null ? ` · ${pc(P.ret)} since ${esc(P.from)} (SPY ${pc(P.spy)})` : ''}</small></div><button class="rp-x" aria-label="Close">×</button></div>
     <div class="ng-box"></div>`;
   card.querySelector('.rp-x').onclick = () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); };
   ngDraw(card.querySelector('.ng-box'), {label: name.length > 12 ? name.slice(0, 11) + '…' : name, sub: P.ret != null ? pc(P.ret) : '', state: P.ret == null ? '' : P.ret >= 0 ? 'up' : 'dn'}, nodes,
-    {h: 330, legend: '<span><i class="ng-k up"></i>gaining since the basket date</span><span><i class="ng-k dn"></i>losing</span><span>bigger dot, thicker line = more of our 14 strategies own it</span>'});
+    {h: 330, legend: '<span><i class="ng-grad"></i>darker green = more of our 14 strategies own it</span><span>label = return since the basket date</span>'});
 }
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
