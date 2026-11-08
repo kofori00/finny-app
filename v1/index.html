@@ -6360,6 +6360,15 @@ const AK_LOOK = {
     const r = await akT212({op: 'prepare', side: a.side, symbol: a.symbol, eur: a.amount_eur, quantity: a.quantity, all: !!a.all});
     AK.draft = r.ok ? {...r, at: Date.now()} : null; return r;
   },
+  async test_strategy({spec = {}} = {}) {                     // 6.203: owner only; a DRAFT backtest (nothing runs until the card's Run test)
+    if (!document.body.classList.contains('role-owner')) return {error: 'Testing your own strategy from the chat is not available yet.'};
+    const r = await akST({op: 'draft', spec, question: AK.q || '', chat: AK.chat || null});
+    AK.test = r.ok ? {...r, at: Date.now()} : null; return r;
+  },
+  async strategy_test_status({id = null} = {}) {              // 6.203: one test or the latest 10 (results only when status is done)
+    if (!document.body.classList.contains('role-owner')) return {error: 'not available'};
+    return await akST({op: 'status', id});
+  },
   async todays_signals(a = {}) {
     // a past day (6.164, user: "Also yesterday?"): read the daily swing-signal log (live_signal_log, written at each close by live-profile).
     // Customers get the two public signals only (as everywhere in the app); the owner also gets the research signals (SW_RES).
@@ -6550,7 +6559,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, library_signals: a => `Library strategies on ${String(a.symbol || '').toUpperCase()}`, trending_strategies: a => `Trending strategies (${a.window_days || 10} days)`, strategy_picks: a => `Picks of ${[].concat(a.strategies || []).slice(0, 3).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, library_signals: a => `Library strategies on ${String(a.symbol || '').toUpperCase()}`, trending_strategies: a => `Trending strategies (${a.window_days || 10} days)`, strategy_picks: a => `Picks of ${[].concat(a.strategies || []).slice(0, 3).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, test_strategy: () => 'Strategy test draft', strategy_test_status: () => 'Strategy tests', todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
@@ -6702,6 +6711,38 @@ function akCard() {
     d.doneCls = r.ok ? 'done' : 'off'; end(d.done, d.doneCls); };
   no.onclick = async () => { ok.disabled = no.disabled = true; clearInterval(d.timer); await akT212({op: 'cancel', draft: d.draft}); d.done = 'Cancelled: nothing was sent.'; d.doneCls = 'off'; end(d.done, 'off'); };
 }
+// ---- strategy test card (6.203, owner only): the draft's rules in plain words; only a tap on Run test rents the server (strategy-test confirm)
+async function akST(body) {
+  const token = await getToken();
+  const r = await fetch(`${SB_URL}/functions/v1/strategy-test`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  return await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status}));
+}
+function akTestCard() {
+  const d = AK.test, T = AK.turns, card = document.querySelector('#ak-out .ak-card'); if (!d || !card || !T.length) return;
+  if (!(T[T.length - 1].lookups || []).some(l => l.name === 'test_strategy')) return;
+  card.querySelector('.ak-test')?.remove();
+  const el = document.createElement('div'); el.className = 'ak-order ak-test';
+  el.innerHTML = `<div class="ak-o-h"><span class="ak-o-k">Backtest · vast.ai server</span><b>${esc(d.spec?.name || 'Your strategy')}</b></div>
+    <p class="ak-o-n">${esc(d.rules_text || '')}</p>
+    <div class="ak-o-g"><div><span>Time</span><b>${esc(d.estimate?.minutes || '~20')} min</b></div><div><span>Cost</span><b>${esc(d.estimate?.cost_usd || '<0.05')} $</b></div><div><span>Judged on</span><b>2021+</b></div></div>
+    <p class="ak-o-n">${esc(d.estimate?.data || '')}. Same tests as the library: costs, luck bar, random-entry check.</p>
+    <div class="ak-o-b"><button type="button" class="ak-o-ok">Run test</button><button type="button" class="ak-o-no">Cancel</button><span class="ak-o-t"></span></div>`;
+  (card.querySelector('.ak-a') || card).after(el);
+  const ok = el.querySelector('.ak-o-ok'), no = el.querySelector('.ak-o-no'), t = el.querySelector('.ak-o-t');
+  const end = (msg, cls) => { ok.remove(); no.remove(); t.textContent = msg; el.classList.add(cls); };
+  if (d.done) return end(d.done, d.doneCls);
+  const poll = () => { clearTimeout(d.timer); d.timer = setTimeout(async () => { const r = await akST({op: 'status', id: d.draft}); const x = (r.tests || [])[0]; if (!x) return;
+      if (x.status === 'done' || x.status === 'failed') { const g = x.result?.gates || {}, k = x.result?.backtest || {};
+        d.done = x.status === 'done' ? `Done: ${g.PASS === 'True' ? 'PASSED our tests' : 'no edge (did not pass)'} · 2021+ Sharpe ${(+g.sharpe_2021).toFixed(2)}, ${(+g.cagr_2021 * 100).toFixed(1)}%/yr, worst drop ${(+g.maxdd_2021 * 100).toFixed(0)}% · ${k.trades || '?'} trades. Ask Finny "how did my test do?" for the details.` : `The test failed: ${x.error || 'see log'}. Nothing more is charged.`;
+        d.doneCls = x.status === 'done' ? 'done' : 'off'; const live = document.querySelector('#ak-out .ak-test .ak-o-t'); if (live) { live.textContent = d.done; live.parentElement.parentElement.classList.add(d.doneCls); } return; }
+      const live = document.querySelector('#ak-out .ak-test .ak-o-t'); if (live) live.textContent = ({queued: 'Queued…', starting: 'Renting a server…', running: 'Running the backtest…'}[x.status] || x.status) + (x.error ? ' (' + x.error + ')' : ''); poll(); }, 30000); };
+  ok.onclick = async () => { ok.disabled = no.disabled = true; t.textContent = 'Starting…';
+    const r = await akST({op: 'confirm', id: d.draft});
+    if (!r.ok) { d.done = 'Not started: ' + (r.error || 'unknown error'); d.doneCls = 'off'; return end(d.done, 'off'); }
+    ok.remove(); no.remove(); t.textContent = r.launch?.started ? 'Renting a server…' : 'Queued…'; poll(); };
+  no.onclick = async () => { await akST({op: 'cancel', id: d.draft}); d.done = 'Cancelled: nothing was run.'; d.doneCls = 'off'; end(d.done, 'off'); };
+}
+{ const f = akShow; akShow = function (...x) { const r = f.apply(this, x); try { akTestCard(); } catch (e) { console.error('test card', e); } return r; }; }
 { const f = akShow; akShow = function (...x) { const r = f.apply(this, x); try { akCard(); } catch (e) { console.error('order card', e); } return r; }; }
 function akNew() { AK.chat = null; AK.turns = []; akSave(); const out = document.getElementById('ak-out'); if (out) out.innerHTML = ''; document.getElementById('ak-q')?.focus(); }
 async function akPast() {                                     // the user's saved conversations (RLS: own rows only)
@@ -6735,7 +6776,7 @@ document.addEventListener('click', async e => {
 
 async function akAsk() {
   const box = document.getElementById('ak-q'), out = document.getElementById('ak-out'), q = (box?.value || '').trim(); if (!q || AK.busy) return;
-  AK.q = q; AK.draft = null;                                  // prepare_order checks the amount against these words (6.165)
+  AK.q = q; AK.draft = null; AK.test = null;                                  // prepare_order checks the amount against these words (6.165)
   AK.busy = true; const btn = document.getElementById('ak-go'); btn.disabled = true;
   out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Reading Finny\'s research…</span></div>';
   try {
