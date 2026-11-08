@@ -1176,7 +1176,7 @@
   .ng-chip em{font-style:normal;font-variant-numeric:tabular-nums;min-width:18px;padding:1px 6px;border-radius:999px;background:var(--glass-2);color:var(--ink)} .ng-chip.on{background:var(--lime);color:var(--lime-ink);border-color:transparent} .ng-chip.on em{background:rgba(0,0,0,.12);color:inherit} .ng-chip.none{opacity:.55}
   .ng-grad{display:inline-block;width:26px;height:9px;border-radius:5px;margin-right:5px;vertical-align:-1px;background:linear-gradient(90deg,color-mix(in srgb,var(--good) 18%,var(--surface)),var(--good))}
   .ng-box{margin:4px 0 8px} .ng-svg{display:block;width:100%;height:auto;overflow:visible}
-  .ng-e{stroke:var(--muted);opacity:.35;stroke-linecap:round;animation:ngIn .4s ease both} .ng-e.on,.ng-e.up{stroke:var(--good);opacity:.9} .ng-e.dn{stroke:var(--bad,#dc2626);opacity:.7} .ng-e.wait{stroke-dasharray:3 4}
+  .ng-e{stroke:var(--muted);opacity:.6;stroke-linecap:round;animation:ngIn .4s ease both} .ng-e.on,.ng-e.up{stroke:var(--good);opacity:.9} .ng-e.dn{stroke:var(--bad,#dc2626);opacity:.7} .ng-e.wait{stroke-dasharray:3 4}
   .ng-n{cursor:pointer;animation:ngIn .4s ease both} .ng-hit{fill:transparent} .ng-c{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:r .15s}
   .ng-n.on .ng-c,.ng-n.up .ng-c{fill:var(--good);stroke:var(--good)} .ng-n.dn .ng-c{fill:var(--bad,#dc2626);stroke:var(--bad,#dc2626);fill-opacity:.85} .ng-n:hover .ng-c,.ng-n:focus .ng-c{stroke:var(--ink);stroke-width:3}
   .ng-in{fill:var(--lime-ink,#10241a);font:700 11px var(--font-ui)} .ng-l{fill:var(--ink);font:600 10.5px var(--font-ui)} .ng-t{fill:var(--muted);font:600 9.5px var(--font-ui);font-variant-numeric:tabular-nums} .ng-t.up{fill:var(--good)} .ng-t.dn{fill:var(--bad,#dc2626)}
@@ -1193,9 +1193,9 @@
   .rp-read{font:500 12px/1.5 var(--font-ui);color:var(--ink-2);background:var(--glass);border:1px solid var(--glass-line);border-radius:12px;padding:8px 10px;margin:6px 0 10px;min-height:46px;font-variant-numeric:tabular-nums}
   .rp-read span{display:inline-block;margin-right:10px} .rp-ok{color:var(--good)} .rp-no{color:var(--muted)}
   .rp-p{margin:0 0 10px} .rp-lab b{display:block;font:600 12.5px var(--font-ui);color:var(--ink)} .rp-lab span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
-  .rp-svg{display:block;width:100%;height:auto;border-radius:10px;background:var(--glass);touch-action:pan-y} .rp-p:first-of-type .rp-svg{aspect-ratio:340/150}
+  .rp-svg{display:block;width:100%;height:auto;border-radius:10px;background:var(--surface);touch-action:pan-y} .rp-p:first-of-type .rp-svg{aspect-ratio:340/150}
   .rp-line{fill:none;stroke:var(--ink);stroke-width:1.2;vector-effect:non-scaling-stroke} .rp-f{stroke:var(--ink-2)} .rp-thr{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3;vector-effect:non-scaling-stroke}
-  .rp-hold{fill:var(--good);opacity:.10} .rp-on{fill:var(--good);opacity:.16} .rp-onx{fill:var(--bad,#dc2626);opacity:.12} .rp-in{fill:var(--good)} .rp-out{fill:var(--bad,#dc2626)} .rp-sig{fill:var(--good)}
+  .rp-hold{fill:var(--good);opacity:.28} .rp-on{fill:var(--good);opacity:.32} .rp-onx{fill:var(--bad,#dc2626);opacity:.26} .rp-in{fill:var(--good)} .rp-out{fill:var(--bad,#dc2626)} .rp-sig{fill:var(--good)}
   .rp-cur{stroke:var(--ink);stroke-width:1;opacity:.45;vector-effect:non-scaling-stroke}
   .rp-sum{font-size:12.5px;color:var(--ink-2);margin:8px 0} .rp-tr summary{cursor:pointer;font:600 13px var(--font-ui);color:var(--ink);margin:6px 0}
   .rp-tr table{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums} .rp-tr th,.rp-tr td{text-align:left;padding:4px 3px;border-bottom:1px solid var(--glass-line)} .rp-tr th{color:var(--muted);font-weight:600}
@@ -7180,12 +7180,15 @@ function ssCard(A) {
         <span class="ss-num">${rc.trades ? `<b>${Math.round(rc.win * 100)}%</b><small>won · ${rc.trades} trades</small>` : '<small>no trades yet</small>'}</span>
         <span class="ss-go">›</span></button>`; };
     const buy = L.filter(x => x.signal_now), wait = L.filter(x => !x.signal_now);
-    const lead = buy.find(x => x.tier === 'edge') || buy[0] || [...L].sort((a, b) => (b.record?.trades || 0) - (a.record?.trades || 0))[0];
+    // 6.197 (user: "why is Williams the default?"): lead = a buying strategy, else the one closest to a buy (share of rules met), then the best past
+    // win rate on this stock; chips let you switch the chart to any strategy
+    const met0 = x => x.conditions.length ? x.conditions.filter(c => c.ok === true).length / x.conditions.length : 0;
+    const lead = buy.find(x => x.tier === 'edge') || buy[0] || [...L].sort((a, b) => met0(b) - met0(a) || ((b.record?.win || 0) - (a.record?.win || 0)))[0];
     el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div>
       <div class="ss-verdict${n ? ' on' : ''}"><span class="ss-vi">${n ? IC.buy : IC.wait}</span><div><b>${n} of ${L.length}</b><span>${n ? 'would buy' : 'would buy'} ${esc(S)} ${r.live ? 'now' : 'at the last close'}</span></div></div>
       <div class="ng-box" id="ss-ng"></div>
       ${buy.length ? `<div class="ss-tiles">${buy.map(tile).join('')}</div>` : ''}
-      ${lead ? `<div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}
+      ${lead ? `<div class="ng-chips rp-pick">${L.map(x => `<button class="ng-chip${x.key === lead.key ? ' on' : ''}" data-tz="${esc(x.key)}">${esc(x.name.length > 18 ? x.name.slice(0, 17) + '…' : x.name)}</button>`).join('')}</div><div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}
       ${wait.length ? `<details class="ss-wait"><summary>${IC.wait}<span>${wait.length} waiting for their rules</span><em>›</em></summary><div class="ss-tiles">${wait.map(tile).join('')}</div></details>` : ''}
       <p class="ss-foot">${IC.info} Hypothetical backtests on ${esc(S)} ${esc(since)} · % = share of winning trades · not advice</p>`;
     try { const sn = t => t.replace(/^Volume-exhaustion /i, 'Vol-exh. ').replace(/^Volume-Exhaustion /, 'Vol-exh. ').replace(/^Coiled-Spring Squeeze /, 'Squeeze ').replace(/Volume zone oscillator \(13\)/, 'VZO').replace(/Williams 3-bar channel/, 'Williams').replace(/ Leader Dip$/, ' dip');
@@ -7199,6 +7202,8 @@ function ssCard(A) {
         {h: 300, legend: '<span><i class="ng-grad"></i>greener = closer to a buy (more rules met)</span><span>bigger = more past wins with this stock</span><span>tap a dot for its chart</span>'}); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre
     el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
+    el.querySelectorAll('[data-tz]').forEach(b => b.onclick = () => { const x = L.find(y => y.key === b.dataset.tz); if (!x || !tz) return;
+      el.querySelectorAll('[data-tz]').forEach(c => c.classList.toggle('on', c === b)); tz.dataset.k = S + '|' + x.key; rpTeaser(tz, S, x.key, x.name); });
     const t0 = document.querySelector('.hero-stats')?.children[0];
     if (t0 && !r.member && HERO.last?.sym === S) { const b = t0.querySelector('b'), l = t0.querySelector('.hs-l'); if (b && l) { t0.dataset.ss = '1'; b.textContent = `${n}/${L.length}`; b.className = n ? 'v2-up' : ''; l.textContent = `of our swing strategies would buy ${S}${r.live ? ' now' : ''}`; } }
   }).catch(e => { if (el.dataset.sym === S) { el.dataset.busy = ''; el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div><p class="note">Could not run them: ${esc(e.message)}</p>`; } });
