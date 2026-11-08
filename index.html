@@ -6445,15 +6445,18 @@ function akCheckSpec(spec, q) {
     if (m && /cross/.test(c.op) && Number.isInteger(v) && v >= 2) { c.f = m[1] + '_x'; c.a = `${c.a},${v}`; c.v = '0'; }
     if (m && !/cross/.test(c.op) && Math.abs(v) >= 2) problems.push(`${c.f}(${c.a}) ${c.op} ${c.v} is impossible: ${c.f} is price / average - 1 (e.g. 0.05 = 5% above). For one average above another use {f: "${m[1]}_x", a: "fast,slow", op: ">", v: "0"}.`);
   }
-  const has = f => conds.some(c => new RegExp('^' + f).test(c.f)), e = spec.exit || {};
+  const e = spec.exit || {}, all = [...conds, ...(e.exit_if || [])];          // a named indicator may sit in the entry, the filter or the sell rules
+  const has = f => all.some(c => new RegExp('^' + f).test(c.f)) || (f === 'atr' && ['stop_atr', 'target_atr', 'trail_atr'].some(k => +e[k] > 0));
   const named = [['rsi', /\brsi\b/, 'rsi'], ['moving average', /\b(sma|ema|moving average|ma\d+|\d+\s*(-day|day)?\s*(ma|sma|ema))\b/, '(sma|ema)_'], ['MACD', /\bmacd\b/, 'macd'], ['ATR', /\batr\b/, 'atr'],
     ['volume', /\bvolume\b/, '(vol_|dollar_vol|obv|vroc)'], ['Bollinger', /\bbollinger\b/, 'bb_'], ['stochastic', /\bstoch/, 'stoch'], ['ADX', /\badx\b/, 'adx'], ['IBS', /\bibs\b/, 'ibs']];
-  for (const [label, re, f] of named) if (re.test(q) && !has(f)) problems.push(`the user named ${label} but the spec has no ${label} condition: add it (e.g. RSI above 50 = {f: "rsi", a: "14", op: ">", v: "50"}).`);
+  for (const [label, re, f] of named) if (re.test(q) && !has(f)) problems.push(`the user named ${label} but the spec has no ${label} condition: add it to entry, regime or exit (ATR stops go in exit.stop_atr; 'exit when price crosses above the N-day SMA' = exit.exit_if {f: "sma_ratio", a: "N", op: "cross_above", v: "0"}).`);
   const pct = x => (q.match(new RegExp('(\\d+(?:[.,]\\d+)?)\\s*%\\s*' + x)) || [])[1];
   const sl = pct('(stop|stop[- ]loss)'), tp = pct('(take[- ]profit|target|profit)');
   if (sl && Math.abs(+e.stop_pct - sl.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${sl}% stop loss: exit.stop_pct must be ${sl.replace(',', '.') / 100}.`);
   if (tp && Math.abs(+e.target_pct - tp.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${tp}% take profit: exit.target_pct must be ${tp.replace(',', '.') / 100}.`);
-  if (!/\b(hold|holding|days?|weeks?|bars?)\b/.test(q.replace(/\d+\s*-?\s*day (sma|ema|ma|moving|average|high|low|return)/g, ''))) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
+  if (!/\b(hold|holding|held|time exit|max(imum)? \d+|(after|for|within) \d+ (trading )?(days?|weeks?|bars?))\b/.test(q)) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
+  const sect = (q.match(/\b(tech(nology)?|financials?|banks?|energy|health ?care|biotech|utilities|industrials?|consumer|materials|real estate|semiconductors?|chips?)\b/) || [])[0];
+  if (sect) assumptions.push(`ALL S&P 500 stocks, not only ${sect} stocks: a sector-only universe cannot be tested yet, so the result is for the whole index`);
   if (!/\b(s&p|sp500|spx|stocks?|etfs?|nasdaq|qqq|spy|shares)\b/.test(q)) assumptions.push('S&P 500 stocks (members at the time); say "use ETFs" to change');
   if (!spec.max_pos) assumptions.push('up to 10 positions at once, equal size');
   const req = (q.match(/\b(\d+)\s*-?\s*(minute|min|m|hour|hr|h)\b(?:\s*(time\s*frame|timeframe|chart|bars?|candles?))?/) || []);
