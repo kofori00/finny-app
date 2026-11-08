@@ -1139,6 +1139,85 @@
   .hs-perf{margin:12px 0 6px;padding:12px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)} .hs-pt b{font:700 15px var(--font-display);color:var(--ink);margin-right:6px} .hs-pt span{font-size:11.5px;color:var(--muted)}
   .hs-pg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px} .hs-pg b{display:block;font:800 19px var(--font-display)} .hs-pg span{display:block;font-size:11px;line-height:1.3;color:var(--muted)} .hs-perf .v2-note{margin:8px 0 0}
   .hs-s small.hs-sp{margin-top:2px} .hs-s small.hs-sp b{font:700 11px var(--font-ui)}
+  .rp-teaser{margin:4px 0 10px;padding:10px;border-radius:14px;background:var(--surface);border:1px solid var(--glass-line)} .rp-tz-h b{display:block;font:600 13.5px var(--font-ui);color:var(--ink)} .rp-tz-h span{display:block;font-size:11.5px;color:var(--muted);margin:2px 0 6px}
+  .rp-teaser .rp-svg{cursor:pointer} .rp-tz-go{width:100%;margin-top:8px;padding:10px;border-radius:12px;border:0;background:var(--lime);color:var(--lime-ink);font:700 13px var(--font-ui);cursor:pointer}
+  .ss-row[data-rp]{cursor:pointer} .ss-rp{display:inline-block;margin:6px 0 2px;padding:5px 10px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--ink);font:600 12px var(--font-ui)}
+  .ss-top{display:flex;align-items:center;gap:8px;margin:0 0 10px} .ss-top b{font:700 15px var(--font-display);color:var(--ink);flex:1} .ss-ti svg,.ss-ic svg,.ss-go svg,.ss-pill svg,.ss-star svg,.ss-what svg,.rp-ri svg,.rp-tz-go svg,.rp-csv svg,.rp-tr summary svg,.rp-disc svg,.rp-sigc svg,.ss-key svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-4px}
+  .ss-ti{color:var(--ink-2)} .ss-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:999px;background:var(--glass-2);color:var(--muted);font:700 13px var(--font-ui);font-variant-numeric:tabular-nums} .ss-pill.on{background:var(--lime);color:var(--lime-ink)}
+  .ss-tiles{display:grid;gap:8px} @media(min-width:640px){.ss-tiles{grid-template-columns:1fr 1fr}}
+  .ss-tile{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:14px;border:1px solid var(--glass-line);background:var(--surface);color:var(--ink);cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+  .ss-tile:active{transform:scale(.98)} .ss-tile:hover{border-color:var(--ink-2)} .ss-tile.on{border-color:var(--good);box-shadow:inset 3px 0 0 var(--good)}
+  .ss-ic{color:var(--muted);flex:none} .ss-tile.on .ss-ic{color:var(--good)} .ss-ic svg{width:22px;height:22px}
+  .ss-mid{flex:1;min-width:0} .ss-mid b{display:block;font:600 13.5px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .ss-star{color:#c9a227;font-style:normal} .ss-star svg{width:14px;height:14px;fill:currentColor} .ss-what{color:var(--muted);font-style:normal} .ss-what svg{width:14px;height:14px}
+  .ss-dots{display:flex;gap:4px;margin-top:5px} .sd{display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--muted)} .sd.y{background:var(--good);border-color:var(--good)} .sd.w{border-style:dashed}
+  .ss-num{text-align:right;flex:none} .ss-num b{display:block;font:700 15px var(--font-ui);font-variant-numeric:tabular-nums} .ss-num small{display:block;font-size:10.5px;color:var(--muted)}
+  .ss-go{color:var(--muted);flex:none}
+  .ss-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:10px 2px 0;font-size:11px;color:var(--muted)} .ss-key .sd{vertical-align:-1px;margin-right:4px} .ss-key details{margin-left:auto} .ss-key summary{list-style:none;cursor:pointer} .ss-key summary::-webkit-details-marker{display:none} .ss-key details p{margin:6px 0 0;font-size:11.5px;line-height:1.4}
+  .rp-l2{display:flex;align-items:center;gap:6px;margin-bottom:3px} .rp-l2 b{font:600 12.5px var(--font-ui);color:var(--ink)} .rp-l2 em{margin-left:auto;font:600 11px var(--font-ui);color:var(--muted);font-style:normal;font-variant-numeric:tabular-nums}
+  .rp-ri{display:inline-flex;width:22px;height:22px;border-radius:7px;align-items:center;justify-content:center;background:var(--glass-2);color:var(--good)} .rp-ri.exit{color:var(--bad,#dc2626)} .rp-ri.regime{color:var(--ink-2)} .rp-ri svg{width:15px;height:15px}
+  .rp-leg{margin-left:auto;font-size:11px;color:var(--muted);display:flex;gap:4px;align-items:center} .rp-leg i{font-style:normal} .rp-leg .up{color:var(--good)} .rp-leg .dn{color:var(--bad,#dc2626);margin-left:6px} .rp-leg .hd{display:inline-block;width:12px;height:8px;background:var(--good);opacity:.25;border-radius:2px;margin-left:6px}
+  .rp-rh{display:flex;align-items:center;gap:8px} .rp-rh span{font-variant-numeric:tabular-nums} .rp-sigc{margin-left:auto;display:inline-flex;align-items:center;gap:3px;color:var(--good);font:700 11.5px var(--font-ui);font-style:normal} .rp-sigc svg{width:15px;height:15px}
+  .rp-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px} .rp-c{padding:3px 8px;border-radius:999px;font:600 11px var(--font-ui);background:var(--glass-2);color:var(--muted)} .rp-c.ok{color:var(--good)}
+  .rp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0} .rp-stats div{padding:10px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-line);text-align:center} .rp-stats b{display:block;font:800 18px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums} .rp-stats span{font-size:11px;color:var(--muted)}
+  .rp-disc{font-size:11px;color:var(--muted);margin:10px 0 0;display:flex;gap:6px;align-items:flex-start;line-height:1.4} .rp-disc svg{flex:none;width:15px;height:15px}
+  .rp-tz-go{display:flex;align-items:center;justify-content:center;gap:6px} .rp-tz-go svg{fill:currentColor;stroke:none} .rp-csv{display:inline-flex;align-items:center;gap:6px}
+  .rp-tz-h{display:flex;align-items:baseline;gap:8px} .rp-tz-h b{display:inline;font:700 14px var(--font-ui)} .rp-tz-h span{display:inline;margin:0 0 6px}
+  .ss-card,.ss-card *{box-sizing:border-box} .ss-top{padding-right:120px}
+  .ss-verdict{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--glass-2);margin:0 0 10px} .ss-verdict.on{background:var(--lime);color:var(--lime-ink)}
+  .ss-vi svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block} .ss-verdict b{display:block;font:800 22px var(--font-display);font-variant-numeric:tabular-nums} .ss-verdict span{font-size:13px}
+  .ss-verdict:not(.on) .ss-vi{color:var(--muted)} .ss-verdict:not(.on) b{color:var(--ink)} .ss-verdict:not(.on) span{color:var(--muted)}
+  .ss-tile .ss-mid small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px} .ss-tile .ss-go{font-size:20px;line-height:1}
+  .ss-wait{margin:10px 0 0} .ss-wait summary{display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:14px;border:1px solid var(--glass-line);cursor:pointer;list-style:none;color:var(--ink-2);font:600 13px var(--font-ui)} .ss-wait summary::-webkit-details-marker{display:none}
+  .ss-wait summary svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round} .ss-wait summary em{margin-left:auto;font-style:normal;transition:transform .15s} .ss-wait[open] summary em{transform:rotate(90deg)} .ss-wait .ss-tiles{margin-top:8px}
+  .ss-foot{display:flex;gap:6px;align-items:flex-start;font-size:11px;color:var(--muted);margin:10px 2px 0;line-height:1.4} .ss-foot svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8}
+  .rp-teaser{margin:0 0 4px} .rp-tz-h{display:block} .rp-tz-h b{display:block;font:700 13.5px var(--font-ui)} .rp-tz-h span{display:block;font-size:11.5px;color:var(--muted);margin:2px 0 6px}
+  .ng-chips{display:flex;gap:6px;overflow-x:auto;padding:12px 2px 4px;scrollbar-width:none} .ng-chips::-webkit-scrollbar{display:none}
+  .ng-chip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass);color:var(--ink-2);font:600 12.5px var(--font-ui);cursor:pointer}
+  .ng-chip em{font-style:normal;font-variant-numeric:tabular-nums;min-width:18px;padding:1px 6px;border-radius:999px;background:var(--glass-2);color:var(--ink)} .ng-chip.on{background:var(--lime);color:var(--lime-ink);border-color:transparent} .ng-chip.on em{background:rgba(0,0,0,.12);color:inherit} .ng-chip.none{opacity:.55}
+  .ng-grad{display:inline-block;width:26px;height:9px;border-radius:5px;margin-right:5px;vertical-align:-1px;background:linear-gradient(90deg,color-mix(in srgb,var(--good) 18%,var(--surface)),var(--good))}
+  .ng-box{margin:4px 0 8px} .ng-svg{display:block;width:100%;height:auto;overflow:visible}
+  .ng-e{stroke:var(--muted);opacity:.35;stroke-linecap:round;animation:ngIn .4s ease both} .ng-e.on,.ng-e.up{stroke:var(--good);opacity:.9} .ng-e.dn{stroke:var(--bad,#dc2626);opacity:.7} .ng-e.wait{stroke-dasharray:3 4}
+  .ng-n{cursor:pointer;animation:ngIn .4s ease both} .ng-hit{fill:transparent} .ng-c{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:r .15s}
+  .ng-n.on .ng-c,.ng-n.up .ng-c{fill:var(--good);stroke:var(--good)} .ng-n.dn .ng-c{fill:var(--bad,#dc2626);stroke:var(--bad,#dc2626);fill-opacity:.85} .ng-n:hover .ng-c,.ng-n:focus .ng-c{stroke:var(--ink);stroke-width:3}
+  .ng-in{fill:var(--lime-ink,#10241a);font:700 11px var(--font-ui)} .ng-l{fill:var(--ink);font:600 10.5px var(--font-ui)} .ng-t{fill:var(--muted);font:600 9.5px var(--font-ui);font-variant-numeric:tabular-nums} .ng-t.up{fill:var(--good)} .ng-t.dn{fill:var(--bad,#dc2626)}
+  .ng-cc{fill:var(--glass-2);stroke:var(--ink);stroke-width:2} .ng-ctr.up .ng-cc{stroke:var(--good);fill:var(--surface)} .ng-ctr.dn .ng-cc{stroke:var(--bad,#dc2626);fill:var(--surface)} .ng-cl{fill:var(--ink);font:800 13px var(--font-display)} .ng-cs{fill:var(--muted);font:600 9.5px var(--font-ui)}
+  .ng-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--muted);margin:2px 2px 0} .ng-k{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:2px solid var(--muted)} .ng-k.on,.ng-k.up{background:var(--good);border-color:var(--good)} .ng-k.dn{background:var(--bad,#dc2626);border-color:var(--bad,#dc2626)} .ng-k.wait{border-style:dashed}
+  .hs-br[data-ng]{cursor:pointer;border-radius:6px} .hs-br[data-ng]:hover{background:var(--glass)}
+  @keyframes ngIn{from{opacity:0}to{opacity:1}} @media(prefers-reduced-motion:reduce){.ng-e,.ng-n{animation:none}}
+  .rp-sheet{position:fixed;inset:0;z-index:90;display:none} .rp-sheet.on{display:block} body.rp-lock{overflow:hidden} .rp-bg{position:absolute;inset:0;background:var(--backdrop)}
+  .rp-card{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px 28px;box-shadow:var(--shadow-lg)}
+  @media(min-width:760px){.rp-card{left:50%;right:auto;width:720px;transform:translateX(-50%);bottom:4vh;border-radius:22px;max-height:90vh}}
+  .rp-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .rp-h b{font:700 16px var(--font-display);color:var(--ink);display:block} .rp-h small{color:var(--muted);font-size:12px}
+  .rp-x{border:0;background:var(--glass-2);color:var(--ink);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer;flex:none}
+  .rp-range{display:flex;gap:6px;margin:12px 0 8px} .rp-range button{flex:1;padding:7px 0;border-radius:10px;border:1px solid var(--glass-line);background:transparent;color:var(--muted);font:600 12px var(--font-ui)} .rp-range button.on{background:var(--glass-2);color:var(--ink)}
+  .rp-read{font:500 12px/1.5 var(--font-ui);color:var(--ink-2);background:var(--glass);border:1px solid var(--glass-line);border-radius:12px;padding:8px 10px;margin:6px 0 10px;min-height:46px;font-variant-numeric:tabular-nums}
+  .rp-read span{display:inline-block;margin-right:10px} .rp-ok{color:var(--good)} .rp-no{color:var(--muted)}
+  .rp-p{margin:0 0 10px} .rp-lab b{display:block;font:600 12.5px var(--font-ui);color:var(--ink)} .rp-lab span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .rp-svg{display:block;width:100%;height:auto;border-radius:10px;background:var(--glass);touch-action:pan-y} .rp-p:first-of-type .rp-svg{aspect-ratio:340/150}
+  .rp-line{fill:none;stroke:var(--ink);stroke-width:1.2;vector-effect:non-scaling-stroke} .rp-f{stroke:var(--ink-2)} .rp-thr{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3;vector-effect:non-scaling-stroke}
+  .rp-hold{fill:var(--good);opacity:.10} .rp-on{fill:var(--good);opacity:.16} .rp-onx{fill:var(--bad,#dc2626);opacity:.12} .rp-in{fill:var(--good)} .rp-out{fill:var(--bad,#dc2626)} .rp-sig{fill:var(--good)}
+  .rp-cur{stroke:var(--ink);stroke-width:1;opacity:.45;vector-effect:non-scaling-stroke}
+  .rp-sum{font-size:12.5px;color:var(--ink-2);margin:8px 0} .rp-tr summary{cursor:pointer;font:600 13px var(--font-ui);color:var(--ink);margin:6px 0}
+  .rp-tr table{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums} .rp-tr th,.rp-tr td{text-align:left;padding:4px 3px;border-bottom:1px solid var(--glass-line)} .rp-tr th{color:var(--muted);font-weight:600}
+  .rp-csv{margin:10px 0 0;padding:8px 12px;border-radius:10px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);font:600 12px var(--font-ui)}
+  .hs-live{margin:14px 0 6px;padding:14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line)} .hs-lh{display:flex;align-items:center;justify-content:space-between}
+  .hs-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--lime);color:var(--lime-ink);font:700 12px var(--font-ui)} .hs-lt{font-size:11.5px;color:var(--muted)}
+  .hs-live svg,.hs-st svg,.hs-lh2 svg,.about summary svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+  .hs-big{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0} .hs-big b{display:block;font:800 24px var(--font-display);font-variant-numeric:tabular-nums;color:var(--ink)} .hs-big span{font-size:11.5px;color:var(--muted)} .hs-big span svg{color:#c9a227;fill:#c9a227;stroke:none}
+  .hs-bars{display:grid;gap:5px} .hs-br{display:grid;grid-template-columns:minmax(0,38%) 1fr 54px;align-items:center;gap:8px;font-size:11.5px}
+  .hs-bn{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .hs-br.ok .hs-bn{color:var(--ink);font-weight:600} .hs-bn svg{color:#c9a227;fill:#c9a227;stroke:none;width:11px;height:11px}
+  .hs-bt{position:relative;height:12px;border-radius:6px;background:var(--glass)} .hs-bt::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--glass-line)}
+  .hs-bt i{position:absolute;top:2px;bottom:2px;border-radius:4px} .hs-bt i.p{background:var(--good)} .hs-bt i.n{background:var(--bad,#dc2626);opacity:.8} .hs-bt em{position:absolute;top:-3px;bottom:-3px;width:0;border-left:2px dashed var(--ink-2)}
+  .hs-br b{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .hs-bk{display:flex;gap:14px;margin-top:6px;font-size:11px;color:var(--muted)} .hs-bk .sp{display:inline-block;width:0;height:10px;border-left:2px dashed var(--ink-2);margin-right:5px;vertical-align:-1px} .hs-bk svg{color:#c9a227;fill:#c9a227;stroke:none;width:11px;height:11px}
+  .hs-how{margin-top:10px} .hs-how summary{cursor:pointer;font-size:12px;color:var(--muted);list-style:none} .hs-how summary::-webkit-details-marker{display:none} .hs-how p{font-size:11.5px;color:var(--muted);line-height:1.45;margin:6px 0 0}
+  .hs-lh2{display:flex;align-items:baseline;justify-content:space-between;margin:16px 2px 8px} .hs-lh2 b{font:700 15px var(--font-display);color:var(--ink)} .hs-lh2 span{font-size:11.5px;color:var(--muted)}
+  .hs-stl{display:grid;gap:8px} @media(min-width:640px){.hs-stl{grid-template-columns:1fr 1fr}}
+  .hs-st,.hs-st *{box-sizing:border-box} .hs-st{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:16px;border:1px solid var(--glass-line);background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;transition:transform .12s}
+  .hs-st:active{transform:scale(.98)} .hs-sm{flex:1;min-width:0} .hs-sm b{display:block;font:600 14px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hs-hb{display:block;height:5px;border-radius:3px;background:var(--glass-2);margin:6px 0 4px;overflow:hidden} .hs-hb i{display:block;height:100%;background:var(--ink-2);border-radius:3px}
+  .hs-sm small{font-size:11px;color:var(--muted)} .hs-sm small svg{color:#c9a227;fill:#c9a227;stroke:none;width:11px;height:11px}
+  .hs-sr{text-align:right;flex:none} .hs-sr b{display:block;font:700 15px var(--font-ui);font-variant-numeric:tabular-nums} .hs-sr small{font-size:10.5px;color:var(--muted)}
   /* 6.196: the three Analyze tiles removed on the owner's request (user: "remove the 3 big banners"); v2Hero still writes into them, hidden */ .hero-stats{display:none!important}
   .hs-strats{display:flex;flex-direction:column;gap:6px;margin-top:8px} .hs-s{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)}
   .hs-s b{font:600 13px var(--font-ui);color:var(--ink)} .hs-s small{display:block;font-size:11px;color:var(--muted)} .hs-sn{font:600 12.5px var(--font-ui);color:var(--muted);white-space:nowrap} .hs-sn i{font-style:normal;margin:0 4px} .hs-sn b{font:800 14px var(--font-display);color:var(--ink)}
@@ -1269,7 +1348,7 @@
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C7 16.5 3.2 13 3.2 9 3.2 6 5.5 4 8 4.3 10.2 4.6 10.9 7 9.4 8.1 8.3 8.9 6.9 8.1 7.3 6.9"/><path d="M12 21C17 16.5 20.8 13 20.8 9 20.8 6 18.5 4 16 4.3 13.8 4.6 13.1 7 14.6 8.1 15.7 8.9 17.1 8.1 16.7 6.9"/><path d="M12 21V12.5"/></svg>
     <span class="hero-kick"><i></i>High-Sharpe group · you only</span>
     <h2 class="ak-h">What our strongest <em>strategies hold.</em></h2>
-    <p class="ak-sub" id="hs-sub">The 14 strategies with the strongest long-term record (Sharpe 1.3+ and 20%+ a year, re-tested) and what they own right now. They change their basket every six months and are kept apart from the monthly picks.</p>
+    <p class="ak-sub" id="hs-sub">Our 14 strongest long-term strategies: how their baskets did, and what they own. They change their basket every six months and are kept apart from the monthly picks.</p>
     <div id="hs-body"><p class="note">Loading…</p></div>
   </section>
 
@@ -7057,6 +7136,17 @@ function v2Hero(A) {
 // swing strategies on the selected stock (2026-11-06, Bible 6.182): every validated strategy in swing_registry run on ANY US stock in real time by
 // the stock-signals function (exact rules, ranks against that day's S&P 500); shared by the Analyze card, the first tile and Ask Finny
 const SS = {};
+const IC = {                                              // 6.192b: small line icons (currentColor), shared by the strategy card and the rule chart
+  buy: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>',
+  wait: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-5 4 3 6-7"/></svg>',
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>',
+  info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg>',
+  in: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
+  out: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H7M11 8l-4 4 4 4"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg>',
+  dl: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'};
 async function ssFetch(syms) {
   const need = syms.filter(s => !(SS[s] && Date.now() - SS[s].at < 60000)), out = {};
   if (need.length) {
@@ -7070,22 +7160,48 @@ async function ssFetch(syms) {
 function ssCard(A) {
   const S = A?.sym; if (!S || HERO.demo) return; let el = document.getElementById('ss-card');
   if (!el) { const anchor = document.getElementById('hs-line') || document.querySelector('.hero-stats'); if (!anchor) return; anchor.insertAdjacentHTML('afterend', '<div id="ss-card" class="ss-card"></div>'); el = document.getElementById('ss-card'); }
-  el.dataset.sym = S; el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">Running every strategy on ${esc(S)}…</p>`;
+  // 6.195 (user: "the app has gotten unstable"): v2Hero runs 4-6 times while one stock loads; redraw this card only for a new stock or after 60 s,
+  // so the page no longer collapses to "Running…" and jumps each time
+  if (el.dataset.sym === S && (el.dataset.busy === '1' || Date.now() - (+el.dataset.done || 0) < 60000)) return;
+  const same = el.dataset.sym === S; el.dataset.sym = S; el.dataset.busy = '1';
+  if (!same) el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div><p class="note">Running every strategy on ${esc(S)}…</p>`;
   ssFetch([S]).then(R => {
-    const r = R[S]; if (el.dataset.sym !== S) return;
+    const r = R[S]; if (el.dataset.sym !== S) return; el.dataset.busy = ''; el.dataset.done = Date.now();
     if (!r || r.error) { el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">${esc(r?.error || 'Not available for this symbol.')}</p>`; return; }
     const L = (r.strategies || []).filter(x => !x.error).sort((a, b) => (b.signal_now - a.signal_now) || ((a.tier === 'edge') ? -1 : 1));
     const n = L.filter(x => x.signal_now).length, pct = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
-    const since = r.record_from && r.record_from > '2016-01-04' ? `since its listing (${r.first_bar})` : 'since 2016';
-    const rows = L.map(x => { const miss = x.conditions.filter(c => c.ok === false).length, wait = x.conditions.filter(c => c.ok === null).length, rc = x.record;
-      return `<div class="ss-row${x.signal_now ? ' on' : ''}"><div class="ss-n"><b>${esc(x.name)}</b><span class="ss-t ${x.tier === 'edge' ? 'ss-edge' : ''}">${x.tier === 'edge' ? 'passed every test' : 'promising'}</span>${x.in_universe ? '' : '<span class="ss-t" title="Never tested outside the S&amp;P 500: shown as a what-if">outside its tested universe</span>'}</div>
-        <div class="ss-s">${x.signal_now ? `<b class="v2-up">would buy${r.live ? ' now' : ' at the last close'}</b>` : `no signal · ${miss} of ${x.conditions.length} rule${x.conditions.length > 1 ? 's' : ''} not met${wait ? ` · ${wait} need${wait === 1 ? 's' : ''} more history (too new)` : ''}`}${x.open_trade ? ` · simulated trade open since ${esc(x.open_trade.entry)}` : ''}${x.last_signal && !x.signal_now ? ` · last signal ${esc(x.last_signal)}` : ''}</div>
-        <div class="ss-r">On ${esc(S)} ${since}: ${rc.trades} trade${rc.trades === 1 ? '' : 's'}${rc.trades ? `, ${Math.round(rc.win * 100)}% winners, average ${pct(rc.avg)}` : ''}</div></div>`; }).join('');
-    el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)} <span>${n} of ${L.length} would buy${r.live ? ' at the live price' : ` (close of ${esc(r.as_of)})`}</span></div>${rows}
-      <p class="ss-f">Exact strategy rules run on ${esc(S)}${r.member ? '' : ', ranked against each day\'s S&amp;P 500 as if it were a member'}. A record on one stock is a small sample, not a forecast. Not advice.</p>`;
+    const since = r.record_from && r.record_from > '2016-01-04' ? `since listing ${r.first_bar}` : 'since 2016';
+    // 6.192b (user: "less text, simple icons and interactions"): one status icon, rule dots, two numbers per strategy; details stay in the chart
+    // 6.192c (user: "too vague, a bit chaotic"): one verdict, the buying strategies first with labelled numbers, the lead strategy's chart, the rest folded
+    const tile = x => { const rc = x.record, ok = x.conditions.filter(c => c.ok === true).length;
+      return `<button class="ss-tile${x.signal_now ? ' on' : ''}" data-rp="${esc(x.key)}" data-rpn="${esc(x.name)}" aria-label="Open the chart of ${esc(x.name)}">
+        <span class="ss-mid"><b>${esc(x.name)}${x.tier === 'edge' ? ` <em class="ss-star" title="Passed every test">${IC.star}</em>` : ''}</b>
+          <small>${ok}/${x.conditions.length} rules met${x.in_universe ? '' : ' · what-if (tested on S&amp;P 500)'}</small></span>
+        <span class="ss-num">${rc.trades ? `<b>${Math.round(rc.win * 100)}%</b><small>won · ${rc.trades} trades</small>` : '<small>no trades yet</small>'}</span>
+        <span class="ss-go">›</span></button>`; };
+    const buy = L.filter(x => x.signal_now), wait = L.filter(x => !x.signal_now);
+    const lead = buy.find(x => x.tier === 'edge') || buy[0] || [...L].sort((a, b) => (b.record?.trades || 0) - (a.record?.trades || 0))[0];
+    el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div>
+      <div class="ss-verdict${n ? ' on' : ''}"><span class="ss-vi">${n ? IC.buy : IC.wait}</span><div><b>${n} of ${L.length}</b><span>${n ? 'would buy' : 'would buy'} ${esc(S)} ${r.live ? 'now' : 'at the last close'}</span></div></div>
+      <div class="ng-box" id="ss-ng"></div>
+      ${buy.length ? `<div class="ss-tiles">${buy.map(tile).join('')}</div>` : ''}
+      ${lead ? `<div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}
+      ${wait.length ? `<details class="ss-wait"><summary>${IC.wait}<span>${wait.length} waiting for their rules</span><em>›</em></summary><div class="ss-tiles">${wait.map(tile).join('')}</div></details>` : ''}
+      <p class="ss-foot">${IC.info} Hypothetical backtests on ${esc(S)} ${esc(since)} · % = share of winning trades · not advice</p>`;
+    try { const sn = t => t.replace(/^Volume-exhaustion /i, 'Vol-exh. ').replace(/^Volume-Exhaustion /, 'Vol-exh. ').replace(/^Coiled-Spring Squeeze /, 'Squeeze ').replace(/Volume zone oscillator \(13\)/, 'VZO').replace(/Williams 3-bar channel/, 'Williams').replace(/ Leader Dip$/, ' dip');
+      // 6.196 (user: "I don't see the meaning of the bullets' colour and size"): colour = how close to a buy (share of rules met, grey -> green),
+      // size = past success on this stock (win rate shrunk towards 50% by 10 pseudo-trades), label = "rules · won"
+      const met = x => x.conditions.length ? x.conditions.filter(c => c.ok === true).length / x.conditions.length : 0;
+      const succ = x => { const rc = x.record || {}; return rc.trades ? (rc.win * rc.trades + 0.5 * 10) / (rc.trades + 10) : 0.5; };
+      ngDraw(el.querySelector('#ss-ng'), {label: S, sub: '', state: n ? 'up' : ''}, L.map(x => ({label: sn(x.name), size: Math.max(0.05, succ(x) - 0.3),
+        strength: met(x), heat: met(x), state: x.signal_now ? 'on' : '',
+        tag: `${x.conditions.filter(c => c.ok === true).length}/${x.conditions.length} rules${x.record?.trades ? ` · ${Math.round(x.record.win * 100)}% won` : ''}`, onTap: () => rpOpen(S, x.key, x.name)})),
+        {h: 300, legend: '<span><i class="ng-grad"></i>greener = closer to a buy (more rules met)</span><span>bigger = more past wins with this stock</span><span>tap a dot for its chart</span>'}); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre
+    el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
+    const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     const t0 = document.querySelector('.hero-stats')?.children[0];
     if (t0 && !r.member && HERO.last?.sym === S) { const b = t0.querySelector('b'), l = t0.querySelector('.hs-l'); if (b && l) { t0.dataset.ss = '1'; b.textContent = `${n}/${L.length}`; b.className = n ? 'v2-up' : ''; l.textContent = `of our swing strategies would buy ${S}${r.live ? ' now' : ''}`; } }
-  }).catch(e => { if (el.dataset.sym === S) el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">Could not run them: ${esc(e.message)}</p>`; });
+  }).catch(e => { if (el.dataset.sym === S) { el.dataset.busy = ''; el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div><p class="note">Could not run them: ${esc(e.message)}</p>`; } });
 }
 // stocks outside the S&P 500 (2026-11-06, Bible 6.181): the first tile shows the stock's live move (odds-live quote, the same lookup Ask Finny
 // uses) instead of an empty dash; our strategy holdings still cover S&P 500 companies only, and the tile says so
@@ -7276,32 +7392,34 @@ function hsRender() {
   const avg = L => { const v = L.map(r => r.perf?.ret).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
   const stockRet = t => { for (const r of HS.rows) { const v = r.perf?.stocks?.[t]; if (v != null) return v; } return null; };
   const rets = HS.rows.map(r => r.perf?.ret).filter(x => x != null), aOk = avg(HS.rows.filter(hsOk)), aAll = avg(HS.rows);
-  const perfBox = P0 ? `<div class="hs-perf"><div class="hs-pt"><b>Since ${esc(pday(P0.from))}</b><span>live record, up to the ${esc(pday(P0.to))} close</span></div>
-      <div class="hs-pg"><div><b class="${cls(aOk)}">${pc(aOk)}</b><span>the ${HS.rows.filter(hsOk).length} that hold up (average)</span></div>
-      <div><b class="${cls(aAll)}">${pc(aAll)}</b><span>all ${rets.length} (from ${pc(Math.min(...rets))} to ${pc(Math.max(...rets))})</span></div>
-      <div><b class="${cls(P0.spy)}">${pc(P0.spy)}</b><span>SPY, same days</span></div></div>
-      <p class="v2-note">Each basket bought in equal weight at the ${esc(pday(P0.from))} close (the day after its holdings date) and held, with split- and dividend-adjusted prices and no costs. Four months is a short, noisy stretch: it says how the baskets did, not whether the strategies work.</p></div>` : '';
+  // 6.193 (user: "more visually appealing and informative"): live record first, one bar per strategy against SPY
+  const mx = Math.max(0.01, ...rets.map(Math.abs), Math.abs(P0?.spy || 0)), bw = x => Math.min(50, Math.abs(x) / mx * 50);
+  const bars = HS.rows.filter(r => r.perf).sort((a, b) => b.perf.ret - a.perf.ret).map(r => `<div class="hs-br${hsOk(r) ? ' ok' : ''}" title="${esc(r.name)}: tap for its stocks" data-ng="${esc(r.key)}" role="button" tabindex="0"><span class="hs-bn">${esc(short(r) || r.name)}${hsOk(r) ? ' ' + IC.star : ''}</span>
+      <span class="hs-bt"><i class="${r.perf.ret >= 0 ? 'p' : 'n'}" style="${r.perf.ret >= 0 ? 'left:50%' : `right:50%`};width:${bw(r.perf.ret).toFixed(1)}%"></i><em style="left:${(50 + (P0.spy >= 0 ? 1 : -1) * bw(P0.spy)).toFixed(1)}%"></em></span>
+      <b class="${cls(r.perf.ret)}">${pc(r.perf.ret)}</b></div>`).join('');
+  const beat = rets.filter(x => x > P0?.spy).length;
+  const perfBox = P0 ? `<div class="hs-live"><div class="hs-lh"><span class="hs-badge">${IC.chart}Live since ${esc(pday(P0.from))}</span><span class="hs-lt">to ${esc(pday(P0.to))}</span></div>
+      <div class="hs-big"><div><b class="${cls(aOk)}">${pc(aOk)}</b><span>${IC.star} the ${HS.rows.filter(hsOk).length} that hold up</span></div><div><b class="${cls(P0.spy)}">${pc(P0.spy)}</b><span>SPY</span></div><div><b>${beat}/${rets.length}</b><span>beat SPY</span></div></div>
+      <div class="hs-bars">${bars}<div class="hs-bk"><span><i class="sp"></i>SPY ${pc(P0.spy)}</span><span>tap a bar: its stocks</span><span>${IC.star} holds up after re-testing</span></div></div>
+      <details class="hs-how"><summary>${IC.info} How this is measured</summary><p>Each basket bought in equal weight at the ${esc(pday(P0.from))} close (the day after its holdings date) and held; adjusted prices, no costs. Four months is short and noisy: it shows how the baskets did, not whether the strategies work. Next basket: January.</p></details></div>` : '';
   const dots = x => Array.from({length: x.okOf}, (_, i) => `<i class="${i < x.ok ? 'on' : ''}"></i>`).join('');
-  const card = x => `<button class="v2-pk hs-pk" data-t="${esc(x.t)}" title="${esc(x.held.map(r => r.name).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
-      <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${x.n} of ${x.of} strategies · ${x.fam} of ${x.fams} families${stockRet(x.t) != null ? ` · <span class="${cls(stockRet(x.t))}">${pc(stockRet(x.t))}</span> since ${esc(pday(P0.from))}` : ''}</small></span>
-      <span class="hs-ok" aria-label="${x.ok} of ${x.okOf} validated strategies"><span class="hs-dots">${dots(x)}</span><em>${x.ok}/${x.okOf}</em></span></button>`;
+  const card = x => { const sr = stockRet(x.t);
+    return `<button class="hs-st" data-t="${esc(x.t)}" title="${esc(x.held.map(r => r.name).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
+      <span class="hs-sm"><b>${esc(nm(x.t) || x.t)}</b><span class="hs-hb" aria-label="held by ${x.n} of ${x.of} strategies"><i style="width:${(x.n / x.of * 100).toFixed(0)}%"></i></span><small>held by ${x.n}/${x.of}${x.ok ? ` · ${x.ok}/${x.okOf} ${IC.star}` : ''}</small></span>
+      <span class="hs-sr">${sr == null ? '<small>–</small>' : `<b class="${cls(sr)}">${sr >= 0 ? '▲' : '▼'} ${pc(Math.abs(sr)).replace('+', '')}</b><small>since ${esc(pday(P0.from))}</small>`}</span></button>`; };
   const strat = r => { const v = r.validation, e = v?.equal; return `<div class="hs-s" data-hs="${esc(r.key)}" data-hs-name="${esc(short(r) || r.name)}" data-rs="${esc(r.key)}" role="button" tabindex="0" title="Open its research"><div><b>${esc(short(r) || r.name)} ›</b><small>${esc(r.family)}</small>${r.perf ? `<small class="hs-sp">since ${esc(pday(r.perf.from))}: <b class="${cls(r.perf.ret)}">${pc(r.perf.ret)}</b> · SPY ${pc(r.perf.spy)} · worst dip ${pc(r.perf.maxdd)}</small>` : ''}</div>
       <div class="hs-sn"><span>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</span><i>→</i><b>${e ? e.sharpe.toFixed(2) : '–'}</b></div>
       <span class="v2-tag ${v?.verdict === 'holds up' ? 'ok' : v?.verdict === 'weak' ? 'bad' : ''}">${esc(v?.verdict || '')}</span></div>`; };
   el.innerHTML = `${hsTabBar()}
-    <div class="hs-sum">
-      <div><b>${okN.length}<i>/${HS.rows.length}</i></b><span>hold up after re-testing</span></div>
-      <div><b>${fams}</b><span>strategy families</span></div>
-      <div><b>${new Date(asof + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'})}</b><span>holdings date · next: Jan</span></div>
-    </div>
     ${perfBox}
-    <div class="v2-lh"><b>Ranked by the ${okN.length} that hold up</b><span>${esc(okN.map(short).join(' · '))} · dots = how many of them hold it · tap for its odds</span></div>
-    <div class="v2-list">${all.slice(0, HS.all ? 999 : 10).map(card).join('')}</div>
+    <div class="hs-lh2"><b>What they own</b><span>basket of ${esc(pday(asof))} · tap a stock</span></div>
+    <div class="hs-stl">${all.slice(0, HS.all ? 999 : 10).map(card).join('')}</div>
     ${all.length > 10 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${all.length}</button>` : ''}
-    <details class="about"><summary>The ${HS.rows.length} strategies: Sharpe as claimed → with equal weights</summary><div class="hs-strats">${HS.rows.slice().sort((a, b) => (b.validation?.equal?.sharpe || 0) - (a.validation?.equal?.sharpe || 0)).map(strat).join('')}</div>
+    <details class="about"><summary>${IC.info} The ${HS.rows.length} strategies and how they were re-tested</summary><div class="hs-strats">${HS.rows.slice().sort((a, b) => (b.validation?.equal?.sharpe || 0) - (a.validation?.equal?.sharpe || 0)).map(strat).join('')}</div>
       <p class="v2-note">${V ? `Re-tested ${v2Day(V.date)}: the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21) and the backtest numbers. ` : ''}"Holds up" = equal-weight Sharpe 1.2+ and 1.0+ in both 2016-20 and 2021-26; "weak" = below 1.0. The others owe much of their 1.3+ to volatility sizing.
       With equal weights none beats SPY by a statistically clear margin (t below 2): the edge is mostly a smoother ride. 11 of 14 are SX25 variants. Cash switches and stops are not applied here.
       SXG4 uses Account 1's actual SX25 targets. Visible to you only.</p></details>`;
+  el.querySelectorAll('[data-ng]').forEach(b => b.onclick = () => ngStrategy(HS.rows.find(r => r.key === b.dataset.ng)));   // 6.194 strategy in the centre
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
   const m = document.getElementById('hs-more'); if (m) m.onclick = () => { HS.all = true; hsRender(); };
 }
@@ -7317,7 +7435,7 @@ function hsTabBar() {
 function hsTabs() {
   const sub = document.getElementById('hs-sub'); if (!sub) return;
   sub.textContent = HS.tab === 'swing' ? 'Our swing strategies buy short-term dips and sell within 2 to 10 trading days. Here is what they own now, with the stocks most of them agree on first.'
-    : 'The 14 strategies with the strongest long-term record (Sharpe 1.3+ and 20%+ a year, re-tested) and what they own right now. They change their basket every six months and are kept apart from the monthly picks.';
+    : 'Our 14 strongest long-term strategies: how their baskets did, and what they own. New basket every six months.';
 }
 document.addEventListener('click', e => { const b = e.target.closest?.('[data-hst]'); if (!b) return; HS.tab = b.dataset.hst; try { localStorage.setItem('hs-tab', HS.tab); } catch (x) {} hsRender(); });
 function hsSwing(el) {
@@ -7327,27 +7445,55 @@ function hsSwing(el) {
   const all = [...H.values()].sort((a, b) => b.by.length - a.by.length || b.d.localeCompare(a.d) || a.t.localeCompare(b.t));
   const nm = t => { const p = TL.prof?.find(r => r.ticker === t); return p ? tlTitle(p.name) : ''; };
   const day = d => d ? new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : '';
-  const card = x => `<button class="v2-pk hs-pk" data-t="${esc(x.t)}" title="${esc(x.by.map(e => e.label).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
-      <span class="v2-pn"><b>${esc(nm(x.t) || x.t)}</b><small>${esc(x.by.map(e => e.key).join(' · '))} · signal ${esc(day(x.d))}</small></span>
-      <span class="hs-ok"><em>${x.by.length}/${SR.length}</em></span></button>`;
+  const card = x => `<button class="hs-st" data-t="${esc(x.t)}" title="${esc(x.by.map(e => e.label).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
+      <span class="hs-sm"><b>${esc(nm(x.t) || x.t)}</b><span class="hs-hb"><i style="width:${(x.by.length / SR.length * 100).toFixed(0)}%"></i></span><small>${x.by.length}/${SR.length} strategies</small></span>
+      <span class="hs-sr"><b>${esc(day(x.d))}</b><small>signal</small></span></button>`;
   const strat = e => { const m = e.metrics || {}, ok = e.key === 'R18L26', n = H.size ? [...H.values()].filter(h => h.by.includes(e)).length : 0;
     return `<div class="hs-s" data-sw="${esc(e.key)}" data-rs="${esc(e.key)}" role="button" tabindex="0" title="Tap: its research · long-press: follow it in a forward test"><div><b>${esc(e.label)} ›</b>
       <small>holds up to ${e.spec?.hold || 5} days · ${n ? n + ' open now' : 'nothing open'}${m.cagr != null ? ' · ' + Math.round(m.cagr * 100) + '% a year' : ''}</small></div>
       <div class="hs-sn"><span>Sharpe</span><i></i><b>${m.sharpe != null ? (+m.sharpe).toFixed(2) : '–'}</b></div>
       <span class="v2-tag ${ok ? 'ok' : ''}">${ok ? 'luck-tested' : 'research'}</span></div>`; };
+  // 6.194b (user: "where is the strategy at the centre, connected to all its signalled tickers?"): pick a strategy, see its open signals around it
+  const used = SR.filter(e => all.some(h => h.by.includes(e)));
+  if (!HS.swSel || !SR.some(e => e.key === HS.swSel)) HS.swSel = (used.slice().sort((a, b) => all.filter(h => h.by.includes(b)).length - all.filter(h => h.by.includes(a)).length)[0] || SR[0])?.key;
+  const chips = SR.map(e => { const k = all.filter(h => h.by.includes(e)).length; return `<button class="ng-chip${e.key === HS.swSel ? ' on' : ''}${k ? '' : ' none'}" data-sel="${esc(e.key)}">${esc(e.key)}<em>${k}</em></button>`; }).join('');
   el.innerHTML = `${hsTabBar()}
-    <div class="hs-sum">
-      <div><b>${all.length}</b><span>stocks and ETFs with an open signal</span></div>
-      <div><b>${SR.filter(e => all.some(h => h.by.includes(e))).length}<i>/${SR.length}</i></b><span>strategies with a position</span></div>
-      <div><b>${esc(day(TL.asof))}</b><span>signals as of · updated every evening</span></div>
-    </div>
-    <div class="v2-lh"><b>What the swing strategies hold now</b><span>signals still inside their holding window · the number = how many of the ${SR.length} have it · tap for its odds</span></div>
-    <div class="v2-list">${all.map(card).join('') || `<p class="note">No open swing signals at the ${esc(day(TL.asof))} close.</p>`}</div>
+    <div class="ng-chips" role="tablist" aria-label="Pick a swing strategy">${chips}</div>
+    <div class="ng-box" id="sw-ng"></div>
+    <div class="hs-lh2"><b>All open signals</b><span>${all.length} stocks · as of ${esc(day(TL.asof))}</span></div>
+    <div class="hs-stl">${all.map(card).join('') || `<p class="note">No open swing signals at the ${esc(day(TL.asof))} close.</p>`}</div>
     <div class="v2-lh"><b>The ${SR.length} swing strategies</b><span>tap for its research · long-press to follow it in a forward test</span></div>
     <div class="hs-strats">${SR.map(strat).join('')}</div>
     <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. Only R18L26 has passed the luck tests (placebos, plateau, 2016-20 out of sample); the other 8 are research candidates, being forward-tested since 26 Oct 2026.
       The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks. "Open" means the signal is inside its holding window; a position can already have been sold earlier by the strategy's own exit rule or stop. Visible to you only.</p>`;
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
+  // 6.194c (user: "gradient colour for tickers chosen by more strategies; bigger dots for better ticker odds and past success with that strategy"):
+  // heat = (strategies holding it - 1) / 8; size = average of the stock's 1-week odds (same source as the movers list) and, when the strategy is in the
+  // real-time registry, its win rate on that stock (shrunk to 50% with few trades). Both load after the first draw and resize the dots.
+  const score = (e, t) => { const parts = [], o = MV.odds?.[t], ss = SS[t]?.v?.strategies?.find(x => x.key === e.key)?.record;
+    if (o?.v != null) parts.push(Math.max(0, Math.min(1, (o.v - 0.40) / 0.30)));
+    if (ss?.trades) { const w = (ss.win * ss.trades + 0.5 * 5) / (ss.trades + 5); parts.push(Math.max(0, Math.min(1, (w - 0.35) / 0.4))); }
+    return parts.length ? parts.reduce((a, b) => a + b, 0) / parts.length : null; };
+  const drawSel = () => { try { drawSel0(); } catch (e) { console.warn('swing graph', e); } };
+  const drawSel0 = () => { const e = SR.find(x => x.key === HS.swSel); if (!e) return; const mine = all.filter(h => h.by.includes(e));
+    const tag = h => { const o = MV.odds?.[h.t], ss = SS[h.t]?.v?.strategies?.find(x => x.key === e.key)?.record;
+      return [o?.v != null ? `${Math.round(o.v * 100)}% odds` : '', ss?.trades ? `${Math.round(ss.win * 100)}% won` : ''].filter(Boolean).join(' · ') || day(h.d); };
+    ngDraw(el.querySelector('#sw-ng'), {label: e.key, sub: `${mine.length} open`, state: mine.length ? 'up' : ''}, mine.map(h => { const sc = score(e, h.t);
+      return {label: h.t, size: sc == null ? 0.5 : 0.15 + sc, strength: h.by.length / SR.length, heat: (h.by.length - 1) / Math.max(SR.length - 1, 1), tag: tag(h), onTap: () => odGo(h.t)}; }),
+      {h: mine.length > 12 ? 340 : 300, legend: `<span><i class="ng-grad"></i>darker = more of the ${SR.length} strategies hold it</span><span>bigger = better odds and past wins with ${esc(e.key)}</span><span>tap a stock</span>`});
+    el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel));
+    const ts = mine.map(h => h.t), sel = HS.swSel;
+    // 6.195b: one odds load per strategy selection, redraw at most once, never re-entered synchronously (an empty mvOddsLoad resolved at once and the
+    // redraw asked again: an endless loop that froze the app)
+    HS.swOdds ||= {};
+    if (typeof mvOddsLoad === 'function' && !HS.swOdds[sel] && ts.some(t => !MV.odds?.[t])) { HS.swOdds[sel] = 1;
+      mvOddsLoad(ts).then(() => setTimeout(() => { if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) drawSel(); }, 50)).catch(() => {}); }
+    const inReg = ['R18L26', 'S4P23', 'FB017', 'FB125', 'LE01', 'LE02', 'R2A03_v06', 'R2D08_v08'].includes(sel) || Object.values(SS).some(v => v.v?.strategies?.some(x => x.key === sel));
+    const reg = inReg ? ts.filter(t => !SS[t]).slice(0, 8) : null;   // past wins exist only for strategies in the real-time registry
+    if (reg && reg.length && !HS.swReg?.[sel]) { (HS.swReg ||= {})[sel] = 1;
+      (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) setTimeout(drawSel, 50); } })(); } };
+  el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; drawSel(); });
+  drawSel();
 }
 const v2HeroBase = v2Hero; v2Hero = function (A) {
   v2HeroBase(A); const box = document.querySelector('.hero-stats'); let line = document.getElementById('hs-line');
@@ -7539,7 +7685,7 @@ const v2mvRenderMP = mvRender; mvRender = function () {
 const v2HeroMP = v2Hero; v2Hero = function (A) {
   v2HeroMP(A); let box = document.getElementById('mp-box');
   if (!A?.sym || HERO.demo || A.member) { if (box) box.remove(); return; }
-  if (!MP.rows || Date.now() - MP.at > 5 * 60e3) { if (!MP.busy) mpLoad(true).then(() => { if (HERO.last?.sym === A.sym) v2Hero(A); }); if (!MP.rows) return; }
+  if (!MP.rows || Date.now() - MP.at > 5 * 60e3) { if (!MP.busy && Date.now() - (MP.tryAt || 0) > 60e3) { MP.tryAt = Date.now(); mpLoad(true).then(() => { if (MP.rows && HERO.last?.sym === A.sym) setTimeout(() => v2Hero(A), 0); }); } if (!MP.rows) return; }   // 6.195b: one retry a minute
   const r = MP.rows[A.sym], hs = document.querySelector('.hero-stats'); if (!r || !hs) { if (box) box.remove(); return; }
   const b = mpBest(r), S = esc(A.sym), f = r.f || {}, t0 = hs.children[0];
   if (b && t0) {
@@ -7668,6 +7814,177 @@ function libInit() {
   if (ask) ask.onclick = () => { const i = document.getElementById('ak-q'); if (i) { i.value = 'Does my strategy have an edge? My rules: '; i.focus(); i.scrollIntoView({block: 'center'}); } };
 }
 const v2viewSetLIB = viewSet; viewSet = function (v, push) { v2viewSetLIB(v, push); if (VIEW.cur === 'research') { libInit(); libLoad(); } };
+
+// rule replay (2026-11-08, Bible 6.192): one strategy on one stock, day by day. Price with every simulated entry (▲) and exit (▼) and the holding
+// periods shaded; below it one panel per rule: the feature, its threshold (fixed, a second feature, or the day's cross-sectional cut) and the days
+// it holds shaded. The days all entry rules hold are the signals. Data: stock-signals op replay (same engine and data as the card).
+const RP = {};
+async function rpFetch(sym, key, days) {
+  const k = `${sym}|${key}|${days}`; if (RP[k] && Date.now() - RP[k].at < 60000) return RP[k].v;
+  const token = await getToken();
+  const r = await fetch(`${SB_URL}/functions/v1/stock-signals`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'},
+    body: JSON.stringify({op: 'replay', symbol: sym, key, days})});
+  const j = await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})); if (!j.ok) throw new Error(j.error || 'replay failed');
+  RP[k] = {at: Date.now(), v: j}; return j;
+}
+const RP_WORDS = {ret_rank: 'return rank vs all S&P 500 stocks', rank_in_sector: 'return rank inside its sector', max_ret: 'biggest one-day gain', ibs: 'close position in the day\'s range (0 = low, 1 = high)',
+  spy_sma_ratio: 'S&P 500 vs its moving average', sma_ratio: 'price vs its moving average', beta: 'beta to the S&P 500', vol_slope: 'volume trend', squeeze: 'volatility squeeze',
+  vzo: 'volume zone oscillator', swing_trend: 'swing-high trend', atr_px: 'average true range', dollar_vol: 'average dollar volume'};
+const RP_ROLE = {entry: 'Buy rule', regime: 'Market filter', exit: 'Sell rule'};
+const RP_SHORT = {ret_rank: 'Leader vs market', rank_in_sector: 'Leader in sector', max_ret: 'Big up-day lately', ibs: 'Closed near the low', spy_sma_ratio: 'Market in uptrend',
+  sma_ratio: 'Above its average', beta: 'Moves more than market', vol_slope: 'Volume fading', squeeze: 'Calm before move', vzo: 'Volume pressure', swing_trend: 'Higher swing highs'};
+const rpShort = p => { const f = p.feature.replace(/\(.*$/, ''); return f === 'ibs' && /^>/.test(p.op) ? 'Closed near the high' : (RP_SHORT[f] || f); };
+const rpIcon = r => r === 'exit' ? IC.out : r === 'regime' ? IC.shield : IC.in;
+function rpOpen(sym, key, name) {
+  let el = document.getElementById('rp-sheet');
+  if (!el) { document.body.insertAdjacentHTML('beforeend', '<div id="rp-sheet" class="rp-sheet" role="dialog" aria-modal="true" aria-label="Rule chart"><div class="rp-bg"></div><div class="rp-card"></div></div>');
+    el = document.getElementById('rp-sheet'); el.querySelector('.rp-bg').onclick = rpClose; document.addEventListener('keydown', e => { if (e.key === 'Escape') rpClose(); }); }
+  el.classList.add('on'); document.body.classList.add('rp-lock');
+  const card = el.querySelector('.rp-card'); card.dataset.k = sym + '|' + key;
+  const head = d => `<div class="rp-h"><div><b>${esc(name)} · ${esc(sym)}</b><small>Each rule, each day</small></div><button class="rp-x" aria-label="Close">×</button></div>
+    <div class="rp-range" role="tablist">${[[125, '6 mo'], [250, '1 yr'], [500, '2 yr'], [1250, '5 yr']].map(([n, l]) => `<button data-n="${n}" class="${n === d ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  const load = days => {
+    card.innerHTML = head(days) + '<p class="note">Running the strategy on ' + esc(sym) + '…</p>'; card.querySelector('.rp-x').onclick = rpClose;
+    card.querySelectorAll('.rp-range button').forEach(b => b.onclick = () => load(+b.dataset.n));
+    rpFetch(sym, key, days).then(j => { if (card.dataset.k !== sym + '|' + key) return; card.innerHTML = head(days) + rpBody(j); card.querySelector('.rp-x').onclick = rpClose;
+      card.querySelectorAll('.rp-range button').forEach(b => b.onclick = () => load(+b.dataset.n)); rpWire(card, j); })
+      .catch(e => { card.innerHTML = head(days) + `<p class="note">Could not run it: ${esc(e.message)}</p>`; card.querySelector('.rp-x').onclick = rpClose; });
+  };
+  load(250);
+}
+function rpClose() { const el = document.getElementById('rp-sheet'); if (el) el.classList.remove('on'); document.body.classList.remove('rp-lock'); }
+// geometry shared by every panel: x by day index, 340 x H viewBox, the svg scales to the card width
+const RP_W = 340, RP_L = 4, RP_R = 336;
+const rpX = (i, n) => RP_L + (RP_R - RP_L) * (n > 1 ? i / (n - 1) : 0.5);
+function rpScale(vals, pad = 0.08) { const f = vals.filter(v => v != null && isFinite(v)); if (!f.length) return null; let lo = Math.min(...f), hi = Math.max(...f);
+  if (hi === lo) { hi += 1; lo -= 1; } const p = (hi - lo) * pad; return [lo - p, hi + p]; }
+function rpPath(vals, n, y) { let d = '', on = false; vals.forEach((v, i) => { if (v == null || !isFinite(v)) { on = false; return; } d += (on ? 'L' : 'M') + rpX(i, n).toFixed(1) + ' ' + y(v).toFixed(1); on = true; }); return d; }
+function rpBands(flags, n, H, cls) {           // shaded runs where flags[i] is true
+  let s = '', a = -1; const w = (RP_R - RP_L) / Math.max(n - 1, 1);
+  flags.forEach((f, i) => { if (f && a < 0) a = i; if ((!f || i === n - 1) && a >= 0) { const b = f ? i : i - 1; s += `<rect class="${cls}" x="${(rpX(a, n) - w / 2).toFixed(1)}" y="0" width="${((b - a + 1) * w).toFixed(1)}" height="${H}"/>`; a = -1; } });
+  return s;
+}
+function rpPrice(j, H) {                          // price with buys (▲), sells (▼), holding periods and signal days
+  const n = j.days.length, idx = Object.fromEntries(j.days.map((d, i) => [d, i])), pc = x => (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+  const held = new Array(n).fill(false); const marks = [];
+  for (const t of j.trades) { const a = idx[t.entry] ?? 0, b = t.exit && idx[t.exit] != null ? idx[t.exit] : n - 1; for (let i = a; i <= b; i++) held[i] = true;
+    if (idx[t.entry] != null) marks.push({i: a, up: true, t}); if (t.exit && idx[t.exit] != null) marks.push({i: b, up: false, t}); }
+  if (j.open && idx[j.open.entry] != null) { for (let i = idx[j.open.entry]; i < n; i++) held[i] = true; marks.push({i: idx[j.open.entry], up: true, t: {entry: j.open.entry, px: j.open.px, why: 'still open'}}); }
+  const sc = rpScale([...j.close, ...j.low.slice(), ...j.high.slice()].filter(v => v != null)); const y = v => H - 6 - (H - 12) * (v - sc[0]) / (sc[1] - sc[0]);
+  const sigDots = j.signal.map((s, i) => s ? `<circle class="rp-sig" cx="${rpX(i, n).toFixed(1)}" cy="${(H - 3).toFixed(1)}" r="1.6"/>` : '').join('');
+  const mk = marks.map(m => { const x = rpX(m.i, n), yy = y(j.close[m.i]) + (m.up ? 9 : -9);
+    return `<path class="${m.up ? 'rp-in' : 'rp-out'}" d="${m.up ? `M${x - 5} ${yy + 7}L${x + 5} ${yy + 7}L${x} ${yy - 2}Z` : `M${x - 5} ${yy - 7}L${x + 5} ${yy - 7}L${x} ${yy + 2}Z`}"><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></path>`; }).join('');
+  const price = `<div class="rp-p"><div class="rp-lab rp-l2"><b>${esc(j.symbol)}</b><span class="rp-leg"><i class="up">▲</i>buy <i class="dn">▼</i>sell <i class="hd"></i>held</span></div>
+    <svg viewBox="0 0 ${RP_W} ${H}" preserveAspectRatio="none" class="rp-svg" data-h="${H}">${rpBands(held, n, H, 'rp-hold')}<path class="rp-line" d="${rpPath(j.close, n, y)}"/>${mk}${sigDots}<line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${H}"/></svg></div>`;
+  return price;
+}
+function rpBody(j) {
+  const n = j.days.length, pc = x => (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+  const price = rpPrice(j, 150);
+  const panels = j.panels.map((p, k) => {
+    const PH = 64, all = [...p.value, ...p.threshold].filter(v => v != null), s = rpScale(all); if (!s) return '';
+    const yy = v => PH - 4 - (PH - 8) * (v - s[0]) / (s[1] - s[0]), on = p.holds.filter(Boolean).length;
+    const fixed = p.threshold_kind === 'fixed' && p.threshold.find(v => v != null) != null;
+    const thr = fixed ? `<line class="rp-thr" x1="${RP_L}" x2="${RP_R}" y1="${yy(p.threshold.find(v => v != null)).toFixed(1)}" y2="${yy(p.threshold.find(v => v != null)).toFixed(1)}"/>`
+      : `<path class="rp-thr" d="${rpPath(p.threshold, n, yy)}"/>`;
+    const f = p.feature.replace(/\(.*$/, ''), words = RP_WORDS[f] || f;
+    return `<div class="rp-p" data-k="${k}"><div class="rp-lab rp-l2" title="${esc(RP_ROLE[p.role] || p.role)}: ${esc(p.rule)} (${esc(words)}; dashed line = ${esc(p.threshold_kind === 'fixed' ? 'threshold' : p.threshold_kind)})"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpShort(p))}</b><em>${on}d</em></div>
+      <svg viewBox="0 0 ${RP_W} ${PH}" preserveAspectRatio="none" class="rp-svg" data-h="${PH}">${rpBands(p.holds.map(Boolean), n, PH, p.role === 'exit' ? 'rp-onx' : 'rp-on')}${thr}<path class="rp-line rp-f" d="${rpPath(p.value, n, yy)}"/><line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${PH}"/></svg></div>`;
+  }).join('');
+  const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
+  const exitTxt = Object.entries(j.exit || {}).filter(([k]) => k !== 'exit_if').map(([k, v]) => k === 'hold' ? `sell after ${v} days` : `${k.replace(/_/g, ' ')} ${v}`).join(', ');
+  return `<div class="rp-read" aria-live="polite"></div>${price}${panels}
+    <div class="rp-stats"><div><b>${done.length}</b><span>trades</span></div><div><b>${done.length ? Math.round(win / done.length * 100) + '%' : '–'}</b><span>won</span></div>
+      <div><b class="${done.length && done.reduce((a, t) => a + t.ret, 0) >= 0 ? 'v2-up' : 'v2-dn'}">${done.length ? pc(done.reduce((a, t) => a + t.ret, 0) / done.length) : '–'}</b><span>avg trade</span></div></div>
+    <details class="rp-tr"><summary>${IC.chart} All trades${exitTxt ? ` · ${esc(exitTxt)}` : ''}</summary>${done.length ? `<table><tr><th>Buy</th><th>Sell</th><th>In</th><th>Out</th><th>Result</th><th>Why sold</th></tr>${done.map(t => `<tr><td>${esc(t.entry)}</td><td>${esc(t.exit)}</td><td>$${(+t.px).toFixed(2)}</td><td>$${(+t.xt).toFixed(2)}</td><td class="${t.ret >= 0 ? 'v2-up' : 'v2-dn'}">${pc(t.ret)}</td><td>${esc(t.why)}</td></tr>`).join('')}</table>` : '<p class="note">No completed trade in this window.</p>'}
+      <button class="rp-csv">${IC.dl} CSV</button></details>
+    <p class="rp-disc">${IC.info} Hypothetical backtest · adjusted daily prices · entry at the close · no costs here${j.member ? '' : ' · ranked as if in the S&amp;P 500'} · not advice</p>`;
+}
+function rpWire(card, j) {
+  const n = j.days.length, read = card.querySelector('.rp-read');
+  const show = i => {
+    card.querySelectorAll('.rp-cur').forEach(l => { const x = rpX(i, n); l.setAttribute('x1', x); l.setAttribute('x2', x); });
+    const fmt = v => v == null ? '–' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3);
+    read.innerHTML = `<div class="rp-rh"><b>${esc(j.days[i])}</b><span>$${fmt(j.close[i])}</span>${j.signal[i] ? `<em class="rp-sigc">${IC.buy}signal</em>` : ''}</div><div class="rp-chips">` + j.panels.map(p =>
+      `<span class="rp-c ${p.holds[i] ? 'ok' : 'no'}" title="${esc(p.rule)}: ${fmt(p.value[i])} vs ${fmt(p.threshold[i])}">${p.holds[i] ? '✓' : p.holds[i] === null ? '·' : '✗'} ${esc(rpShort(p))}</span>`).join('') + '</div>';
+  };
+  card.querySelectorAll('.rp-svg').forEach(svg => {
+    const at = e => { const r = svg.getBoundingClientRect(), x = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * RP_W; return Math.max(0, Math.min(n - 1, Math.round((x - RP_L) / (RP_R - RP_L) * (n - 1)))); };
+    svg.addEventListener('pointermove', e => show(at(e))); svg.addEventListener('pointerdown', e => show(at(e)));
+  });
+  card.querySelector('.rp-csv').onclick = () => {
+    const head = ['date', 'close', 'signal', ...j.panels.map(p => `${p.rule} value`), ...j.panels.map(p => `${p.rule} threshold`), ...j.panels.map(p => `${p.rule} holds`)];
+    const rows = j.days.map((d, i) => [d, j.close[i], j.signal[i] ? 1 : 0, ...j.panels.map(p => p.value[i]), ...j.panels.map(p => p.threshold[i]), ...j.panels.map(p => p.holds[i] == null ? '' : p.holds[i] ? 1 : 0)]);
+    const tr = ['', 'trades: entry,exit,price in,price out,return,why', ...j.trades.map(t => [t.entry, t.exit, t.px, t.xt, t.ret, t.why].join(','))];
+    const csv = [head, ...rows].map(r => r.map(x => /[",]/.test(String(x ?? '')) ? `"${String(x).replace(/"/g, '""')}"` : (x ?? '')).join(',')).join('\n') + '\n' + tr.join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = `finny_${j.symbol}_${j.key}_rules.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  show(n - 1);
+}
+
+// teaser (2026-11-08): the lead strategy's trades on the stock, drawn at the top of the card so the evidence is the first thing you see
+function rpTeaser(box, sym, key, name) {
+  if (box.dataset.drawn === sym + '|' + key) return; box.dataset.drawn = sym + '|' + key;
+  box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>loading…</span></div>`;
+  const draw = (j, label) => { const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
+    box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>${label} · ${done.length} trade${done.length === 1 ? '' : 's'}${done.length ? ` · ${win} won` : ''}${j.open ? ' · 1 open now' : ''}</span></div>
+      ${rpPrice(j, 120)}<button class="rp-tz-go">${IC.play} Watch the rules fire</button>`;
+    box.querySelector('.rp-tz-go').onclick = () => rpOpen(sym, key, name); box.querySelector('.rp-svg').onclick = () => rpOpen(sym, key, name); };
+  rpFetch(sym, key, 250).then(j => { if (box.dataset.k !== sym + '|' + key) return;
+    if (j.trades.filter(t => t.ret != null).length >= 2) return draw(j, 'last year');
+    return rpFetch(sym, key, 500).then(k => { if (box.dataset.k === sym + '|' + key) draw(k, 'last 2 years'); });
+  }).catch(() => { box.innerHTML = ''; });
+}
+
+// 6.195: a sheet left open by the back button or a view change kept the page scroll-locked; close every sheet then
+function rpCloseAll() { document.querySelectorAll('.rp-sheet.on').forEach(x => x.classList.remove('on')); document.body.classList.remove('rp-lock'); }
+window.addEventListener('popstate', rpCloseAll); window.addEventListener('hashchange', rpCloseAll);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') rpCloseAll(); });
+if (typeof viewSet === 'function') { const _rpVs = viewSet; viewSet = function (v, push) { rpCloseAll(); return _rpVs(v, push); }; }
+
+// connection graph (2026-11-08, Bible 6.194; user: "the data and connections of the items most prominent rather than text"; "depending on whether I click
+// for ticker or strategy comparison the ticker or strategy should be at the centre"). One radial graph: the chosen item in the centre, the connected items
+// around it. Edge width = strength (0-1), solid green = active (would buy / gaining), dashed = waiting, node size = weight, node ring colour = its value.
+// Tap a node: its onTap. Pure SVG, theme colours via CSS classes.
+function ngDraw(box, center, nodes, opts = {}) {
+  const W = 340, H = opts.h || 300, cx = W / 2, cy = H / 2, n = nodes.length;
+  const R = Math.min(W, H) / 2 - 58, ring = n > 12 ? [R, R * 0.62] : [R];
+  const pos = nodes.map((_, i) => { const r = ring.length > 1 && i % 2 ? ring[1] : ring[0], a = -Math.PI / 2 + (2 * Math.PI * i) / Math.max(n, 1); return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
+  const maxW = Math.max(1e-9, ...nodes.map(d => d.size || 1));
+  const edges = nodes.map((d, i) => { const [x, y] = pos[i], w = 1 + 5 * Math.max(0, Math.min(1, d.strength ?? 0.5));
+    const L = Math.hypot(x - cx, y - cy) || 1, sx = cx + (x - cx) / L * 36, sy = cy + (y - cy) / L * 36;
+    return `<line class="ng-e ${d.state || ''}" x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke-width="${w.toFixed(1)}" style="animation-delay:${(i * 35)}ms${d.heat != null ? `;stroke:var(--good);opacity:${(0.25 + 0.7 * d.heat).toFixed(2)}` : ''}"/>`; }).join('');
+  const dots = nodes.map((d, i) => { const [x, y] = pos[i], r = 9 + 11 * Math.sqrt((d.size || 1) / maxW), lx = x + (x < cx - 4 ? -1 : x > cx + 4 ? 1 : 0) * (r + 5), anc = x < cx - 4 ? 'end' : x > cx + 4 ? 'start' : 'middle';
+    const ly = Math.abs(x - cx) <= 4 ? y + (y < cy ? -r - 16 : r + 13) : y + 4;
+    return `<g class="ng-n ${d.state || ''}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(d.label)}${d.tag ? ', ' + esc(d.tag) : ''}" style="animation-delay:${(120 + i * 35)}ms">
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 6).toFixed(1)}" class="ng-hit"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" class="ng-c"${d.heat != null ? ` style="fill:color-mix(in srgb, var(--good) ${(18 + 82 * d.heat).toFixed(0)}%, var(--surface));stroke:color-mix(in srgb, var(--good) ${(40 + 60 * d.heat).toFixed(0)}%, var(--surface))"` : ''}/>
+      ${d.inner ? `<text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" class="ng-in" text-anchor="middle">${esc(d.inner)}</text>` : ''}
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="ng-l" text-anchor="${anc}">${esc(d.label)}</text>
+      ${d.tag ? `<text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" class="ng-t ${d.tagCls || ''}" text-anchor="${anc}">${esc(d.tag)}</text>` : ''}</g>`; }).join('');
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="ng-svg" role="img" aria-label="${esc(center.label)} and ${n} connected items">${edges}
+    <g class="ng-ctr ${center.state || ''}"><circle cx="${cx}" cy="${cy}" r="34" class="ng-cc"/><text x="${cx}" y="${cy - 2}" class="ng-cl" text-anchor="middle">${esc(center.label)}</text>
+      ${center.sub ? `<text x="${cx}" y="${cy + 13}" class="ng-cs" text-anchor="middle">${esc(center.sub)}</text>` : ''}</g>${dots}</svg>
+    ${opts.legend ? `<div class="ng-leg">${opts.legend}</div>` : ''}`;
+  box.querySelectorAll('.ng-n').forEach(g => { const d = nodes[+g.dataset.i]; if (!d.onTap) return; g.onclick = () => d.onTap(); g.onkeydown = e => { if (e.key === 'Enter') d.onTap(); }; });
+}
+// strategy in the centre: one long-term strategy and the stocks in its basket (from the "strongest strategies" panel)
+function ngStrategy(r) {
+  let el = document.getElementById('ng-sheet');
+  if (!el) { document.body.insertAdjacentHTML('beforeend', '<div id="ng-sheet" class="rp-sheet" role="dialog" aria-modal="true" aria-label="Strategy map"><div class="rp-bg"></div><div class="rp-card"></div></div>');
+    el = document.getElementById('ng-sheet'); el.querySelector('.rp-bg').onclick = () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); }; }
+  el.classList.add('on'); document.body.classList.add('rp-lock');
+  const card = el.querySelector('.rp-card'), P = r.perf || {}, pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+  const shared = t => (HS.rows || []).filter(x => x.picks.includes(t)).length;
+  const NR = (HS.rows || [1]).length;
+  const nodes = r.picks.map(t => { const v = P.stocks?.[t]; return {label: t, inner: '', size: shared(t), strength: shared(t) / NR, heat: (shared(t) - 1) / Math.max(NR - 1, 1),
+    state: '', tag: v == null ? '' : pc(v), tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn', onTap: () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); }}; });
+  const name = r.name.replace(/_/g, ' ');
+  card.innerHTML = `<div class="rp-h"><div><b>${esc(name)}</b><small>${r.picks.length} stocks · basket of ${esc(r.as_of)}${P.ret != null ? ` · ${pc(P.ret)} since ${esc(P.from)} (SPY ${pc(P.spy)})` : ''}</small></div><button class="rp-x" aria-label="Close">×</button></div>
+    <div class="ng-box"></div>`;
+  card.querySelector('.rp-x').onclick = () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); };
+  ngDraw(card.querySelector('.ng-box'), {label: name.length > 12 ? name.slice(0, 11) + '…' : name, sub: P.ret != null ? pc(P.ret) : '', state: P.ret == null ? '' : P.ret >= 0 ? 'up' : 'dn'}, nodes,
+    {h: 330, legend: '<span><i class="ng-grad"></i>darker green = more of our 14 strategies own it</span><span>label = return since the basket date</span>'});
+}
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
 // Long press (or right-click) on any element with a ticker (data-t / data-od: odds lists, movers, news, picks, high-Sharpe cards) or a strategy
