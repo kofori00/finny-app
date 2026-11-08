@@ -1139,6 +1139,23 @@
   .hs-perf{margin:12px 0 6px;padding:12px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)} .hs-pt b{font:700 15px var(--font-display);color:var(--ink);margin-right:6px} .hs-pt span{font-size:11.5px;color:var(--muted)}
   .hs-pg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px} .hs-pg b{display:block;font:800 19px var(--font-display)} .hs-pg span{display:block;font-size:11px;line-height:1.3;color:var(--muted)} .hs-perf .v2-note{margin:8px 0 0}
   .hs-s small.hs-sp{margin-top:2px} .hs-s small.hs-sp b{font:700 11px var(--font-ui)}
+  .ss-rp{display:inline-block;margin:6px 0 2px;padding:6px 10px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);font:600 12px var(--font-ui);cursor:pointer}
+  .rp-sheet{position:fixed;inset:0;z-index:90;display:none} .rp-sheet.on{display:block} body.rp-lock{overflow:hidden} .rp-bg{position:absolute;inset:0;background:var(--backdrop)}
+  .rp-card{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px 28px;box-shadow:var(--shadow-lg)}
+  @media(min-width:760px){.rp-card{left:50%;right:auto;width:720px;transform:translateX(-50%);bottom:4vh;border-radius:22px;max-height:90vh}}
+  .rp-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .rp-h b{font:700 16px var(--font-display);color:var(--ink);display:block} .rp-h small{color:var(--muted);font-size:12px}
+  .rp-x{border:0;background:var(--glass-2);color:var(--ink);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer;flex:none}
+  .rp-range{display:flex;gap:6px;margin:12px 0 8px} .rp-range button{flex:1;padding:7px 0;border-radius:10px;border:1px solid var(--glass-line);background:transparent;color:var(--muted);font:600 12px var(--font-ui)} .rp-range button.on{background:var(--glass-2);color:var(--ink)}
+  .rp-read{font:500 12px/1.5 var(--font-ui);color:var(--ink-2);background:var(--glass);border:1px solid var(--glass-line);border-radius:12px;padding:8px 10px;margin:6px 0 10px;min-height:46px;font-variant-numeric:tabular-nums}
+  .rp-read span{display:inline-block;margin-right:10px} .rp-ok{color:var(--good)} .rp-no{color:var(--muted)}
+  .rp-p{margin:0 0 10px} .rp-lab b{display:block;font:600 12.5px var(--font-ui);color:var(--ink)} .rp-lab span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .rp-svg{display:block;width:100%;height:auto;border-radius:10px;background:var(--glass);touch-action:pan-y} .rp-p:first-of-type .rp-svg{aspect-ratio:340/150}
+  .rp-line{fill:none;stroke:var(--ink);stroke-width:1.2;vector-effect:non-scaling-stroke} .rp-f{stroke:var(--ink-2)} .rp-thr{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3;vector-effect:non-scaling-stroke}
+  .rp-hold{fill:var(--good);opacity:.10} .rp-on{fill:var(--good);opacity:.16} .rp-onx{fill:var(--bad,#dc2626);opacity:.12} .rp-in{fill:var(--good)} .rp-out{fill:var(--bad,#dc2626)} .rp-sig{fill:var(--good)}
+  .rp-cur{stroke:var(--ink);stroke-width:1;opacity:.45;vector-effect:non-scaling-stroke}
+  .rp-sum{font-size:12.5px;color:var(--ink-2);margin:8px 0} .rp-tr summary{cursor:pointer;font:600 13px var(--font-ui);color:var(--ink);margin:6px 0}
+  .rp-tr table{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums} .rp-tr th,.rp-tr td{text-align:left;padding:4px 3px;border-bottom:1px solid var(--glass-line)} .rp-tr th{color:var(--muted);font-weight:600}
+  .rp-csv{margin:10px 0 0;padding:8px 12px;border-radius:10px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink);font:600 12px var(--font-ui)}
   .hs-strats{display:flex;flex-direction:column;gap:6px;margin-top:8px} .hs-s{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)}
   .hs-s b{font:600 13px var(--font-ui);color:var(--ink)} .hs-s small{display:block;font-size:11px;color:var(--muted)} .hs-sn{font:600 12.5px var(--font-ui);color:var(--muted);white-space:nowrap} .hs-sn i{font-style:normal;margin:0 4px} .hs-sn b{font:800 14px var(--font-display);color:var(--ink)}
   .hs-t tr[data-t]{cursor:pointer} .hs-bar{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--glass-2);overflow:hidden;vertical-align:middle} .hs-bar i{display:block;height:100%;background:var(--accent)}
@@ -7079,9 +7096,11 @@ function ssCard(A) {
     const rows = L.map(x => { const miss = x.conditions.filter(c => c.ok === false).length, wait = x.conditions.filter(c => c.ok === null).length, rc = x.record;
       return `<div class="ss-row${x.signal_now ? ' on' : ''}"><div class="ss-n"><b>${esc(x.name)}</b><span class="ss-t ${x.tier === 'edge' ? 'ss-edge' : ''}">${x.tier === 'edge' ? 'passed every test' : 'promising'}</span>${x.in_universe ? '' : '<span class="ss-t" title="Never tested outside the S&amp;P 500: shown as a what-if">outside its tested universe</span>'}</div>
         <div class="ss-s">${x.signal_now ? `<b class="v2-up">would buy${r.live ? ' now' : ' at the last close'}</b>` : `no signal · ${miss} of ${x.conditions.length} rule${x.conditions.length > 1 ? 's' : ''} not met${wait ? ` · ${wait} need${wait === 1 ? 's' : ''} more history (too new)` : ''}`}${x.open_trade ? ` · simulated trade open since ${esc(x.open_trade.entry)}` : ''}${x.last_signal && !x.signal_now ? ` · last signal ${esc(x.last_signal)}` : ''}</div>
+        <button class="ss-rp" data-rp="${esc(x.key)}" data-rpn="${esc(x.name)}">See the rules fire on the chart ›</button>
         <div class="ss-r">On ${esc(S)} ${since}: ${rc.trades} trade${rc.trades === 1 ? '' : 's'}${rc.trades ? `, ${Math.round(rc.win * 100)}% winners, average ${pct(rc.avg)}` : ''}</div></div>`; }).join('');
     el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)} <span>${n} of ${L.length} would buy${r.live ? ' at the live price' : ` (close of ${esc(r.as_of)})`}</span></div>${rows}
       <p class="ss-f">Exact strategy rules run on ${esc(S)}${r.member ? '' : ', ranked against each day\'s S&amp;P 500 as if it were a member'}. A record on one stock is a small sample, not a forecast. Not advice.</p>`;
+    el.querySelectorAll('[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay
     const t0 = document.querySelector('.hero-stats')?.children[0];
     if (t0 && !r.member && HERO.last?.sym === S) { const b = t0.querySelector('b'), l = t0.querySelector('.hs-l'); if (b && l) { t0.dataset.ss = '1'; b.textContent = `${n}/${L.length}`; b.className = n ? 'v2-up' : ''; l.textContent = `of our swing strategies would buy ${S}${r.live ? ' now' : ''}`; } }
   }).catch(e => { if (el.dataset.sym === S) el.innerHTML = `<div class="ss-h">Our swing strategies on ${esc(S)}</div><p class="note">Could not run them: ${esc(e.message)}</p>`; });
@@ -7667,6 +7686,103 @@ function libInit() {
   if (ask) ask.onclick = () => { const i = document.getElementById('ak-q'); if (i) { i.value = 'Does my strategy have an edge? My rules: '; i.focus(); i.scrollIntoView({block: 'center'}); } };
 }
 const v2viewSetLIB = viewSet; viewSet = function (v, push) { v2viewSetLIB(v, push); if (VIEW.cur === 'research') { libInit(); libLoad(); } };
+
+// rule replay (2026-11-08, Bible 6.192): one strategy on one stock, day by day. Price with every simulated entry (▲) and exit (▼) and the holding
+// periods shaded; below it one panel per rule: the feature, its threshold (fixed, a second feature, or the day's cross-sectional cut) and the days
+// it holds shaded. The days all entry rules hold are the signals. Data: stock-signals op replay (same engine and data as the card).
+const RP = {};
+async function rpFetch(sym, key, days) {
+  const k = `${sym}|${key}|${days}`; if (RP[k] && Date.now() - RP[k].at < 60000) return RP[k].v;
+  const token = await getToken();
+  const r = await fetch(`${SB_URL}/functions/v1/stock-signals`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'},
+    body: JSON.stringify({op: 'replay', symbol: sym, key, days})});
+  const j = await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})); if (!j.ok) throw new Error(j.error || 'replay failed');
+  RP[k] = {at: Date.now(), v: j}; return j;
+}
+const RP_WORDS = {ret_rank: 'return rank vs all S&P 500 stocks', rank_in_sector: 'return rank inside its sector', max_ret: 'biggest one-day gain', ibs: 'close position in the day\'s range (0 = low, 1 = high)',
+  spy_sma_ratio: 'S&P 500 vs its moving average', sma_ratio: 'price vs its moving average', beta: 'beta to the S&P 500', vol_slope: 'volume trend', squeeze: 'volatility squeeze',
+  vzo: 'volume zone oscillator', swing_trend: 'swing-high trend', atr_px: 'average true range', dollar_vol: 'average dollar volume'};
+const RP_ROLE = {entry: 'Entry rule', regime: 'Market filter', exit: 'Exit rule'};
+function rpOpen(sym, key, name) {
+  let el = document.getElementById('rp-sheet');
+  if (!el) { document.body.insertAdjacentHTML('beforeend', '<div id="rp-sheet" class="rp-sheet" role="dialog" aria-modal="true" aria-label="Rule chart"><div class="rp-bg"></div><div class="rp-card"></div></div>');
+    el = document.getElementById('rp-sheet'); el.querySelector('.rp-bg').onclick = rpClose; document.addEventListener('keydown', e => { if (e.key === 'Escape') rpClose(); }); }
+  el.classList.add('on'); document.body.classList.add('rp-lock');
+  const card = el.querySelector('.rp-card'); card.dataset.k = sym + '|' + key;
+  const head = d => `<div class="rp-h"><div><b>${esc(name)} on ${esc(sym)}</b><small>Every rule, every day: the backtest you can see</small></div><button class="rp-x" aria-label="Close">×</button></div>
+    <div class="rp-range" role="tablist">${[[125, '6 mo'], [250, '1 yr'], [500, '2 yr'], [1250, '5 yr']].map(([n, l]) => `<button data-n="${n}" class="${n === d ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  const load = days => {
+    card.innerHTML = head(days) + '<p class="note">Running the strategy on ' + esc(sym) + '…</p>'; card.querySelector('.rp-x').onclick = rpClose;
+    card.querySelectorAll('.rp-range button').forEach(b => b.onclick = () => load(+b.dataset.n));
+    rpFetch(sym, key, days).then(j => { if (card.dataset.k !== sym + '|' + key) return; card.innerHTML = head(days) + rpBody(j); card.querySelector('.rp-x').onclick = rpClose;
+      card.querySelectorAll('.rp-range button').forEach(b => b.onclick = () => load(+b.dataset.n)); rpWire(card, j); })
+      .catch(e => { card.innerHTML = head(days) + `<p class="note">Could not run it: ${esc(e.message)}</p>`; card.querySelector('.rp-x').onclick = rpClose; });
+  };
+  load(250);
+}
+function rpClose() { const el = document.getElementById('rp-sheet'); if (el) el.classList.remove('on'); document.body.classList.remove('rp-lock'); }
+// geometry shared by every panel: x by day index, 340 x H viewBox, the svg scales to the card width
+const RP_W = 340, RP_L = 4, RP_R = 336;
+const rpX = (i, n) => RP_L + (RP_R - RP_L) * (n > 1 ? i / (n - 1) : 0.5);
+function rpScale(vals, pad = 0.08) { const f = vals.filter(v => v != null && isFinite(v)); if (!f.length) return null; let lo = Math.min(...f), hi = Math.max(...f);
+  if (hi === lo) { hi += 1; lo -= 1; } const p = (hi - lo) * pad; return [lo - p, hi + p]; }
+function rpPath(vals, n, y) { let d = '', on = false; vals.forEach((v, i) => { if (v == null || !isFinite(v)) { on = false; return; } d += (on ? 'L' : 'M') + rpX(i, n).toFixed(1) + ' ' + y(v).toFixed(1); on = true; }); return d; }
+function rpBands(flags, n, H, cls) {           // shaded runs where flags[i] is true
+  let s = '', a = -1; const w = (RP_R - RP_L) / Math.max(n - 1, 1);
+  flags.forEach((f, i) => { if (f && a < 0) a = i; if ((!f || i === n - 1) && a >= 0) { const b = f ? i : i - 1; s += `<rect class="${cls}" x="${(rpX(a, n) - w / 2).toFixed(1)}" y="0" width="${((b - a + 1) * w).toFixed(1)}" height="${H}"/>`; a = -1; } });
+  return s;
+}
+function rpBody(j) {
+  const n = j.days.length, idx = Object.fromEntries(j.days.map((d, i) => [d, i])), pc = x => (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+  const held = new Array(n).fill(false); const marks = [];
+  for (const t of j.trades) { const a = idx[t.entry] ?? 0, b = t.exit && idx[t.exit] != null ? idx[t.exit] : n - 1; for (let i = a; i <= b; i++) held[i] = true;
+    if (idx[t.entry] != null) marks.push({i: a, up: true, t}); if (t.exit && idx[t.exit] != null) marks.push({i: b, up: false, t}); }
+  if (j.open && idx[j.open.entry] != null) { for (let i = idx[j.open.entry]; i < n; i++) held[i] = true; marks.push({i: idx[j.open.entry], up: true, t: {entry: j.open.entry, px: j.open.px, why: 'still open'}}); }
+  const H = 150, sc = rpScale([...j.close, ...j.low.slice(), ...j.high.slice()].filter(v => v != null)); const y = v => H - 6 - (H - 12) * (v - sc[0]) / (sc[1] - sc[0]);
+  const sigDots = j.signal.map((s, i) => s ? `<circle class="rp-sig" cx="${rpX(i, n).toFixed(1)}" cy="${(H - 3).toFixed(1)}" r="1.6"/>` : '').join('');
+  const mk = marks.map(m => { const x = rpX(m.i, n), yy = y(j.close[m.i]) + (m.up ? 9 : -9);
+    return `<path class="${m.up ? 'rp-in' : 'rp-out'}" d="${m.up ? `M${x - 4} ${yy + 5}L${x + 4} ${yy + 5}L${x} ${yy - 2}Z` : `M${x - 4} ${yy - 5}L${x + 4} ${yy - 5}L${x} ${yy + 2}Z`}"><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></path>`; }).join('');
+  const price = `<div class="rp-p"><div class="rp-lab"><b>${esc(j.symbol)} price</b><span>▲ buy · ▼ sell · shaded = holding · dots = signal days</span></div>
+    <svg viewBox="0 0 ${RP_W} ${H}" preserveAspectRatio="none" class="rp-svg" data-h="${H}">${rpBands(held, n, H, 'rp-hold')}<path class="rp-line" d="${rpPath(j.close, n, y)}"/>${mk}${sigDots}<line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${H}"/></svg></div>`;
+  const panels = j.panels.map((p, k) => {
+    const PH = 64, all = [...p.value, ...p.threshold].filter(v => v != null), s = rpScale(all); if (!s) return '';
+    const yy = v => PH - 4 - (PH - 8) * (v - s[0]) / (s[1] - s[0]), on = p.holds.filter(Boolean).length;
+    const fixed = p.threshold_kind === 'fixed' && p.threshold.find(v => v != null) != null;
+    const thr = fixed ? `<line class="rp-thr" x1="${RP_L}" x2="${RP_R}" y1="${yy(p.threshold.find(v => v != null)).toFixed(1)}" y2="${yy(p.threshold.find(v => v != null)).toFixed(1)}"/>`
+      : `<path class="rp-thr" d="${rpPath(p.threshold, n, yy)}"/>`;
+    const f = p.feature.replace(/\(.*$/, ''), words = RP_WORDS[f] || f;
+    return `<div class="rp-p" data-k="${k}"><div class="rp-lab"><b>${RP_ROLE[p.role] || p.role}: ${esc(p.rule)}</b><span>${esc(words)} · dashed = ${esc(p.threshold_kind === 'fixed' ? 'threshold' : p.threshold_kind)} · holds on ${on} of ${n} days</span></div>
+      <svg viewBox="0 0 ${RP_W} ${PH}" preserveAspectRatio="none" class="rp-svg" data-h="${PH}">${rpBands(p.holds.map(Boolean), n, PH, p.role === 'exit' ? 'rp-onx' : 'rp-on')}${thr}<path class="rp-line rp-f" d="${rpPath(p.value, n, yy)}"/><line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${PH}"/></svg></div>`;
+  }).join('');
+  const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
+  const exitTxt = Object.entries(j.exit || {}).filter(([k]) => k !== 'exit_if').map(([k, v]) => k === 'hold' ? `sell after ${v} days` : `${k.replace(/_/g, ' ')} ${v}`).join(', ');
+  return `<div class="rp-read" aria-live="polite">Tap or slide over the chart to read any day.</div>${price}${panels}
+    <div class="rp-sum">${done.length} trade${done.length === 1 ? '' : 's'} in this window${done.length ? ` · ${win} winners · average ${pc(done.reduce((a, t) => a + t.ret, 0) / done.length)}` : ''}${exitTxt ? ` · exit: ${esc(exitTxt)}` : ''}${j.member ? '' : ` · ${esc(j.symbol)} is outside the S&amp;P 500: ranked against it as if it were a member`}</div>
+    <details class="rp-tr"><summary>Every trade in this window</summary>${done.length ? `<table><tr><th>Buy</th><th>Sell</th><th>In</th><th>Out</th><th>Result</th><th>Why sold</th></tr>${done.map(t => `<tr><td>${esc(t.entry)}</td><td>${esc(t.exit)}</td><td>$${(+t.px).toFixed(2)}</td><td>$${(+t.xt).toFixed(2)}</td><td class="${t.ret >= 0 ? 'v2-up' : 'v2-dn'}">${pc(t.ret)}</td><td>${esc(t.why)}</td></tr>`).join('')}</table>` : '<p class="note">No completed trade in this window.</p>'}
+      <button class="rp-csv">Download the days and trades (CSV)</button></details>
+    <p class="v2-note">Hypothetical backtest: the strategy's exact rules run on ${esc(j.symbol)}'s split- and dividend-adjusted daily prices, entering at the close, one position at a time, no costs in this view. Past results do not predict future ones. Not advice.</p>`;
+}
+function rpWire(card, j) {
+  const n = j.days.length, read = card.querySelector('.rp-read');
+  const show = i => {
+    card.querySelectorAll('.rp-cur').forEach(l => { const x = rpX(i, n); l.setAttribute('x1', x); l.setAttribute('x2', x); });
+    const fmt = v => v == null ? '–' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3);
+    read.innerHTML = `<b>${esc(j.days[i])}</b> · $${fmt(j.close[i])}${j.signal[i] ? ' · <b class="v2-up">signal: all entry rules hold</b>' : ''}<br>` + j.panels.map(p =>
+      `<span class="${p.holds[i] ? 'rp-ok' : 'rp-no'}">${p.holds[i] ? '✓' : p.holds[i] === null ? '·' : '✗'} ${esc(p.rule)}: ${fmt(p.value[i])} vs ${fmt(p.threshold[i])}</span>`).join('');
+  };
+  card.querySelectorAll('.rp-svg').forEach(svg => {
+    const at = e => { const r = svg.getBoundingClientRect(), x = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * RP_W; return Math.max(0, Math.min(n - 1, Math.round((x - RP_L) / (RP_R - RP_L) * (n - 1)))); };
+    svg.addEventListener('pointermove', e => show(at(e))); svg.addEventListener('pointerdown', e => show(at(e)));
+  });
+  card.querySelector('.rp-csv').onclick = () => {
+    const head = ['date', 'close', 'signal', ...j.panels.map(p => `${p.rule} value`), ...j.panels.map(p => `${p.rule} threshold`), ...j.panels.map(p => `${p.rule} holds`)];
+    const rows = j.days.map((d, i) => [d, j.close[i], j.signal[i] ? 1 : 0, ...j.panels.map(p => p.value[i]), ...j.panels.map(p => p.threshold[i]), ...j.panels.map(p => p.holds[i] == null ? '' : p.holds[i] ? 1 : 0)]);
+    const tr = ['', 'trades: entry,exit,price in,price out,return,why', ...j.trades.map(t => [t.entry, t.exit, t.px, t.xt, t.ret, t.why].join(','))];
+    const csv = [head, ...rows].map(r => r.map(x => /[",]/.test(String(x ?? '')) ? `"${String(x).replace(/"/g, '""')}"` : (x ?? '')).join(',')).join('\n') + '\n' + tr.join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = `finny_${j.symbol}_${j.key}_rules.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  show(n - 1);
+}
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
 // Long press (or right-click) on any element with a ticker (data-t / data-od: odds lists, movers, news, picks, high-Sharpe cards) or a strategy
