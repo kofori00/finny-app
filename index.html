@@ -6433,6 +6433,17 @@ function custRender() {
 }
 function custInit() { custLoad(); if (!CU.timer) CU.timer = setInterval(() => { if (!document.hidden) custLoad(); }, 5 * 60 * 1000); }
 
+// 6.203: the model sometimes writes indicator names instead of the engine's features ("sma" 50,200 for a crossover): fix the common ones
+function akNormSpec(spec) {
+  const n2 = a => String(a ?? '').split(',').filter(x => x.trim() !== '').length;
+  const fix = c => { if (!c || !c.f) return c; const f = String(c.f).toLowerCase().replace(/[^a-z_]/g, ''), k = n2(c.a);
+    const m = {sma: k === 2 ? 'sma_x' : 'sma_ratio', ma: k === 2 ? 'sma_x' : 'sma_ratio', ema: k === 2 ? 'ema_x' : 'ema_ratio', sma_cross: 'sma_x', ema_cross: 'ema_x', golden_cross: 'sma_x', rsi14: 'rsi', return: 'ret', atr: 'atr_pct'}[f];
+    const o = {...c, f: m || f, op: {crosses_above: 'cross_above', crossover: 'cross_above', crosses_below: 'cross_below', crossunder: 'cross_below', gt: '>', lt: '<', gte: '>=', lte: '<='}[String(c.op).toLowerCase()] || c.op};
+    if (f === 'golden_cross' && !k) o.a = '50,200'; if (f === 'rsi14') o.a = '14'; if (o.f === 'rsi' && !n2(o.a)) o.a = '14';
+    if (o.v == null || o.v === '') o.v = '0'; return o; };
+  const e = spec.exit || {};
+  return {...spec, entry: (spec.entry || []).map(fix), regime: (spec.regime || []).map(fix), exit: {...e, exit_if: (e.exit_if || []).map(fix)}};
+}
 // ---------------- Ask Finny (2026-10-23): questions answered from Finny's own research (ask-finny Edge Function) ----------------
 // The question, plus the numbers the app shows for the stock on screen, go to ask-finny: it finds the closest passages in our research
 // notes / strategy texts / FAQ (built-in gte-small embeddings) and Gemini writes a short answer with [n] citations. History, not advice.
@@ -6590,9 +6601,21 @@ const AK_LOOK = {
     const r = await akT212({op: 'prepare', side: a.side, symbol: a.symbol, eur: a.amount_eur, quantity: a.quantity, all: !!a.all});
     AK.draft = r.ok ? {...r, at: Date.now()} : null; return r;
   },
+  async library_search({spec = {}} = {}) {                    // 6.203: the closest already-tested strategies in the library (rules + stored results)
+    spec = akNormSpec(spec);
+    const cs = [...(spec.entry || []), ...(spec.regime || [])].filter(c => c && c.f), e = spec.exit || {};
+    const feats = [...new Set(cs.map(c => c.f))], ops = [...new Set(cs.map(c => c.op).filter(Boolean))];
+    const ex = ['stop_pct', 'target_pct', 'stop_atr', 'target_atr', 'trail_atr', 'exit_if'].filter(k => e[k] != null && e[k] !== '' && !(Array.isArray(e[k]) && !e[k].length));
+    const conds = [...new Set(cs.map(c => `${c.f}(${String(c.a ?? '').replace(/\s/g, '')}) ${c.op}`))];
+    if (!feats.length) return {error: 'no rules to compare'};
+    const token = await getToken();
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/library_closest`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({want_feats: feats, want_ops: ops, want_exit: ex, top: 5, want_conds: conds})});
+    const j = await r.json().catch(() => null); if (!r.ok || !j) throw new Error('library search not available');
+    return j;
+  },
   async test_strategy({spec = {}} = {}) {                     // 6.203: owner only; a DRAFT backtest (nothing runs until the card's Run test)
     if (!document.body.classList.contains('role-owner')) return {error: 'Testing your own strategy from the chat is not available yet.'};
-    const r = await akST({op: 'draft', spec, question: AK.q || '', chat: AK.chat || null});
+    const r = await akST({op: 'draft', spec: akNormSpec(spec), question: AK.q || '', chat: AK.chat || null});
     AK.test = r.ok ? {...r, at: Date.now()} : null; return r;
   },
   async strategy_test_status({id = null} = {}) {              // 6.203: one test or the latest 10 (results only when status is done)
@@ -6789,7 +6812,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, library_signals: a => `Library strategies on ${String(a.symbol || '').toUpperCase()}`, trending_strategies: a => `Trending strategies (${a.window_days || 10} days)`, strategy_picks: a => `Picks of ${[].concat(a.strategies || []).slice(0, 3).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, test_strategy: () => 'Strategy test draft', strategy_test_status: () => 'Strategy tests', todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, library_signals: a => `Library strategies on ${String(a.symbol || '').toUpperCase()}`, trending_strategies: a => `Trending strategies (${a.window_days || 10} days)`, strategy_picks: a => `Picks of ${[].concat(a.strategies || []).slice(0, 3).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, test_strategy: () => 'Strategy test draft', library_search: () => 'Closest tested strategies', strategy_test_status: () => 'Strategy tests', todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
