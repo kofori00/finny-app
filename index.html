@@ -7478,11 +7478,15 @@ function hsSwing(el) {
       {h: mine.length > 12 ? 340 : 300, legend: `<span><i class="ng-grad"></i>darker = more of the ${SR.length} strategies hold it</span><span>bigger = better odds and past wins with ${esc(e.key)}</span><span>tap a stock</span>`});
     el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel));
     const ts = mine.map(h => h.t), sel = HS.swSel;
-    if (typeof mvOddsLoad === 'function' && ts.some(t => !MV.odds?.[t])) mvOddsLoad(ts).then(() => { if (HS.swSel === sel && HS.tab === 'swing') drawSel(); }).catch(() => {});
+    // 6.195b: one odds load per strategy selection, redraw at most once, never re-entered synchronously (an empty mvOddsLoad resolved at once and the
+    // redraw asked again: an endless loop that froze the app)
+    HS.swOdds ||= {};
+    if (typeof mvOddsLoad === 'function' && !HS.swOdds[sel] && ts.some(t => !MV.odds?.[t])) { HS.swOdds[sel] = 1;
+      mvOddsLoad(ts).then(() => setTimeout(() => { if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) drawSel(); }, 50)).catch(() => {}); }
     const inReg = ['R18L26', 'S4P23', 'FB017', 'FB125', 'LE01', 'LE02', 'R2A03_v06', 'R2D08_v08'].includes(sel) || Object.values(SS).some(v => v.v?.strategies?.some(x => x.key === sel));
     const reg = inReg ? ts.filter(t => !SS[t]).slice(0, 8) : null;   // past wins exist only for strategies in the real-time registry
     if (reg && reg.length && !HS.swReg?.[sel]) { (HS.swReg ||= {})[sel] = 1;
-      (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing') drawSel(); } })(); } };
+      (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) setTimeout(drawSel, 50); } })(); } };
   el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; drawSel(); });
   drawSel();
 }
@@ -7676,7 +7680,7 @@ const v2mvRenderMP = mvRender; mvRender = function () {
 const v2HeroMP = v2Hero; v2Hero = function (A) {
   v2HeroMP(A); let box = document.getElementById('mp-box');
   if (!A?.sym || HERO.demo || A.member) { if (box) box.remove(); return; }
-  if (!MP.rows || Date.now() - MP.at > 5 * 60e3) { if (!MP.busy) mpLoad(true).then(() => { if (HERO.last?.sym === A.sym) v2Hero(A); }); if (!MP.rows) return; }
+  if (!MP.rows || Date.now() - MP.at > 5 * 60e3) { if (!MP.busy && Date.now() - (MP.tryAt || 0) > 60e3) { MP.tryAt = Date.now(); mpLoad(true).then(() => { if (MP.rows && HERO.last?.sym === A.sym) setTimeout(() => v2Hero(A), 0); }); } if (!MP.rows) return; }   // 6.195b: one retry a minute
   const r = MP.rows[A.sym], hs = document.querySelector('.hero-stats'); if (!r || !hs) { if (box) box.remove(); return; }
   const b = mpBest(r), S = esc(A.sym), f = r.f || {}, t0 = hs.children[0];
   if (b && t0) {
