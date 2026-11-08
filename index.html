@@ -1197,6 +1197,8 @@
   .rp-g{position:relative;width:64px;height:12px;flex:none} .rp-g i{position:absolute;top:50%} .rp-g .tr{left:0;right:0;height:3px;margin-top:-1.5px;border-radius:2px;background:var(--glass-2)} .rp-g .th{width:2px;height:12px;margin-top:-6px;background:var(--ink-2);border-radius:1px}
   .rp-g .vv{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--muted)} .rp-g .vv.ok{background:var(--good)}
   .rp-raw summary{cursor:pointer;font:600 12px var(--font-ui);color:var(--muted);margin:4px 0 8px}
+  .rp-ax{position:relative;height:16px;margin-top:3px} .rp-ax span{position:absolute;top:0;transform:translateX(-50%);font:600 10px var(--font-ui);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .rp-ax span::before{content:"";position:absolute;left:50%;top:-4px;width:1px;height:3px;background:var(--muted)}
   .rp-sheet{position:fixed;inset:0;z-index:90;display:none} .rp-sheet.on{display:block} body.rp-lock{overflow:hidden} .rp-bg{position:absolute;inset:0;background:var(--backdrop)}
   .rp-card{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px 28px;box-shadow:var(--shadow-lg)}
   @media(min-width:760px){.rp-card{left:50%;right:auto;width:720px;transform:translateX(-50%);bottom:4vh;border-radius:22px;max-height:90vh}}
@@ -7912,7 +7914,7 @@ function rpPrice(j, H) {                          // price with buys (▲), sell
       ${grid}<path d="${area}" fill="url(#${gid}a)" opacity=".55"/>${heldArea.replace(/class="rp-ha"/g, `class="rp-ha" fill="url(#${gid}a)"`)}
       <path class="rp-glow" d="${line}" filter="url(#${gid}f)"/><path class="rp-line rp-pl" d="${line}"/>${mk}
       ${last ? `<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="7" class="rp-now-h"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.5" class="rp-now"/>` : ''}
-      <line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${H}"/></svg></div>`;
+      <line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${H}"/></svg>${rpAxis(j)}</div>`;
   return price;
 }
 function rpBody(j) {
@@ -7995,7 +7997,15 @@ function rpStrips(j) {
   const buyRules = j.panels.filter(p => p.role !== 'exit');
   const rows = j.panels.map(p => `<div class="rp-row"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpShort(p))}</b>${gauge(p)}<em class="${p.holds[n - 1] ? 'ok' : ''}">${p.holds[n - 1] ? '✓' : '✗'}</em></div>${strip(p.holds.map(Boolean), p.role === 'exit' ? 'rp-sx' : 'rp-sy')}`).join('');
   return `<div class="rp-tl"><div class="rp-tlh"><b>When each rule was met</b><span>green = met that day · gauge = today vs the line it must cross</span></div>${rows}
-    <div class="rp-row all"><span class="rp-ri entry">${IC.buy}</span><b>All buy rules met</b><em>${j.signal.filter(Boolean).length} days</em></div>${strip(j.signal, 'rp-sall')}</div>`;
+    <div class="rp-row all"><span class="rp-ri entry">${IC.buy}</span><b>All buy rules met</b><em>${j.signal.filter(Boolean).length} days</em></div>${strip(j.signal, 'rp-sall')}${rpAxis(j)}</div>`;
+}
+
+// 6.200 (user: "maybe place a time x-axis?"): month ticks shared by the price chart and the rule timeline (same x positions)
+function rpAxis(j) {
+  const n = j.days.length, mon = []; for (let i = 1; i < n; i++) if (j.days[i].slice(0, 7) !== j.days[i - 1].slice(0, 7)) mon.push(i);
+  const step = Math.max(1, Math.ceil(mon.length / 5)), pick = mon.filter((_, k) => k % step === 0);
+  const lab = i => { const d = new Date(j.days[i] + 'T12:00:00Z'); return d.toLocaleDateString(undefined, {month: 'short'}) + (d.getUTCMonth() === 0 || n > 300 ? " '" + String(d.getUTCFullYear()).slice(2) : ''); };
+  return `<div class="rp-ax">${pick.map(i => `<span style="left:${(rpX(i, n) / RP_W * 100).toFixed(1)}%">${esc(lab(i))}</span>`).join('')}</div>`;
 }
 
 // connection graph (2026-11-08, Bible 6.194; user: "the data and connections of the items most prominent rather than text"; "depending on whether I click
