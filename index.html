@@ -1175,6 +1175,8 @@
   .ng-chip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass);color:var(--ink-2);font:600 12.5px var(--font-ui);cursor:pointer}
   .ng-chip em{font-style:normal;font-variant-numeric:tabular-nums;min-width:18px;padding:1px 6px;border-radius:999px;background:var(--glass-2);color:var(--ink)} .ng-chip.on{background:var(--lime);color:var(--lime-ink);border-color:transparent} .ng-chip.on em{background:rgba(0,0,0,.12);color:inherit} .ng-chip.none{opacity:.55}
   .ng-grad{display:inline-block;width:26px;height:9px;border-radius:5px;margin-right:5px;vertical-align:-1px;background:linear-gradient(90deg,color-mix(in srgb,var(--good) 18%,var(--surface)),var(--good))}
+  .ng-leg .lg{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:var(--glass-2);color:var(--ink-2);font:600 11px var(--font-ui)} .ng-leg .lg .ng-grad{width:22px;height:8px;margin:0}
+  .ng-sz{display:inline-block;border-radius:50%;background:color-mix(in srgb,var(--good) 45%,var(--surface))} .ng-sz.s{width:6px;height:6px} .ng-sz.b{width:11px;height:11px;margin-right:2px} .ng-leg .lg.tap{background:transparent;color:var(--muted)} .ng-leg{justify-content:center;gap:6px}
   .ng-box{margin:4px 0 8px} .ng-svg{display:block;width:100%;height:auto;overflow:visible}
   .ng-e{stroke:var(--muted);opacity:.6;stroke-linecap:round;animation:ngIn .4s ease both} .ng-e.on,.ng-e.up{stroke:var(--good);opacity:.9} .ng-e.dn{stroke:var(--bad,#dc2626);opacity:.7} .ng-e.wait{stroke-dasharray:3 4}
   .ng-n{cursor:pointer;animation:ngIn .4s ease both} .ng-hit{fill:transparent} .ng-c{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:r .15s}
@@ -7199,7 +7201,7 @@ function ssCard(A) {
       ngDraw(el.querySelector('#ss-ng'), {label: S, sub: '', state: n ? 'up' : ''}, L.map(x => ({label: sn(x.name), size: Math.max(0.05, succ(x) - 0.3),
         strength: met(x), heat: met(x), state: x.signal_now ? 'on' : '',
         tag: `${x.conditions.filter(c => c.ok === true).length}/${x.conditions.length} rules${x.record?.trades ? ` · ${Math.round(x.record.win * 100)}% won` : ''}`, onTap: () => rpOpen(S, x.key, x.name)})),
-        {h: 300, legend: '<span><i class="ng-grad"></i>greener = closer to a buy (more rules met)</span><span>bigger = more past wins with this stock</span><span>tap a dot for its chart</span>'}); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre
+        {h: 300, legend: '<span class="lg"><i class="ng-grad"></i>rules met</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>past wins</span><span class="lg tap">tap ›</span>'}); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre
     el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     el.querySelectorAll('[data-tz]').forEach(b => b.onclick = () => { const x = L.find(y => y.key === b.dataset.tz); if (!x || !tz) return;
