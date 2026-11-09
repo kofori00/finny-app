@@ -6621,6 +6621,25 @@ const AK_LOOK = {
     }
     return {strategies: out};
   },
+  async company_profile({symbols = []} = {}) {               // 6.206: company card (SEC + Wikipedia via company-profile) + live price -> P/E, market cap, dividend yield
+    const syms = [].concat(symbols).map(x => String(x).toUpperCase()).filter(Boolean).slice(0, 5); if (!syms.length) return {error: 'no symbol'};
+    const token = await getToken();
+    const r = await fetch(`${SB_URL}/functions/v1/company-profile`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({symbols: syms})});
+    const j = await r.json().catch(() => null); if (!r.ok || !j?.ok) throw new Error(j?.error || 'company profiles not available');
+    let px = {}; try { const q = await AK_LOOK.stock_price({symbols: syms}); for (const x of (q.quotes || q.prices || q.stocks || [])) if (x?.symbol) px[x.symbol] = x; } catch (e) {}
+    const usd = v => v && (v.currency || 'USD') === 'USD' && Number.isFinite(v.value);
+    for (const c of j.companies || []) {
+      const q = px[c.symbol], price = +(q?.price_usd ?? q?.price), f = c.financials || {};
+      if (!Number.isFinite(price) || price <= 0) { c.valuation = {note: 'no live price, so no P/E or market cap'}; continue; }
+      const e12 = f.eps_trailing_12_months, efy = f.eps_diluted_last_fiscal_year, eps = usd(e12) ? e12 : usd(efy) ? efy : null, sh = f.shares_outstanding?.value, dps = f.dividends_per_share_last_fiscal_year;
+      c.valuation = {price_usd: price, price_time: q?.last_trade_at || null,
+        pe: eps ? (eps.value > 0 ? +(price / eps.value).toFixed(1) : 'negative earnings (no P/E)') : 'EPS not in USD or not filed, so no P/E',
+        pe_basis: eps ? `price / EPS ${eps === e12 ? 'trailing 12 months' : 'last fiscal year'} to ${eps.period_end}` : null,
+        market_cap_usd_bn: Number.isFinite(sh) ? +(price * sh / 1e9).toFixed(1) : null,
+        dividend_yield_pct: usd(dps) ? +(100 * dps.value / price).toFixed(2) : null};
+    }
+    return {...j, how_to_read: 'Company facts from SEC filings (with period end dates) and a Wikipedia summary; P/E, market cap and dividend yield are computed with the live price. Give the period of every figure, the currency when not USD, and name Wikipedia when you use the description.'};
+  },
   async stock_price({symbols = []} = {}) {                    // 6.167: live price + previous close (odds-live action quote; SIP, IEX fallback)
     const S = []; for (const x of [...new Set((Array.isArray(symbols) ? symbols : [symbols]).map(String))].slice(0, 10)) S.push(await akSym(x));
     const token = await getToken();
@@ -6876,7 +6895,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, library_signals: a => `Library strategies on ${String(a.symbol || '').toUpperCase()}`, trending_strategies: a => `Trending strategies (${a.window_days || 10} days)`, strategy_picks: a => `Picks of ${[].concat(a.strategies || []).slice(0, 3).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, test_strategy: () => 'Strategy test draft', library_search: () => 'Closest tested strategies', strategy_test_status: () => 'Strategy tests', todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, library_signals: a => `Library strategies on ${String(a.symbol || '').toUpperCase()}`, trending_strategies: a => `Trending strategies (${a.window_days || 10} days)`, strategy_picks: a => `Picks of ${[].concat(a.strategies || []).slice(0, 3).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, test_strategy: () => 'Strategy test draft', company_profile: a => `Company profile ${[].concat(a.symbols || []).slice(0, 3).join(', ')}`, library_search: () => 'Closest tested strategies', strategy_test_status: () => 'Strategy tests', todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
