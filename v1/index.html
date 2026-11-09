@@ -6216,7 +6216,8 @@ function akCheckSpec(spec, q) {
     if (m && !/cross/.test(c.op) && Math.abs(v) >= 2) problems.push(`${c.f}(${c.a}) ${c.op} ${c.v} is impossible: ${c.f} is price / average - 1 (e.g. 0.05 = 5% above). For one average above another use {f: "${m[1]}_x", a: "fast,slow", op: ">", v: "0"}.`);
   }
   const e = spec.exit || {}, all = [...conds, ...(e.exit_if || [])];          // a named indicator may sit in the entry, the filter or the sell rules
-  const has = f => all.some(c => new RegExp('^' + f).test(c.f)) || (f === 'atr' && ['stop_atr', 'target_atr', 'trail_atr'].some(k => +e[k] > 0));
+  const EXH = {rsi: /\brsi\(/, '(sma|ema)_': /\b(sma|ema|wma)\(/, macd: /\bema\(/, atr: /\batr\(/, '(vol_|dollar_vol|obv|vroc)': /\bvolume\b/, bb_: /\bstd\(/, stoch: /\b(max|min)\(/, ibs: /\b(high|low)\b/, '(red_run|green_run|streak)': /\bopen\b|\blag\(close/};
+  const has = f => all.some(c => c.f === 'expr' && EXH[f]?.test(String(c.x || ''))) || all.some(c => new RegExp('^' + f).test(c.f)) || (f === 'atr' && ['stop_atr', 'target_atr', 'trail_atr'].some(k => +e[k] > 0));
   const named = [['rsi', /\brsi\b/, 'rsi'], ['moving average', /\b(sma|ema|moving average|ma\d+|\d+\s*(-day|day)?\s*(ma|sma|ema))\b/, '(sma|ema)_'], ['MACD', /\bmacd\b/, 'macd'], ['ATR', /\batr\b/, 'atr'],
     ['volume', /\bvolume\b/, '(vol_|dollar_vol|obv|vroc)'], ['Bollinger', /\bbollinger\b/, 'bb_'], ['stochastic', /\bstoch/, 'stoch'], ['ADX', /\badx\b/, 'adx'], ['IBS', /\bibs\b/, 'ibs']];
   if (/\b(red|green|bearish|bullish|down|up) (days?|candles?|bars?)\b|\bclose[sd]? (below|under|above|over) (the |its )?open\b/.test(q) && !has('(red_run|green_run|streak)'))   // 6.204
@@ -6226,7 +6227,7 @@ function akCheckSpec(spec, q) {
   const sl = pct('(stop|stop[- ]loss)'), tp = pct('(take[- ]profit|target|profit)');
   if (sl && Math.abs(+e.stop_pct - sl.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${sl}% stop loss: exit.stop_pct must be ${sl.replace(',', '.') / 100}.`);
   if (tp && Math.abs(+e.target_pct - tp.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${tp}% take profit: exit.target_pct must be ${tp.replace(',', '.') / 100}.`);
-  if (!/\b(hold|holding|held|time exit|max(imum)? \d+|(after|for|within|exit in|sell in)( (exactly|about|max(imum)?|at most|up to))? \d+ (trading )?(days?|weeks?|bars?)|\d+[- ](trading[- ])?days? (hold|max|limit|exit))\b/.test(q)) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
+  if (!/\b(hold|holding|held|time exit)\b|\b(after|within|for|in|max(imum)?|at most|up to|exactly|no more than|no longer than)( a| an| the)?( max(imum)?| min(imum)?)?( of)?( exactly| about| at most)? \d+ (trading |calendar |market )?(days?|weeks?|bars?|sessions?)\b|\b\d+[- ](trading[- ])?days? (hold|max|limit|exit|time stop)\b/.test(q)) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
   const sect = (q.match(/\b(tech(nology)?|financials?|banks?|energy|health ?care|biotech|utilities|industrials?|consumer|materials|real estate|semiconductors?|chips?)\b/) || [])[0];
   if (spec.universe && spec.universe !== 'sp500' && !/\b(etfs?|funds?|spy|qqq|sector spdrs?)\b/.test(q.replace(/nasdaq[- ]?100|nasdaq/g, ''))) spec.universe = 'sp500';   // 6.204: "Nasdaq 100 stocks" once became the ETF universe
   if ((spec.exit?.exit_if || []).some(c => c.f === 'gap')) assumptions.push('the gap exit is checked at that day\'s close and sells at the next open (selling at the gap open itself cannot be tested yet)');
@@ -6242,6 +6243,7 @@ function akCheckSpec(spec, q) {
 function akNormSpec(spec) {
   const n2 = a => String(a ?? '').split(',').filter(x => x.trim() !== '').length;
   const fix = c => { if (!c || !c.f) return c; const f = String(c.f).toLowerCase().replace(/[^a-z_]/g, ''), k = n2(c.a);
+    if (f === 'expr' || f === 'expression') return {f: 'expr', x: String(c.x ?? c.a ?? '').trim(), op: c.op || '>', v: c.v ?? '0.5'};   // 6.205: expressions pass through as written
     const m = {sma: k === 2 ? 'sma_x' : 'sma_ratio', ma: k === 2 ? 'sma_x' : 'sma_ratio', ema: k === 2 ? 'ema_x' : 'ema_ratio', sma_cross: 'sma_x', ema_cross: 'ema_x', golden_cross: 'sma_x', rsi14: 'rsi', return: 'ret', atr: 'atr_pct', red_days: 'red_run', red_candles: 'red_run', red_day: 'red_run', red_bars: 'red_run', consecutive_red: 'red_run', consecutive_red_days: 'red_run', bearish_candles: 'red_run', green_days: 'green_run', green_candles: 'green_run', green_day: 'green_run', consecutive_green: 'green_run', consecutive_green_days: 'green_run', down_days: 'streak', up_days: 'streak', consecutive_down_days: 'streak'}[f];
     const o = {...c, f: m || f, op: {crosses_above: 'cross_above', crossover: 'cross_above', crosses_below: 'cross_below', crossunder: 'cross_below', gt: '>', lt: '<', gte: '>=', lte: '<='}[String(c.op).toLowerCase()] || c.op};
     if (f === 'golden_cross' && !k) o.a = '50,200'; if (f === 'rsi14') o.a = '14'; if (o.f === 'rsi' && !n2(o.a)) o.a = '14';
@@ -6424,7 +6426,10 @@ const AK_LOOK = {
   async library_search({spec = {}} = {}) {                    // 6.203: the closest already-tested strategies in the library (rules + stored results)
     spec = akCheckSpec(spec, AK.q).spec;
     const cs = [...(spec.entry || []), ...(spec.regime || [])].filter(c => c && c.f), e = spec.exit || {};
-    const feats = [...new Set(cs.map(c => c.f))], ops = [...new Set(cs.map(c => c.op).filter(Boolean))];
+    const EXF = [[/\brsi\(/, ['rsi']], [/\b(sma|ema|wma)\(/, ['sma_ratio', 'ema_ratio', 'sma_x']], [/\bzscore\(/, ['zscore']], [/\batr\(/, ['atr_pct']], [/\bstd\(/, ['volatility', 'bb_pctb']],
+      [/\bslope/, ['sma_slope', 'ema_slope']], [/\bmax\(/, ['hi_dist', 'new_high']], [/\bmin\(/, ['lo_dist']], [/\bvolume\b/, ['vol_ratio']], [/\bopen\b/, ['red_run', 'gap', 'intraday']], [/\bpct_change\(/, ['ret']]];
+    const fx = cs.flatMap(c => c.f === 'expr' ? EXF.filter(([re]) => re.test(String(c.x || ''))).flatMap(([, fs]) => fs) : [c.f]);
+    const feats = [...new Set(fx)], ops = [...new Set(cs.map(c => c.op).filter(Boolean))];
     const ex = ['stop_pct', 'target_pct', 'stop_atr', 'target_atr', 'trail_atr', 'exit_if'].filter(k => e[k] != null && e[k] !== '' && !(Array.isArray(e[k]) && !e[k].length));
     const conds = [...new Set(cs.map(c => `${c.f}(${String(c.a ?? '').replace(/\s/g, '')}) ${c.op}`))];
     if (!feats.length) return {error: 'no rules to compare'};
