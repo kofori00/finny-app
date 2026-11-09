@@ -6220,7 +6220,7 @@ function akCheckSpec(spec, q) {
   const named = [['rsi', /\brsi\b/, 'rsi'], ['moving average', /\b(sma|ema|moving average|ma\d+|\d+\s*(-day|day)?\s*(ma|sma|ema))\b/, '(sma|ema)_'], ['MACD', /\bmacd\b/, 'macd'], ['ATR', /\batr\b/, 'atr'],
     ['volume', /\bvolume\b/, '(vol_|dollar_vol|obv|vroc)'], ['Bollinger', /\bbollinger\b/, 'bb_'], ['stochastic', /\bstoch/, 'stoch'], ['ADX', /\badx\b/, 'adx'], ['IBS', /\bibs\b/, 'ibs']];
   if (/\b(red|green|bearish|bullish|down|up) (days?|candles?|bars?)\b|\bclose[sd]? (below|under|above|over) (the |its )?open\b/.test(q) && !has('(red_run|green_run|streak)'))   // 6.204
-    problems.push('the user asked for consecutive red / green candles (close vs open). That condition cannot be tested yet (the engine feature is not live). Do NOT make a test without it: tell the user plainly that the red-days part cannot be tested yet, offer to test the rest without it if they say so, and show only Option 1.');
+    problems.push('the user asked for consecutive red / green candles (close vs open) but the spec lacks it: add {f: "red_run", a: "", op: ">=", v: "3"} for three red candles in a row (green_run for green).');
   for (const [label, re, f] of named) if (re.test(q) && !has(f)) problems.push(`the user named ${label} but the spec has no ${label} condition: add it to entry, regime or exit (ATR stops go in exit.stop_atr; 'exit when price crosses above the N-day SMA' = exit.exit_if {f: "sma_ratio", a: "N", op: "cross_above", v: "0"}).`);
   const pct = x => (q.match(new RegExp('(\\d+(?:[.,]\\d+)?)\\s*%\\s*' + x)) || [])[1];
   const sl = pct('(stop|stop[- ]loss)'), tp = pct('(take[- ]profit|target|profit)');
