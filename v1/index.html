@@ -6228,6 +6228,7 @@ function akCheckSpec(spec, q) {
   if (tp && Math.abs(+e.target_pct - tp.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${tp}% take profit: exit.target_pct must be ${tp.replace(',', '.') / 100}.`);
   if (!/\b(hold|holding|held|time exit|max(imum)? \d+|(after|for|within|exit in|sell in)( (exactly|about|max(imum)?|at most|up to))? \d+ (trading )?(days?|weeks?|bars?)|\d+[- ](trading[- ])?days? (hold|max|limit|exit))\b/.test(q)) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
   const sect = (q.match(/\b(tech(nology)?|financials?|banks?|energy|health ?care|biotech|utilities|industrials?|consumer|materials|real estate|semiconductors?|chips?)\b/) || [])[0];
+  if (spec.universe && spec.universe !== 'sp500' && !/\b(etfs?|funds?|spy|qqq|sector spdrs?)\b/.test(q.replace(/nasdaq[- ]?100|nasdaq/g, ''))) spec.universe = 'sp500';   // 6.204: "Nasdaq 100 stocks" once became the ETF universe
   if (/\b(nasdaq|ndx|qqq|russell|small caps?|dow jones|djia)\b/.test(q)) assumptions.push('S&P 500 stocks instead of the index you named (only the point-in-time S&P 500 can be tested; many Nasdaq 100 stocks are in it)');
   if (sect) assumptions.push(`ALL S&P 500 stocks, not only ${sect} stocks: a sector-only universe cannot be tested yet, so the result is for the whole index`);
   if (!/\b(s&p|sp500|spx|stocks?|etfs?|nasdaq|qqq|spy|shares)\b/.test(q)) assumptions.push('S&P 500 stocks (members at the time); say "use ETFs" to change');
@@ -6436,7 +6437,13 @@ const AK_LOOK = {
   },
   async strategy_test_status({id = null} = {}) {              // 6.203: one test or the latest 10 (results only when status is done)
     if (!document.body.classList.contains('role-owner')) return {error: 'not available'};
-    return await akST({op: 'status', id});
+    const r = await akST({op: 'status', id});
+    // 6.204: the comparison comes from the library itself (the model once invented TA24's numbers): the closest match of each finished test's own rules
+    for (const t of (r.tests || []).slice(0, 3)) if (t.status === 'done') try {
+      const row = (await sb(`strategy_tests?id=eq.${encodeURIComponent(t.id)}&select=spec`))[0];
+      if (row?.spec) t.closest_library_match = ((await AK_LOOK.library_search({spec: row.spec})).matches || []).slice(0, 2);
+    } catch (e) { t.closest_library_match = 'not available'; }
+    return {...r, note: 'Compare ONLY with closest_library_match (from the library); never quote library numbers from memory. Say which universe was tested (rules_text).'};
   },
   async todays_signals(a = {}) {
     // a past day (6.164, user: "Also yesterday?"): read the daily swing-signal log (live_signal_log, written at each close by live-profile).
