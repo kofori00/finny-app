@@ -6477,7 +6477,7 @@ function akNormSpec(spec) {
       o.f = 'bb_pctb'; o.a = n2(c.a) === 2 ? String(c.a).replace(/\s/g, '') : (n2(c.a) === 1 ? `${String(c.a).trim()},2` : '20,2');
       const up = /upper/.test(f) || (/^>|above/.test(String(c.op)) && !/lower/.test(f)); o.v = up ? '1' : '0'; o.op = up ? (/cross/.test(o.op) ? 'cross_above' : '>') : (/cross/.test(o.op) ? 'cross_below' : '<'); }
     if (/^(sma|ema)_ratio$/.test(o.f) && n2(o.a) === 1 && String(+o.v) === String(o.a).trim()) o.v = '0';   // "price above the 20-day SMA" written as sma(20) > 20
-    if (['macd', 'macd_cross', 'macd_signal', 'macd_line', 'macd_hist', 'macd_histogram', 'macdh_cross'].includes(f)) {   // MACD line vs signal line = histogram vs 0
+    if (/^macd/.test(f) && !['macdh', 'macdh_slope', 'macd_pos_recent'].includes(f)) {   // any MACD-line-vs-signal name (macd_x, macd_cross, macd_signal...)   // MACD line vs signal line = histogram vs 0
       o.f = 'macdh'; o.a = n2(c.a) === 3 ? String(c.a).replace(/\s/g, '') : '12,26,9'; o.v = '0'; if (/^>|above/.test(String(o.op)) && !/cross/.test(o.op)) o.op = '>'; }
     if (['red_run', 'green_run'].includes(o.f)) { o.a = ''; if (!/[<>=]/.test(String(o.op))) o.op = '>='; }   // "three red days" = red_run() >= 3
     if (['down_days', 'consecutive_down_days'].includes(f)) { o.a = ''; o.op = '<='; o.v = String(-Math.abs(+c.v || 3)); }
@@ -6659,10 +6659,10 @@ const AK_LOOK = {
   async test_strategy({spec = {}} = {}) {                     // 6.203: owner only; a DRAFT backtest (nothing runs until the card's Run test)
     if (!document.body.classList.contains('role-owner')) return {error: 'Testing your own strategy from the chat is not available yet.'};
     const ck = akCheckSpec(spec, AK.q);
-    if (ck.problems.length) { AK.test = null; return {ok: false, error: 'the spec does not match the user\'s words yet: fix it and call test_strategy again', problems: ck.problems}; }
+    if (ck.problems.length) { AK.test = null; return {ok: false, error: 'the spec does not match the user\'s words yet: fix it and call test_strategy again', problems: ck.problems, card: 'NO card was shown. Never tell the user to tap Run test until test_strategy succeeds.'}; }
     const r = await akST({op: 'draft', spec: ck.spec, question: AK.q || '', chat: AK.chat || null});
     AK.test = r.ok ? {...r, at: Date.now(), assumptions: ck.assumptions, requested_timeframe: ck.requested_timeframe} : null;
-    return r.ok ? {...r, assumptions: ck.assumptions, requested_timeframe: ck.requested_timeframe, note: r.note + ' Name every assumption to the user.'} : r;
+    return r.ok ? {...r, assumptions: ck.assumptions, requested_timeframe: ck.requested_timeframe, note: r.note + ' Name every assumption to the user.'} : {...r, card: 'NO card was shown. Fix the spec and call test_strategy again, or tell the user plainly that no test could be prepared; never tell them to tap Run test.'};
   },
   async strategy_test_status({id = null} = {}) {              // 6.203: one test or the latest 10 (results only when status is done)
     if (!document.body.classList.contains('role-owner')) return {error: 'not available'};
