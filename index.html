@@ -8268,11 +8268,14 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing) {
         .concat(R.families.map(f => ({label: short(f.family), size: f.n, heat: f.n ? Math.min(1, 4 * f.n_buy / f.n) : 0, state: f.n_buy ? 'on' : '',
           tag: `${f.n_buy} buy · ${f.n}`, onTap: () => fam(f)})));
       ngDraw(box, {label: S, sub: `${R.buying}/${R.total}`, state: R.buying ? 'up' : ''}, nodes, {h: 330, legend: famLeg});
+      const vd = host.closest('#ss-card')?.querySelector('.ss-verdict');   // 6.211: the verdict counts the whole library, the swing set as its second line
+      if (vd) { vd.classList.toggle('on', R.buying + nSwing > 0); const vb = vd.querySelector('b'), vs = vd.querySelector('div span');
+        if (vb) vb.textContent = `${R.buying + nSwing} of ${R.total + totSwing}`; if (vs) vs.textContent = `strategies would buy ${S} · ${nSwing} of ${totSwing} swing (live) · ${R.buying} of ${R.total} library (${R.day || 'last'} close)`; }
       info.innerHTML = `<p class="ss-foot">${IC.info} ${R.buying} of ${R.total} library strategies would buy ${esc(S)} at the ${esc(R.day || 'last')} close, in ${R.families.length} families. Tap a family to see its strategies.</p>`;
     };
     const fam = f => {
-      const it = (f.items || []).slice(0, 16);
-      ngDraw(box, {label: short(f.family), sub: `${f.n_buy}/${f.n}`, state: f.n_buy ? 'up' : ''}, it.map(x => ({label: short(x.name || x.id), size: Math.max(0.2, (x.sharpe_2021 ?? 0.3) + 0.5),
+      const it = (f.items || []).slice(0, 12);   // one ring: 16 nodes on two rings overlapped their labels
+      ngDraw(box, {label: short(f.family), sub: `${f.n_buy}/${f.n}`, state: f.n_buy ? 'up' : ''}, it.map(x => ({label: short((x.name || x.id).replace(/^Williams 3-bar channel.*/, 'Williams 3-bar').replace(/^Turtle System (\d).*/, 'Turtle $1')), size: Math.max(0.2, (x.sharpe_2021 ?? 0.3) + 0.5),
         heat: x.buy ? 1 : x.class === 'proven' ? 0.6 : x.class === 'promising' ? 0.4 : 0.1, state: x.buy ? 'on' : '',
         tag: `${x.buy ? 'buy · ' : ''}${CL[x.class] || x.class || ''}${x.on_stock?.won_pct_2021 != null ? ` · ${Math.round(x.on_stock.won_pct_2021)}% won` : ''}`, onTap: () => one(f, x)})),
         {h: 330, legend: '<span class="lg"><i class="ng-grad"></i>buys now / verdict</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>2021+ Sharpe</span><span class="lg tap">tap ›</span>'});
