@@ -7403,10 +7403,11 @@ function ssCard(A) {
       // size = past success on this stock (win rate shrunk towards 50% by 10 pseudo-trades), label = "rules · won"
       const met = x => x.conditions.length ? x.conditions.filter(c => c.ok === true).length / x.conditions.length : 0;
       const succ = x => { const rc = x.record || {}; return rc.trades ? (rc.win * rc.trades + 0.5 * 10) / (rc.trades + 10) : 0.5; };
-      ngDraw(el.querySelector('#ss-ng'), {label: S, sub: '', state: n ? 'up' : ''}, L.map(x => ({label: sn(x.name), size: Math.max(0.05, succ(x) - 0.3),
+      const swingGraph = () => ngDraw(el.querySelector('#ss-ng'), {label: S, sub: '', state: n ? 'up' : ''}, L.map(x => ({label: sn(x.name), size: Math.max(0.05, succ(x) - 0.3),
         strength: met(x), heat: met(x), state: x.signal_now ? 'on' : '',
         tag: `${x.conditions.filter(c => c.ok === true).length}/${x.conditions.length} rules${x.record?.trades ? ` · ${Math.round(x.record.win * 100)}% won` : ''}`, onTap: () => rpOpen(S, x.key, x.name)})),
-        {h: 300, legend: '<span class="lg"><i class="ng-grad"></i>rules met</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>past wins</span><span class="lg tap">tap ›</span>'}); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre
+        {h: 300, legend: '<span class="lg"><i class="ng-grad"></i>rules met</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>past wins</span><span class="lg tap">tap ›</span>'});
+      swingGraph(); ssFamilies(el.querySelector('#ss-ng'), S, swingGraph, n, L.length); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre; 6.211 library families
     el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     el.querySelectorAll('[data-tz]').forEach(b => b.onclick = () => { const x = L.find(y => y.key === b.dataset.tz); if (!x || !tz) return;
@@ -8242,6 +8243,51 @@ function ngStrategy(r) {
   card.querySelector('.rp-x').onclick = () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); };
   ngDraw(card.querySelector('.ng-box'), {label: name.length > 12 ? name.slice(0, 11) + '…' : name, sub: P.ret != null ? pc(P.ret) : '', state: P.ret == null ? '' : P.ret >= 0 ? 'up' : 'dn'}, nodes,
     {h: 330, legend: '<span><i class="ng-grad"></i>darker green = more of our 14 strategies own it</span><span>label = return since the basket date</span>'});
+}
+// 6.211 (user: "update this with all strategies but then grouped in families, from which you can expand the families into the individual strategies"):
+// the stock's graph shows the whole rule-based library (library run, public.stock_library_families) as families by what their buy rules look at, plus
+// the live swing set as one family. Node size = strategies in the family, green = share that would buy at the last library-run close. Tap a family:
+// its strategies (buying first, then proven / promising, then the most traded on this stock); tap one: its rules, verdict and record on this stock.
+const SSF = {};
+async function ssFamFetch(S) {
+  if (SSF[S] && Date.now() - SSF[S].at < 6e5) return SSF[S].v;
+  const token = await getToken();
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/stock_library_families`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({sym: S})});
+  const v = await r.json().catch(() => null); if (!r.ok || !v) throw new Error('library families not available'); SSF[S] = {at: Date.now(), v}; return v;
+}
+function ssFamilies(box, S, swingGraph, nSwing, totSwing) {
+  if (!box) return; const host = box.parentNode; let info = host.querySelector('.ssf-info');
+  if (!info) { box.insertAdjacentHTML('afterend', '<div class="ssf-info"></div>'); info = host.querySelector('.ssf-info'); }
+  const CL = {proven: 'proven', promising: 'promising', no_edge: 'no edge'}, short = t => t.length > 16 ? t.slice(0, 15) + '…' : t;
+  const famLeg = '<span class="lg"><i class="ng-grad"></i>share buying</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>strategies</span><span class="lg tap">tap a family ›</span>';
+  ssFamFetch(S).then(R => {
+    if (!R?.families?.length || box.closest('#ss-card')?.dataset.sym !== S) return;
+    const top = () => {
+      const nodes = [{label: 'Swing set', size: Math.max(60, totSwing * 20), heat: totSwing ? nSwing / totSwing : 0, state: nSwing ? 'on' : '', tag: `${nSwing}/${totSwing} buy now`,
+        onTap: () => { swingGraph(); info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">Our 8 swing strategies, checked live on ${esc(S)}.</p>`; info.querySelector('.ssf-back').onclick = top; }}]
+        .concat(R.families.map(f => ({label: short(f.family), size: f.n, heat: f.n ? Math.min(1, 4 * f.n_buy / f.n) : 0, state: f.n_buy ? 'on' : '',
+          tag: `${f.n_buy} buy · ${f.n}`, onTap: () => fam(f)})));
+      ngDraw(box, {label: S, sub: `${R.buying}/${R.total}`, state: R.buying ? 'up' : ''}, nodes, {h: 330, legend: famLeg});
+      info.innerHTML = `<p class="ss-foot">${IC.info} ${R.buying} of ${R.total} library strategies would buy ${esc(S)} at the ${esc(R.day || 'last')} close, in ${R.families.length} families. Tap a family to see its strategies.</p>`;
+    };
+    const fam = f => {
+      const it = (f.items || []).slice(0, 16);
+      ngDraw(box, {label: short(f.family), sub: `${f.n_buy}/${f.n}`, state: f.n_buy ? 'up' : ''}, it.map(x => ({label: short(x.name || x.id), size: Math.max(0.2, (x.sharpe_2021 ?? 0.3) + 0.5),
+        heat: x.buy ? 1 : x.class === 'proven' ? 0.6 : x.class === 'promising' ? 0.4 : 0.1, state: x.buy ? 'on' : '',
+        tag: `${x.buy ? 'buy · ' : ''}${CL[x.class] || x.class || ''}${x.on_stock?.won_pct_2021 != null ? ` · ${Math.round(x.on_stock.won_pct_2021)}% won` : ''}`, onTap: () => one(f, x)})),
+        {h: 330, legend: '<span class="lg"><i class="ng-grad"></i>buys now / verdict</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>2021+ Sharpe</span><span class="lg tap">tap ›</span>'});
+      info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">${f.family}: ${f.n} strategies, ${f.n_buy} would buy ${esc(S)}, ${f.n_good} proven or promising. Showing ${it.length}: buying first, then proven / promising, then the most traded on ${esc(S)}.</p>`;
+      info.querySelector('.ssf-back').onclick = top;
+    };
+    const one = (f, x) => { const o = x.on_stock;
+      info.innerHTML = `<button class="ng-chip ssf-back">‹ ${esc(f.family)}</button>
+        <div class="ss-tile${x.buy ? ' on' : ''}"><span class="ss-mid"><b>${esc(x.name || x.id)}</b><small>${esc(CL[x.class] || x.class || '')}${x.sharpe_2021 != null ? ` · 2021+ Sharpe ${(+x.sharpe_2021).toFixed(2)}` : ''}${x.buy ? ` · would buy ${esc(S)}` : ''}</small></span>
+        <span class="ss-num">${o?.trades_2021 ? `<b>${Math.round(o.won_pct_2021)}%</b><small>won · ${o.trades_2021} trades on ${esc(S)} (2021+) · avg ${o.avg_trade_pct_2021 >= 0 ? '+' : ''}${o.avg_trade_pct_2021}%</small>` : '<small>few trades on this stock</small>'}</span></div>
+        <p class="ss-foot">${esc(x.rules || '')}</p>`;
+      info.querySelector('.ssf-back').onclick = () => fam(f);
+    };
+    top();
+  }).catch(e => console.warn('families', e));
 }
 
 // ---------------- forward tests (2026-10-25, Bible 6.86): long-press any stock or strategy to start a live forward test ----------------
