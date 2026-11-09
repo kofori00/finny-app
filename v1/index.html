@@ -6237,9 +6237,12 @@ function akCheckSpec(spec, q) {
 function akNormSpec(spec) {
   const n2 = a => String(a ?? '').split(',').filter(x => x.trim() !== '').length;
   const fix = c => { if (!c || !c.f) return c; const f = String(c.f).toLowerCase().replace(/[^a-z_]/g, ''), k = n2(c.a);
-    const m = {sma: k === 2 ? 'sma_x' : 'sma_ratio', ma: k === 2 ? 'sma_x' : 'sma_ratio', ema: k === 2 ? 'ema_x' : 'ema_ratio', sma_cross: 'sma_x', ema_cross: 'ema_x', golden_cross: 'sma_x', rsi14: 'rsi', return: 'ret', atr: 'atr_pct'}[f];
+    const m = {sma: k === 2 ? 'sma_x' : 'sma_ratio', ma: k === 2 ? 'sma_x' : 'sma_ratio', ema: k === 2 ? 'ema_x' : 'ema_ratio', sma_cross: 'sma_x', ema_cross: 'ema_x', golden_cross: 'sma_x', rsi14: 'rsi', return: 'ret', atr: 'atr_pct', red_days: 'red_run', red_candles: 'red_run', red_day: 'red_run', red_bars: 'red_run', consecutive_red: 'red_run', consecutive_red_days: 'red_run', bearish_candles: 'red_run', green_days: 'green_run', green_candles: 'green_run', green_day: 'green_run', consecutive_green: 'green_run', consecutive_green_days: 'green_run', down_days: 'streak', up_days: 'streak', consecutive_down_days: 'streak'}[f];
     const o = {...c, f: m || f, op: {crosses_above: 'cross_above', crossover: 'cross_above', crosses_below: 'cross_below', crossunder: 'cross_below', gt: '>', lt: '<', gte: '>=', lte: '<='}[String(c.op).toLowerCase()] || c.op};
     if (f === 'golden_cross' && !k) o.a = '50,200'; if (f === 'rsi14') o.a = '14'; if (o.f === 'rsi' && !n2(o.a)) o.a = '14';
+    if (['red_run', 'green_run'].includes(o.f)) { o.a = ''; if (!/[<>=]/.test(String(o.op))) o.op = '>='; }   // "three red days" = red_run() >= 3
+    if (['down_days', 'consecutive_down_days'].includes(f)) { o.a = ''; o.op = '<='; o.v = String(-Math.abs(+c.v || 3)); }
+    if (f === 'up_days') { o.a = ''; o.op = '>='; o.v = String(Math.abs(+c.v || 3)); }
     if (o.v == null || o.v === '') o.v = '0'; return o; };
   const e = spec.exit || {};
   return {...spec, entry: (spec.entry || []).map(fix), regime: (spec.regime || []).map(fix), exit: {...e, exit_if: (e.exit_if || []).map(fix)}};
