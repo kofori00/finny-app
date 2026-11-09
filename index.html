@@ -6459,6 +6459,7 @@ function akCheckSpec(spec, q) {
   if (!/\b(hold|holding|held|time exit|max(imum)? \d+|(after|for|within|exit in|sell in)( (exactly|about|max(imum)?|at most|up to))? \d+ (trading )?(days?|weeks?|bars?)|\d+[- ](trading[- ])?days? (hold|max|limit|exit))\b/.test(q)) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
   const sect = (q.match(/\b(tech(nology)?|financials?|banks?|energy|health ?care|biotech|utilities|industrials?|consumer|materials|real estate|semiconductors?|chips?)\b/) || [])[0];
   if (spec.universe && spec.universe !== 'sp500' && !/\b(etfs?|funds?|spy|qqq|sector spdrs?)\b/.test(q.replace(/nasdaq[- ]?100|nasdaq/g, ''))) spec.universe = 'sp500';   // 6.204: "Nasdaq 100 stocks" once became the ETF universe
+  if ((spec.exit?.exit_if || []).some(c => c.f === 'gap')) assumptions.push('the gap exit is checked at that day\'s close and sells at the next open (selling at the gap open itself cannot be tested yet)');
   if (/\b(nasdaq|ndx|qqq|russell|small caps?|dow jones|djia)\b/.test(q)) assumptions.push('S&P 500 stocks instead of the index you named (only the point-in-time S&P 500 can be tested; many Nasdaq 100 stocks are in it)');
   if (sect) assumptions.push(`ALL S&P 500 stocks, not only ${sect} stocks: a sector-only universe cannot be tested yet, so the result is for the whole index`);
   if (!/\b(s&p|sp500|spx|stocks?|etfs?|nasdaq|qqq|spy|shares)\b/.test(q)) assumptions.push('S&P 500 stocks (members at the time); say "use ETFs" to change');
@@ -6478,6 +6479,9 @@ function akNormSpec(spec) {
       o.f = 'bb_pctb'; o.a = n2(c.a) === 2 ? String(c.a).replace(/\s/g, '') : (n2(c.a) === 1 ? `${String(c.a).trim()},2` : '20,2');
       const up = /upper/.test(f) || (/^>|above/.test(String(c.op)) && !/lower/.test(f)); o.v = up ? '1' : '0'; o.op = up ? (/cross/.test(o.op) ? 'cross_above' : '>') : (/cross/.test(o.op) ? 'cross_below' : '<'); }
     if (/^(sma|ema)_ratio$/.test(o.f) && n2(o.a) === 1 && String(+o.v) === String(o.a).trim()) o.v = '0';   // "price above the 20-day SMA" written as sma(20) > 20
+    if (['close_rank', 'new_high_n', 'new_20d_high', 'n_day_high', 'highest_close', 'breakout_high', 'close_at_high', 'new_highs'].includes(f)) { o.f = 'new_high'; o.a = String(n2(c.a) ? String(c.a).split(',')[0].trim() : '20'); o.op = '>'; o.v = '0.5'; }   // close at a new n-day high
+    if (['gap_pct', 'gap_up', 'gap_open', 'open_gap', 'gap_percent'].includes(f)) { o.f = 'gap'; o.a = ''; if (+o.v >= 1) o.v = String(+o.v / 100); }   // open vs previous close
+    if (/^(sma|ema)_ratio$/.test(o.f) && n2(o.a) === 2) o.f = o.f.replace('_ratio', '_x');   // sma_ratio(50,200) = one average vs another
     if (/^macd/.test(f) && !['macdh', 'macdh_slope', 'macd_pos_recent'].includes(f)) {   // any MACD-line-vs-signal name (macd_x, macd_cross, macd_signal...)   // MACD line vs signal line = histogram vs 0
       o.f = 'macdh'; o.a = n2(c.a) === 3 ? String(c.a).replace(/\s/g, '') : '12,26,9'; o.v = '0'; if (/^>|above/.test(String(o.op)) && !/cross/.test(o.op)) o.op = '>'; }
     if (['red_run', 'green_run'].includes(o.f)) { o.a = ''; if (!/[<>=]/.test(String(o.op))) o.op = '>='; }   // "three red days" = red_run() >= 3
@@ -6485,7 +6489,9 @@ function akNormSpec(spec) {
     if (f === 'up_days') { o.a = ''; o.op = '>='; o.v = String(Math.abs(+c.v || 3)); }
     if (o.v == null || o.v === '') o.v = '0'; return o; };
   const e = {...(spec.exit || {})};
-  for (const k of ['stop_pct', 'target_pct']) if (+e[k] >= 1 && +e[k] < 50) e[k] = +e[k] / 100;   // "5% stop" written as 5
+  for (const k of ['stop_pct', 'target_pct', 'trail_pct']) if (+e[k] >= 1 && +e[k] < 50) e[k] = +e[k] / 100;   // "5% stop" written as 5
+  for (const [a, b] of [['trail_atr', 'trail_pct'], ['stop_atr', 'stop_pct'], ['target_atr', 'target_pct']])   // 6.204: "5% trailing stop" written as 0.05 ATR = a 10-cent stop
+    if (+e[a] > 0 && +e[a] < 0.5 && e[b] == null) { e[b] = +e[a]; delete e[a]; }
   return {...spec, entry: (spec.entry || []).map(fix), regime: (spec.regime || []).map(fix), exit: {...e, exit_if: (e.exit_if || []).map(fix)}};
 }
 // ---------------- Ask Finny (2026-10-23): questions answered from Finny's own research (ask-finny Edge Function) ----------------
@@ -7024,7 +7030,12 @@ async function akST(body) {
   return await r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status}));
 }
 function akTestCard() {
-  const d = AK.test, T = AK.turns, card = document.querySelector('#ak-out .ak-card'); if (!d || !card || !T.length) return;
+  const T = AK.turns, card = document.querySelector('#ak-out .ak-card');
+  if (!AK.test && card && T.length && (T[T.length - 1].lookups || []).some(l => l.name === 'test_strategy') && !card.querySelector('.ak-test')) {   // 6.204: the gate
+    const el = document.createElement('div'); el.className = 'ak-order ak-test off';
+    el.innerHTML = '<div class="ak-o-h"><span class="ak-o-k">Backtest</span><b>No test card</b></div><p class="ak-o-n">These rules could not be turned into a test the engine can run, so nothing will be run or charged. Any "Run test" mentioned above does not apply. Rephrase a rule, or ask for the nearest testable version.</p>';
+    (card.querySelector('.ak-a') || card).after(el); return; }
+  const d = AK.test; if (!d || !card || !T.length) return;
   if (!(T[T.length - 1].lookups || []).some(l => l.name === 'test_strategy')) return;
   card.querySelector('.ak-test')?.remove();
   const el = document.createElement('div'); el.className = 'ak-order ak-test';
