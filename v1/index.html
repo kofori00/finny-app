@@ -6798,15 +6798,22 @@ function akTestCard() {
   const ok = el.querySelector('.ak-o-ok'), no = el.querySelector('.ak-o-no'), t = el.querySelector('.ak-o-t');
   const end = (msg, cls) => { ok.remove(); no.remove(); t.textContent = msg; el.classList.add(cls); };
   if (d.done) return end(d.done, d.doneCls);
-  const poll = () => { clearTimeout(d.timer); d.timer = setTimeout(async () => { const r = await akST({op: 'status', id: d.draft}); const x = (r.tests || [])[0]; if (!x) return;
-      if (x.status === 'done' || x.status === 'failed') { const g = x.result?.gates || {}, k = x.result?.backtest || {};
-        d.done = x.status === 'done' ? `Done: ${g.PASS === 'True' ? 'PASSED our tests' : 'no edge (did not pass)'} · 2021+ Sharpe ${(+g.sharpe_2021).toFixed(2)}, ${(+g.cagr_2021 * 100).toFixed(1)}%/yr, worst drop ${(+g.maxdd_2021 * 100).toFixed(0)}% · ${k.trades || '?'} trades. Ask Finny "how did my test do?" for the details.` : `The test failed: ${x.error || 'see log'}. Nothing more is charged.`;
-        d.doneCls = x.status === 'done' ? 'done' : 'off'; const live = document.querySelector('#ak-out .ak-test .ak-o-t'); if (live) { live.textContent = d.done; live.parentElement.parentElement.classList.add(d.doneCls); } return; }
-      const live = document.querySelector('#ak-out .ak-test .ak-o-t'); if (live) live.textContent = ({queued: 'Queued…', starting: 'Renting a server…', running: 'Running the backtest…'}[x.status] || x.status) + (x.error ? ' (' + x.error + ')' : ''); poll(); }, 30000); };
+  // 6.204: the status lives in AK.test (not in the DOM), so a re-drawn card keeps it; polling survives errors and re-renders
+  const paint = () => { const live = document.querySelector('#ak-out .ak-test .ak-o-t'); if (!live) return; live.textContent = d.done || d.state || '';
+    if (d.done) { live.closest('.ak-test')?.classList.add(d.doneCls); live.closest('.ak-test')?.querySelectorAll('.ak-o-ok, .ak-o-no').forEach(b => b.remove()); } };
+  const poll = () => { clearTimeout(d.timer); if (d.done) return paint(); d.timer = setTimeout(async () => {
+      try { const r = await akST({op: 'status', id: d.draft}); const x = (r.tests || [])[0];
+        if (x && (x.status === 'done' || x.status === 'failed')) { const g = x.result?.gates || {}, k = x.result?.backtest || {};
+          d.done = x.status === 'done' ? `Done: ${g.PASS === 'True' ? 'PASSED our tests' : 'no edge (did not pass)'} · 2021+ Sharpe ${(+g.sharpe_2021).toFixed(2)}, ${(+g.cagr_2021 * 100).toFixed(1)}%/yr, worst drop ${(+g.maxdd_2021 * 100).toFixed(0)}% · ${Math.round(+k.trades) || '?'} trades. Ask Finny "how did my test do?" for the details.` : `The test failed: ${x.error || 'see log'}. Nothing more is charged.`;
+          d.doneCls = x.status === 'done' ? 'done' : 'off'; return paint(); }
+        if (x) d.state = ({queued: 'Queued…', starting: 'Renting a server…', running: 'Running the backtest (about 5 minutes)…'}[x.status] || x.status) + (x.error ? ' (' + x.error + ')' : '');
+      } catch (e) { d.state = (d.state || 'Checking…').replace(/ \(retrying\)$/, '') + ' (retrying)'; }
+      paint(); poll(); }, 15000); };
+  if (d.started && !d.done) { ok.remove(); no.remove(); paint(); poll(); }
   ok.onclick = async () => { ok.disabled = no.disabled = true; t.textContent = 'Starting…';
     const r = await akST({op: 'confirm', id: d.draft});
     if (!r.ok) { d.done = 'Not started: ' + (r.error || 'unknown error'); d.doneCls = 'off'; return end(d.done, 'off'); }
-    ok.remove(); no.remove(); t.textContent = r.launch?.started ? 'Renting a server…' : 'Queued…'; poll(); };
+    d.started = true; ok.remove(); no.remove(); d.state = r.launch?.started ? 'Renting a server…' : 'Queued…'; paint(); poll(); };
   no.onclick = async () => { await akST({op: 'cancel', id: d.draft}); d.done = 'Cancelled: nothing was run.'; d.doneCls = 'off'; end(d.done, 'off'); };
 }
 { const f = akShow; akShow = function (...x) { const r = f.apply(this, x); try { akTestCard(); } catch (e) { console.error('test card', e); } return r; }; }
