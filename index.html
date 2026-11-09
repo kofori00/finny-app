@@ -6603,6 +6603,7 @@ const AK_LOOK = {
   },
   async library_signals({symbol, date} = {}) {               // 6.201: the nightly run of the whole swing library on one stock
     const S = await akSym(symbol), token = await getToken();
+    fetch(`${SB_URL}/functions/v1/company-profile`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({symbols: [S]})}).catch(() => {});   // 6.208: marks it 'asked' -> in tonight's library run
     const r = await fetch(`${SB_URL}/rest/v1/rpc/nightly_stock`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({sym: S, on_day: date || null})});
     const j = await r.json().catch(() => null); if (!r.ok || !j) throw new Error('nightly signals not available');
     return {...j, note: 'Every rule-based swing strategy in our library (about 7,000 of ~10,000; ML ones excluded) checked against this stock at the close of `day` (nightly job, Alpaca prices). Grouped by verdict: proven = passed every test; promising = close but not proven; no_edge = tested, no edge after costs and the luck bar. Counts of no-edge strategies say little by themselves. Stocks outside the S&P 500 are what-ifs: the strategies were tested on S&P 500 stocks.'};
@@ -6620,6 +6621,11 @@ const AK_LOOK = {
       out.push(await r.json().catch(() => ({error: 'not available', strategy: st})));
     }
     return {strategies: out};
+  },
+  async stock_strategy_record({symbol, top = 10} = {}) {     // 6.208: how the library's strategies did on THIS stock in the backtest
+    const S = await akSym(symbol), token = await getToken();
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/stock_strategy_record`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({sym: S, top: Math.min(Math.max(+top || 10, 1), 25)})});
+    const j = await r.json().catch(() => null); if (!r.ok || !j) throw new Error('strategy records not available'); return j;
   },
   async companies_in_focus({hours = 24, top = 30} = {}) {      // 6.206: NASDAQ / NYSE companies seen in the mover lists and news, with their company cards
     const token = await getToken();
@@ -6900,7 +6906,7 @@ Object.assign(AK_LOOK, {
   }
 });
 const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26').toUpperCase()}${a.month ? ' ' + a.month : a.year ? ' ' + a.year : ''}`, swing_strategies: () => 'Swing strategies', account_details: a => `Account ${a.account || ''}`.trim(), forward_tests_overview: () => 'Forward tests', forward_test_details: a => `Forward test: ${a.test || ''}`, where_do_i_hold: a => `Where I hold ${String(a.symbol || '').toUpperCase()}`, strategy_performance: a => `Strategy results (${String(a.period || 'this_week').replace(/_/g, ' ')})`, stock_odds: a => `${String(a.symbol || '').toUpperCase()} odds`, strategy_fit: a => `${String(a.symbol || '').toUpperCase()} strategy fit`,
-  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, library_signals: a => `Library strategies on ${String(a.symbol || '').toUpperCase()}`, trending_strategies: a => `Trending strategies (${a.window_days || 10} days)`, strategy_picks: a => `Picks of ${[].concat(a.strategies || []).slice(0, 3).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, test_strategy: () => 'Strategy test draft', company_profile: a => `Company profile ${[].concat(a.symbols || []).slice(0, 3).join(', ')}`, companies_in_focus: () => 'Companies in the news and movers', library_search: () => 'Closest tested strategies', strategy_test_status: () => 'Strategy tests', todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
+  top_movers: a => ({losers: 'Top losers', most_active: 'Most active'}[a.list] || 'Top gainers'), latest_news: a => a.symbol ? `${String(a.symbol).toUpperCase()} news` : 'Latest news', stock_price: a => `Price ${[].concat(a.symbols || []).slice(0, 10).join(', ')}`, library_signals: a => `Library strategies on ${String(a.symbol || '').toUpperCase()}`, trending_strategies: a => `Trending strategies (${a.window_days || 10} days)`, strategy_picks: a => `Picks of ${[].concat(a.strategies || []).slice(0, 3).join(', ')}`, stock_swing_signals: a => `Swing strategies on ${[].concat(a.symbols || []).slice(0, 4).join(', ')}`, compare_stocks: a => `Compare ${(a.symbols || []).slice(0, 10).join(', ')}`, prepare_order: a => `Order draft ${String(a.symbol || '').toUpperCase()}`, test_strategy: () => 'Strategy test draft', company_profile: a => `Company profile ${[].concat(a.symbols || []).slice(0, 3).join(', ')}`, companies_in_focus: () => 'Companies in the news and movers', stock_strategy_record: a => `Strategy record on ${String(a.symbol || '').toUpperCase()}`, library_search: () => 'Closest tested strategies', strategy_test_status: () => 'Strategy tests', todays_signals: a => a.date ? `Signals ${a.date}` : "Today's signals"};
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
