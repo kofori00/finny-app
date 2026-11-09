@@ -6456,8 +6456,9 @@ function akCheckSpec(spec, q) {
   const sl = pct('(stop|stop[- ]loss)'), tp = pct('(take[- ]profit|target|profit)');
   if (sl && Math.abs(+e.stop_pct - sl.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${sl}% stop loss: exit.stop_pct must be ${sl.replace(',', '.') / 100}.`);
   if (tp && Math.abs(+e.target_pct - tp.replace(',', '.') / 100) > 1e-9) problems.push(`the user asked for a ${tp}% take profit: exit.target_pct must be ${tp.replace(',', '.') / 100}.`);
-  if (!/\b(hold|holding|held|time exit|max(imum)? \d+|(after|for|within) \d+ (trading )?(days?|weeks?|bars?))\b/.test(q)) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
+  if (!/\b(hold|holding|held|time exit|max(imum)? \d+|(after|for|within|exit in|sell in)( (exactly|about|max(imum)?|at most|up to))? \d+ (trading )?(days?|weeks?|bars?)|\d+[- ](trading[- ])?days? (hold|max|limit|exit))\b/.test(q)) { spec.exit = {...e, hold: 20}; assumptions.push('max holding time 20 trading days (you gave none; a stop or target usually ends trades sooner)'); }
   const sect = (q.match(/\b(tech(nology)?|financials?|banks?|energy|health ?care|biotech|utilities|industrials?|consumer|materials|real estate|semiconductors?|chips?)\b/) || [])[0];
+  if (/\b(nasdaq|ndx|qqq|russell|small caps?|dow jones|djia)\b/.test(q)) assumptions.push('S&P 500 stocks instead of the index you named (only the point-in-time S&P 500 can be tested; many Nasdaq 100 stocks are in it)');
   if (sect) assumptions.push(`ALL S&P 500 stocks, not only ${sect} stocks: a sector-only universe cannot be tested yet, so the result is for the whole index`);
   if (!/\b(s&p|sp500|spx|stocks?|etfs?|nasdaq|qqq|spy|shares)\b/.test(q)) assumptions.push('S&P 500 stocks (members at the time); say "use ETFs" to change');
   if (!spec.max_pos) assumptions.push('up to 10 positions at once, equal size');
@@ -6476,11 +6477,14 @@ function akNormSpec(spec) {
       o.f = 'bb_pctb'; o.a = n2(c.a) === 2 ? String(c.a).replace(/\s/g, '') : (n2(c.a) === 1 ? `${String(c.a).trim()},2` : '20,2');
       const up = /upper/.test(f) || (/^>|above/.test(String(c.op)) && !/lower/.test(f)); o.v = up ? '1' : '0'; o.op = up ? (/cross/.test(o.op) ? 'cross_above' : '>') : (/cross/.test(o.op) ? 'cross_below' : '<'); }
     if (/^(sma|ema)_ratio$/.test(o.f) && n2(o.a) === 1 && String(+o.v) === String(o.a).trim()) o.v = '0';   // "price above the 20-day SMA" written as sma(20) > 20
+    if (['macd', 'macd_cross', 'macd_signal', 'macd_line', 'macd_hist', 'macd_histogram', 'macdh_cross'].includes(f)) {   // MACD line vs signal line = histogram vs 0
+      o.f = 'macdh'; o.a = n2(c.a) === 3 ? String(c.a).replace(/\s/g, '') : '12,26,9'; o.v = '0'; if (/^>|above/.test(String(o.op)) && !/cross/.test(o.op)) o.op = '>'; }
     if (['red_run', 'green_run'].includes(o.f)) { o.a = ''; if (!/[<>=]/.test(String(o.op))) o.op = '>='; }   // "three red days" = red_run() >= 3
     if (['down_days', 'consecutive_down_days'].includes(f)) { o.a = ''; o.op = '<='; o.v = String(-Math.abs(+c.v || 3)); }
     if (f === 'up_days') { o.a = ''; o.op = '>='; o.v = String(Math.abs(+c.v || 3)); }
     if (o.v == null || o.v === '') o.v = '0'; return o; };
-  const e = spec.exit || {};
+  const e = {...(spec.exit || {})};
+  for (const k of ['stop_pct', 'target_pct']) if (+e[k] >= 1 && +e[k] < 50) e[k] = +e[k] / 100;   // "5% stop" written as 5
   return {...spec, entry: (spec.entry || []).map(fix), regime: (spec.regime || []).map(fix), exit: {...e, exit_if: (e.exit_if || []).map(fix)}};
 }
 // ---------------- Ask Finny (2026-10-23): questions answered from Finny's own research (ask-finny Edge Function) ----------------
