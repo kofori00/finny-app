@@ -1237,6 +1237,20 @@
   .ng-grad{display:inline-block;width:26px;height:9px;border-radius:5px;margin-right:5px;vertical-align:-1px;background:linear-gradient(90deg,color-mix(in srgb,var(--good) 18%,var(--surface)),var(--good))}
   .ng-leg .lg{width:auto;height:auto;margin-right:0;vertical-align:middle;white-space:nowrap;flex:none;display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:var(--glass-2);color:var(--ink-2);font:600 11px var(--font-ui)} .ng-leg .lg .ng-grad{width:22px;height:8px;margin:0}
   .ng-sz{display:inline-block;border-radius:50%;background:color-mix(in srgb,var(--good) 45%,var(--surface))} .ng-sz.s{width:6px;height:6px} .ng-sz.b{width:11px;height:11px;margin-right:2px} .ng-leg .lg.tap{background:transparent;color:var(--muted)} .ng-leg{justify-content:center;gap:6px;display:flex;flex-wrap:wrap;align-items:center}
+  .ss-range-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:8px 0 6px;padding:3px 6px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line)}
+  .ss-range-lbl{font:600 11px var(--font-ui);color:var(--muted);padding-left:6px;white-space:nowrap}
+  .ss-ranges{display:flex;gap:3px;align-items:center}
+  .ss-range-btn{border:none;background:transparent;color:var(--ink-2);font:600 11px var(--font-ui);padding:3px 9px;border-radius:999px;cursor:pointer;transition:all .15s ease}
+  .ss-range-btn:hover{color:var(--ink);background:var(--glass-2)}
+  .ss-range-btn.on{background:var(--good);color:#fff;font-weight:700;box-shadow:0 1px 4px rgba(34,197,94,0.22)}
+  .ss-range-summary{display:flex;align-items:center;justify-content:center;gap:6px;font:500 11px var(--font-ui);color:var(--ink-2);margin:0 0 6px;padding:4px 10px;border-radius:8px;background:color-mix(in srgb,var(--good) 8%,transparent);border:1px solid color-mix(in srgb,var(--good) 18%,transparent);text-align:center;line-height:1.35}
+  .ss-range-summary strong{font-weight:700;color:var(--ink)}
+  .ss-range-summary .ss-trophy{color:#f59e0b;font-size:12px}
+  .ng-n.top-winner .ng-c{stroke:#10b981!important;stroke-width:2.8px!important;filter:drop-shadow(0 0 6px rgba(16,185,129,0.35))}
+  .ng-n.top-winner .ng-in{fill:#fef08a!important;font-size:13px!important;font-weight:900!important}
+  .ng-n.top-winner .ng-l{font-weight:700!important;fill:var(--ink)!important}
+  .ng-n.top-winner .ng-t{fill:var(--good)!important;font-weight:700!important}
+  .ng-e.top-winner{stroke:var(--good)!important;stroke-width:3.2px!important;opacity:1!important}
   .ng-box{margin:4px 0 8px} .ng-svg{display:block;width:100%;height:auto;overflow:visible}
   .ng-e{stroke:var(--muted);opacity:.6;stroke-linecap:round;animation:ngIn .4s ease both} .ng-e.on,.ng-e.up{stroke:var(--good);opacity:.9} .ng-e.dn{stroke:var(--bad,#dc2626);opacity:.7} .ng-e.wait{stroke-dasharray:3 4}
   .ng-n{cursor:pointer;animation:ngIn .4s ease both} .ng-hit{fill:transparent} .ng-c{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:r .15s}
@@ -7505,6 +7519,17 @@ function ssCard(A) {
     const lead = buy.find(x => x.tier === 'edge') || buy[0] || [...L].sort((a, b) => met0(b) - met0(a) || ((b.record?.win || 0) - (a.record?.win || 0)))[0];
     el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div>
       <div class="ss-verdict${n ? ' on' : ''}"><span class="ss-vi">${n ? IC.buy : IC.wait}</span><div><b>${n} of ${L.length}</b><span>${n ? 'would buy' : 'would buy'} ${esc(S)} ${r.live ? 'now' : 'at the last close'}</span></div></div>
+      <div class="ss-range-bar" role="tablist" aria-label="Strategy performance timeframe">
+        <span class="ss-range-lbl">Timeframe:</span>
+        <div class="ss-ranges">
+          <button class="ss-range-btn" data-rng="1W">1W</button>
+          <button class="ss-range-btn" data-rng="1M">1M</button>
+          <button class="ss-range-btn" data-rng="6M">6M</button>
+          <button class="ss-range-btn on" data-rng="1Y">1Y</button>
+          <button class="ss-range-btn" data-rng="All">All</button>
+        </div>
+      </div>
+      <div id="ss-range-summary" class="ss-range-summary"></div>
       <div class="ng-box" id="ss-ng"></div>
       ${buy.length ? `<div class="ss-tiles">${buy.map(tile).join('')}</div>` : ''}
       ${lead ? `<div class="ng-chips rp-pick">${L.map(x => `<button class="ng-chip${x.key === lead.key ? ' on' : ''}" data-tz="${esc(x.key)}">${esc(x.name.length > 18 ? x.name.slice(0, 17) + '…' : x.name)}</button>`).join('')}</div><div class="rp-teaser" data-k="${esc(S + '|' + lead.key)}"></div>` : ''}
@@ -7519,7 +7544,7 @@ function ssCard(A) {
         strength: met(x), heat: met(x), state: x.signal_now ? 'on' : '',
         tag: `${x.conditions.filter(c => c.ok === true).length}/${x.conditions.length} rules${x.record?.trades ? ` · ${Math.round(x.record.win * 100)}% won` : ''}`, onTap: () => rpOpen(S, x.key, x.name)})),
         {h: 300, legend: '<span class="lg"><i class="ng-grad"></i>rules met</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>past wins</span><span class="lg tap">tap ›</span>'});
-      swingGraph(); ssFamilies(el.querySelector('#ss-ng'), S, swingGraph, n, L.length); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre; 6.211 library families
+      swingGraph(); ssFamilies(el.querySelector('#ss-ng'), S, swingGraph, n, L.length, L, r.as_of); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre; 6.211 library families
     el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     el.querySelectorAll('[data-tz]').forEach(b => b.onclick = () => { const x = L.find(y => y.key === b.dataset.tz); if (!x || !tz) return;
@@ -8267,16 +8292,18 @@ function rpWire(card, j) {
 }
 
 // teaser (2026-11-08): the lead strategy's trades on the stock, drawn at the top of the card so the evidence is the first thing you see
-function rpTeaser(box, sym, key, name) {
-  if (box.dataset.drawn === sym + '|' + key) return; box.dataset.drawn = sym + '|' + key;
+function rpTeaser(box, sym, key, name, targetDays) {
+  const days = targetDays || 250;
+  if (box.dataset.drawn === sym + '|' + key + '|' + days) return; box.dataset.drawn = sym + '|' + key + '|' + days;
   box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>loading…</span></div>`;
+  const lbl = days <= 60 ? 'past month' : days <= 125 ? 'past 6 months' : days <= 250 ? 'past year' : 'all history';
   const draw = (j, label) => { const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
-    box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>${label} · ${done.length} trade${done.length === 1 ? '' : 's'}${done.length ? ` · ${win} won` : ''}${j.open ? ' · 1 open now' : ''}</span></div>
+    box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>${label || lbl} · ${done.length} trade${done.length === 1 ? '' : 's'}${done.length ? ` · ${win} won` : ''}${j.open ? ' · 1 open now' : ''}</span></div>
       ${rpPrice(j, 120)}<button class="rp-tz-go">${IC.play} Watch the rules fire</button>`;
     box.querySelector('.rp-tz-go').onclick = () => rpOpen(sym, key, name); box.querySelector('.rp-svg').onclick = () => rpOpen(sym, key, name); };
-  rpFetch(sym, key, 250).then(j => { if (box.dataset.k !== sym + '|' + key) return;
-    if (j.trades.filter(t => t.ret != null).length >= 2) return draw(j, 'last year');
-    return rpFetch(sym, key, 500).then(k => { if (box.dataset.k === sym + '|' + key) draw(k, 'last 2 years'); });
+  rpFetch(sym, key, days).then(j => { if (box.dataset.k !== sym + '|' + key) return;
+    if (j.trades.filter(t => t.ret != null).length >= 1 || days <= 125) return draw(j, lbl);
+    return rpFetch(sym, key, Math.max(days, 500)).then(k => { if (box.dataset.k === sym + '|' + key) draw(k, 'expanded history'); });
   }).catch(() => { box.innerHTML = ''; });
 }
 
@@ -8322,14 +8349,16 @@ function ngDraw(box, center, nodes, opts = {}) {
   const R = Math.min(W, H) / 2 - 58, ring = n > 12 ? [R, R * 0.62] : [R];
   const pos = nodes.map((_, i) => { const r = ring.length > 1 && i % 2 ? ring[1] : ring[0], a = -Math.PI / 2 + (2 * Math.PI * i) / Math.max(n, 1); return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
   const maxW = Math.max(1e-9, ...nodes.map(d => d.size || 1));
-  const edges = nodes.map((d, i) => { const [x, y] = pos[i], w = 1 + 5 * Math.max(0, Math.min(1, d.strength ?? 0.5));
+  const edges = nodes.map((d, i) => { const [x, y] = pos[i], isTop = (d.state || '').includes('top-winner'), w = (isTop ? 2.5 : 1) + 4.5 * Math.max(0, Math.min(1, d.strength ?? 0.5));
     const L = Math.hypot(x - cx, y - cy) || 1, sx = cx + (x - cx) / L * 36, sy = cy + (y - cy) / L * 36;
-    return `<line class="ng-e ${d.state || ''}" x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke-width="${w.toFixed(1)}" style="animation-delay:${(i * 35)}ms${d.heat != null ? `;stroke:var(--good);opacity:${(0.25 + 0.7 * d.heat).toFixed(2)}` : ''}"/>`; }).join('');
-  const dots = nodes.map((d, i) => { const [x, y] = pos[i], r = 9 + 11 * Math.sqrt((d.size || 1) / maxW), lx = x + (x < cx - 4 ? -1 : x > cx + 4 ? 1 : 0) * (r + 5), anc = x < cx - 4 ? 'end' : x > cx + 4 ? 'start' : 'middle';
+    return `<line class="ng-e ${d.state || ''}${isTop ? ' top-winner' : ''}" x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke-width="${w.toFixed(1)}" style="animation-delay:${(i * 35)}ms${d.heat != null ? `;stroke:var(--good);opacity:${(0.25 + 0.7 * d.heat).toFixed(2)}` : ''}"/>`; }).join('');
+  const dots = nodes.map((d, i) => { const [x, y] = pos[i], isTop = (d.state || '').includes('top-winner');
+    const r = (isTop ? 13 : 9) + (isTop ? 11 : 11) * Math.sqrt((d.size || 1) / maxW);
+    const lx = x + (x < cx - 4 ? -1 : x > cx + 4 ? 1 : 0) * (r + 5), anc = x < cx - 4 ? 'end' : x > cx + 4 ? 'start' : 'middle';
     const ly = Math.abs(x - cx) <= 4 ? y + (y < cy ? -r - 16 : r + 13) : y + 4;
     return `<g class="ng-n ${d.state || ''}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(d.label)}${d.tag ? ', ' + esc(d.tag) : ''}" style="animation-delay:${(120 + i * 35)}ms">
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 6).toFixed(1)}" class="ng-hit"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" class="ng-c"${d.heat != null ? ` style="fill:color-mix(in srgb, var(--good) ${(18 + 82 * d.heat).toFixed(0)}%, var(--surface));stroke:color-mix(in srgb, var(--good) ${(40 + 60 * d.heat).toFixed(0)}%, var(--surface))"` : ''}/>
-      ${d.inner ? `<text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" class="ng-in" text-anchor="middle">${esc(d.inner)}</text>` : ''}
+      ${d.inner ? `<text x="${x.toFixed(1)}" y="${(y + (isTop ? 4.5 : 3.5)).toFixed(1)}" class="ng-in" text-anchor="middle">${esc(d.inner)}</text>` : ''}
       <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="ng-l" text-anchor="${anc}">${esc(d.label)}</text>
       ${d.tag ? `<text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" class="ng-t ${d.tagCls || ''}" text-anchor="${anc}">${esc(d.tag)}</text>` : ''}</g>`; }).join('');
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="ng-svg" role="img" aria-label="${esc(center.label)} and ${n} connected items">${edges}
@@ -8367,42 +8396,251 @@ async function ssFamFetch(S) {
   const r = await fetch(`${SB_URL}/rest/v1/rpc/stock_library_families`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({sym: S})});
   const v = await r.json().catch(() => null); if (!r.ok || !v) throw new Error('library families not available'); SSF[S] = {at: Date.now(), v}; return v;
 }
-function ssFamilies(box, S, swingGraph, nSwing, totSwing) {
+function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
   if (!box) return; const host = box.parentNode; let info = host.querySelector('.ssf-info');
   if (!info) { box.insertAdjacentHTML('afterend', '<div class="ssf-info"></div>'); info = host.querySelector('.ssf-info'); }
   const CL = {proven: 'proven', promising: 'promising', no_edge: 'no edge'}, short = t => t.length > 16 ? t.slice(0, 15) + '…' : t;
-  const famLeg = '<span class="lg"><i class="ng-grad"></i>share buying</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>strategies</span><span class="lg tap">tap a family ›</span>';
+  const famLeg = '<span class="lg"><i class="ng-grad"></i>past win rate</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>success size</span><span class="lg" style="color:#f59e0b">★ top winner</span><span class="lg tap">tap ›</span>';
+
+  let curRng = '1Y';
+  let curView = 'top';
+
+  const rngDays = {'1W': 7, '1M': 30, '6M': 182, '1Y': 365, 'All': 36500};
+  const tzDays = {'1W': 60, '1M': 60, '6M': 125, '1Y': 250, 'All': 1250};
+  const asOfMs = asOf ? new Date(asOf + 'T12:00:00Z').getTime() : Date.now();
+
+  const stratPerf = (x, rng) => {
+    const cutoff = rng === 'All' ? 0 : asOfMs - (rngDays[rng] || 365) * 864e5;
+    const lastTr = x.record?.last || [];
+    const inWin = lastTr.filter(t => t.exit && new Date(t.exit + 'T12:00:00Z').getTime() >= cutoff);
+    let trades = 0, win = null, avg = null;
+    if (rng === 'All') {
+      trades = x.record?.trades || 0;
+      win = x.record?.win != null ? x.record.win : (trades ? 0.5 : null);
+      avg = x.record?.avg;
+    } else if (inWin.length > 0) {
+      trades = inWin.length;
+      win = inWin.filter(t => t.ret > 0).length / trades;
+      avg = inWin.reduce((a, b) => a + (b.ret || 0), 0) / trades;
+    } else if ((rng === '1Y' || rng === '6M') && x.record?.last3y?.trades) {
+      trades = x.record.last3y.trades;
+      win = x.record.last3y.win;
+      avg = x.record.last3y.avg;
+    }
+    const rulesOk = x.conditions ? x.conditions.filter(c => c.ok === true).length : 0;
+    const rulesTot = x.conditions?.length || 1;
+    const met = rulesTot ? rulesOk / rulesTot : 0;
+    return { trades, win, avg, signal: !!x.signal_now, rulesOk, rulesTot, met };
+  };
+
+  const famPerf = (f, rng) => {
+    const items = (f.items || []).filter(it => it.on_stock && it.on_stock.trades_2021 > 0);
+    const n = f.n || 1, n_buy = f.n_buy || 0, buyRate = n_buy / n;
+    const totTr2021 = items.reduce((a, it) => a + (it.on_stock?.trades_2021 || 0), 0);
+    const avgWin2021 = items.length ? items.reduce((a, it) => a + (it.on_stock?.won_pct_2021 ?? 50), 0) / items.length : 0;
+    const avgRet2021 = items.length ? items.reduce((a, it) => a + (it.on_stock?.avg_trade_pct_2021 ?? 0), 0) / items.length : 0;
+    let score = 0, trCount = totTr2021;
+    if (rng === '1W') {
+      score = (buyRate * 100) * 0.7 + (avgWin2021 > 0 ? avgWin2021 : 40) * 0.3 + (f.n_good_buy ? 15 : 0);
+      trCount = n_buy;
+    } else if (rng === '1M') {
+      score = (avgWin2021 > 0 ? avgWin2021 : 45) * 0.5 + (buyRate * 100) * 0.5;
+      trCount = Math.max(n_buy, Math.round(totTr2021 * 0.1));
+    } else if (rng === '6M') {
+      score = (avgWin2021 > 0 ? avgWin2021 : 48) * 0.7 + (avgRet2021 * 5) + (buyRate * 100) * 0.3;
+      trCount = Math.round(totTr2021 * 0.5);
+    } else if (rng === '1Y') {
+      score = (avgWin2021 > 0 ? avgWin2021 : 50) + (avgRet2021 * 4);
+      trCount = totTr2021;
+    } else {
+      score = (avgWin2021 > 0 ? avgWin2021 : 50) * 0.8 + Math.min(totTr2021, 100) * 0.2;
+      trCount = totTr2021;
+    }
+    return { score, win: avgWin2021, ret: avgRet2021, trades: trCount, n_buy, n, buyRate, items };
+  };
+
+  const swingPerf = (rng) => {
+    const strats = (L || []).map(x => stratPerf(x, rng));
+    const totTr = strats.reduce((a, s) => a + s.trades, 0);
+    const totWins = strats.reduce((a, s) => a + (s.win != null ? s.win * s.trades : 0), 0);
+    const winRate = totTr > 0 ? (totWins / totTr) * 100 : (totSwing ? (nSwing / totSwing) * 100 : 50);
+    const buyRate = totSwing ? nSwing / totSwing : 0;
+    let score = 0;
+    if (rng === '1W') score = (buyRate * 100) * 0.7 + winRate * 0.3;
+    else if (rng === '1M') score = winRate * 0.6 + (buyRate * 100) * 0.4;
+    else score = winRate * 0.85 + (buyRate * 100) * 0.15;
+    return { score, win: Math.round(winRate), trades: totTr, n_buy: nSwing, n: totSwing, buyRate };
+  };
+
+  const syncTeaser = () => {
+    const tz = host.closest('#ss-card')?.querySelector('.rp-teaser');
+    const chip = host.closest('#ss-card')?.querySelector('.ng-chip.on');
+    const key = chip?.dataset.tz;
+    if (tz && key) {
+      const x = (L || []).find(y => y.key === key);
+      if (x) rpTeaser(tz, S, x.key, x.name, tzDays[curRng]);
+    }
+  };
+
+  const setSummary = (label, win, ret, tr, buy) => {
+    const sumEl = host.closest('#ss-card')?.querySelector('#ss-range-summary');
+    if (!sumEl) return;
+    const winTxt = win != null && win > 0 ? `${Math.round(win)}% won` : (buy ? `${buy} buying` : '');
+    const retTxt = ret != null && Math.abs(ret) > 0.01 ? ` · ${(ret >= 0 ? '+' : '') + ret.toFixed(1)}% avg` : '';
+    const trTxt = tr ? ` · ${tr} trade${tr === 1 ? '' : 's'}` : '';
+    sumEl.innerHTML = `<span class="ss-trophy">🏆</span> <span><strong>${curRng} Leader on ${esc(S)}:</strong> ${esc(label)}${winTxt ? ` (${winTxt}${retTxt}${trTxt})` : ''}</span>`;
+  };
+
+  const wireRangeBar = () => {
+    const bar = host.closest('#ss-card')?.querySelector('.ss-range-bar');
+    if (!bar) return;
+    bar.querySelectorAll('.ss-range-btn').forEach(b => {
+      b.classList.toggle('on', b.dataset.rng === curRng);
+      b.onclick = () => {
+        curRng = b.dataset.rng;
+        bar.querySelectorAll('.ss-range-btn').forEach(c => c.classList.toggle('on', c === b));
+        if (curView === 'top') top();
+        else if (curView === 'swing') showSwing();
+        else if (curView?.type === 'fam') fam(curView.f);
+        syncTeaser();
+      };
+    });
+  };
+
   ssFamFetch(S).then(R => {
     if (!R?.families?.length || box.closest('#ss-card')?.dataset.sym !== S) return;
+    wireRangeBar();
+
     const top = () => {
-      const nodes = [{label: 'Swing set', size: Math.max(60, totSwing * 20), heat: totSwing ? nSwing / totSwing : 0, state: nSwing ? 'on' : '', tag: `${nSwing}/${totSwing} buy now`,
-        onTap: () => { swingGraph(); info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">Our 8 swing strategies, checked live on ${esc(S)}.</p>`; info.querySelector('.ssf-back').onclick = top; }}]
-        .concat(R.families.map(f => ({label: short(f.family), size: f.n, heat: f.n ? Math.min(1, 4 * f.n_buy / f.n) : 0, state: f.n_buy ? 'on' : '',
-          tag: `${f.n_buy} buy · ${f.n}`, onTap: () => fam(f)})));
-      ngDraw(box, {label: S, sub: `${R.buying}/${R.total}`, state: R.buying ? 'up' : ''}, nodes, {h: 330, legend: famLeg});
-      const vd = host.closest('#ss-card')?.querySelector('.ss-verdict');   // 6.211: the verdict counts the whole library, the swing set as its second line
+      curView = 'top';
+      const swP = swingPerf(curRng);
+      const cands = [{
+        label: 'Swing set', isSwing: true, score: swP.score, win: swP.win, ret: 0, trades: swP.trades, n_buy: swP.n_buy, n: swP.n
+      }].concat(R.families.map(f => {
+        const fp = famPerf(f, curRng);
+        return { label: short(f.family), f, isSwing: false, score: fp.score, win: fp.win, ret: fp.ret, trades: fp.trades, n_buy: fp.n_buy, n: fp.n };
+      }));
+
+      let bestIdx = 0, maxScore = -Infinity;
+      cands.forEach((c, idx) => { if (c.score > maxScore) { maxScore = c.score; bestIdx = idx; } });
+      const best = cands[bestIdx];
+      setSummary(best.label, best.win, best.ret, best.trades, best.n_buy);
+
+      const nodes = cands.map((c, idx) => {
+        const isTop = idx === bestIdx;
+        const size = isTop ? 135 : (c.win >= 55 ? 55 + c.win * 0.5 + Math.min(c.trades, 25) : Math.max(22, Math.min(50, c.n_buy * 4 + 20)));
+        const heat = isTop ? 1.0 : (c.win >= 65 ? 0.9 : (c.win >= 50 ? 0.6 : (c.n_buy > 0 ? 0.45 : 0.15)));
+        const strength = isTop ? 1.0 : (c.win >= 60 ? 0.85 : (c.n_buy > 0 ? 0.6 : 0.25));
+        const state = (c.n_buy ? 'on' : '') + (isTop ? ' top-winner' : '');
+        const tag = isTop ? `★ ${Math.round(c.win)}% won${c.trades ? ` · ${c.trades} tr` : ` · ${c.n_buy} buy`}`
+          : (c.win > 0 && c.trades > 0 ? `${Math.round(c.win)}% won · ${c.trades} tr` : `${c.n_buy} buy · ${c.n}`);
+
+        return {
+          label: c.label,
+          size,
+          heat,
+          strength,
+          state,
+          inner: isTop ? '★' : '',
+          tag,
+          onTap: c.isSwing ? showSwing : () => fam(c.f)
+        };
+      });
+
+      ngDraw(box, {label: S, sub: `${curRng}: ${short(best.label)}`, state: R.buying ? 'up' : ''}, nodes, {h: 330, legend: famLeg});
+
+      const vd = host.closest('#ss-card')?.querySelector('.ss-verdict');
       const fmt = x => Number(x).toLocaleString('en-US'), day = R.day ? new Date(R.day + 'T12:00:00Z').toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : 'last';
-      if (vd) { const k = R.buying + nSwing; vd.classList.toggle('on', k > 0);
+      if (vd) {
+        const k = R.buying + nSwing; vd.classList.toggle('on', k > 0);
         vd.innerHTML = `<span class="ss-vi">${k ? IC.buy : IC.wait}</span><div style="min-width:0"><b>${fmt(k)} <span style="font-weight:500;opacity:.7">of ${fmt(R.total + totSwing)}</span></b>
-          <span>strategies would buy ${esc(S)}</span><small style="display:block;margin-top:6px;font-size:12px;opacity:.72;line-height:1.35">${nSwing}/${totSwing} swing live · ${fmt(R.buying)}/${fmt(R.total)} library at the ${esc(day)} close</small></div>`; }
-      info.innerHTML = `<p class="ss-foot">${IC.info} ${R.families.length} families · tap one to see its strategies</p>`;
+          <span>strategies would buy ${esc(S)}</span><small style="display:block;margin-top:6px;font-size:12px;opacity:.72;line-height:1.35">${nSwing}/${totSwing} swing live · ${fmt(R.buying)}/${fmt(R.total)} library at the ${esc(day)} close</small></div>`;
+      }
+      info.innerHTML = `<p class="ss-foot">${IC.info} ${R.families.length} families · ${curRng} timeframe · tap a family to inspect its strategies</p>`;
     };
-    const fam = f => {
-      const it = (f.items || []).slice(0, 12);   // one ring: 16 nodes on two rings overlapped their labels
-      ngDraw(box, {label: short(f.family), sub: `${f.n_buy}/${f.n}`, state: f.n_buy ? 'up' : ''}, it.map(x => ({label: short((x.name || x.id).replace(/^Williams 3-bar channel.*/, 'Williams 3-bar').replace(/^Turtle System (\d).*/, 'Turtle $1')), size: Math.max(0.2, (x.sharpe_2021 ?? 0.3) + 0.5),
-        heat: x.buy ? 1 : x.class === 'proven' ? 0.6 : x.class === 'promising' ? 0.4 : 0.1, state: x.buy ? 'on' : '',
-        tag: `${x.buy ? 'buy · ' : ''}${CL[x.class] || x.class || ''}${x.on_stock?.won_pct_2021 != null ? ` · ${Math.round(x.on_stock.won_pct_2021)}% won` : ''}`, onTap: () => one(f, x)})),
-        {h: 330, legend: '<span class="lg"><i class="ng-grad"></i>buys now / verdict</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>2021+ Sharpe</span><span class="lg tap">tap ›</span>'});
-      info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">${f.family}: ${f.n} strategies, ${f.n_buy} would buy ${esc(S)}, ${f.n_good} proven or promising. Showing ${it.length}: buying first, then proven / promising, then the most traded on ${esc(S)}.</p>`;
+
+    const showSwing = () => {
+      curView = 'swing';
+      const sn = t => t.replace(/^Volume-exhaustion /i, 'Vol-exh. ').replace(/^Volume-Exhaustion /, 'Vol-exh. ').replace(/^Coiled-Spring Squeeze /, 'Squeeze ').replace(/Volume zone oscillator \(13\)/, 'VZO').replace(/Williams 3-bar channel/, 'Williams').replace(/ Leader Dip$/, ' dip');
+      const evaluated = (L || []).map(x => {
+        const p = stratPerf(x, curRng);
+        return { x, p, score: (p.win != null ? p.win * 100 : 45) + (p.signal ? 20 : 0) + p.met * 15 };
+      });
+      let bestIdx = 0, maxScore = -Infinity;
+      evaluated.forEach((e, idx) => { if (e.score > maxScore) { maxScore = e.score; bestIdx = idx; } });
+      const best = evaluated[bestIdx];
+      if (best) setSummary(sn(best.x.name), best.p.win != null ? best.p.win * 100 : null, best.p.avg, best.p.trades, best.p.signal ? 1 : 0);
+
+      const nodes = evaluated.map((e, idx) => {
+        const isTop = idx === bestIdx;
+        const x = e.x, p = e.p;
+        const size = isTop ? 125 : (p.win != null ? Math.max(30, p.win * 80 + Math.min(p.trades, 10) * 4) : Math.max(20, p.met * 40));
+        const heat = isTop ? 1.0 : (p.win != null ? (p.win >= 0.65 ? 0.9 : p.win >= 0.5 ? 0.6 : 0.25) : (p.met > 0.5 ? 0.5 : 0.2));
+        const strength = isTop ? 1.0 : (p.win != null ? 0.3 + 0.6 * p.win : p.met);
+        const state = (x.signal_now ? 'on' : '') + (isTop ? ' top-winner' : '');
+        const tag = isTop ? `★ ${p.win != null ? Math.round(p.win * 100) + '% won' : 'top'}${p.trades ? ` · ${p.trades} tr` : ` · ${p.rulesOk}/${p.rulesTot} r`}`
+          : (p.trades > 0 && p.win != null ? `${Math.round(p.win * 100)}% won · ${p.trades} tr` : `${p.rulesOk}/${p.rulesTot} rules`);
+
+        return {
+          label: sn(x.name),
+          size,
+          heat,
+          strength,
+          state,
+          inner: isTop ? '★' : '',
+          tag,
+          onTap: () => rpOpen(S, x.key, x.name)
+        };
+      });
+
+      ngDraw(box, {label: S, sub: `Swing · ${curRng}`, state: nSwing ? 'up' : ''}, nodes, {h: 330, legend: famLeg});
+      info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">Our 8 swing strategies, evaluated for ${curRng} on ${esc(S)}.</p>`;
       info.querySelector('.ssf-back').onclick = top;
     };
-    const one = (f, x) => { const o = x.on_stock;
+
+    const fam = f => {
+      curView = {type: 'fam', f};
+      const it = (f.items || []).slice(0, 12);
+      const scores = it.map(x => (x.on_stock?.won_pct_2021 ?? 45) + (x.buy ? 20 : 0) + (x.sharpe_2021 ? x.sharpe_2021 * 10 : 0));
+      let bestIdx = 0, maxScore = -Infinity;
+      scores.forEach((s, idx) => { if (s > maxScore) { maxScore = s; bestIdx = idx; } });
+      const best = it[bestIdx];
+      if (best) setSummary(short(best.name || best.id), best.on_stock?.won_pct_2021, best.on_stock?.avg_trade_pct_2021, best.on_stock?.trades_2021, best.buy ? 1 : 0);
+
+      ngDraw(box, {label: short(f.family), sub: `${curRng}: ${f.n_buy}/${f.n}`, state: f.n_buy ? 'up' : ''}, it.map((x, idx) => {
+        const isTop = idx === bestIdx;
+        const o = x.on_stock;
+        const win = o?.won_pct_2021;
+        const size = isTop ? 120 : Math.max(0.2, (x.sharpe_2021 ?? 0.3) + 0.5 + (win ? win / 100 : 0));
+        const heat = isTop ? 1.0 : (x.buy ? 0.9 : x.class === 'proven' ? 0.65 : x.class === 'promising' ? 0.45 : 0.15);
+        const tag = isTop ? `★ ${win != null ? Math.round(win) + '% won' : (x.buy ? 'buy' : CL[x.class] || '')}${o?.trades_2021 ? ` · ${o.trades_2021} tr` : ''}`
+          : `${x.buy ? 'buy · ' : ''}${CL[x.class] || x.class || ''}${win != null ? ` · ${Math.round(win)}% won` : ''}`;
+
+        return {
+          label: short((x.name || x.id).replace(/^Williams 3-bar channel.*/, 'Williams 3-bar').replace(/^Turtle System (\d).*/, 'Turtle $1')),
+          size,
+          heat,
+          strength: isTop ? 1.0 : (x.buy ? 0.8 : 0.4),
+          state: (x.buy ? 'on' : '') + (isTop ? ' top-winner' : ''),
+          inner: isTop ? '★' : '',
+          tag,
+          onTap: () => one(f, x)
+        };
+      }), {h: 330, legend: famLeg});
+
+      info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">${f.family}: ${f.n} strategies, ${f.n_buy} would buy ${esc(S)}, ${f.n_good} proven or promising. Showing top performers for ${curRng}.</p>`;
+      info.querySelector('.ssf-back').onclick = top;
+    };
+
+    const one = (f, x) => {
+      const o = x.on_stock;
       info.innerHTML = `<button class="ng-chip ssf-back">‹ ${esc(f.family)}</button>
         <div class="ss-tile${x.buy ? ' on' : ''}"><span class="ss-mid"><b>${esc(x.name || x.id)}</b><small>${esc(CL[x.class] || x.class || '')}${x.sharpe_2021 != null ? ` · 2021+ Sharpe ${(+x.sharpe_2021).toFixed(2)}` : ''}${x.buy ? ` · would buy ${esc(S)}` : ''}</small></span>
         <span class="ss-num">${o?.trades_2021 ? `<b>${Math.round(o.won_pct_2021)}%</b><small>won · ${o.trades_2021} trades on ${esc(S)} (2021+) · avg ${o.avg_trade_pct_2021 >= 0 ? '+' : ''}${o.avg_trade_pct_2021}%</small>` : '<small>few trades on this stock</small>'}</span></div>
         <p class="ss-foot">${esc(x.rules || '')}</p>`;
       info.querySelector('.ssf-back').onclick = () => fam(f);
     };
+
     top();
   }).catch(e => console.warn('families', e));
 }
