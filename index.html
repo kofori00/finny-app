@@ -8402,8 +8402,9 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
   const CL = {proven: 'proven', promising: 'promising', no_edge: 'no edge'}, short = t => t.length > 16 ? t.slice(0, 15) + '…' : t;
   const famLeg = '<span class="lg"><i class="ng-grad"></i>past win rate</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>success size</span><span class="lg" style="color:#f59e0b">★ top winner</span><span class="lg tap">tap ›</span>';
 
-  let curRng = '1Y';
+  let curRng = window.SS_RNG || '1Y';
   let curView = 'top';
+  let top, showSwing, fam, one;
 
   const rngDays = {'1W': 7, '1M': 30, '6M': 182, '1Y': 365, 'All': 36500};
   const tzDays = {'1W': 60, '1M': 60, '6M': 125, '1Y': 250, 'All': 1250};
@@ -8497,11 +8498,11 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
     bar.querySelectorAll('.ss-range-btn').forEach(b => {
       b.classList.toggle('on', b.dataset.rng === curRng);
       b.onclick = () => {
-        curRng = b.dataset.rng;
+        curRng = window.SS_RNG = b.dataset.rng;
         bar.querySelectorAll('.ss-range-btn').forEach(c => c.classList.toggle('on', c === b));
-        if (curView === 'top') top();
-        else if (curView === 'swing') showSwing();
-        else if (curView?.type === 'fam') fam(curView.f);
+        if (curView === 'top' && typeof top === 'function') top();
+        else if (curView === 'swing' && typeof showSwing === 'function') showSwing();
+        else if (curView?.type === 'fam' && typeof fam === 'function') fam(curView.f);
         syncTeaser();
       };
     });
@@ -8509,9 +8510,8 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
 
   ssFamFetch(S).then(R => {
     if (!R?.families?.length || box.closest('#ss-card')?.dataset.sym !== S) return;
-    wireRangeBar();
 
-    const top = () => {
+    top = () => {
       curView = 'top';
       const swP = swingPerf(curRng);
       const cands = [{
@@ -8559,7 +8559,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
       info.innerHTML = `<p class="ss-foot">${IC.info} ${R.families.length} families · ${curRng} timeframe · tap a family to inspect its strategies</p>`;
     };
 
-    const showSwing = () => {
+    showSwing = () => {
       curView = 'swing';
       const sn = t => t.replace(/^Volume-exhaustion /i, 'Vol-exh. ').replace(/^Volume-Exhaustion /, 'Vol-exh. ').replace(/^Coiled-Spring Squeeze /, 'Squeeze ').replace(/Volume zone oscillator \(13\)/, 'VZO').replace(/Williams 3-bar channel/, 'Williams').replace(/ Leader Dip$/, ' dip');
       const evaluated = (L || []).map(x => {
@@ -8598,7 +8598,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
       info.querySelector('.ssf-back').onclick = top;
     };
 
-    const fam = f => {
+    fam = f => {
       curView = {type: 'fam', f};
       const it = (f.items || []).slice(0, 12);
       const scores = it.map(x => (x.on_stock?.won_pct_2021 ?? 45) + (x.buy ? 20 : 0) + (x.sharpe_2021 ? x.sharpe_2021 * 10 : 0));
@@ -8632,7 +8632,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
       info.querySelector('.ssf-back').onclick = top;
     };
 
-    const one = (f, x) => {
+    one = (f, x) => {
       const o = x.on_stock;
       info.innerHTML = `<button class="ng-chip ssf-back">‹ ${esc(f.family)}</button>
         <div class="ss-tile${x.buy ? ' on' : ''}"><span class="ss-mid"><b>${esc(x.name || x.id)}</b><small>${esc(CL[x.class] || x.class || '')}${x.sharpe_2021 != null ? ` · 2021+ Sharpe ${(+x.sharpe_2021).toFixed(2)}` : ''}${x.buy ? ` · would buy ${esc(S)}` : ''}</small></span>
@@ -8641,6 +8641,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
       info.querySelector('.ssf-back').onclick = () => fam(f);
     };
 
+    wireRangeBar();
     top();
   }).catch(e => console.warn('families', e));
 }
