@@ -458,10 +458,10 @@
   .si-books span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px} .si-foot{font-size:11.5px;color:var(--muted);margin-top:16px}
   .ev-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 10px;border:1px solid var(--border);border-radius:999px;margin:4px 4px 0 0}
   /* ---- glass look (reference design): frosted cards on a soft backdrop, lime status accents ---- */
-  :root{--radius:20px;--radius-sm:14px;--font-display:'Plus Jakarta Sans','IBM Plex Sans',sans-serif;--font-ui:'Plus Jakarta Sans','IBM Plex Sans',sans-serif;}
+  :root{--radius:20px;--radius-sm:14px;--font-display:'Inter','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--font-ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--font-mono:'JetBrains Mono','SF Mono','Roboto Mono',Menlo,Consolas,monospace;}
   :root[data-theme="dark"],:root:not([data-theme="light"]){color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
   @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){color-scheme:light} }
-  html{background:var(--bg)} body{background:var(--backdrop);background-attachment:fixed;min-height:100vh}
+  html{background:var(--bg)} body{background:var(--backdrop);background-attachment:fixed;min-height:100vh;font-family:var(--font-ui);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:-.011em}
   .panel,details.panel{background:var(--glass);border:1px solid var(--glass-line);border-radius:var(--radius);box-shadow:var(--shadow);
     -webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);padding:20px 22px}
   .panel::before{display:none}
@@ -1091,6 +1091,7 @@
     --c-v1:#9ca7a1; --v-sig:#dbc078; --v-beat:#76a7ce; --v-below:#4a5652; --div-neg:#df8b75; --div-mid:#242d30; --div-pos:#76a7ce;
     --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 12px 32px -18px rgba(0,0,0,.7); --shadow-lg:0 24px 52px -20px rgba(0,0,0,.8);}
   #mv-panel .mv-pct.mv-up{color:var(--good)} #mv-panel .mv-pct.mv-dn{color:var(--bad)} html{background:var(--bg)} .hero h2 em{background:linear-gradient(95deg,var(--accent),#7ab8a2);-webkit-background-clip:text;background-clip:text}
+  .v2-st b,.hero-stats b,.lt-v,.mv-pct,.sl-pct,.hs-big b,.fwd-st b,.rp-stats b,.ss-verdict b,.ha-k b{font-variant-numeric:tabular-nums;letter-spacing:-.02em} .sname .code,.mv-sym,.sl-id b,.fwd-tk,.rs-chip{letter-spacing:.02em}
 
   .v2-panel{position:relative;overflow:hidden;padding:24px 20px 18px;border-radius:24px;background:linear-gradient(165deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--surface) 90%);border:1px solid var(--glass-line)}
   .v2-wm{position:absolute;right:-18px;top:-10px;width:150px;height:150px;opacity:.05;fill:none;stroke:var(--ink);stroke-width:1.2}
@@ -1279,7 +1280,7 @@
   @media (max-width:560px){ .v2-panel{padding:20px 16px 14px} .v2-st b{font-size:17px} .v2-list{grid-template-columns:1fr} .fwd-st b{font-size:16px} }
 </style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0e1315"><meta name="mobile-web-app-capable" content="yes"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..800;1,14..32,400..700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 </head>
 <body>
 <div class="wrap">
