@@ -942,7 +942,7 @@
   .lab-txt h2{font:700 14.5px var(--font-display);letter-spacing:-.015em;margin:0;color:var(--ink);display:inline}
   .lab-txt p{margin:3px 0 0;font-size:12px;line-height:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lab-txt em{color:var(--ink-2);font-style:italic}
-  body.v-analyze #rs-hero,body.v-accounts #rs-hero{display:none!important}
+  #rs-hero{display:none!important}
   @media (max-width:640px){
     .lab-hero{padding:10px 14px;gap:12px;margin-bottom:10px}
     .lab-art{width:34px;height:34px}
@@ -1277,15 +1277,7 @@
     <div class="panel-title"><span class="pt-ic pt-trade" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg></span>Paper trading</div>
     <div id="live-body"></div>
   </div>
-
-  <section class="lab-hero" id="rs-hero">
-    <div class="kente" aria-hidden="true"></div>
-    <div class="lab-art" aria-hidden="true"><svg viewBox="0 0 24 24" class="lab-sk"><path d="M12 21C7 16.5 3.2 13 3.2 9 3.2 6 5.5 4 8 4.3 10.2 4.6 10.9 7 9.4 8.1 8.3 8.9 6.9 8.1 7.3 6.9"/><path d="M12 21C17 16.5 20.8 13 20.8 9 20.8 6 18.5 4 16 4.3 13.8 4.6 13.1 7 14.6 8.1 15.7 8.9 17.1 8.1 16.7 6.9"/><path d="M12 21V12.5"/></svg></div>
-    <div class="lab-txt">
-      <div class="lab-h"><span class="hero-kick lab-kick"><i></i>Research lab</span><h2>Sankofa: learn from the past</h2></div>
-      <p>Tested on 10 years of market history before live trading. <em>Se wo were fi na wosankofa a yenkyi.</em></p>
-    </div>
-  </section>
+  <div id="rs-hero" style="display:none!important" aria-hidden="true"></div>
 
   <div class="panel login-card" id="login-panel" style="display:none">
     <div class="panel-title">Welcome to Finny</div>
