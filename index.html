@@ -1256,7 +1256,8 @@
   .ng-n{cursor:pointer;animation:ngIn .4s ease both} .ng-hit{fill:transparent} .ng-c{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:r .15s}
   .ng-n.on .ng-c,.ng-n.up .ng-c{fill:var(--good);stroke:var(--good)} .ng-n.dn .ng-c{fill:var(--bad,#dc2626);stroke:var(--bad,#dc2626);fill-opacity:.85} .ng-n:hover .ng-c,.ng-n:focus .ng-c{stroke:var(--ink);stroke-width:3}
   .ng-in{fill:var(--lime-ink,#10241a);font:700 11px var(--font-ui)} .ng-l{fill:var(--ink);font:600 10.5px var(--font-ui)} .ng-t{fill:var(--muted);font:600 9.5px var(--font-ui);font-variant-numeric:tabular-nums} .ng-t.up{fill:var(--good)} .ng-t.dn{fill:var(--bad,#dc2626)}
-  .ng-cc{fill:var(--glass-2);stroke:var(--ink);stroke-width:2} .ng-ctr.up .ng-cc{stroke:var(--good);fill:var(--surface)} .ng-ctr.dn .ng-cc{stroke:var(--bad,#dc2626);fill:var(--surface)} .ng-cl{fill:var(--ink);font:800 13px var(--font-display)} .ng-cs{fill:var(--muted);font:600 9.5px var(--font-ui)}
+  .ng-cc{fill:var(--glass-2);stroke:var(--ink);stroke-width:2} .ng-ctr.up .ng-cc{stroke:var(--good);fill:var(--surface)} .ng-ctr.dn .ng-cc{stroke:var(--bad,#dc2626);fill:var(--surface)} .ng-cl{fill:var(--ink);font:800 13px var(--font-display)} .ng-cs{fill:var(--muted);font:600 9.5px var(--font-ui)} .ng-cs.edge{fill:#34d399;font-weight:700} .ng-cs.promising{fill:#fbbf24;font-weight:700} .ng-cs.no-edge{fill:#94a3b8;font-weight:600}
+  .ng-chip .v2-tag{font-size:9.5px;padding:1px 6px;margin:0 2px}
   .ng-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--muted);margin:2px 2px 0} .ng-k{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:2px solid var(--muted)} .ng-k.on,.ng-k.up{background:var(--good);border-color:var(--good)} .ng-k.dn{background:var(--bad,#dc2626);border-color:var(--bad,#dc2626)} .ng-k.wait{border-style:dashed}
   .hs-br[data-ng]{cursor:pointer;border-radius:6px} .hs-br[data-ng]:hover{background:var(--glass)}
   @keyframes ngIn{from{opacity:0}to{opacity:1}} @media(prefers-reduced-motion:reduce){.ng-e,.ng-n{animation:none}}
@@ -7912,9 +7913,23 @@ function hsRender() {
     </div>`;
   };
 
+  const curLongKey = HS.longSel || (topOverall?.r.key || HS.rows[0]?.key);
+  const curLong = HS.rows.find(r => r.key === curLongKey) || HS.rows[0];
+  const curEdge = hsEdge(curLong);
+  const curP = hsStratPerf(curLong, HS.rng);
+
+  const longChips = filtered.map(item => {
+    const r = item.r, edge = item.edge;
+    const isSel = (r.key === curLongKey);
+    return `<button class="ng-chip${isSel ? ' on' : ''}" data-longsel="${esc(r.key)}">${edge.key === 'edge' ? '★ ' : ''}<span>${esc(short(r) || r.name)}</span><span class="v2-tag ${edge.cls}">${edge.label}</span><em>${item.perf.fmt}</em></button>`;
+  }).join('');
+
   el.innerHTML = `${hsTabBar()}
     ${hsControlBar(topInfo, tierCounts)}
     ${perfBox}
+    <div class="hs-lh2"><b>Strategy holdings network</b><span>${esc(short(curLong) || curLong.name)} · tap a bar or chip to inspect</span></div>
+    <div class="ng-chips" role="tablist" aria-label="Pick a strategy to map">${longChips}</div>
+    <div class="ng-box" id="hs-long-ng"></div>
     <div class="hs-lh2"><b>What they own</b><span>basket of ${esc(pday(asof))} · tap a stock</span></div>
     <div class="hs-stl">${allPicks.slice(0, HS.all ? 999 : 10).map(card).join('')}</div>
     ${allPicks.length > 10 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${allPicks.length}</button>` : ''}
@@ -7922,7 +7937,46 @@ function hsRender() {
       <p class="v2-note">${V ? `Re-tested ${v2Day(V.date)}: the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21) and the backtest numbers. ` : ''}"Has an edge" = equal-weight Sharpe 1.2+ and 1.0+ in both 2016-20 and 2021-26; "Promising" = sizing-dependent edge awaiting forward verification; "No edge" = failed out-of-sample or equal-weight tests.
       SXG4 uses Account 1\'s actual SX25 targets. Visible to you only.</p></details>`;
 
-  el.querySelectorAll('[data-ng]').forEach(b => b.onclick = () => ngStrategy(HS.rows.find(r => r.key === b.dataset.ng)));
+  const drawLongNet = () => {
+    const box = el.querySelector('#hs-long-ng');
+    if (!box || !curLong) return;
+    const shared = t => (HS.rows || []).filter(x => x.picks.includes(t)).length;
+    const NR = (HS.rows || [1]).length;
+    const longNodes = curLong.picks.map(t => {
+      const v = HS.rng === 'All' ? curLong.perf?.stocks?.[t] : (fmap[t]?.[field] ?? curLong.perf?.stocks?.[t]);
+      const retTxt = v != null ? (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%' : '';
+      return {
+        label: t,
+        size: shared(t),
+        strength: shared(t) / NR,
+        heat: (shared(t) - 1) / Math.max(NR - 1, 1),
+        tag: retTxt ? `${retTxt} (${HS.rng})` : '',
+        tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn',
+        onTap: () => odGo(t)
+      };
+    });
+    ngDraw(box, {
+      label: short(curLong) || curLong.name,
+      edge: curEdge.label,
+      edgeCls: curEdge.cls,
+      sub: `${curP.fmt} (${HS.rng})`,
+      state: curEdge.key === 'edge' ? 'up' : ''
+    }, longNodes, {
+      h: 330,
+      legend: `<span><i class="ng-grad"></i>darker = shared across strategies</span><span>${curEdge.label}</span><span>label = stock return (${HS.rng})</span><span>tap a stock</span>`
+    });
+  };
+  drawLongNet();
+
+  el.querySelectorAll('[data-longsel]').forEach(b => b.onclick = () => {
+    HS.longSel = b.dataset.longsel;
+    hsRender();
+  });
+  el.querySelectorAll('[data-ng]').forEach(b => b.onclick = () => {
+    HS.longSel = b.dataset.ng;
+    hsRender();
+    document.getElementById('hs-long-ng')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
   const m = document.getElementById('hs-more'); if (m) m.onclick = () => { HS.all = true; hsRender(); };
 }
@@ -7997,8 +8051,9 @@ function hsSwing(el) {
   if (!HS.swSel || !SR.some(e => e.key === HS.swSel)) HS.swSel = (used.slice().sort((a, b) => all.filter(h => h.by.includes(b)).length - all.filter(h => h.by.includes(a)).length)[0] || SR[0])?.key;
   const chips = SR.map(e => {
     const isTop = (topSwing && topSwing.e.key === e.key);
+    const edge = hsEdge(e);
     const k = all.filter(h => h.by.includes(e)).length;
-    return `<button class="ng-chip${e.key === HS.swSel ? ' on' : ''}${k ? '' : ' none'}" data-sel="${esc(e.key)}">${isTop ? '★ ' : ''}${esc(e.key)}<em>${k}</em></button>`;
+    return `<button class="ng-chip${e.key === HS.swSel ? ' on' : ''}${k ? '' : ' none'}" data-sel="${esc(e.key)}">${edge.key === 'edge' ? '★ ' : ''}<span>${esc(e.key)}</span><span class="v2-tag ${edge.cls}">${edge.label}</span><em>${k}</em></button>`;
   }).join('');
 
   el.innerHTML = `${hsTabBar()}
@@ -8018,12 +8073,47 @@ function hsSwing(el) {
     if (ss?.trades) { const w = (ss.win * ss.trades + 0.5 * 5) / (ss.trades + 5); parts.push(Math.max(0, Math.min(1, (w - 0.35) / 0.4))); }
     return parts.length ? parts.reduce((a, b) => a + b, 0) / parts.length : null; };
   const drawSel = () => { try { drawSel0(); } catch (e) { console.warn('swing graph', e); } };
-  const drawSel0 = () => { const e = SR.find(x => x.key === HS.swSel); if (!e) return; const mine = all.filter(h => h.by.includes(e));
-    const tag = h => { const o = MV.odds?.[h.t], ss = SS[h.t]?.v?.strategies?.find(x => x.key === e.key)?.record;
-      return [o?.v != null ? `${Math.round(o.v * 100)}% odds` : '', ss?.trades ? `${Math.round(ss.win * 100)}% won` : ''].filter(Boolean).join(' · ') || day(h.d); };
-    ngDraw(el.querySelector('#sw-ng'), {label: e.key, sub: `${mine.length} open`, state: mine.length ? 'up' : ''}, mine.map(h => { const sc = score(e, h.t);
-      return {label: h.t, size: sc == null ? 0.5 : 0.15 + sc, strength: h.by.length / SR.length, heat: (h.by.length - 1) / Math.max(SR.length - 1, 1), tag: tag(h), onTap: () => odGo(h.t)}; }),
-      {h: mine.length > 12 ? 340 : 300, legend: `<span><i class="ng-grad"></i>darker = more of the ${SR.length} strategies hold it</span><span>bigger = better odds and past wins with ${esc(e.key)}</span><span>tap a stock</span>`});
+  const drawSel0 = () => {
+    const e = SR.find(x => x.key === HS.swSel); if (!e) return;
+    const edge = hsEdge(e);
+    const mine = all.filter(h => h.by.includes(e));
+    const fmap = TL.fmap || (TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.f || {}])) : {});
+    const field = HS.rng === '1W' ? 'ret_5d' : HS.rng === '1M' ? 'mom1m' : HS.rng === '6M' ? 'mom6m' : 'mom12m';
+    const getRet = t => {
+      const v = fmap[t]?.[field];
+      if (v != null && isFinite(v)) return v;
+      for (const r of (HS.rows || [])) { const sv = r.perf?.stocks?.[t]; if (sv != null && isFinite(sv)) return sv; }
+      return null;
+    };
+    ngDraw(el.querySelector('#sw-ng'), {
+      label: e.key,
+      edge: edge.label,
+      edgeCls: edge.cls,
+      sub: `${mine.length} open · ${HS.rng}`,
+      state: edge.key === 'edge' ? 'up' : ''
+    }, mine.map(h => {
+      const sc = score(e, h.t);
+      const ret = getRet(h.t);
+      const retTxt = ret != null ? (ret >= 0 ? '+' : '') + (ret * 100).toFixed(1) + '%' : '';
+      const o = MV.odds?.[h.t], ss = SS[h.t]?.v?.strategies?.find(x => x.key === e.key)?.record;
+      const parts = [];
+      if (retTxt) parts.push(retTxt);
+      if (o?.v != null) parts.push(`${Math.round(o.v * 100)}% odds`);
+      if (ss?.trades) parts.push(`${Math.round(ss.win * 100)}% won`);
+      const tagStr = parts.join(' · ') || day(h.d);
+      return {
+        label: h.t,
+        size: sc == null ? 0.5 : 0.15 + sc,
+        strength: h.by.length / SR.length,
+        heat: (h.by.length - 1) / Math.max(SR.length - 1, 1),
+        tag: tagStr,
+        tagCls: ret == null ? '' : ret >= 0 ? 'up' : 'dn',
+        onTap: () => odGo(h.t)
+      };
+    }), {
+      h: mine.length > 12 ? 340 : 300,
+      legend: `<span><i class="ng-grad"></i>darker = more hold it</span><span>${edge.label}</span><span>label = stock return (${HS.rng}) & odds</span><span>tap a stock</span>`
+    });
     el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel));
     const ts = mine.map(h => h.t), sel = HS.swSel;
     HS.swOdds ||= {};
@@ -8553,8 +8643,10 @@ function ngDraw(box, center, nodes, opts = {}) {
       <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="ng-l" text-anchor="${anc}">${esc(d.label)}</text>
       ${d.tag ? `<text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" class="ng-t ${d.tagCls || ''}" text-anchor="${anc}">${esc(d.tag)}</text>` : ''}</g>`; }).join('');
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="ng-svg" role="img" aria-label="${esc(center.label)} and ${n} connected items">${edges}
-    <g class="ng-ctr ${center.state || ''}"><circle cx="${cx}" cy="${cy}" r="34" class="ng-cc"/><text x="${cx}" y="${cy - 2}" class="ng-cl" text-anchor="middle">${esc(center.label)}</text>
-      ${center.sub ? `<text x="${cx}" y="${cy + 13}" class="ng-cs" text-anchor="middle">${esc(center.sub)}</text>` : ''}</g>${dots}</svg>
+    <g class="ng-ctr ${center.state || ''}"><circle cx="${cx}" cy="${cy}" r="${center.edge ? 36 : 34}" class="ng-cc"/>
+      <text x="${cx}" y="${center.edge ? cy - 6 : cy - 2}" class="ng-cl" text-anchor="middle">${esc(center.label)}</text>
+      ${center.edge ? `<text x="${cx}" y="${cy + 6}" class="ng-cs ${center.edgeCls || ''}" text-anchor="middle">${esc(center.edge)}</text>` : ''}
+      ${center.sub ? `<text x="${cx}" y="${center.edge ? cy + 17 : cy + 13}" class="ng-cs" text-anchor="middle">${esc(center.sub)}</text>` : ''}</g>${dots}</svg>
     ${opts.legend ? `<div class="ng-leg">${opts.legend}</div>` : ''}`;
   box.querySelectorAll('.ng-n').forEach(g => { const d = nodes[+g.dataset.i]; if (!d.onTap) return; g.onclick = () => d.onTap(); g.onkeydown = e => { if (e.key === 'Enter') d.onTap(); }; });
 }
@@ -8567,14 +8659,26 @@ function ngStrategy(r) {
   const card = el.querySelector('.rp-card'), P = r.perf || {}, pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
   const shared = t => (HS.rows || []).filter(x => x.picks.includes(t)).length;
   const NR = (HS.rows || [1]).length;
-  const nodes = r.picks.map(t => { const v = P.stocks?.[t]; return {label: t, inner: '', size: shared(t), strength: shared(t) / NR, heat: (shared(t) - 1) / Math.max(NR - 1, 1),
-    state: '', tag: v == null ? '' : pc(v), tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn', onTap: () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); }}; });
-  const name = r.name.replace(/_/g, ' ');
-  card.innerHTML = `<div class="rp-h"><div><b>${esc(name)}</b><small>${r.picks.length} stocks · basket of ${esc(r.as_of)}${P.ret != null ? ` · ${pc(P.ret)} since ${esc(P.from)} (SPY ${pc(P.spy)})` : ''}</small></div><button class="rp-x" aria-label="Close">×</button></div>
+  const edge = (typeof hsEdge === 'function') ? hsEdge(r) : { label: 'Has an edge', cls: 'edge', key: 'edge' };
+  const curRng = (typeof HS !== 'undefined' && HS.rng) || '1Y';
+  const fmap = (typeof TL !== 'undefined' && TL.fmap) || (typeof TL !== 'undefined' && TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.f || {}])) : {});
+  const field = curRng === '1W' ? 'ret_5d' : curRng === '1M' ? 'mom1m' : curRng === '6M' ? 'mom6m' : 'mom12m';
+
+  const nodes = r.picks.map(t => {
+    const v = curRng === 'All' ? P.stocks?.[t] : (fmap[t]?.[field] ?? P.stocks?.[t]);
+    const retTxt = v != null ? (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%' : '';
+    return {label: t, inner: '', size: shared(t), strength: shared(t) / NR, heat: (shared(t) - 1) / Math.max(NR - 1, 1),
+      state: '', tag: retTxt ? `${retTxt} (${curRng})` : '', tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn', onTap: () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); }};
+  });
+  const LBL = {SXG4_V38_SPY200_TBill: 'SXG4 (Account 1)', NB069_SX25_V38: 'SX25 + V38', VX09_Deterministic_Drawdown_Stop_Circuit: 'VX09', ZX18_Volume_Adjusted_Moving_Average_VAMA: 'ZX18', SX30_Cross_Sleeve_Momentum_Shifter: 'SX30'};
+  const name = LBL[r.name] || r.name.replace(/^(NB\d+|SXG\d+)_/, '').replace(/_/g, ' ').replace(/^SX25 Multi Sleeve Triple Parity$/, 'SX25').replace(/Deterministic Drawdown Stop Circuit/, '').trim();
+  const perf = (typeof hsStratPerf === 'function') ? hsStratPerf(r, curRng) : { fmt: pc(P.ret), raw: P.ret };
+
+  card.innerHTML = `<div class="rp-h"><div><div style="display:flex;align-items:center;gap:6px"><b>${esc(name)}</b><span class="v2-tag ${edge.cls}">${edge.label}</span></div><small>${r.picks.length} stocks · ${curRng}: <b class="${perf.raw >= 0 ? 'v2-up' : 'v2-dn'}">${perf.fmt}</b></small></div><button class="rp-x" aria-label="Close">×</button></div>
     <div class="ng-box"></div>`;
   card.querySelector('.rp-x').onclick = () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); };
-  ngDraw(card.querySelector('.ng-box'), {label: name.length > 12 ? name.slice(0, 11) + '…' : name, sub: P.ret != null ? pc(P.ret) : '', state: P.ret == null ? '' : P.ret >= 0 ? 'up' : 'dn'}, nodes,
-    {h: 330, legend: '<span><i class="ng-grad"></i>darker green = more of our 14 strategies own it</span><span>label = return since the basket date</span>'});
+  ngDraw(card.querySelector('.ng-box'), {label: name.length > 12 ? name.slice(0, 11) + '…' : name, edge: edge.label, edgeCls: edge.cls, sub: `${perf.fmt} (${curRng})`, state: edge.key === 'edge' ? 'up' : ''}, nodes,
+    {h: 330, legend: `<span><i class="ng-grad"></i>darker = shared across strategies</span><span>${edge.label}</span><span>label = stock return (${curRng})</span>`});
 }
 // 6.211 (user: "update this with all strategies but then grouped in families, from which you can expand the families into the individual strategies"):
 // the stock's graph shows the whole rule-based library (library run, public.stock_library_families) as families by what their buy rules look at, plus
@@ -8723,8 +8827,9 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
         const heat = isTop ? 1.0 : (c.win >= 65 ? 0.9 : (c.win >= 50 ? 0.6 : (c.n_buy > 0 ? 0.45 : 0.15)));
         const strength = isTop ? 1.0 : (c.win >= 60 ? 0.85 : (c.n_buy > 0 ? 0.6 : 0.25));
         const state = (c.n_buy ? 'on' : '') + (isTop ? ' top-winner' : '');
-        const tag = isTop ? `★ ${Math.round(c.win)}% won${c.trades ? ` · ${c.trades} tr` : ` · ${c.n_buy} buy`}`
-          : (c.win > 0 && c.trades > 0 ? `${Math.round(c.win)}% won · ${c.trades} tr` : `${c.n_buy} buy · ${c.n}`);
+        const retTxt = c.ret != null && Math.abs(c.ret) > 0.01 ? (c.ret >= 0 ? '+' : '') + c.ret.toFixed(1) + '% · ' : '';
+        const tag = isTop ? `★ ${retTxt}${Math.round(c.win)}% won${c.trades ? ` · ${c.trades} tr` : ` · ${c.n_buy} buy`}`
+          : (c.win > 0 && c.trades > 0 ? `${retTxt}${Math.round(c.win)}% won · ${c.trades} tr` : `${retTxt}${c.n_buy} buy · ${c.n}`);
 
         return {
           label: c.label,
