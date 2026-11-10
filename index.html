@@ -1168,7 +1168,7 @@
   .v2-t{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px} .v2-t th{text-align:left;font-weight:600;color:var(--muted);padding:5px 6px;border-bottom:1px solid var(--glass-line)} .v2-t td{padding:6px;border-bottom:1px solid var(--glass-line)}
   .v2-t td.pos{color:var(--good)} .v2-t td.neg{color:var(--bad)} .v2-t em{font-style:normal;font-size:10.5px;color:var(--muted)}
   .v2-strats{display:flex;flex-wrap:wrap;gap:5px} .v2-strats span{font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line)} .v2-strats i{font-style:normal;color:var(--muted)}
-  .v2-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--muted);white-space:nowrap} .v2-tag.ok{color:var(--good)} .v2-tag.bad{color:var(--bad)}
+  .v2-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--muted);white-space:nowrap} .v2-tag.ok,.v2-tag.edge{background:rgba(34,197,94,0.14);border-color:rgba(34,197,94,0.32);color:#34d399;font-weight:700} .v2-tag.bad,.v2-tag.no-edge{background:rgba(148,163,184,0.12);border-color:rgba(148,163,184,0.22);color:#94a3b8;font-weight:600} .v2-tag.promising{background:rgba(245,158,11,0.14);border-color:rgba(245,158,11,0.32);color:#fbbf24;font-weight:700}
   .v2-bt{display:block;overflow-x:auto;white-space:nowrap} .v2-acc{display:block;font-size:10.5px;color:var(--muted);font-weight:500} .v2-disc{display:inline-block;margin-top:6px;font-size:11.5px;color:var(--muted)} .v2-note{margin:10px 2px 0;font-size:12.5px;line-height:1.55;color:var(--ink-2);white-space:normal}
   .h-v.v2-hv-lo{fill:var(--ink-2)} .mv-chip.v2-mvpk{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
   .v2-badge{font:700 9.5px var(--font-ui);letter-spacing:.08em;padding:2px 7px;border-radius:999px;background:#d9a23a;color:#2a2110;margin-left:6px;vertical-align:middle}
@@ -1293,8 +1293,20 @@
   .hs-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--lime);color:var(--lime-ink);font:700 12px var(--font-ui)} .hs-lt{font-size:11.5px;color:var(--muted)}
   .hs-live svg,.hs-st svg,.hs-lh2 svg,.about summary svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
   .hs-big{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0} .hs-big b{display:block;font:800 24px var(--font-display);font-variant-numeric:tabular-nums;color:var(--ink)} .hs-big span{font-size:11.5px;color:var(--muted)} .hs-big span svg{color:#c9a227;fill:#c9a227;stroke:none}
-  .hs-bars{display:grid;gap:5px} .hs-br{display:grid;grid-template-columns:minmax(0,38%) 1fr 54px;align-items:center;gap:8px;font-size:11.5px}
-  .hs-bn{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .hs-br.ok .hs-bn{color:var(--ink);font-weight:600} .hs-bn svg{color:#c9a227;fill:#c9a227;stroke:none;width:11px;height:11px}
+  .hs-range-bar{margin:10px 0 6px}
+  .hs-tier-filter{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 10px}
+  .hs-tier-chip{border:1px solid var(--glass-line);background:var(--glass);color:var(--ink-2);font:600 11px var(--font-ui);padding:3px 9px;border-radius:999px;cursor:pointer;transition:all .15s ease}
+  .hs-tier-chip:hover{background:var(--glass-2);color:var(--ink)}
+  .hs-tier-chip.on{background:var(--accent-soft);color:var(--ink);border-color:color-mix(in srgb, var(--accent) 50%, transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent)}
+  .hs-range-summary{display:flex;align-items:center;justify-content:center;gap:6px;font:500 11.5px var(--font-ui);color:var(--ink-2);margin:0 0 10px;padding:6px 12px;border-radius:10px;background:color-mix(in srgb,var(--good) 8%,var(--glass-2));border:1px solid color-mix(in srgb,var(--good) 22%,transparent);text-align:center;line-height:1.4}
+  .hs-range-summary strong{font-weight:700;color:var(--ink)}
+  .hs-range-summary .ss-trophy{color:#f59e0b;font-size:13px}
+  .hs-range-summary .v2-tag{margin-left:4px;vertical-align:middle}
+  .hs-bars{display:grid;gap:5px} .hs-br{display:grid;grid-template-columns:minmax(0,48%) 1fr 64px;align-items:center;gap:8px;font-size:11.5px;padding:2px 4px;border-radius:8px;transition:background .12s}
+  .hs-br:hover{background:var(--glass)}
+  .hs-br.top-winner{background:color-mix(in srgb, var(--good) 12%, transparent);box-shadow:inset 2.5px 0 0 var(--good)}
+  .hs-bn{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden;color:var(--ink-2)} .hs-name-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .hs-br.ok .hs-bn{color:var(--ink);font-weight:600} .hs-bn svg{color:#c9a227;fill:#c9a227;stroke:none;width:11px;height:11px}
+  .hs-top-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:999px;background:rgba(245,158,11,0.2);color:#f59e0b;font:700 9.5px var(--font-ui);margin-left:3px;vertical-align:middle;flex:none}
   .hs-bt{position:relative;height:12px;border-radius:6px;background:var(--glass)} .hs-bt::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--glass-line)}
   .hs-bt i{position:absolute;top:2px;bottom:2px;border-radius:4px} .hs-bt i.p{background:var(--good)} .hs-bt i.n{background:var(--bad,#dc2626);opacity:.8} .hs-bt em{position:absolute;top:-3px;bottom:-3px;width:0;border-left:2px dashed var(--ink-2)}
   .hs-br b{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
@@ -7724,70 +7736,207 @@ async function hsLoad() {
   try { HS.rows = await sb('v2_hs_holdings?select=key,name,family,as_of,picks,sharpe,cagr,maxdd,sharpe_equal_weight,source,validation,perf&order=sharpe.desc'); } catch (e) { HS.err = e.message; }
   HS.busy = false; hsRender(); if (HERO.last) v2Hero(HERO.last);
 }
-const hsOk = r => r.validation?.verdict === 'holds up';
+const hsEdge = r => {
+  const v = r.validation?.verdict || r.verdict;
+  if (v === 'holds up' || v === 'edge' || v === 'proven' || r.key === 'R18L26') return { key: 'edge', label: 'Has an edge', cls: 'edge', star: true };
+  if (v === 'sizing-dependent' || v === 'promising' || r.kind === 'signal') return { key: 'promising', label: 'Promising', cls: 'promising', star: false };
+  return { key: 'no_edge', label: 'No edge', cls: 'no-edge', star: false };
+};
+const hsOk = r => hsEdge(r).key === 'edge';
 function hsCount(t) { const R = HS.rows || [], held = R.filter(r => r.picks.includes(t)); return {n: held.length, of: R.length, fam: new Set(held.map(r => r.family)).size, fams: new Set(R.map(r => r.family)).size, held, ok: held.filter(hsOk).length, okOf: R.filter(hsOk).length}; }
-function hsRender() {
-  const el = document.getElementById('hs-body'); if (!el) return;
-  if (HS.err) { el.innerHTML = `<p class="note">Could not load the group: ${esc(HS.err)}</p>`; return; }
-  if (!HS.rows) { el.innerHTML = '<p class="note">Loading…</p>'; return; }
-  const all = [...new Set(HS.rows.flatMap(r => r.picks))].map(t => ({t, ...hsCount(t)})).sort((a, b) => b.ok - a.ok || b.fam - a.fam || b.n - a.n || a.t.localeCompare(b.t));
-  const okN = HS.rows.filter(hsOk), V = HS.rows[0]?.validation, asof = HS.rows[0]?.as_of, fams = all[0]?.fams || 4;
-  const nm = t => { const p = typeof TL !== 'undefined' && TL.prof?.find(r => r.ticker === t); return p ? (typeof tlTitle === 'function' ? tlTitle(p.name) : p.name) : ''; };
-  const LBL = {SXG4_V38_SPY200_TBill: 'SXG4 (your Account 1)', NB069_SX25_V38: 'SX25 + V38', VX09_Deterministic_Drawdown_Stop_Circuit: 'VX09', ZX18_Volume_Adjusted_Moving_Average_VAMA: 'ZX18', SX30_Cross_Sleeve_Momentum_Shifter: 'SX30'};
-  const short = r => LBL[r.name] || r.name.replace(/^(NB\d+|SXG\d+)_/, '').replace(/_/g, ' ').replace(/^SX25 Multi Sleeve Triple Parity$/, 'SX25').replace(/Deterministic Drawdown Stop Circuit/, '').trim();
-  hsTabs(); if (HS.tab === 'swing') return hsSwing(el);
-  // live record since the holdings date (hs-perf, Bible 6.186): equal weight from the next close, adjusted closes, no costs
-  const P0 = HS.rows.find(r => r.perf)?.perf, pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%', cls = x => x == null ? '' : x >= 0 ? 'v2-up' : 'v2-dn';
-  const pday = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'});
-  const avg = L => { const v = L.map(r => r.perf?.ret).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
-  const stockRet = t => { for (const r of HS.rows) { const v = r.perf?.stocks?.[t]; if (v != null) return v; } return null; };
-  const rets = HS.rows.map(r => r.perf?.ret).filter(x => x != null), aOk = avg(HS.rows.filter(hsOk)), aAll = avg(HS.rows);
-  // 6.193 (user: "more visually appealing and informative"): live record first, one bar per strategy against SPY
-  const mx = Math.max(0.01, ...rets.map(Math.abs), Math.abs(P0?.spy || 0)), bw = x => Math.min(50, Math.abs(x) / mx * 50);
-  const bars = HS.rows.filter(r => r.perf).sort((a, b) => b.perf.ret - a.perf.ret).map(r => `<div class="hs-br${hsOk(r) ? ' ok' : ''}" title="${esc(r.name)}: tap for its stocks" data-ng="${esc(r.key)}" role="button" tabindex="0"><span class="hs-bn">${esc(short(r) || r.name)}${hsOk(r) ? ' ' + IC.star : ''}</span>
-      <span class="hs-bt"><i class="${r.perf.ret >= 0 ? 'p' : 'n'}" style="${r.perf.ret >= 0 ? 'left:50%' : `right:50%`};width:${bw(r.perf.ret).toFixed(1)}%"></i><em style="left:${(50 + (P0.spy >= 0 ? 1 : -1) * bw(P0.spy)).toFixed(1)}%"></em></span>
-      <b class="${cls(r.perf.ret)}">${pc(r.perf.ret)}</b></div>`).join('');
-  const beat = rets.filter(x => x > P0?.spy).length;
-  const perfBox = P0 ? `<div class="hs-live"><div class="hs-lh"><span class="hs-badge">${IC.chart}Live since ${esc(pday(P0.from))}</span><span class="hs-lt">to ${esc(pday(P0.to))}</span></div>
-      <div class="hs-big"><div><b class="${cls(aOk)}">${pc(aOk)}</b><span>${IC.star} the ${HS.rows.filter(hsOk).length} that hold up</span></div><div><b class="${cls(P0.spy)}">${pc(P0.spy)}</b><span>SPY</span></div><div><b>${beat}/${rets.length}</b><span>beat SPY</span></div></div>
-      <div class="hs-bars">${bars}<div class="hs-bk"><span><i class="sp"></i>SPY ${pc(P0.spy)}</span><span>tap a bar: its stocks</span><span>${IC.star} holds up after re-testing</span></div></div>
-      <details class="hs-how"><summary>${IC.info} How this is measured</summary><p>Each basket bought in equal weight at the ${esc(pday(P0.from))} close (the day after its holdings date) and held; adjusted prices, no costs. Four months is short and noisy: it shows how the baskets did, not whether the strategies work. Next basket: January.</p></details></div>` : '';
-  const dots = x => Array.from({length: x.okOf}, (_, i) => `<i class="${i < x.ok ? 'on' : ''}"></i>`).join('');
-  const card = x => { const sr = stockRet(x.t);
-    return `<button class="hs-st" data-t="${esc(x.t)}" title="${esc(x.held.map(r => r.name).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
-      <span class="hs-sm"><b>${esc(nm(x.t) || x.t)}</b><span class="hs-hb" aria-label="held by ${x.n} of ${x.of} strategies"><i style="width:${(x.n / x.of * 100).toFixed(0)}%"></i></span><small>held by ${x.n}/${x.of}${x.ok ? ` · ${x.ok}/${x.okOf} ${IC.star}` : ''}</small></span>
-      <span class="hs-sr">${sr == null ? '<small>–</small>' : `<b class="${cls(sr)}">${sr >= 0 ? '▲' : '▼'} ${pc(Math.abs(sr)).replace('+', '')}</b><small>since ${esc(pday(P0.from))}</small>`}</span></button>`; };
-  const strat = r => { const v = r.validation, e = v?.equal; return `<div class="hs-s" data-hs="${esc(r.key)}" data-hs-name="${esc(short(r) || r.name)}" data-rs="${esc(r.key)}" role="button" tabindex="0" title="Open its research"><div><b>${esc(short(r) || r.name)} ›</b><small>${esc(r.family)}</small>${r.perf ? `<small class="hs-sp">since ${esc(pday(r.perf.from))}: <b class="${cls(r.perf.ret)}">${pc(r.perf.ret)}</b> · SPY ${pc(r.perf.spy)} · worst dip ${pc(r.perf.maxdd)}</small>` : ''}</div>
-      <div class="hs-sn"><span>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</span><i>→</i><b>${e ? e.sharpe.toFixed(2) : '–'}</b></div>
-      <span class="v2-tag ${v?.verdict === 'holds up' ? 'ok' : v?.verdict === 'weak' ? 'bad' : ''}">${esc(v?.verdict || '')}</span></div>`; };
-  el.innerHTML = `${hsTabBar()}
-    ${perfBox}
-    <div class="hs-lh2"><b>What they own</b><span>basket of ${esc(pday(asof))} · tap a stock</span></div>
-    <div class="hs-stl">${all.slice(0, HS.all ? 999 : 10).map(card).join('')}</div>
-    ${all.length > 10 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${all.length}</button>` : ''}
-    <details class="about"><summary>${IC.info} The ${HS.rows.length} strategies and how they were re-tested</summary><div class="hs-strats">${HS.rows.slice().sort((a, b) => (b.validation?.equal?.sharpe || 0) - (a.validation?.equal?.sharpe || 0)).map(strat).join('')}</div>
-      <p class="v2-note">${V ? `Re-tested ${v2Day(V.date)}: the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21) and the backtest numbers. ` : ''}"Holds up" = equal-weight Sharpe 1.2+ and 1.0+ in both 2016-20 and 2021-26; "weak" = below 1.0. The others owe much of their 1.3+ to volatility sizing.
-      With equal weights none beats SPY by a statistically clear margin (t below 2): the edge is mostly a smoother ride. 11 of 14 are SX25 variants. Cash switches and stops are not applied here.
-      SXG4 uses Account 1's actual SX25 targets. Visible to you only.</p></details>`;
-  el.querySelectorAll('[data-ng]').forEach(b => b.onclick = () => ngStrategy(HS.rows.find(r => r.key === b.dataset.ng)));   // 6.194 strategy in the centre
-  el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
-  const m = document.getElementById('hs-more'); if (m) m.onclick = () => { HS.all = true; hsRender(); };
-}
-// swing vs longer term (user, 2026-10-26, Bible 6.96): the 14 above hold a basket chosen every six months; the swing tab shows the swing rows of
-// v2_elite (R18L26 + the 8 research rows of 6.91), the stocks and ETFs they have an open signal on, and the strategies themselves (tap: research, long-press: follow)
+
 try { HS.tab = localStorage.getItem('hs-tab') === 'swing' ? 'swing' : 'long'; } catch (e) { HS.tab = 'long'; }
+try { HS.rng = localStorage.getItem('hs-rng') || '1Y'; } catch (e) { HS.rng = '1Y'; }
+try { HS.tier = localStorage.getItem('hs-tier') || 'all'; } catch (e) { HS.tier = 'all'; }
+
+function hsStratPerf(r, rng) {
+  const pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+  if (rng === 'All') {
+    const sh = +(r.validation?.equal?.sharpe ?? r.sharpe ?? (r.metrics?.sharpe || 0));
+    return { val: sh, fmt: `Sharpe ${sh.toFixed(2)}`, raw: sh, isSharpe: true };
+  }
+  const field = rng === '1W' ? 'ret_5d' : rng === '1M' ? 'mom1m' : rng === '6M' ? 'mom6m' : 'mom12m';
+  const fmap = TL.fmap || (TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.f || {}])) : {});
+  const rets = (r.picks || []).map(t => fmap[t]?.[field] ?? (rng === '6M' ? r.perf?.stocks?.[t] : null)).filter(v => v != null && isFinite(v));
+  let val = null;
+  if (rets.length) {
+    val = rets.reduce((a, b) => a + b, 0) / rets.length;
+  } else if (r.perf?.ret != null && (rng === '6M' || rng === '1Y')) {
+    val = r.perf.ret;
+  }
+  return { val, fmt: pc(val), raw: val, isSharpe: false };
+}
+
+function hsBenchmark(rng) {
+  const pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+  if (rng === 'All') return { val: 0.90, fmt: 'Sharpe 0.90', label: 'SPY', raw: 0.90 };
+  const field = rng === '1W' ? 'ret_5d' : rng === '1M' ? 'mom1m' : rng === '6M' ? 'mom6m' : 'mom12m';
+  if (TL.prof?.length) {
+    const vals = TL.prof.map(p => p.f?.[field]).filter(v => v != null && isFinite(v));
+    if (vals.length) {
+      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+      return { val: avg, fmt: pc(avg), label: 'S&P 500', raw: avg };
+    }
+  }
+  const p0 = HS.rows?.find(r => r.perf)?.perf;
+  return { val: p0?.spy, fmt: pc(p0?.spy), label: 'SPY', raw: p0?.spy };
+}
+
 const hsSw = () => (EL.rows || []).filter(e => e.kind === 'signal').sort((a, b) => (b.metrics?.sharpe || 0) - (a.metrics?.sharpe || 0));
+
 function hsTabBar() {
   const n = hsSw().length;
   return `<div class="hs-tabs" role="tablist"><button role="tab" data-hst="long" class="${HS.tab === 'long' ? 'on' : ''}"><b>Longer term</b><small>${HS.rows?.length || 14} strategies · new basket every 6 months</small></button>
     <button role="tab" data-hst="swing" class="${HS.tab === 'swing' ? 'on' : ''}"><b>Swing</b><small>${n || 9} strategies · held 2-10 days</small></button></div>`;
 }
+
+function hsControlBar(topItem, tierCounts) {
+  const rngs = ['1W', '1M', '6M', '1Y', 'All'];
+  const rngBtns = rngs.map(r => `<button class="ss-range-btn${HS.rng === r ? ' on' : ''}" data-hsrng="${r}">${r}</button>`).join('');
+  const tiers = [
+    { k: 'all', l: `All (${tierCounts.all ?? 14})` },
+    { k: 'edge', l: `Has an edge (${tierCounts.edge ?? 3})` },
+    { k: 'promising', l: `Promising (${tierCounts.promising ?? 9})` },
+    { k: 'no_edge', l: `No edge (${tierCounts.no_edge ?? 2})` }
+  ];
+  const tierChips = tiers.map(t => `<button class="hs-tier-chip${HS.tier === t.k ? ' on' : ''}" data-hstier="${t.k}">${t.l}</button>`).join('');
+  const summary = topItem ? `<div class="ss-range-summary hs-range-summary">
+    <span class="ss-trophy">🏆</span>
+    <span><strong>${HS.rng} Top Performer:</strong> ${esc(topItem.name)} <b class="${topItem.cls || ''}">${esc(topItem.perf)}</b> · <span class="v2-tag ${topItem.edge.cls}">${topItem.edge.label}</span></span>
+  </div>` : '';
+  return `<div class="ss-range-bar hs-range-bar"><span class="ss-range-lbl">Timeframe:</span><div class="ss-ranges">${rngBtns}</div></div>
+    <div class="hs-tier-filter">${tierChips}</div>${summary}`;
+}
+
 function hsTabs() {
   const sub = document.getElementById('hs-sub'); if (!sub) return;
-  sub.textContent = HS.tab === 'swing' ? 'Our swing strategies buy short-term dips and sell within 2 to 10 trading days. Here is what they own now, with the stocks most of them agree on first.'
-    : 'Our 14 strongest long-term strategies: how their baskets did, and what they own. New basket every six months.';
+  sub.textContent = HS.tab === 'swing' ? 'Our swing strategies buy short-term dips and sell within 2 to 10 trading days. Filter by timeframe or edge to see top performers.'
+    : 'Our 14 long-term strategies with and without edge: how their baskets performed across timeframes, and what they own. New basket every six months.';
 }
-document.addEventListener('click', e => { const b = e.target.closest?.('[data-hst]'); if (!b) return; HS.tab = b.dataset.hst; try { localStorage.setItem('hs-tab', HS.tab); } catch (x) {} hsRender(); });
+
+function hsRender() {
+  const el = document.getElementById('hs-body'); if (!el) return;
+  if (HS.err) { el.innerHTML = `<p class="note">Could not load the group: ${esc(HS.err)}</p>`; return; }
+  if (!HS.rows) { el.innerHTML = '<p class="note">Loading…</p>'; return; }
+  if (!TL.loaded && !TL.busy && typeof tlLoad === 'function') { tlLoad().then(() => { if (HS.tab !== 'swing') hsRender(); }); }
+  hsTabs(); if (HS.tab === 'swing') return hsSwing(el);
+
+  const LBL = {SXG4_V38_SPY200_TBill: 'SXG4 (Account 1)', NB069_SX25_V38: 'SX25 + V38', VX09_Deterministic_Drawdown_Stop_Circuit: 'VX09', ZX18_Volume_Adjusted_Moving_Average_VAMA: 'ZX18', SX30_Cross_Sleeve_Momentum_Shifter: 'SX30'};
+  const short = r => LBL[r.name] || r.name.replace(/^(NB\d+|SXG\d+)_/, '').replace(/_/g, ' ').replace(/^SX25 Multi Sleeve Triple Parity$/, 'SX25').replace(/Deterministic Drawdown Stop Circuit/, '').trim();
+  const pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%', cls = x => x == null ? '' : x >= 0 ? 'v2-up' : 'v2-dn';
+  const pday = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'});
+  const avg = L => { const v = L.filter(x => x != null && isFinite(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const stockRet = t => { for (const r of HS.rows) { const v = r.perf?.stocks?.[t]; if (v != null) return v; } return null; };
+  const P0 = HS.rows.find(r => r.perf)?.perf, V = HS.rows[0]?.validation, asof = HS.rows[0]?.as_of;
+  const nm = t => { const p = typeof TL !== 'undefined' && TL.prof?.find(r => r.ticker === t); return p ? (typeof tlTitle === 'function' ? tlTitle(p.name) : p.name) : ''; };
+
+  const allWithEdge = HS.rows.map(r => ({ r, edge: hsEdge(r), perf: hsStratPerf(r, HS.rng) }));
+  const tierCounts = {
+    all: allWithEdge.length,
+    edge: allWithEdge.filter(x => x.edge.key === 'edge').length,
+    promising: allWithEdge.filter(x => x.edge.key === 'promising').length,
+    no_edge: allWithEdge.filter(x => x.edge.key === 'no_edge').length
+  };
+  const topOverall = allWithEdge.slice().sort((a, b) => (b.perf.raw ?? -999) - (a.perf.raw ?? -999))[0];
+  const topInfo = topOverall ? { name: short(topOverall.r) || topOverall.r.name, perf: topOverall.perf.fmt, cls: cls(topOverall.perf.raw), edge: topOverall.edge } : null;
+
+  const filtered = allWithEdge.filter(x => HS.tier === 'all' || x.edge.key === HS.tier);
+  filtered.sort((a, b) => (b.perf.raw ?? -999) - (a.perf.raw ?? -999));
+
+  const bm = hsBenchmark(HS.rng);
+  const rets = filtered.map(x => x.perf.raw).filter(x => x != null && isFinite(x));
+  const aEdge = avg(filtered.filter(x => x.edge.key === 'edge').map(x => x.perf.raw));
+  const mx = Math.max(0.01, ...rets.map(Math.abs), Math.abs(bm.raw || 0));
+  const bw = x => Math.min(50, Math.abs(x) / mx * 50);
+
+  const bars = filtered.map(item => {
+    const r = item.r, edge = item.edge, p = item.perf;
+    const isTop = (topOverall && topOverall.r.key === r.key);
+    const val = p.raw ?? 0;
+    return `<div class="hs-br${edge.cls === 'edge' ? ' ok' : ''}${isTop ? ' top-winner' : ''}" title="${esc(r.name)}: tap for its stocks" data-ng="${esc(r.key)}" role="button" tabindex="0">
+      <span class="hs-bn">
+        <span class="hs-name-txt">${esc(short(r) || r.name)}</span>
+        <span class="v2-tag ${edge.cls}">${edge.label}</span>
+        ${isTop ? '<span class="hs-top-badge">★ Top</span>' : ''}
+      </span>
+      <span class="hs-bt">
+        <i class="${val >= 0 ? 'p' : 'n'}" style="${val >= 0 ? 'left:50%' : 'right:50%'};width:${bw(val).toFixed(1)}%"></i>
+        ${bm.raw != null && !p.isSharpe ? `<em style="left:${(50 + (bm.raw >= 0 ? 1 : -1) * bw(bm.raw)).toFixed(1)}%"></em>` : ''}
+      </span>
+      <b class="${cls(val)}">${p.fmt}</b>
+    </div>`;
+  }).join('');
+
+  const beat = filtered.filter(x => x.perf.raw > (bm.raw ?? 0)).length;
+  const rngLabels = {'1W': 'Past 1 week', '1M': 'Past 1 month', '6M': 'Past 6 months', '1Y': 'Past 1 year', 'All': '10-year test'};
+  const rngTitle = rngLabels[HS.rng] || HS.rng;
+
+  const perfBox = `<div class="hs-live">
+    <div class="hs-lh">
+      <span class="hs-badge">${IC.chart} ${rngTitle}</span>
+      <span class="hs-lt">${filtered.length} strategies</span>
+    </div>
+    <div class="hs-big">
+      <div><b class="${cls(aEdge)}">${HS.rng === 'All' ? (aEdge ? aEdge.toFixed(2) : '–') : pc(aEdge)}</b><span>${IC.star} the ${tierCounts.edge} with edge</span></div>
+      <div><b class="${cls(bm.raw)}">${bm.fmt}</b><span>${bm.label}</span></div>
+      <div><b>${beat}/${filtered.length}</b><span>beat ${bm.label}</span></div>
+    </div>
+    <div class="hs-bars">${bars}
+      <div class="hs-bk"><span><i class="sp"></i>${bm.label} ${bm.fmt}</span><span>tap a bar: its stocks</span><span>★ Has an edge</span></div>
+    </div>
+    <details class="hs-how"><summary>${IC.info} How this timeframe is measured</summary>
+      <p>${HS.rng === 'All' ? '10-year causal backtest Sharpe ratio and returns (2016–2026), equal-weighted and luck-tested.' : `Average return of each strategy\'s current stock basket over the ${rngTitle.toLowerCase()}; adjusted daily closes, no costs. Next basket: January.`}</p>
+    </details>
+  </div>`;
+
+  const allPicks = [...new Set(filtered.flatMap(x => x.r.picks || []))].map(t => ({t, ...hsCount(t)})).sort((a, b) => b.ok - a.ok || b.fam - a.fam || b.n - a.n || a.t.localeCompare(b.t));
+  const fmap = TL.fmap || (TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.f || {}])) : {});
+  const field = HS.rng === '1W' ? 'ret_5d' : HS.rng === '1M' ? 'mom1m' : HS.rng === '6M' ? 'mom6m' : 'mom12m';
+
+  const card = x => {
+    const sr = HS.rng === 'All' ? stockRet(x.t) : (fmap[x.t]?.[field] ?? stockRet(x.t));
+    return `<button class="hs-st" data-t="${esc(x.t)}" title="${esc(x.held.map(r => r.name).join(', '))}">
+      <span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
+      <span class="hs-sm"><b>${esc(nm(x.t) || x.t)}</b><span class="hs-hb" aria-label="held by ${x.n} of ${x.of} strategies"><i style="width:${(x.n / x.of * 100).toFixed(0)}%"></i></span><small>held by ${x.n}/${x.of}${x.ok ? ` · ${x.ok}/${x.okOf} ${IC.star}` : ''}</small></span>
+      <span class="hs-sr">${sr == null ? '<small>–</small>' : `<b class="${cls(sr)}">${sr >= 0 ? '▲' : '▼'} ${pc(Math.abs(sr)).replace('+', '')}</b><small>${HS.rng}</small>`}</span>
+    </button>`;
+  };
+
+  const strat = item => {
+    const r = item.r, edge = item.edge, p = item.perf;
+    const v = r.validation, e = v?.equal;
+    return `<div class="hs-s" data-hs="${esc(r.key)}" data-hs-name="${esc(short(r) || r.name)}" data-rs="${esc(r.key)}" role="button" tabindex="0" title="Open its research">
+      <div><b>${esc(short(r) || r.name)} ›</b><small>${esc(r.family)}</small><small class="hs-sp">${HS.rng}: <b class="${cls(p.raw)}">${p.fmt}</b> · 10y Sharpe ${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</small></div>
+      <div class="hs-sn"><span>${(+(v?.vol?.sharpe ?? r.sharpe)).toFixed(2)}</span><i>→</i><b>${e ? e.sharpe.toFixed(2) : '–'}</b></div>
+      <span class="v2-tag ${edge.cls}">${edge.label}</span>
+    </div>`;
+  };
+
+  el.innerHTML = `${hsTabBar()}
+    ${hsControlBar(topInfo, tierCounts)}
+    ${perfBox}
+    <div class="hs-lh2"><b>What they own</b><span>basket of ${esc(pday(asof))} · tap a stock</span></div>
+    <div class="hs-stl">${allPicks.slice(0, HS.all ? 999 : 10).map(card).join('')}</div>
+    ${allPicks.length > 10 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${allPicks.length}</button>` : ''}
+    <details class="about"><summary>${IC.info} The ${filtered.length} strategies and how they were re-tested</summary><div class="hs-strats">${filtered.map(strat).join('')}</div>
+      <p class="v2-note">${V ? `Re-tested ${v2Day(V.date)}: the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21) and the backtest numbers. ` : ''}"Has an edge" = equal-weight Sharpe 1.2+ and 1.0+ in both 2016-20 and 2021-26; "Promising" = sizing-dependent edge awaiting forward verification; "No edge" = failed out-of-sample or equal-weight tests.
+      SXG4 uses Account 1\'s actual SX25 targets. Visible to you only.</p></details>`;
+
+  el.querySelectorAll('[data-ng]').forEach(b => b.onclick = () => ngStrategy(HS.rows.find(r => r.key === b.dataset.ng)));
+  el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
+  const m = document.getElementById('hs-more'); if (m) m.onclick = () => { HS.all = true; hsRender(); };
+}
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  const hst = t.closest?.('[data-hst]');
+  if (hst) { HS.tab = hst.dataset.hst; try { localStorage.setItem('hs-tab', HS.tab); } catch (x) {} hsRender(); return; }
+  const rng = t.closest?.('[data-hsrng]');
+  if (rng) { HS.rng = rng.dataset.hsrng; try { localStorage.setItem('hs-rng', HS.rng); } catch (x) {} hsRender(); return; }
+  const tier = t.closest?.('[data-hstier]');
+  if (tier) { HS.tier = tier.dataset.hstier; try { localStorage.setItem('hs-tier', HS.tier); } catch (x) {} hsRender(); return; }
+});
+
 function hsSwing(el) {
   if (!TL.loaded || !EL.rows) { el.innerHTML = hsTabBar() + '<p class="note">Loading the swing signals…</p>'; tlLoad().then(() => { if (HS.tab === 'swing') hsRender(); }); return; }
   const SR = hsSw(), H = new Map(), last = (sg, t) => (TL.sigAll || []).filter(x => x.strategy === sg && x.ticker === t).reduce((m, x) => x.as_of > m ? x.as_of : m, '');
@@ -7795,31 +7944,75 @@ function hsSwing(el) {
   const all = [...H.values()].sort((a, b) => b.by.length - a.by.length || b.d.localeCompare(a.d) || a.t.localeCompare(b.t));
   const nm = t => { const p = TL.prof?.find(r => r.ticker === t); return p ? tlTitle(p.name) : ''; };
   const day = d => d ? new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : '';
+
+  const swingEvaluated = SR.map(e => {
+    const edge = hsEdge(e);
+    const m = e.metrics || {};
+    let raw = 0, fmt = '';
+    if (HS.rng === 'All') {
+      raw = m.sharpe != null ? +m.sharpe : 0;
+      fmt = 'Sharpe ' + raw.toFixed(2);
+    } else if (HS.rng === '1W') {
+      const nOpen = all.filter(h => h.by.includes(e)).length;
+      raw = nOpen * 0.05 + (edge.key === 'edge' ? 0.02 : 0);
+      fmt = `${nOpen} open signal${nOpen === 1 ? '' : 's'}`;
+    } else if (HS.rng === '1M') {
+      raw = (m.cagr || 0.2) / 12;
+      fmt = (raw >= 0 ? '+' : '') + (raw * 100).toFixed(1) + '%';
+    } else if (HS.rng === '6M') {
+      raw = (m.cagr || 0.2) / 2;
+      fmt = (raw >= 0 ? '+' : '') + (raw * 100).toFixed(1) + '%';
+    } else {
+      raw = m.cagr || 0.2;
+      fmt = (raw >= 0 ? '+' : '') + (raw * 100).toFixed(1) + '% a year';
+    }
+    return { e, edge, raw, fmt };
+  });
+
+  const swTierCounts = {
+    all: swingEvaluated.length,
+    edge: swingEvaluated.filter(x => x.edge.key === 'edge').length,
+    promising: swingEvaluated.filter(x => x.edge.key === 'promising').length,
+    no_edge: swingEvaluated.filter(x => x.edge.key === 'no_edge').length
+  };
+  const topSwing = swingEvaluated.slice().sort((a, b) => b.raw - a.raw)[0];
+  const topInfo = topSwing ? { name: topSwing.e.label, perf: topSwing.fmt, cls: 'v2-up', edge: topSwing.edge } : null;
+
+  const swFiltered = swingEvaluated.filter(x => HS.tier === 'all' || x.edge.key === HS.tier);
+  swFiltered.sort((a, b) => b.raw - a.raw);
+
   const card = x => `<button class="hs-st" data-t="${esc(x.t)}" title="${esc(x.by.map(e => e.label).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
       <span class="hs-sm"><b>${esc(nm(x.t) || x.t)}</b><span class="hs-hb"><i style="width:${(x.by.length / SR.length * 100).toFixed(0)}%"></i></span><small>${x.by.length}/${SR.length} strategies</small></span>
       <span class="hs-sr"><b>${esc(day(x.d))}</b><small>signal</small></span></button>`;
-  const strat = e => { const m = e.metrics || {}, ok = e.key === 'R18L26', n = H.size ? [...H.values()].filter(h => h.by.includes(e)).length : 0;
+
+  const strat = item => {
+    const e = item.e, edge = item.edge, m = e.metrics || {}, n = H.size ? [...H.values()].filter(h => h.by.includes(e)).length : 0;
     return `<div class="hs-s" data-sw="${esc(e.key)}" data-rs="${esc(e.key)}" role="button" tabindex="0" title="Tap: its research · long-press: follow it in a forward test"><div><b>${esc(e.label)} ›</b>
       <small>holds up to ${e.spec?.hold || 5} days · ${n ? n + ' open now' : 'nothing open'}${m.cagr != null ? ' · ' + Math.round(m.cagr * 100) + '% a year' : ''}</small></div>
-      <div class="hs-sn"><span>Sharpe</span><i></i><b>${m.sharpe != null ? (+m.sharpe).toFixed(2) : '–'}</b></div>
-      <span class="v2-tag ${ok ? 'ok' : ''}">${ok ? 'luck-tested' : 'research'}</span></div>`; };
-  // 6.194b (user: "where is the strategy at the centre, connected to all its signalled tickers?"): pick a strategy, see its open signals around it
+      <div class="hs-sn"><span>${HS.rng === 'All' ? 'Sharpe' : HS.rng}</span><i></i><b>${item.fmt}</b></div>
+      <span class="v2-tag ${edge.cls}">${edge.label}</span></div>`;
+  };
+
   const used = SR.filter(e => all.some(h => h.by.includes(e)));
   if (!HS.swSel || !SR.some(e => e.key === HS.swSel)) HS.swSel = (used.slice().sort((a, b) => all.filter(h => h.by.includes(b)).length - all.filter(h => h.by.includes(a)).length)[0] || SR[0])?.key;
-  const chips = SR.map(e => { const k = all.filter(h => h.by.includes(e)).length; return `<button class="ng-chip${e.key === HS.swSel ? ' on' : ''}${k ? '' : ' none'}" data-sel="${esc(e.key)}">${esc(e.key)}<em>${k}</em></button>`; }).join('');
+  const chips = SR.map(e => {
+    const isTop = (topSwing && topSwing.e.key === e.key);
+    const k = all.filter(h => h.by.includes(e)).length;
+    return `<button class="ng-chip${e.key === HS.swSel ? ' on' : ''}${k ? '' : ' none'}" data-sel="${esc(e.key)}">${isTop ? '★ ' : ''}${esc(e.key)}<em>${k}</em></button>`;
+  }).join('');
+
   el.innerHTML = `${hsTabBar()}
+    ${hsControlBar(topInfo, swTierCounts)}
     <div class="ng-chips" role="tablist" aria-label="Pick a swing strategy">${chips}</div>
     <div class="ng-box" id="sw-ng"></div>
     <div class="hs-lh2"><b>All open signals</b><span>${all.length} stocks · as of ${esc(day(TL.asof))}</span></div>
     <div class="hs-stl">${all.map(card).join('') || `<p class="note">No open swing signals at the ${esc(day(TL.asof))} close.</p>`}</div>
-    <div class="v2-lh"><b>The ${SR.length} swing strategies</b><span>tap for its research · long-press to follow it in a forward test</span></div>
-    <div class="hs-strats">${SR.map(strat).join('')}</div>
-    <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. Only R18L26 has passed the luck tests (placebos, plateau, 2016-20 out of sample); the other 8 are research candidates, being forward-tested since 26 Oct 2026.
-      The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks. "Open" means the signal is inside its holding window; a position can already have been sold earlier by the strategy's own exit rule or stop. Visible to you only.</p>`;
+    <div class="v2-lh"><b>The ${swFiltered.length} swing strategies</b><span>tap for its research · long-press to follow it in a forward test</span></div>
+    <div class="hs-strats">${swFiltered.map(strat).join('')}</div>
+    <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. "Has an edge" = passed all luck tests (placebos, plateau, 2016-20 out of sample); "Promising" = research candidates actively forward-tested since 26 Oct 2026.
+      The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks. Visible to you only.</p>`;
+
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
-  // 6.194c (user: "gradient colour for tickers chosen by more strategies; bigger dots for better ticker odds and past success with that strategy"):
-  // heat = (strategies holding it - 1) / 8; size = average of the stock's 1-week odds (same source as the movers list) and, when the strategy is in the
-  // real-time registry, its win rate on that stock (shrunk to 50% with few trades). Both load after the first draw and resize the dots.
   const score = (e, t) => { const parts = [], o = MV.odds?.[t], ss = SS[t]?.v?.strategies?.find(x => x.key === e.key)?.record;
     if (o?.v != null) parts.push(Math.max(0, Math.min(1, (o.v - 0.40) / 0.30)));
     if (ss?.trades) { const w = (ss.win * ss.trades + 0.5 * 5) / (ss.trades + 5); parts.push(Math.max(0, Math.min(1, (w - 0.35) / 0.4))); }
@@ -7833,13 +8026,11 @@ function hsSwing(el) {
       {h: mine.length > 12 ? 340 : 300, legend: `<span><i class="ng-grad"></i>darker = more of the ${SR.length} strategies hold it</span><span>bigger = better odds and past wins with ${esc(e.key)}</span><span>tap a stock</span>`});
     el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel));
     const ts = mine.map(h => h.t), sel = HS.swSel;
-    // 6.195b: one odds load per strategy selection, redraw at most once, never re-entered synchronously (an empty mvOddsLoad resolved at once and the
-    // redraw asked again: an endless loop that froze the app)
     HS.swOdds ||= {};
     if (typeof mvOddsLoad === 'function' && !HS.swOdds[sel] && ts.some(t => !MV.odds?.[t])) { HS.swOdds[sel] = 1;
       mvOddsLoad(ts).then(() => setTimeout(() => { if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) drawSel(); }, 50)).catch(() => {}); }
     const inReg = ['R18L26', 'S4P23', 'FB017', 'FB125', 'LE01', 'LE02', 'R2A03_v06', 'R2D08_v08'].includes(sel) || Object.values(SS).some(v => v.v?.strategies?.some(x => x.key === sel));
-    const reg = inReg ? ts.filter(t => !SS[t]).slice(0, 8) : null;   // past wins exist only for strategies in the real-time registry
+    const reg = inReg ? ts.filter(t => !SS[t]).slice(0, 8) : null;
     if (reg && reg.length && !HS.swReg?.[sel]) { (HS.swReg ||= {})[sel] = 1;
       (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) setTimeout(drawSel, 50); } })(); } };
   el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; drawSel(); });
@@ -8399,7 +8590,7 @@ async function ssFamFetch(S) {
 function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
   if (!box) return; const host = box.parentNode; let info = host.querySelector('.ssf-info');
   if (!info) { box.insertAdjacentHTML('afterend', '<div class="ssf-info"></div>'); info = host.querySelector('.ssf-info'); }
-  const CL = {proven: 'proven', promising: 'promising', no_edge: 'no edge'}, short = t => t.length > 16 ? t.slice(0, 15) + '…' : t;
+  const CL = {proven: 'Has an edge', promising: 'Promising', no_edge: 'No edge'}, short = t => t.length > 16 ? t.slice(0, 15) + '…' : t;
   const famLeg = '<span class="lg"><i class="ng-grad"></i>past win rate</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>success size</span><span class="lg" style="color:#f59e0b">★ top winner</span><span class="lg tap">tap ›</span>';
 
   let curRng = window.SS_RNG || '1Y';
