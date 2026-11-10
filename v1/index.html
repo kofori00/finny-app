@@ -1023,10 +1023,17 @@
   .ak-a-body ul{list-style:none;margin:10px 0 14px;padding:0;display:grid;gap:6px}
   .ak-a-body ul li{position:relative;display:flex;align-items:center;padding:7px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--glass-line);font-size:13.5px;line-height:1.45}
   .ak-a-body ul li:not(.ak-item-ticker)::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none;margin-right:10px}
-  .ak-item-ticker{display:flex;align-items:center;gap:6px}
-  .ak-sym{display:inline-flex;align-items:center;justify-content:center;font:700 12.5px var(--font-mono);color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--surface));padding:2px 8px;border-radius:6px;border:1px solid color-mix(in srgb,var(--accent) 32%,transparent);letter-spacing:.03em;flex:none}
-  .ak-comp{color:var(--ink);font-weight:600;font-size:13.5px}
+  .ak-item-ticker{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--glass-line);cursor:pointer;transition:transform .12s,background .12s,border-color .12s}
+  .ak-item-ticker:hover{background:color-mix(in srgb,var(--accent) 8%,var(--surface-2));border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+  .ak-item-ticker:active{transform:scale(.985)}
+  .ak-sym{display:inline-flex;align-items:center;justify-content:center;font:700 12.5px var(--font-mono);color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--surface));padding:2px 8px;border-radius:6px;border:1px solid color-mix(in srgb,var(--accent) 32%,transparent);letter-spacing:.03em;flex:none;cursor:pointer;outline:none}
+  .ak-comp{color:var(--ink);font-weight:600;font-size:13.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ak-rest{color:var(--muted);font-size:13px}
+  .ak-chev{flex:none;width:14px;height:14px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.7;margin-left:auto}
+  .ak-item-ticker:hover .ak-chev{stroke:var(--accent);opacity:1}
+  .ak-sym-btn{display:inline-flex;align-items:center;vertical-align:baseline;padding:1px 6px;border-radius:6px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);background:color-mix(in srgb,var(--accent) 14%,var(--surface-2));color:var(--accent);font:700 12.5px var(--font-mono);letter-spacing:.02em;cursor:pointer;line-height:1.35;margin:0 1.5px;transition:all .12s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .ak-sym-btn:hover{background:color-mix(in srgb,var(--accent) 26%,var(--surface-2));border-color:var(--accent);transform:translateY(-1px);color:var(--ink)}
+  .ak-sym-btn:active{transform:scale(.95)}
   .ak-a-body ol.ak-ol{margin:10px 0 14px;padding:0;list-style:none;display:grid;gap:6px}
   .ak-a-body ol.ak-ol li{position:relative;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--glass-line);font-size:13.5px;line-height:1.45}
   .ak-a-body ol.ak-ol li::before{content:attr(data-n);flex:none;width:18px;height:18px;border-radius:50%;background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);font:700 10.5px var(--font-mono);display:grid;place-items:center}
@@ -6722,22 +6729,44 @@ const akPlain = s => String(s || '').split('\n').map((l, i, L) => {      // mode
   if (/^\s*\|.*\|\s*$/.test(l)) { const c = l.trim().replace(/^\||\|$/g, '').split('|').map(x => x.trim()).filter(Boolean); return c.length ? '- ' + c[0] + (c.length > 1 ? ': ' + c.slice(1).join(' · ') : '') : null; }
   const h = l.match(/^\s*#{1,6}\s+(.*)$/); return h ? `**${h[1].replace(/\*\*/g, '')}**` : l;
 }).filter(l => l !== null).join('\n');
-const akFmt = s => esc(akPlain(s))
-  .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-  .replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => `<sup class="ak-ref">${l.split(/\s*,\s*/).join(',')}</sup>`)
-  .replace(/`([^`]+)`/g, '<span class="ak-code">$1</span>')
-  .replace(/\b([RS]\d{1,2}[A-Za-z0-9\-]*)\b/g, '<span class="ak-tag">$1</span>')
-  .replace(/(?<![a-zA-Z0-9])([-+]?\d+(?:\.\d+)?%)/g, '<span class="ak-pct">$1</span>')
-  .replace(/^\s*(\d+)[\.)]\s+(.*)$/gm, '<li class="ak-li-num" data-n="$1">$2</li>')
-  .replace(/(<li class="ak-li-num".*?<\/li>\n?)+/g, m => '<ol class="ak-ol">' + m.replace(/\n/g, '') + '</ol>')
-  .replace(/^\s*[-*•]\s+(.*)$/gm, '<li>$1</li>')
-  .replace(/<li>\s*(?:<b>)?([A-Z]{1,5}(?:\.[A-Z])?)(?:<\/b>)?\s*\(([^)]+)\)(.*?)<\/li>/gi,
-    '<li class="ak-item-ticker"><span class="ak-sym">$1</span><span class="ak-comp">$2</span><span class="ak-rest">$3</span></li>')
-  .replace(/(<li(?:\s+class="[^"]*")?>.*?<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g, '') + '</ul>')
-  .replace(/\n{2,}/g, '</p><p>')
-  .replace(/\n/g, '<br>')
-  .replace(/<br>\s*(<\/?(?:ul|ol|p|div))/gi, '$1')
-  .replace(/(<\/(?:ul|ol|p|div)>)\s*<br>/gi, '$1');
+const AK_BASE_TICKERS = 'A,AAL,AAP,AAPL,ABBV,ABNB,ABT,ACGL,ACN,ADBE,ADI,ADM,ADP,ADSK,ADT,AEE,AEP,AES,AFL,AIG,AIV,AIZ,AJG,AKAM,ALB,ALGN,ALK,ALL,ALLE,ALLO,ALNY,AMAT,AMCR,AMD,AME,AMG,AMGN,AMP,AMT,AMTM,AMZN,AN,ANET,ANSS,AON,AOS,APA,APC,APD,APH,APO,APP,APTV,ARE,ARKK,ATO,AVB,AVGO,AVY,AWK,AXON,AXP,AYI,AZO,BA,BAC,BALL,BAX,BBT,BBY,BDX,BEN,BF.B,BG,BHF,BIIB,BIO,BK,BKNG,BKR,BLK,BLMN,BMY,BNY,BR,BRK.A,BRK.B,BRO,BSX,BWA,BX,BXP,C,CAG,CAH,CAM,CARR,CAT,CB,CBOE,CBRE,CCI,CCL,CDNS,CDW,CE,CEG,CF,CFG,CHD,CHRW,CHTR,CI,CINF,CL,CLX,CMA,CMCSA,CME,CMG,CMI,CMS,CNC,CNP,CNX,COF,COO,COP,COR,COST,COTY,CPB,CPAY,CPRT,CPT,CRL,CRM,CRWD,CSCO,CSGP,CSX,CTAS,CTLT,CTRA,CTSH,CTVA,CVS,CVX,CZR,D,DAL,DD,DDOG,DE,DECK,DELL,DFS,DG,DGX,DHI,DHR,DIA,DIS,DISH,DLR,DLTR,DOC,DOV,DOW,DPZ,DRI,DTE,DUK,DVA,DVN,DXCM,DXC,EA,EBAY,ECL,ED,EFX,EG,EIX,EL,ELV,EMC,EME,EMN,EMR,ENPH,EOG,EPAM,EQIX,EQR,EQT,ES,ESS,ETN,ETR,EVRG,EW,EXC,EXE,EXPD,EXPE,EXR,F,FANG,FAST,FB,FCX,FDS,FDX,FE,FFIV,FI,FICO,FIS,FITB,FIX,FLIR,FLR,FLS,FMC,FOX,FOXA,FRT,FSLR,FTI,FTNT,FTV,FXI,GD,GE,GEHC,GEN,GEV,GILD,GIS,GL,GLD,GLW,GM,GME,GNRC,GNW,GOOG,GOOGL,GPC,GPN,GRMN,GS,GT,GWW,HAL,HAS,HBAN,HCA,HD,HES,HIG,HII,HLT,HOG,HOLX,HON,HP,HPE,HPQ,HRB,HRL,HSIC,HST,HSY,HUBB,HUM,HWM,IBM,ICE,IDXX,IEX,IFF,ILMN,INCY,INTC,INTU,INVH,IP,IPG,IQV,IR,IRM,ISRG,IT,ITW,IVZ,IWM,J,JBHT,JBL,JCI,JEF,JKHY,JNJ,JNPR,JPM,K,KDP,KEY,KEYS,KHC,KIM,KKR,KLAC,KMB,KMI,KMX,KO,KR,KSS,KWEB,L,LB,LDOS,LEN,LH,LHX,LII,LIN,LKQ,LLY,LMT,LNC,LNT,LQD,LOW,LRCX,LULU,LUV,LVS,LW,LYB,LYV,M,MA,MAA,MAC,MAR,MAS,MAT,MCD,MCK,MCO,MDLZ,MDT,MET,META,MGM,MHK,MKC,MKTX,MLM,MMM,MNST,MO,MOH,MOS,MPC,MPWR,MRK,MRNA,MS,MSFT,MSI,MTB,MTCH,MTD,MU,MUR,NDAQ,NDSN,NE,NEE,NEM,NFLX,NI,NKE,NLOK,NOC,NOV,NOW,NRG,NSC,NTAP,NTRS,NUE,NVDA,NVR,NWL,NWS,NWSA,NXPI,O,ODFL,OGN,OI,OKE,OMC,ON,ONEOK,ORCL,ORLY,OTIS,OXY,PANW,PAYC,PAYX,PBI,PCAR,PCG,PCL,PEG,PEP,PFE,PFG,PG,PGR,PH,PHM,PKG,PLD,PLTR,PM,PNC,PNR,PNW,PODD,POM,POOL,PPG,PPL,PRU,PSA,PSX,PTC,PVH,PWR,PXD,Q,QCOM,QRVO,QQQ,R,RCL,REG,REGN,RF,RHI,RIG,RJF,RL,RMD,ROK,ROL,ROP,ROST,RRC,RSG,RTX,RVTY,SBAC,SBUX,SCHW,SE,SHW,SIG,SJM,SLB,SLG,SLV,SMCI,SMH,SNA,SNPS,SO,SOXX,SOXL,SPG,SPGI,SPY,SQQQ,SRE,STE,STI,STLD,STT,STX,STZ,SW,SWK,SWKS,SYF,SYK,SYY,T,TAP,TDG,TDY,TE,TECH,TEL,TER,TFC,TFX,TGT,THC,TJX,TKO,TLT,TMO,TMUS,TOWR,TPE,TPL,TPR,TPX,TQQQ,TRGP,TRMB,TROW,TRV,TSCO,TSLA,TSN,TT,TTD,TTWO,TXN,TXT,TYL,UA,UAA,UAL,UBER,UDR,UHS,ULTA,UNH,UNM,UNP,UPS,UPRO,URI,USB,V,VALE,VFC,VICI,VLO,VLTO,VMC,VNO,VNT,VRSK,VRSN,VRT,VRTX,VST,VTR,VTI,VOO,VZ,WAB,WAT,WBA,WDC,WEC,WELL,WFC,WHR,WM,WMB,WMT,WRB,WRK,WST,WTW,WU,WY,WYNN,XBI,XEL,XLB,XLC,XLE,XLF,XLI,XLK,XLP,XLRE,XLU,XLV,XLY,XOM,XRAY,XRX,XYL,XYZ,YUM,ZBH,ZBRA,ZION,ZTS';
+const AK_TICKERS = new Set(AK_BASE_TICKERS.split(','));
+const AK_NON_TICKERS = new Set(['A','ALL','ARE','HAS','IT','ON','SO','LOW','KEY','NOW','SEE','AI','US','ML','BE','DO','GO','OR','IF','BY','AS','AT','IN','TO','NO','IS','AM','AN','ME','MY','HE','WE','UP','OUT','CAN','FOR','DAY','TOP','FAQ','RLS','API','SEC','FED','FOMC','CPI','PCE','GDP','PE','EPS','ROE','ROIC','FCF','EBITDA','MOC','LOO','MOO','LOC','AUC','CAGR','SPX','ETF','ETFS','HTTP','HTTPS','SQL','JSON','CSV','PDF','NYSE','NASDAQ','ARCA','AMEX','RSI','MACD','ATR','SMA','EMA','VWAP','TWAP','SHARPE','SORTINO','MAXDD','WIN','LOSS','NEW','YORK','UTC','EST','EDT','CST','CDT','PST','PDT','T212','AND','THE','NOT','BUT','WAS','OUR','ITS','HAD','MAY','ONE','TWO','WEEK','MON','YEAR','YOU','WHY','HOW','WHO','WHAT','WHEN','WHERE','WHICH','BUY','SELL','HOLD','CLOSE','OPEN','HIGH','TRUE','FALSE']);
+function akIsTicker(w) {
+  if (!w || AK_NON_TICKERS.has(w)) return false;
+  if (AK_TICKERS.has(w)) return true;
+  if (typeof TL !== 'undefined' && TL.prof && TL.prof.some(r => r.ticker === w)) { AK_TICKERS.add(w); return true; }
+  return false;
+}
+function akLinkTickers(html) {
+  return String(html || '').replace(/(<li\b[^>]*class="[^"]*ak-item-ticker[^"]*"[^>]*>[\s\S]*?<\/li>)|(<(?:button|a|svg|code)[^>]*>[\s\S]*?<\/(?:button|a|svg|code)>)|(<[^>]+>)|(\b[A-Z]{1,5}(?:\.[A-Z])?\b)/g, (match, li, block, tag, word) => {
+    if (li || block) return match;
+    if (tag) return tag;
+    if (word && akIsTicker(word)) {
+      return `<button type="button" class="ak-sym-btn" data-t="${word}" title="Check odds and strategies for ${word}">${word}</button>`;
+    }
+    return match;
+  });
+}
+const akFmt = s => {
+  let html = esc(akPlain(s))
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => `<sup class="ak-ref">${l.split(/\s*,\s*/).join(',')}</sup>`)
+    .replace(/`([^`]+)`/g, '<span class="ak-code">$1</span>')
+    .replace(/\b([RS]\d{1,2}[A-Za-z0-9\-]*)\b/g, '<span class="ak-tag">$1</span>')
+    .replace(/(?<![a-zA-Z0-9])([-+]?\d+(?:\.\d+)?%)/g, '<span class="ak-pct">$1</span>')
+    .replace(/^\s*(\d+)[\.)]\s+(.*)$/gm, '<li class="ak-li-num" data-n="$1">$2</li>')
+    .replace(/(<li class="ak-li-num".*?<\/li>\n?)+/g, m => '<ol class="ak-ol">' + m.replace(/\n/g, '') + '</ol>')
+    .replace(/^\s*[-*•]\s+(.*)$/gm, '<li>$1</li>')
+    .replace(/<li>\s*(?:<b>)?([A-Z]{1,5}(?:\.[A-Z])?)(?:<\/b>)?\s*\(([^)]+)\)(.*?)<\/li>/gi,
+      '<li class="ak-item-ticker" data-t="$1"><button type="button" class="ak-sym" data-t="$1" title="Check odds and strategies for $1">$1</button><span class="ak-comp">$2</span><span class="ak-rest">$3</span><svg class="ak-chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></li>')
+    .replace(/(<li[^>]*>[\s\S]*?<\/li>\s*)+/gi, m => '<ul>' + m.replace(/\n/g, '') + '</ul>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/<br>\s*(<\/?(?:ul|ol|p|div))/gi, '$1')
+    .replace(/(<\/(?:ul|ol|p|div)>)\s*<br>/gi, '$1');
+  return akLinkTickers(html);
+};
 // Sources: only the passages the answer actually cites, renumbered 1..k in reading order; the other close passages fold away.
 const AK_KIND = {'Finny FAQ': ['Guide', 'k-guide'], 'Research notes (Bible)': ['Research note', 'k-note'], 'Strategy description': ['Strategy', 'k-strat']};
 function akSources(answer, sources) {
@@ -6832,7 +6861,19 @@ async function akGo(id, t) {
   if (el.tagName === 'DETAILS') el.open = true;
   const y = el.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
 }
-document.addEventListener('click', e => { const b = e.target.closest?.('[data-go]'); if (!b) return; e.preventDefault(); akGo(b.dataset.go, b.dataset.goT); });
+document.addEventListener('click', e => {
+  const tEl = e.target.closest?.('#ak-out [data-t], .ak-a [data-t], .ak-card [data-t]');
+  if (tEl) {
+    const sym = (tEl.dataset.t || '').trim().toUpperCase();
+    if (sym) {
+      e.preventDefault();
+      if (typeof viewSet === 'function' && typeof VIEW !== 'undefined' && VIEW.cur !== 'analyze') viewSet('analyze');
+      if (typeof odGo === 'function') odGo(sym);
+      return;
+    }
+  }
+  const b = e.target.closest?.('[data-go]'); if (!b) return; e.preventDefault(); akGo(b.dataset.go, b.dataset.goT);
+});
 
 function akTurn(t) {                                          // one saved turn -> text, sources and Go-to buttons
   const gp = akGoParse(t.a || ''), src = akSources(gp.body, t.sources || []);
