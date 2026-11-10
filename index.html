@@ -387,11 +387,11 @@
   @media (max-width:640px){
     body{padding-inline:16px} .wrap{padding-block:10px 56px}
     #ux-bar{flex-wrap:wrap;gap:6px 8px;padding:6px 16px;margin-inline:-16px} #ux-bar select{max-width:none;min-width:0;font-size:13px;padding:6px 6px}
-    #ux-range{flex:1 1 auto;min-width:0;order:1} #ux-jump{flex:0 0 auto;order:2} .ux-dates,#ux-fold,.ux-spacer{display:none}
-    .ux-regime{flex:1 1 100%;width:100%;order:3;font-size:11.5px;padding:5px 9px;border-radius:8px;background:color-mix(in srgb, var(--surface) 80%, transparent);border:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;box-sizing:border-box;white-space:normal}
+    .ux-regime{flex:1 1 100%;width:100%;order:1;font-size:11.5px;padding:5px 9px;border-radius:8px;background:color-mix(in srgb, var(--surface) 80%, transparent);border:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;box-sizing:border-box;white-space:normal}
     .ux-regime .rg-word{font-weight:600;color:var(--ink);white-space:nowrap}
     .ux-regime .rg-more{display:inline;font-size:11px;color:var(--ink-2);white-space:normal}
     .ux-regime.open{position:static;box-shadow:none;padding:6px 9px;background:var(--surface)}
+    #ux-range{flex:1 1 auto;min-width:0;order:2} #ux-jump{flex:0 0 auto;order:3;margin-left:auto} .ux-dates,#ux-fold,.ux-spacer{display:none}
     .banner{font-size:11px;padding:6px 12px;margin:8px 0 10px}
     header{flex-wrap:nowrap;gap:10px;margin-bottom:14px;align-items:center} .head-text{min-width:0;flex:1}
     .head-text h1{font-size:23px;margin-bottom:4px} .sub{font-size:13px;line-height:1.45}
@@ -511,7 +511,8 @@
   body.v-analyze .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="analyze"]){display:none!important}
   body.v-accounts .wrap > :not(header):not(footer):not(.banner):not(#login-panel):not(#view-tabs):not([data-view="accounts"]){display:none!important}
   body.v-research .wrap > [data-view]{display:none!important}   /* Research shows only research (restored 6.111: lost in 6.100) */
-  body.v-analyze #ux-bar,body.v-accounts #ux-bar{display:none!important} body.v-research #ux-jh,body.v-research #ux-jf,body:not(.v-analyze):not(.v-accounts) #ux-jf{display:none!important}
+  body.v-analyze #ux-range,body.v-analyze #ux-dates,body.v-analyze #ux-fold,body.v-accounts #ux-range,body.v-accounts #ux-dates,body.v-accounts #ux-fold{display:none!important}
+  #ux-jh,#ux-jf{display:none!important}
   header .ux-jh{color:var(--ink-2);margin-left:auto} header .ux-jh:hover{color:var(--accent)}
   .ux-jf{position:fixed;z-index:60;top:calc(env(safe-area-inset-top) + 10px);right:16px;max-width:calc(100vw - 32px);box-shadow:0 10px 28px rgba(0,0,0,.32);
     transform:translateY(-160%);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s}
@@ -2656,8 +2657,8 @@ function syncTopbar() {
   const jf = jump.cloneNode(true); jf.id = 'ux-jf'; jf.classList.add('ux-jf'); document.body.appendChild(jf);
   const appView = () => document.body.classList.contains('v-analyze') || document.body.classList.contains('v-accounts');
   function spy() {                                            // the section whose top is last above the top controls' bottom edge
-    const top = appView() ? (jf.classList.contains('show') ? jf.getBoundingClientRect().bottom : 0) : bar.getBoundingClientRect().bottom;
-    jf.classList.toggle('show', appView() && !!hd && hd.getBoundingClientRect().bottom < 0);
+    const top = bar.getBoundingClientRect().bottom;
+    jf.classList.toggle('show', false);
     const y = top + 24; let i = -1;
     targets.forEach(([, p], k) => { const q = p.classList.contains('an-col') ? document.querySelector(`.an-bar[data-for="${p.id}"]`) : p;   // folded: its row
       if (q && q.getClientRects().length && q.getBoundingClientRect().top <= y) i = k; });
@@ -2684,7 +2685,7 @@ function syncTopbar() {
     if (e.target.closest('.ux-js-fold')) { document.querySelectorAll('details.fold[open]').forEach(d => { d.open = false; }); return close(); }
     const b = e.target.closest('.ux-js-i'); if (!b) return; const p = targets[+b.dataset.i]?.[1]; close(); if (!p) return; if (typeof anOpen === 'function') anOpen(p);
     if (p.tagName === 'DETAILS') p.open = true;
-    const y = p.getBoundingClientRect().top + window.scrollY - (appView() ? 64 : bar.offsetHeight + 8); window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
+    const y = p.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - 8; window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && sh.classList.contains('on')) close(); });
   document.addEventListener('click', e => { if (e.target.closest?.('#view-tabs, [data-view-btn], nav')) setTimeout(fill, 400); });
