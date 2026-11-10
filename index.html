@@ -1265,6 +1265,12 @@
   .ng-in{fill:var(--lime-ink,#10241a);font:700 11px var(--font-ui)} .ng-l{fill:var(--ink);font:600 10.5px var(--font-ui)} .ng-t{fill:var(--muted);font:600 9.5px var(--font-ui);font-variant-numeric:tabular-nums} .ng-t.up{fill:var(--good)} .ng-t.dn{fill:var(--bad,#dc2626)}
   .ng-cc{fill:var(--glass-2);stroke:var(--ink);stroke-width:2} .ng-ctr.up .ng-cc{stroke:var(--good);fill:var(--surface)} .ng-ctr.dn .ng-cc{stroke:var(--bad,#dc2626);fill:var(--surface)} .ng-cl{fill:var(--ink);font:800 13px var(--font-display)} .ng-cs{fill:var(--muted);font:600 9.5px var(--font-ui)} .ng-cs.edge{fill:#34d399;font-weight:700} .ng-cs.promising{fill:#fbbf24;font-weight:700} .ng-cs.no-edge{fill:#94a3b8;font-weight:600}
   .ng-chip .v2-tag{font-size:9.5px;padding:1px 6px;margin:0 2px}
+  .ng-view-toggle{display:inline-flex;align-items:center;background:var(--glass);border:1px solid var(--glass-line);border-radius:999px;padding:2px;gap:2px}
+  .ng-view-btn{border:none;background:transparent;color:var(--ink-2);font:600 11px var(--font-ui);padding:3px 10px;border-radius:999px;cursor:pointer;transition:all .15s ease}
+  .ng-view-btn:hover{color:var(--ink);background:var(--glass-2)}
+  .ng-view-btn.on{background:var(--good);color:#fff;font-weight:700;box-shadow:0 1px 4px rgba(34,197,94,0.22)}
+  .ng-sec-back{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--glass-line);background:var(--glass);color:var(--ink);font:600 11px var(--font-ui);padding:3px 10px;border-radius:999px;cursor:pointer;transition:all .15s ease}
+  .ng-sec-back:hover{background:var(--glass-2)}
   .ng-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--muted);margin:2px 2px 0} .ng-k{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:2px solid var(--muted)} .ng-k.on,.ng-k.up{background:var(--good);border-color:var(--good)} .ng-k.dn{background:var(--bad,#dc2626);border-color:var(--bad,#dc2626)} .ng-k.wait{border-style:dashed}
   .hs-br[data-ng]{cursor:pointer;border-radius:6px} .hs-br[data-ng]:hover{background:var(--glass)}
   @keyframes ngIn{from{opacity:0}to{opacity:1}} @media(prefers-reduced-motion:reduce){.ng-e,.ng-n{animation:none}}
@@ -7843,6 +7849,8 @@ function hsCount(t) { const R = HS.rows || [], held = R.filter(r => r.picks.incl
 try { HS.tab = localStorage.getItem('hs-tab') === 'swing' ? 'swing' : 'long'; } catch (e) { HS.tab = 'long'; }
 try { HS.rng = localStorage.getItem('hs-rng') || '1Y'; } catch (e) { HS.rng = '1Y'; }
 try { HS.tier = localStorage.getItem('hs-tier') || 'all'; } catch (e) { HS.tier = 'all'; }
+try { HS.ngView = localStorage.getItem('hs-ngview') || 'stock'; } catch (e) { HS.ngView = 'stock'; }
+try { HS.swNgView = localStorage.getItem('hs-swngview') || 'stock'; } catch (e) { HS.swNgView = 'stock'; }
 
 function hsStratPerf(r, rng) {
   const pc = x => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
@@ -8021,7 +8029,13 @@ function hsRender() {
   el.innerHTML = `${hsTabBar()}
     ${hsControlBar(topInfo, tierCounts)}
     ${perfBox}
-    <div class="hs-lh2"><b>Strategy holdings network</b><span>${esc(short(curLong) || curLong.name)} · tap a bar or chip to inspect</span></div>
+    <div class="hs-lh2" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div><b>Strategy holdings network</b><span>${esc(short(curLong) || curLong.name)} · tap a bar or chip to inspect</span></div>
+      <div class="ng-view-toggle" role="group" aria-label="Strategy network view mode">
+        <button class="ng-view-btn${(HS.ngView || 'stock') === 'stock' ? ' on' : ''}" data-ngview="stock">By Stock</button>
+        <button class="ng-view-btn${HS.ngView === 'sector' ? ' on' : ''}" data-ngview="sector">By Sector</button>
+      </div>
+    </div>
     <div class="ng-chips" role="tablist" aria-label="Pick a strategy to map">${longChips}</div>
     <div class="ng-box" id="hs-long-ng"></div>
     <div class="hs-lh2"><b>What they own</b><span>basket of ${esc(pday(asof))} · tap a stock</span></div>
@@ -8036,6 +8050,26 @@ function hsRender() {
     if (!box || !curLong) return;
     const shared = t => (HS.rows || []).filter(x => x.picks.includes(t)).length;
     const NR = (HS.rows || [1]).length;
+
+    if (HS.ngView === 'sector') {
+      ngDrawSectorGraph(box, {
+        label: short(curLong) || curLong.name,
+        edgeCls: curEdge.cls,
+        state: curEdge.key === 'edge' ? 'up' : ''
+      }, curLong.picks, {
+        rng: HS.rng,
+        drillSector: HS.secDrill,
+        onDrill: sec => { HS.secDrill = sec; drawLongNet(); },
+        onBack: () => { HS.secDrill = null; drawLongNet(); },
+        onStockTap: t => odGo(t),
+        stocksPerf: curLong.perf?.stocks,
+        sharedFn: shared,
+        totalStrats: NR,
+        h: 330
+      });
+      return;
+    }
+
     const longNodes = curLong.picks.map(t => {
       const v = HS.rng === 'All' ? curLong.perf?.stocks?.[t] : (fmap[t]?.[field] ?? curLong.perf?.stocks?.[t]);
       const retTxt = v != null ? (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%' : '';
@@ -8064,10 +8098,12 @@ function hsRender() {
 
   el.querySelectorAll('[data-longsel]').forEach(b => b.onclick = () => {
     HS.longSel = b.dataset.longsel;
+    HS.secDrill = null;
     hsRender();
   });
   el.querySelectorAll('[data-ng]').forEach(b => b.onclick = () => {
     HS.longSel = b.dataset.ng;
+    HS.secDrill = null;
     hsRender();
     document.getElementById('hs-long-ng')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
@@ -8083,6 +8119,29 @@ document.addEventListener('click', e => {
   if (rng) { HS.rng = rng.dataset.hsrng; try { localStorage.setItem('hs-rng', HS.rng); } catch (x) {} hsRender(); return; }
   const tier = t.closest?.('[data-hstier]');
   if (tier) { HS.tier = tier.dataset.hstier; try { localStorage.setItem('hs-tier', HS.tier); } catch (x) {} hsRender(); return; }
+  const ngv = t.closest?.('[data-ngview]');
+  if (ngv) {
+    HS.ngView = ngv.dataset.ngview;
+    HS.secDrill = null;
+    try { localStorage.setItem('hs-ngview', HS.ngView); } catch (x) {}
+    hsRender();
+    return;
+  }
+  const swngv = t.closest?.('[data-swngview]');
+  if (swngv) {
+    HS.swNgView = swngv.dataset.swngview;
+    HS.swSecDrill = null;
+    try { localStorage.setItem('hs-swngview', HS.swNgView); } catch (x) {}
+    hsRender();
+    return;
+  }
+  const secb = t.closest?.('[data-secback]');
+  if (secb) {
+    HS.secDrill = null;
+    HS.swSecDrill = null;
+    hsRender();
+    return;
+  }
 });
 
 function hsSwing(el) {
@@ -8152,6 +8211,13 @@ function hsSwing(el) {
 
   el.innerHTML = `${hsTabBar()}
     ${hsControlBar(topInfo, swTierCounts)}
+    <div class="hs-lh2" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div><b>Swing signals network</b><span>${esc(HS.swSel)} · tap a chip to inspect</span></div>
+      <div class="ng-view-toggle" role="group" aria-label="Swing network view mode">
+        <button class="ng-view-btn${(HS.swNgView || 'stock') === 'stock' ? ' on' : ''}" data-swngview="stock">By Stock</button>
+        <button class="ng-view-btn${HS.swNgView === 'sector' ? ' on' : ''}" data-swngview="sector">By Sector</button>
+      </div>
+    </div>
     <div class="ng-chips" role="tablist" aria-label="Pick a swing strategy">${chips}</div>
     <div class="ng-box" id="sw-ng"></div>
     <div class="hs-lh2"><b>All open signals</b><span>${all.length} stocks · as of ${esc(day(TL.asof))}</span></div>
@@ -8179,6 +8245,33 @@ function hsSwing(el) {
       for (const r of (HS.rows || [])) { const sv = r.perf?.stocks?.[t]; if (sv != null && isFinite(sv)) return sv; }
       return null;
     };
+    if (HS.swNgView === 'sector') {
+      ngDrawSectorGraph(el.querySelector('#sw-ng'), {
+        label: e.key,
+        edgeCls: edge.cls,
+        state: edge.key === 'edge' ? 'up' : ''
+      }, mine.map(h => {
+        const ret = getRet(h.t);
+        const retTxt = ret != null ? (ret >= 0 ? '+' : '') + (ret * 100).toFixed(1) + '%' : '';
+        const o = MV.odds?.[h.t], ss = SS[h.t]?.v?.strategies?.find(x => x.key === e.key)?.record;
+        const parts = [];
+        if (retTxt) parts.push(retTxt);
+        if (o?.v != null) parts.push(`${Math.round(o.v * 100)}% odds`);
+        if (ss?.trades) parts.push(`${Math.round(ss.win * 100)}% won`);
+        return { ticker: h.t, ret, tag: parts.join(' · ') || day(h.d) };
+      }), {
+        rng: HS.rng,
+        drillSector: HS.swSecDrill,
+        onDrill: sec => { HS.swSecDrill = sec; drawSel(); },
+        onBack: () => { HS.swSecDrill = null; drawSel(); },
+        onStockTap: t => odGo(t),
+        sharedFn: t => mine.find(h => h.t === t)?.by.length || 1,
+        totalStrats: SR.length,
+        h: mine.length > 12 ? 340 : 300
+      });
+      el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel));
+      return;
+    }
     ngDraw(el.querySelector('#sw-ng'), {
       label: e.key,
       edge: edge.label,
@@ -8217,7 +8310,7 @@ function hsSwing(el) {
     const reg = inReg ? ts.filter(t => !SS[t]).slice(0, 8) : null;
     if (reg && reg.length && !HS.swReg?.[sel]) { (HS.swReg ||= {})[sel] = 1;
       (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) setTimeout(drawSel, 50); } })(); } };
-  el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; drawSel(); });
+  el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; HS.swSecDrill = null; drawSel(); });
   drawSel();
 }
 const v2HeroBase = v2Hero; v2Hero = function (A) {
@@ -8744,6 +8837,153 @@ function ngDraw(box, center, nodes, opts = {}) {
     ${opts.legend ? `<div class="ng-leg">${opts.legend}</div>` : ''}`;
   box.querySelectorAll('.ng-n').forEach(g => { const d = nodes[+g.dataset.i]; if (!d.onTap) return; g.onclick = () => d.onTap(); g.onkeydown = e => { if (e.key === 'Enter') d.onTap(); }; });
 }
+// clean sector names for display in network graphs
+function cleanSectorName(s) {
+  if (!s) return 'Other';
+  return s.replace(/^Information /, '')
+          .replace(/^Communication Services$/, 'Comm. Services')
+          .replace(/^Consumer Discretionary$/, 'Cons. Discretionary')
+          .replace(/^Consumer Staples$/, 'Cons. Staples');
+}
+
+// 6.212: depict strategy picks per sector with date-range performance and interactive drilldown
+function ngDrawSectorGraph(box, center, picks, opts = {}) {
+  if (!box) return;
+  const curRng = opts.rng || (typeof HS !== 'undefined' && HS.rng) || '1Y';
+  const fmap = (typeof TL !== 'undefined' && TL.fmap) || (typeof TL !== 'undefined' && TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.f || {}])) : {});
+  const field = curRng === '1W' ? 'ret_5d' : curRng === '1M' ? 'mom1m' : curRng === '6M' ? 'mom6m' : 'mom12m';
+
+  const getRet = t => {
+    if (curRng === 'All' && opts.stocksPerf?.[t] != null) return opts.stocksPerf[t];
+    const v = fmap[t]?.[field];
+    if (v != null && isFinite(v)) return v;
+    if (opts.stocksPerf?.[t] != null && isFinite(opts.stocksPerf[t])) return opts.stocksPerf[t];
+    if (typeof HS !== 'undefined' && HS.rows) {
+      for (const r of HS.rows) {
+        const sv = r.perf?.stocks?.[t];
+        if (sv != null && isFinite(sv)) return sv;
+      }
+    }
+    return null;
+  };
+
+  const getSector = t => {
+    const p = typeof TL !== 'undefined' && TL.prof?.find(x => x.ticker === t);
+    return p?.sector || 'Other';
+  };
+
+  const normPicks = picks.map(p => typeof p === 'string' ? { t: p } : { t: p.ticker || p.t, ...p });
+  const NR = opts.totalStrats || (typeof HS !== 'undefined' && HS.rows ? HS.rows.length : 1);
+  const shared = opts.sharedFn || (t => (typeof HS !== 'undefined' && HS.rows ? HS.rows.filter(x => x.picks?.includes(t)).length : 1));
+
+  const secMap = {};
+  for (const item of normPicks) {
+    const sec = item.sector || getSector(item.t);
+    if (!secMap[sec]) secMap[sec] = { sector: sec, items: [], rets: [] };
+    secMap[sec].items.push(item);
+    const r = item.ret != null ? item.ret : getRet(item.t);
+    if (r != null && isFinite(r)) secMap[sec].rets.push({ t: item.t, ret: r });
+  }
+
+  const secList = Object.values(secMap);
+  secList.forEach(s => {
+    s.count = s.items.length;
+    s.avg = s.rets.length ? s.rets.reduce((a, b) => a + b.ret, 0) / s.rets.length : null;
+    s.win = s.rets.length ? s.rets.filter(x => x.ret > 0).length / s.rets.length : null;
+    s.rets.sort((a, b) => b.ret - a.ret);
+    s.best = s.rets[0] || null;
+  });
+  secList.sort((a, b) => (b.avg ?? -999) - (a.avg ?? -999) || b.count - a.count);
+  const topSec = secList.find(s => s.avg != null);
+
+  // Drilldown mode: when drilling into one sector
+  if (opts.drillSector && secMap[opts.drillSector]) {
+    const target = secMap[opts.drillSector];
+    const sAvg = target.avg;
+    const sRetTxt = sAvg != null ? (sAvg >= 0 ? '+' : '') + (sAvg * 100).toFixed(1) + '%' : '–';
+    const drillNodes = target.items.map(item => {
+      const t = item.t;
+      const v = item.ret != null ? item.ret : getRet(t);
+      const retTxt = v != null ? (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%' : '';
+      const sh = shared(t);
+      const tagStr = item.tag || (retTxt ? `${retTxt} (${curRng})` : '');
+      return {
+        label: t,
+        inner: '',
+        size: sh,
+        strength: sh / NR,
+        heat: (sh - 1) / Math.max(NR - 1, 1),
+        state: v != null && v >= 0 ? 'on' : '',
+        tag: tagStr,
+        tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn',
+        onTap: () => { if (opts.onStockTap) opts.onStockTap(t); else if (typeof odGo === 'function') odGo(t); }
+      };
+    });
+
+    const secName = cleanSectorName(target.sector);
+    const boxId = box.id || 'ng';
+    const backBtnId = `${boxId}-sec-back`;
+
+    ngDraw(box, {
+      label: secName.length > 12 ? secName.slice(0, 11) + '…' : secName,
+      edge: `${target.count} pick${target.count === 1 ? '' : 's'}`,
+      edgeCls: sAvg == null || sAvg >= 0 ? 'edge' : 'no-edge',
+      sub: `${sRetTxt} avg (${curRng})`,
+      state: sAvg != null && sAvg >= 0 ? 'up' : ''
+    }, drillNodes, {
+      h: opts.h || (drillNodes.length > 12 ? 350 : 320),
+      legend: `<button class="ng-sec-back" id="${backBtnId}">‹ All ${secList.length} Sectors</button><span>${secName}: ${target.count} stock${target.count === 1 ? '' : 's'}</span><span>label = stock return (${curRng})</span><span>tap a stock</span>`
+    });
+
+    const bBtn = box.querySelector(`#${backBtnId}`);
+    if (bBtn && opts.onBack) bBtn.onclick = () => opts.onBack();
+    return;
+  }
+
+  // Overview mode: all sectors
+  const allRets = secList.flatMap(s => s.rets.map(x => x.ret));
+  const totalAvg = allRets.length ? allRets.reduce((a, b) => a + b, 0) / allRets.length : null;
+  const totalAvgTxt = totalAvg != null ? (totalAvg >= 0 ? '+' : '') + (totalAvg * 100).toFixed(1) + '%' : '–';
+  const maxCount = Math.max(1, ...secList.map(s => s.count));
+
+  const sectorNodes = secList.map(s => {
+    const isTop = (topSec && topSec.sector === s.sector && s.avg != null);
+    const nPicks = s.count;
+    const avg = s.avg;
+    const retTxt = avg != null ? (avg >= 0 ? '+' : '') + (avg * 100).toFixed(1) + '%' : '–';
+    const size = isTop ? 125 : Math.max(20, 16 + (nPicks / maxCount) * 45);
+    const heat = isTop ? 1.0 : (avg != null ? (avg >= 0.05 ? 0.9 : avg >= 0 ? 0.65 : 0.2) : 0.35);
+    const strength = isTop ? 1.0 : Math.min(1, 0.35 + (nPicks / Math.max(1, normPicks.length)) * 0.65);
+    const state = (avg != null && avg >= 0 ? 'on ' : '') + (isTop ? 'top-winner' : '');
+    const tag = isTop ? `★ ${retTxt} (${curRng}) · ${nPicks} pick${nPicks === 1 ? '' : 's'}`
+      : `${retTxt} (${curRng}) · ${nPicks} pick${nPicks === 1 ? '' : 's'}`;
+
+    return {
+      label: cleanSectorName(s.sector),
+      inner: isTop ? '★' : String(nPicks),
+      size,
+      strength,
+      heat,
+      state,
+      tag,
+      tagCls: avg == null ? '' : avg >= 0 ? 'up' : 'dn',
+      onTap: () => { if (opts.onDrill) opts.onDrill(s.sector); }
+    };
+  });
+
+  const ctrLabel = center.label || 'Strategy';
+  ngDraw(box, {
+    label: ctrLabel.length > 12 ? ctrLabel.slice(0, 11) + '…' : ctrLabel,
+    edge: `${secList.length} Sectors`,
+    edgeCls: center.edgeCls || 'edge',
+    sub: center.sub || `${totalAvgTxt} avg (${curRng})`,
+    state: center.state || (totalAvg != null && totalAvg >= 0 ? 'up' : '')
+  }, sectorNodes, {
+    h: opts.h || (sectorNodes.length > 8 ? 350 : 320),
+    legend: `<span class="lg"><i class="ng-grad"></i>size = picks in sector</span><span class="lg">inner = # of picks</span><span class="lg">label = sector avg return (${curRng})</span><span class="lg tap">tap sector to inspect ›</span>`
+  });
+}
+
 // strategy in the centre: one long-term strategy and the stocks in its basket (from the "strongest strategies" panel)
 function ngStrategy(r) {
   let el = document.getElementById('ng-sheet');
@@ -8758,21 +8998,70 @@ function ngStrategy(r) {
   const fmap = (typeof TL !== 'undefined' && TL.fmap) || (typeof TL !== 'undefined' && TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.f || {}])) : {});
   const field = curRng === '1W' ? 'ret_5d' : curRng === '1M' ? 'mom1m' : curRng === '6M' ? 'mom6m' : 'mom12m';
 
-  const nodes = r.picks.map(t => {
-    const v = curRng === 'All' ? P.stocks?.[t] : (fmap[t]?.[field] ?? P.stocks?.[t]);
-    const retTxt = v != null ? (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%' : '';
-    return {label: t, inner: '', size: shared(t), strength: shared(t) / NR, heat: (shared(t) - 1) / Math.max(NR - 1, 1),
-      state: '', tag: retTxt ? `${retTxt} (${curRng})` : '', tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn', onTap: () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); }};
-  });
   const LBL = {SXG4_V38_SPY200_TBill: 'SXG4 (Account 1)', NB069_SX25_V38: 'SX25 + V38', VX09_Deterministic_Drawdown_Stop_Circuit: 'VX09', ZX18_Volume_Adjusted_Moving_Average_VAMA: 'ZX18', SX30_Cross_Sleeve_Momentum_Shifter: 'SX30'};
   const name = LBL[r.name] || r.name.replace(/^(NB\d+|SXG\d+)_/, '').replace(/_/g, ' ').replace(/^SX25 Multi Sleeve Triple Parity$/, 'SX25').replace(/Deterministic Drawdown Stop Circuit/, '').trim();
   const perf = (typeof hsStratPerf === 'function') ? hsStratPerf(r, curRng) : { fmt: pc(P.ret), raw: P.ret };
 
-  card.innerHTML = `<div class="rp-h"><div><div style="display:flex;align-items:center;gap:6px"><b>${esc(name)}</b><span class="v2-tag ${edge.cls}">${edge.label}</span></div><small>${r.picks.length} stocks · ${curRng}: <b class="${perf.raw >= 0 ? 'v2-up' : 'v2-dn'}">${perf.fmt}</b></small></div><button class="rp-x" aria-label="Close">×</button></div>
-    <div class="ng-box"></div>`;
+  let view = (typeof HS !== 'undefined' && HS.ngView) || 'stock';
+  let drill = null;
+
+  card.innerHTML = `<div class="rp-h">
+    <div>
+      <div style="display:flex;align-items:center;gap:6px"><b>${esc(name)}</b><span class="v2-tag ${edge.cls}">${edge.label}</span></div>
+      <small>${r.picks.length} stocks · ${curRng}: <b class="${perf.raw >= 0 ? 'v2-up' : 'v2-dn'}">${perf.fmt}</b></small>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="ng-view-toggle">
+        <button class="ng-view-btn${view === 'stock' ? ' on' : ''}" data-modengview="stock">By Stock</button>
+        <button class="ng-view-btn${view === 'sector' ? ' on' : ''}" data-modengview="sector">By Sector</button>
+      </div>
+      <button class="rp-x" aria-label="Close">×</button>
+    </div>
+  </div>
+  <div class="ng-box" id="ng-sheet-box"></div>`;
+
   card.querySelector('.rp-x').onclick = () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); };
-  ngDraw(card.querySelector('.ng-box'), {label: name.length > 12 ? name.slice(0, 11) + '…' : name, edge: edge.label, edgeCls: edge.cls, sub: `${perf.fmt} (${curRng})`, state: edge.key === 'edge' ? 'up' : ''}, nodes,
-    {h: 330, legend: `<span><i class="ng-grad"></i>darker = shared across strategies</span><span>${edge.label}</span><span>label = stock return (${curRng})</span>`});
+  const box = card.querySelector('#ng-sheet-box');
+
+  const renderSheet = () => {
+    card.querySelectorAll('[data-modengview]').forEach(b => b.classList.toggle('on', b.dataset.modengview === view));
+    if (view === 'sector') {
+      ngDrawSectorGraph(box, {
+        label: name.length > 12 ? name.slice(0, 11) + '…' : name,
+        edge: edge.label,
+        edgeCls: edge.cls,
+        sub: `${perf.fmt} (${curRng})`,
+        state: edge.key === 'edge' ? 'up' : ''
+      }, r.picks, {
+        rng: curRng,
+        drillSector: drill,
+        onDrill: sec => { drill = sec; renderSheet(); },
+        onBack: () => { drill = null; renderSheet(); },
+        onStockTap: t => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); },
+        stocksPerf: P.stocks,
+        sharedFn: shared,
+        totalStrats: NR,
+        h: 330
+      });
+      return;
+    }
+    const nodes = r.picks.map(t => {
+      const v = curRng === 'All' ? P.stocks?.[t] : (fmap[t]?.[field] ?? P.stocks?.[t]);
+      const retTxt = v != null ? (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%' : '';
+      return {label: t, inner: '', size: shared(t), strength: shared(t) / NR, heat: (shared(t) - 1) / Math.max(NR - 1, 1),
+        state: '', tag: retTxt ? `${retTxt} (${curRng})` : '', tagCls: v == null ? '' : v >= 0 ? 'up' : 'dn', onTap: () => { el.classList.remove('on'); document.body.classList.remove('rp-lock'); odGo(t); }};
+    });
+    ngDraw(box, {label: name.length > 12 ? name.slice(0, 11) + '…' : name, edge: edge.label, edgeCls: edge.cls, sub: `${perf.fmt} (${curRng})`, state: edge.key === 'edge' ? 'up' : ''}, nodes,
+      {h: 330, legend: `<span><i class="ng-grad"></i>darker = shared across strategies</span><span>${edge.label}</span><span>label = stock return (${curRng})</span>`});
+  };
+
+  card.querySelectorAll('[data-modengview]').forEach(b => b.onclick = () => {
+    view = b.dataset.modengview;
+    drill = null;
+    renderSheet();
+  });
+
+  renderSheet();
 }
 // 6.211 (user: "update this with all strategies but then grouped in families, from which you can expand the families into the individual strategies"):
 // the stock's graph shows the whole rule-based library (library run, public.stock_library_families) as families by what their buy rules look at, plus
