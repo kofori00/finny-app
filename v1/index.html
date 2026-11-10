@@ -930,13 +930,26 @@
   .adk-wm{position:absolute;right:16px;top:18px;width:150px;height:150px;fill:none;stroke:var(--lime);stroke-width:.35;opacity:.12;pointer-events:none}
   .hero > .hero-txt,.hero > .hero-art{position:relative}
   .hero-stats svg{display:block;width:17px;height:17px;margin-bottom:6px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
-  .lab-hero{position:relative;display:grid;grid-template-columns:120px minmax(0,1fr);gap:20px;align-items:center;padding:24px;margin:0 0 18px;border-radius:24px;border:1px solid var(--glass-line);box-shadow:var(--shadow);
-    background:radial-gradient(420px 220px at 0% 0%, color-mix(in srgb, #d9a943 13%, transparent), transparent 70%), var(--glass);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
-  .lab-art{position:relative;width:120px;height:120px} .lab-art svg{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke-linecap:round;stroke-linejoin:round}
-  .lab-rings{stroke:#d9a943;stroke-width:.5;opacity:.45} .lab-sk{stroke:var(--accent);stroke-width:1.3;transform:scale(.52);transform-origin:center}
-  .lab-txt h2{font:800 26px/1.1 var(--font-display);letter-spacing:-.03em;margin:12px 0 8px;color:var(--ink)} .lab-txt p{margin:0;font-size:14px;line-height:1.6;color:var(--ink-2)} .lab-txt em{color:var(--ink);font-style:italic}
+  .lab-hero{position:relative;display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 14px;border-radius:18px;border:1px solid var(--glass-line);box-shadow:var(--shadow);
+    background:linear-gradient(135deg, color-mix(in srgb, #d9a943 7%, var(--surface)), var(--surface));overflow:hidden}
+  .lab-art{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;background:color-mix(in srgb, #d9a943 14%, var(--surface-2));border:1px solid color-mix(in srgb, #d9a943 28%, transparent)}
+  .lab-art svg{width:20px;height:20px;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .lab-sk{stroke:#d9a943;stroke-width:1.6}
+  .lab-txt{flex:1;min-width:0}
+  .lab-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .lab-kick{padding:3px 9px;font-size:10px;letter-spacing:.06em}
+  .lab-kick i{width:5px;height:5px}
+  .lab-txt h2{font:700 14.5px var(--font-display);letter-spacing:-.015em;margin:0;color:var(--ink);display:inline}
+  .lab-txt p{margin:3px 0 0;font-size:12px;line-height:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lab-txt em{color:var(--ink-2);font-style:italic}
   body.v-analyze #rs-hero,body.v-accounts #rs-hero{display:none!important}
-  @media (max-width:640px){ .lab-hero{grid-template-columns:76px minmax(0,1fr);gap:14px;padding:20px 16px} .lab-art{width:76px;height:76px} .lab-txt h2{font-size:21px} .lab-txt p{font-size:13px} }
+  @media (max-width:640px){
+    .lab-hero{padding:10px 14px;gap:12px;margin-bottom:10px}
+    .lab-art{width:34px;height:34px}
+    .lab-art svg{width:18px;height:18px}
+    .lab-txt h2{font-size:13.5px}
+    .lab-txt p{font-size:11.5px}
+  }
   .pt-map,.pt-chart{--icc:#7598c4} .pt-pie,.pt-compass{--icc:#6fae9c} .pt-calendar,.pt-flag{--icc:#c9a05e} .pt-shield,.pt-book{--icc:#9d8fc6} .pt-play{--icc:#c98b80} .pt-chain{--icc:#c9a05e}
 
   /* ---- sign-in, waiting screen, customers (2026-10-23) ---- */
@@ -1267,9 +1280,11 @@
 
   <section class="lab-hero" id="rs-hero">
     <div class="kente" aria-hidden="true"></div>
-    <div class="lab-art" aria-hidden="true"><svg viewBox="0 0 24 24" class="lab-rings"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg><svg viewBox="0 0 24 24" class="lab-sk"><path d="M12 21C7 16.5 3.2 13 3.2 9 3.2 6 5.5 4 8 4.3 10.2 4.6 10.9 7 9.4 8.1 8.3 8.9 6.9 8.1 7.3 6.9"/><path d="M12 21C17 16.5 20.8 13 20.8 9 20.8 6 18.5 4 16 4.3 13.8 4.6 13.1 7 14.6 8.1 15.7 8.9 17.1 8.1 16.7 6.9"/><path d="M12 21V12.5"/></svg></div>
-    <div class="lab-txt"><span class="hero-kick"><i></i>Research lab</span><h2>Sankofa: learn from the past.</h2>
-      <p><em>Se wo were fi na wosankofa a yenkyi</em>: it is not wrong to go back for what you forgot. Every strategy here was tested on ten years of history, and checked again on years it never saw, before it got near real money.</p></div>
+    <div class="lab-art" aria-hidden="true"><svg viewBox="0 0 24 24" class="lab-sk"><path d="M12 21C7 16.5 3.2 13 3.2 9 3.2 6 5.5 4 8 4.3 10.2 4.6 10.9 7 9.4 8.1 8.3 8.9 6.9 8.1 7.3 6.9"/><path d="M12 21C17 16.5 20.8 13 20.8 9 20.8 6 18.5 4 16 4.3 13.8 4.6 13.1 7 14.6 8.1 15.7 8.9 17.1 8.1 16.7 6.9"/><path d="M12 21V12.5"/></svg></div>
+    <div class="lab-txt">
+      <div class="lab-h"><span class="hero-kick lab-kick"><i></i>Research lab</span><h2>Sankofa: learn from the past</h2></div>
+      <p>Tested on 10 years of market history before live trading. <em>Se wo were fi na wosankofa a yenkyi.</em></p>
+    </div>
   </section>
 
   <div class="panel login-card" id="login-panel" style="display:none">
