@@ -1003,13 +1003,34 @@
   .ak-o-ok{padding:10px 18px;border-radius:999px;border:0;background:var(--accent);color:#10261a;font:700 14px var(--font-ui);cursor:pointer} .ak-o-ok:disabled,.ak-o-no:disabled{opacity:.5}
   .ak-o-no{padding:10px 16px;border-radius:999px;border:1px solid var(--glass-line);background:transparent;color:var(--ink-2);font:600 14px var(--font-ui);cursor:pointer}
   .ak-o-t{font-size:12.5px;color:var(--muted)} .ak-order.done .ak-o-t{color:var(--accent);font-weight:600} .ak-order.off{opacity:.8}
-  .ak-card{padding:4px 2px 0;background:none;border:0}
+  .ak-card{padding:6px 2px 0;background:none;border:0}
   .ak-who{display:flex;align-items:center;gap:10px;margin-bottom:10px} .ak-who img{width:30px;height:30px;border-radius:9px} .ak-who b{font:700 14px var(--font-display);color:var(--ink)} .ak-who span{display:block;font-size:11px;color:var(--muted)}
-  .ak-q{width:fit-content;max-width:85%;margin:0 0 14px auto;padding:8px 14px;border-radius:18px 18px 4px 18px;background:var(--accent-soft);color:var(--ink);font:600 13.5px/1.4 var(--font-ui)}
-  .ak-a{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.55;color:var(--ink)} .ak-a>div{min-width:0} .ak-av{flex:none;width:24px;height:24px;border-radius:7px;margin-top:1px}
-  .ak-a p{margin:0 0 6px} .ak-a p:last-child{margin:0} .ak-a b{color:var(--ink)} .ak-a ul{margin:4px 0 6px;padding-left:16px} .ak-a li{margin:1px 0}
-  .ak-ref{font:700 10px var(--font-ui);color:var(--accent);margin:0 1px}
-  .ak-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:14px 0 0 34px;font:500 11.5px var(--font-ui);color:var(--muted)}
+  .ak-q{width:fit-content;max-width:85%;margin:0 0 16px auto;padding:10px 16px;border-radius:18px 18px 4px 18px;background:color-mix(in srgb, var(--accent) 15%, var(--surface-2));color:var(--ink);font:600 14px/1.45 var(--font-ui);border:1px solid color-mix(in srgb, var(--accent) 32%, transparent);box-shadow:0 3px 12px -4px rgba(0,0,0,.35)}
+  .ak-a{display:flex;gap:12px;align-items:flex-start;margin:0 0 4px}
+  .ak-av{flex:none;width:30px;height:30px;border-radius:9px;margin-top:2px;border:1px solid var(--glass-line);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .ak-av-fallback{display:grid;place-items:center;background:var(--accent);color:#10261a;font:800 14px var(--font-display)}
+  .ak-bubble{flex:1;min-width:0;background:var(--surface);border:1px solid var(--glass-line);border-radius:6px 20px 20px 20px;padding:15px 17px;box-shadow:0 8px 24px -10px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.04) inset}
+  .ak-a-head{display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--glass-line)}
+  .ak-author{font:700 14.5px var(--font-display);color:var(--ink);letter-spacing:-.01em}
+  .ak-chip{font:700 10px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+  .ak-chip-ai{background:color-mix(in srgb, var(--good) 16%, var(--surface-2));color:var(--good);border:1px solid color-mix(in srgb, var(--good) 28%, transparent)}
+  .ak-chip-model{background:var(--glass-2);color:var(--muted);border:1px solid var(--glass-line);text-transform:none;font:600 10.5px var(--font-mono)}
+  .ak-a-body{font-size:14.5px;line-height:1.65;color:var(--ink)}
+  .ak-a-body p{margin:0 0 12px} .ak-a-body p:last-child{margin-bottom:0} .ak-a-body b{color:var(--ink);font-weight:700}
+  .ak-ref{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);font:700 10px var(--font-mono);vertical-align:super;margin:0 2px;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);text-decoration:none}
+  .ak-pct{display:inline-block;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);padding:1px 6px;border-radius:5px;border:1px solid color-mix(in srgb,var(--accent) 26%,transparent);font-size:13px;letter-spacing:-.02em}
+  .ak-tag,.ak-code{display:inline-block;padding:1px 6px;border-radius:6px;background:var(--surface-2);border:1px solid var(--glass-line);font:600 12px var(--font-mono);color:var(--ink);letter-spacing:.02em}
+  .ak-a-body ul{list-style:none;margin:10px 0 14px;padding:0;display:grid;gap:6px}
+  .ak-a-body ul li{position:relative;display:flex;align-items:center;padding:7px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--glass-line);font-size:13.5px;line-height:1.45}
+  .ak-a-body ul li:not(.ak-item-ticker)::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none;margin-right:10px}
+  .ak-item-ticker{display:flex;align-items:center;gap:6px}
+  .ak-sym{display:inline-flex;align-items:center;justify-content:center;font:700 12.5px var(--font-mono);color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--surface));padding:2px 8px;border-radius:6px;border:1px solid color-mix(in srgb,var(--accent) 32%,transparent);letter-spacing:.03em;flex:none}
+  .ak-comp{color:var(--ink);font-weight:600;font-size:13.5px}
+  .ak-rest{color:var(--muted);font-size:13px}
+  .ak-a-body ol.ak-ol{margin:10px 0 14px;padding:0;list-style:none;display:grid;gap:6px}
+  .ak-a-body ol.ak-ol li{position:relative;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--glass-line);font-size:13.5px;line-height:1.45}
+  .ak-a-body ol.ak-ol li::before{content:attr(data-n);flex:none;width:18px;height:18px;border-radius:50%;background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);font:700 10.5px var(--font-mono);display:grid;place-items:center}
+  .ak-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:12px 0 0 42px;font:500 12px var(--font-ui);color:var(--muted)}
   .ak-meta>span{display:inline-flex;align-items:center;gap:5px} .ak-meta>span i{width:6px;height:6px;border-radius:50%;background:var(--lime)}
   .ak-meta details{flex-basis:auto} .ak-meta summary{display:inline;cursor:pointer;list-style:none;color:var(--muted)} .ak-meta summary::-webkit-details-marker{display:none}
   .ak-meta summary:hover{color:var(--ink-2)} .ak-meta details[open] summary{color:var(--ink-2)}
@@ -1072,15 +1093,20 @@
   .an-chev{flex:none;width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .an-open{position:relative} .an-hide{position:absolute;top:12px;right:12px;z-index:4;padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:color-mix(in srgb,var(--surface) 80%,transparent);color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer}
   .an-col .an-hide{display:none}
-  .ak-go{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 0 34px} .ak-go>span{display:none}
-  .ak-go button{display:inline-flex;align-items:center;gap:4px;padding:6px 9px 6px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:var(--accent-soft);color:var(--ink);font:600 12.5px var(--font-ui);cursor:pointer}
+  .ak-go{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 0 42px} .ak-go>span{display:none}
+  .ak-go button{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:var(--accent-soft);color:var(--ink);font:600 12.5px var(--font-ui);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:transform .12s}
+  .ak-go button:active{transform:scale(.97)}
   .ak-go button svg{width:14px;height:14px;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round} .ak-go button:hover{border-color:var(--accent)}
   .ak-who .ak-new{margin-left:auto;padding:6px 12px;border-radius:999px;border:1px solid var(--glass-line);background:transparent;color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer;white-space:nowrap} .ak-who .ak-new:hover{border-color:var(--accent);color:var(--ink)}
   .ak-hist{margin:0}
-  .ak-hq{margin-top:8px;padding:8px 11px;border-radius:12px;background:var(--glass)} .ak-hq b{display:block;font:600 13px var(--font-ui);color:var(--ink);margin-bottom:4px} .ak-hq p{margin:0;font-size:13px;line-height:1.5;color:var(--ink-2)}
+  .ak-hq{margin-top:8px;padding:10px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--glass-line)} .ak-hq b{display:block;font:600 13px var(--font-ui);color:var(--ink);margin-bottom:6px}
   .ak-think{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13px;padding:6px 2px} .ak-think i{width:6px;height:6px;border-radius:50%;background:#7598c4;animation:akB 1s infinite ease-in-out}
   .ak-think i:nth-child(2){animation-delay:.15s} .ak-think i:nth-child(3){animation-delay:.3s} .ak-think span{margin-left:6px} @keyframes akB{0%,100%{opacity:.25}50%{opacity:1}}
-  @media (max-width:640px){ .ask-panel{padding:22px 16px 16px;border-radius:22px} .ak-h{font-size:24px} .ak-chips{margin:0 -16px 14px;padding:2px 16px 4px} .ak-wm{width:96px;height:96px} }
+  @media (max-width:640px){
+    .ask-panel{padding:22px 16px 16px;border-radius:22px} .ak-h{font-size:24px} .ak-chips{margin:0 -16px 14px;padding:2px 16px 4px} .ak-wm{width:96px;height:96px}
+    .ak-a{gap:10px} .ak-av{width:26px;height:26px;border-radius:8px} .ak-bubble{padding:13px 14px;border-radius:6px 16px 16px 16px}
+    .ak-go,.ak-meta{margin-left:36px}
+  }
 :root{--bg:#eeece6; --surface:#faf8f3; --surface-2:#f3f0e9; --surface-3:#e8e4db; --border:rgba(60,55,40,.09);
     --glass:rgba(255,253,248,.62); --glass-2:rgba(255,253,248,.46); --glass-line:rgba(255,255,255,.72);
     --ink:#2d3633; --ink-2:#56615c; --muted:#8a938e;
@@ -6696,8 +6722,22 @@ const akPlain = s => String(s || '').split('\n').map((l, i, L) => {      // mode
   if (/^\s*\|.*\|\s*$/.test(l)) { const c = l.trim().replace(/^\||\|$/g, '').split('|').map(x => x.trim()).filter(Boolean); return c.length ? '- ' + c[0] + (c.length > 1 ? ': ' + c.slice(1).join(' · ') : '') : null; }
   const h = l.match(/^\s*#{1,6}\s+(.*)$/); return h ? `**${h[1].replace(/\*\*/g, '')}**` : l;
 }).filter(l => l !== null).join('\n');
-const akFmt = s => esc(akPlain(s)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => `<sup class="ak-ref">${l.split(/\s*,\s*/).join(',')}</sup>`).replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
-  .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g, '') + '</ul>').replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
+const akFmt = s => esc(akPlain(s))
+  .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+  .replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => `<sup class="ak-ref">${l.split(/\s*,\s*/).join(',')}</sup>`)
+  .replace(/`([^`]+)`/g, '<span class="ak-code">$1</span>')
+  .replace(/\b([RS]\d{1,2}[A-Za-z0-9\-]*)\b/g, '<span class="ak-tag">$1</span>')
+  .replace(/(?<![a-zA-Z0-9])([-+]?\d+(?:\.\d+)?%)/g, '<span class="ak-pct">$1</span>')
+  .replace(/^\s*(\d+)[\.)]\s+(.*)$/gm, '<li class="ak-li-num" data-n="$1">$2</li>')
+  .replace(/(<li class="ak-li-num".*?<\/li>\n?)+/g, m => '<ol class="ak-ol">' + m.replace(/\n/g, '') + '</ol>')
+  .replace(/^\s*[-*•]\s+(.*)$/gm, '<li>$1</li>')
+  .replace(/<li>\s*(?:<b>)?([A-Z]{1,5}(?:\.[A-Z])?)(?:<\/b>)?\s*\(([^)]+)\)(.*?)<\/li>/gi,
+    '<li class="ak-item-ticker"><span class="ak-sym">$1</span><span class="ak-comp">$2</span><span class="ak-rest">$3</span></li>')
+  .replace(/(<li(?:\s+class="[^"]*")?>.*?<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g, '') + '</ul>')
+  .replace(/\n{2,}/g, '</p><p>')
+  .replace(/\n/g, '<br>')
+  .replace(/<br>\s*(<\/?(?:ul|ol|p|div))/gi, '$1')
+  .replace(/(<\/(?:ul|ol|p|div)>)\s*<br>/gi, '$1');
 // Sources: only the passages the answer actually cites, renumbered 1..k in reading order; the other close passages fold away.
 const AK_KIND = {'Finny FAQ': ['Guide', 'k-guide'], 'Research notes (Bible)': ['Research note', 'k-note'], 'Strategy description': ['Strategy', 'k-strat']};
 function akSources(answer, sources) {
@@ -6803,10 +6843,10 @@ function akShow(note) {                                       // the open conver
   const out = document.getElementById('ak-out'), T = AK.turns; if (!out) return; if (!T.length) { out.innerHTML = ''; return; }
   const t = T[T.length - 1], r = akTurn(t), earlier = T.slice(0, -1).slice(-8), logo = document.querySelector('.brand-mark img')?.src || '';
   out.innerHTML = `<div class="ak-card">${note ? `<p class="ak-saved">${note}</p>` : ''}
-    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="">` : ''}<div><p>${akFmt(r.text)}</p></div></div>${r.go}
+    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${r.go}
     <div class="ak-meta">${r.live.length ? `<span title="${esc(r.live.join(', '))}"><i></i>Live data</span>` : ''}${r.html}
       <span class="ak-dis" title="AI answer (${esc(r.model)}) from Finny's research only${t.at ? ', ' + esc(akWhen(t.at)) : ''}">AI · can be wrong · not advice</span>
-      ${earlier.length ? `<details class="ak-hist"><summary>Earlier (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><p>${akFmt(akTurn(h).text)}</p></div>`).join('')}</details>` : ''}
+      ${earlier.length ? `<details class="ak-hist"><summary>Earlier (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><div class="ak-a-body"><p>${akFmt(akTurn(h).text)}</p></div></div>`).join('')}</details>` : ''}
       <button type="button" class="ak-new ak-past">Past chats</button><button type="button" class="ak-new ak-fresh" title="Start a new conversation (this one stays saved)">New chat</button></div></div>`;
 }
 // ---- Trading 212 order card (6.165, owner only): shows the draft under Finny's answer; only a tap on Confirm sends it (t212-chat execute, once, within 2 minutes)
