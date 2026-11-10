@@ -1042,6 +1042,9 @@
   .ak-sym-btn{display:inline-flex;align-items:center;vertical-align:baseline;padding:1px 6px;border-radius:5px;border:1px solid rgba(223,192,126,.22);background:rgba(223,192,126,.10);color:#dfc07e;font:600 11.5px var(--font-mono);letter-spacing:.02em;cursor:pointer;line-height:1.35;margin:0 1.5px;transition:all .12s;outline:none}
   .ak-sym-btn:hover{background:rgba(223,192,126,.18);border-color:rgba(223,192,126,.38);color:var(--ink)}
   .ak-sym-btn:active{transform:scale(.95)}
+  .ak-strat-btn{display:inline-flex;align-items:center;vertical-align:baseline;padding:1px 6.5px;border-radius:5px;background:rgba(127,173,211,.12);border:1px solid rgba(127,173,211,.28);font:600 11.5px var(--font-mono);color:#7fadd3;letter-spacing:.01em;cursor:pointer;line-height:1.35;margin:0 1.5px;transition:all .12s;outline:none}
+  .ak-strat-btn:hover{background:rgba(127,173,211,.22);border-color:rgba(127,173,211,.50);color:var(--ink);transform:translateY(-1px)}
+  .ak-strat-btn:active{transform:scale(.95)}
   .ak-a-body ol.ak-ol{margin:10px 0 14px;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
   .ak-a-body ol.ak-ol li{position:relative;display:block;padding:10px 14px 10px 36px;border-radius:12px;background:var(--surface-2);border:1px solid var(--glass-line);font-size:13.5px;line-height:1.65;color:var(--ink);box-sizing:border-box}
   .ak-a-body ol.ak-ol li::before{content:attr(data-n);position:absolute;left:10px;top:12px;width:18px;height:18px;border-radius:50%;background:rgba(178,162,216,.10);color:#b2a2d8;border:1px solid rgba(178,162,216,.20);font:600 10.5px var(--font-mono);display:grid;place-items:center}
@@ -6761,13 +6764,89 @@ function akLinkTickers(html) {
     return match;
   });
 }
+const AK_NAMED_STRATS = [
+  ['High-beta dip in calm markets', 'S7P21'],
+  ['High-beta leader dip', 'S4P23'],
+  ['High-beta dip, time stop', 'S14L19'],
+  ['High-beta dip, blow-off exit', 'S14A10'],
+  ['High-beta dip, 2-day exit', 'S14L08'],
+  ['High-beta dip', 'S4P23'],
+  ['Leader-dip swing', 'R18L26'],
+  ['Leader dip swing', 'R18L26'],
+  ['Leader dip', 'R18L26'],
+  ['Bear-market rebound', 'S1L20'],
+  ['Sector ETF flow rotation', 'S3A09'],
+  ['ETFs near their highs', 'S12P15'],
+  ['Cross-Sleeve Momentum Shifter', 'SX30'],
+  ['Cross Sleeve Momentum Shifter', 'SX30'],
+  ['Volume-Adjusted Moving Average', 'ZX18'],
+  ['Volume Adjusted Moving Average', 'ZX18'],
+  ['Deterministic Drawdown Stop Circuit', 'VX09'],
+  ['Deterministic Drawdown Stop', 'VX09'],
+  ['Trending Value on normal earnings', 'R30L26'],
+  ['Trending Value', 'R30L26'],
+  ['Triple screen on normal GARP', 'R28L16'],
+  ['Triple screen', 'R28L16'],
+  ['Normal-earnings Cornerstone', 'R27L10'],
+  ['Cornerstone', 'R27L10'],
+  ['Profitability per unit of risk', 'R31L21'],
+  ['Piotroski', 'R31L21'],
+  ['SX25 Multi Sleeve Triple Parity', 'SX25'],
+  ['SX25 Multi Sleeve', 'SX25'],
+  ['Triple Parity', 'SX25']
+].sort((a, b) => b[0].length - a[0].length);
+
+function akLinkStrategies(html) {
+  let res = String(html || '');
+
+  // 1. First link composite phrases: "Name (CODE)" or "Name: CODE" into a single button
+  for (const [name, code] of AK_NAMED_STRATS) {
+    const escName = name.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const reComposite = new RegExp(`(<(?:button|a|svg|code)[^>]*>[\\s\\S]*?<\\/(?:button|a|svg|code)>)|(<[^>]+>)|(\\b${escName}\\s*\\([A-Za-z0-9_\\|]+\\))`, 'gi');
+    res = res.replace(reComposite, (match, block, tag, full) => {
+      if (block) return match;
+      if (tag) return tag;
+      if (full) {
+        return `<button type="button" class="ak-strat-btn" data-rs="${esc(code)}" title="Open research for ${esc(code)}">${full}</button>`;
+      }
+      return match;
+    });
+  }
+
+  // 2. Link standalone strategy codes
+  const STRAT_CODE_RE = /(<(?:button|a|svg|code)[^>]*>[\s\S]*?<\/(?:button|a|svg|code)>)|(<[^>]+>)|(\b[a-z0-9_]+\|[A-Za-z0-9_]+|[RS]\d{1,2}[A-Za-z0-9\-_]+|FB\d{2,3}|LE\d{2}|NB\d{3}|SXG\d+|VX\d{2}|ZX\d{2}|SX\d{2}|TA\d{2}|SP\d{2}|SA\d{2}|SL\d{2}|M\d{2}|Q\d{2,3}|CANSLIM|LMRR|SXN\d{2}|BLTRUE|BLMOM|BLTOP5|V38|K10|P6|P8\b)/g;
+  res = res.replace(STRAT_CODE_RE, (match, block, tag, code) => {
+    if (block) return match;
+    if (tag) return tag;
+    if (code) {
+      return `<button type="button" class="ak-strat-btn" data-rs="${esc(code)}" title="Open research for ${esc(code)}">${code}</button>`;
+    }
+    return match;
+  });
+
+  // 3. Link standalone recognized strategy names
+  for (const [name, code] of AK_NAMED_STRATS) {
+    const escName = name.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const re = new RegExp(`(<(?:button|a|svg|code)[^>]*>[\\s\\S]*?<\\/(?:button|a|svg|code)>)|(<[^>]+>)|(\\b${escName}\\b)`, 'gi');
+    res = res.replace(re, (match, block, tag, matchedName) => {
+      if (block) return match;
+      if (tag) return tag;
+      if (matchedName) {
+        return `<button type="button" class="ak-strat-btn" data-rs="${esc(code)}" title="Open research for ${esc(matchedName)} (${esc(code)})">${matchedName}</button>`;
+      }
+      return match;
+    });
+  }
+
+  return res;
+}
+
 const akFmt = s => {
   let html = esc(akPlain(s))
     .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
     .replace(/<b>([^<]+?:)<\/b>/g, '<b class="ak-lead">$1</b>')
     .replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (_, l) => `<sup class="ak-ref">${l.split(/\s*,\s*/).join(',')}</sup>`)
     .replace(/`([^`]+)`/g, '<span class="ak-code">$1</span>')
-    .replace(/\b([RS]\d{1,2}[A-Za-z0-9\-]*)\b/g, '<span class="ak-tag">$1</span>')
     .replace(/\b(PROVEN|PROMISING|NO EDGE)\b/g, (m, v) => {
       const cls = v === 'PROVEN' ? 'ak-verdict ak-v-proven' : (v === 'PROMISING' ? 'ak-verdict ak-v-promising' : 'ak-verdict ak-v-fail');
       return `<span class="${cls}">${v}</span>`;
@@ -6788,6 +6867,7 @@ const akFmt = s => {
     .replace(/\n/g, '<br>')
     .replace(/<br>\s*(<\/?(?:ul|ol|p|div))/gi, '$1')
     .replace(/(<\/(?:ul|ol|p|div)>)\s*<br>/gi, '$1');
+  html = akLinkStrategies(html);
   return akLinkTickers(html);
 };
 // Sources: only the passages the answer actually cites, renumbered 1..k in reading order; the other close passages fold away.
@@ -6885,6 +6965,16 @@ async function akGo(id, t) {
   const y = el.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
 }
 document.addEventListener('click', e => {
+  const sEl = e.target.closest?.('#ak-out [data-rs], .ak-a [data-rs], .ak-card [data-rs]');
+  if (sEl) {
+    const strat = (sEl.dataset.rs || '').trim();
+    if (strat) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof rsGo === 'function') rsGo(strat);
+      return;
+    }
+  }
   const tEl = e.target.closest?.('#ak-out [data-t], .ak-a [data-t], .ak-card [data-t]');
   if (tEl) {
     const sym = (tEl.dataset.t || '').trim().toUpperCase();
