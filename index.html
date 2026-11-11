@@ -1057,7 +1057,7 @@
     transform: scale(0.94);
   }
   .ak-scroll-body {
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     min-height: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -1077,10 +1077,14 @@
     border-radius: 999px;
   }
   #ask-panel .ak-form {
-    margin-top: 10px;
-    flex: none;
-    position: relative;
-    z-index: 2;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 5 !important;
   }
   .ak-wm{top:22px;right:18px;width:120px;height:120px;stroke:#7598c4;opacity:.16} .ask-panel > *:not(.kente):not(.ak-wm){position:relative}
   .ask-panel .hero-kick{color:#7598c4;background:color-mix(in srgb, #7598c4 14%, transparent);border-color:color-mix(in srgb, #7598c4 30%, transparent)} .ask-panel .hero-kick i{background:#7598c4}
@@ -1335,12 +1339,10 @@
   .ak-live span i{width:6px;height:6px;border-radius:50%;background:var(--good,#6ec08a)}
   .ak-live em{font:600 12px var(--font-ui);font-style:normal;padding:3px 10px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);color:var(--ink-2)}
   .ak-foot{font-size:11px;color:var(--muted);margin:12px 0 0}
-  /* compact Ask Finny on Research and Accounts (6.162) */
-  .ask-panel.ak-compact{padding:18px 18px 14px;border-radius:22px} .ak-compact .ak-sub,.ak-compact .ak-chips,.ak-compact .ak-wm{display:none!important}
-  .ak-compact .hero-kick{margin-bottom:8px} .ak-compact .ak-h{font-size:21px;line-height:1.2;margin:0 0 12px}
-  .ak-compact:not(.ak-live) .ak-out{display:none} .ak-compact .ak-tools{margin-top:8px;gap:16px} .ak-resume[hidden]{display:none!important}
-  .ask-panel:not(.ak-compact) .ak-resume{display:none} .ask-panel:not(.ak-compact) .ak-h-tab,.ak-compact .ak-h:not(.ak-h-tab){display:none}
-  .ak-tools{display:flex;justify-content:flex-end;margin:6px 8px 0} .ak-tools .ak-new{margin:0;padding:0;border:0;background:none;color:var(--muted);font:600 12px var(--font-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  /* Ask Finny floating panel / bottom sheet modal styles (6.214) */
+  .ask-panel .ak-resume{display:none!important}
+  .ask-panel .ak-h-tab{display:none!important}
+  .ak-tools{display:flex;justify-content:flex-end;margin:6px 0 10px;width:100%;box-sizing:border-box} .ak-tools .ak-new{margin:0;padding:0;border:0;background:none;color:var(--muted);font:600 12px var(--font-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
   .ak-meta .ak-past{margin-left:auto} .ak-meta .ak-past+.ak-fresh{margin-left:0}
   .ak-saved{margin:0 0 12px;padding:8px 12px;border-radius:12px;background:var(--glass);font-size:12px;line-height:1.45;color:var(--muted)}
   .ak-pastl{display:flex;flex-direction:column;gap:6px} .ak-pasth{display:flex;align-items:baseline;gap:10px;margin:2px 2px 6px} .ak-pasth b{font:800 17px var(--font-display);color:var(--ink)}
@@ -1424,7 +1426,20 @@
       animation: akSheetUp .25s cubic-bezier(.16, 1, .3, 1) both !important;
       display: flex !important;
       flex-direction: column !important;
+      overflow: hidden !important;
+    }
+    #ask-panel .ak-scroll-body {
+      flex: 1 1 0% !important;
+      min-height: 80px !important;
+      width: 100% !important;
+      overflow-y: auto !important;
       overflow-x: hidden !important;
+    }
+    #ask-panel .ak-form {
+      flex: 0 0 auto !important;
+      margin-top: 8px !important;
+      margin-bottom: 0 !important;
+      width: 100% !important;
     }
     @keyframes akSheetUp {
       from { transform: translateY(100%); }
@@ -1770,10 +1785,10 @@
       <h2 class="ak-h">Ask anything about a <em>stock or a strategy.</em></h2>
       <p class="ak-sub">New here? Just ask in your own words, like <i>"How is NVDA doing?"</i> or <i>"Where are this month's picks?"</i> Finny answers from its own research and live numbers, shows where each answer comes from, and takes you to the right place in the app. It explains what happened before, never what to buy.</p>
       <div class="ak-chips" id="ak-chips"></div>
-      <form id="ak-form" class="ak-form"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-        <input id="ak-q" maxlength="600" placeholder="Ask about a stock, a strategy or the research…" autocomplete="off"><button id="ak-go" type="submit">Ask</button></form>
       <div id="ak-out" class="ak-out"></div>
     </div>
+    <form id="ak-form" class="ak-form"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+      <input id="ak-q" maxlength="600" placeholder="Ask about a stock, a strategy or the research…" autocomplete="off"><button id="ak-go" type="submit">Ask</button></form>
   </section>
   <section class="panel v2-panel" id="v2-panel" data-view="analyze">
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm v2-wm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.4"/><circle cx="12" cy="12" r="2.8"/></svg>
@@ -7728,13 +7743,18 @@ async function akAsk() {
     AK.turns.push({q, a: j.answer || '', sources: j.sources || [], lookups: j.lookups?.length ? j.lookups : calls, model: j.model, at: new Date().toISOString()});
     AK.turns = AK.turns.slice(-10); akSave(); if (box) box.value = '';
     akShow();
+    const sb = document.getElementById('ak-scroll-body');
+    if (sb) setTimeout(() => { sb.scrollTop = sb.scrollHeight; }, 60);
   } catch (e) { out.innerHTML = `<p class="note">Ask Finny could not answer: ${esc(e.message)}</p>`; }
   AK.busy = false; btn.disabled = false;
 }
 function akInit() {
   const f = document.getElementById('ak-form'); if (!f || f.dataset.wired) return; f.dataset.wired = '1';
   f.onsubmit = e => { e.preventDefault(); akAsk(); }; akChips();
-  f.insertAdjacentHTML('afterend', '<div class="ak-tools"><button type="button" class="ak-new ak-past">Past chats</button></div>');   // saved conversations (6.107)
+  const pastHost = document.getElementById('ak-chips') || document.getElementById('ak-scroll-body') || f;
+  if (!document.querySelector('.ak-tools')) {
+    pastHost.insertAdjacentHTML('afterend', '<div class="ak-tools"><button type="button" class="ak-new ak-past">Past chats</button></div>');
+  }
   if (AK.turns.length) akShow();
 }
 
@@ -8797,7 +8817,7 @@ function akPlace(v) {
   const h = p.querySelector('.ak-h'), q = document.getElementById('ak-q'); let hs = p.querySelector('.ak-h-tab');
   if (h && !hs) { hs = document.createElement('h2'); hs.className = 'ak-h ak-h-tab'; h.after(hs); }
   if (q && !q.dataset.full) q.dataset.full = q.placeholder;
-  const c = AK_TAB[v]; p.classList.toggle('ak-compact', !!c); p.classList.remove('ak-live');
+  const c = AK_TAB[v]; p.classList.remove('ak-compact'); p.classList.remove('ak-live');
   if (hs && c && hs.dataset.v !== v) { hs.innerHTML = c[0]; hs.dataset.v = v; } if (q && (c || q.dataset.full)) q.placeholder = c ? c[1] : q.dataset.full;
   const tools = p.querySelector('.ak-tools');
   if (tools && !tools.querySelector('.ak-resume')) { const b = document.createElement('button'); b.type = 'button'; b.className = 'ak-new ak-resume'; b.textContent = 'Last chat';
@@ -9016,7 +9036,11 @@ function initAskWidget() {
     }
     if (scrollBody) {
       setTimeout(() => {
-        scrollBody.scrollTop = scrollBody.scrollHeight;
+        if (typeof AK !== 'undefined' && AK.turns && AK.turns.length > 0) {
+          scrollBody.scrollTop = scrollBody.scrollHeight;
+        } else {
+          scrollBody.scrollTop = 0;
+        }
         lockScrollLeft();
       }, 100);
     }
