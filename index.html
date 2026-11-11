@@ -995,7 +995,9 @@
     -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
     backdrop-filter: blur(28px) saturate(160%) !important;
     padding: 16px 18px !important;
+    box-sizing: border-box !important;
     overflow: hidden !important;
+    overflow-x: hidden !important;
     animation: akPopupIn .22s cubic-bezier(.16, 1, .3, 1) both !important;
   }
   #ask-panel:not(.ak-open) {
@@ -1005,15 +1007,27 @@
     from { transform: translateY(16px) scale(0.96); opacity: 0; }
     to { transform: none; opacity: 1; }
   }
-  .ak-top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
+  .ak-drag-handle {
+    display: none;
+    width: 38px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--glass-line);
+    margin: 0 auto 10px;
     flex: none;
-    position: relative;
-    z-index: 2;
+    opacity: 0.6;
+  }
+  .ak-top-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 12px !important;
+    flex: none !important;
+    position: relative !important;
+    z-index: 2 !important;
   }
   .ak-top-title {
     display: flex;
@@ -1043,14 +1057,17 @@
     transform: scale(0.94);
   }
   .ak-scroll-body {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 2px;
-    scrollbar-width: thin;
-    position: relative;
-    z-index: 1;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 2px !important;
+    scrollbar-width: thin !important;
+    position: relative !important;
+    z-index: 1 !important;
   }
   .ak-scroll-body::-webkit-scrollbar {
     width: 4px;
@@ -1068,10 +1085,10 @@
   .ak-wm{top:22px;right:18px;width:120px;height:120px;stroke:#7598c4;opacity:.16} .ask-panel > *:not(.kente):not(.ak-wm){position:relative}
   .ask-panel .hero-kick{color:#7598c4;background:color-mix(in srgb, #7598c4 14%, transparent);border-color:color-mix(in srgb, #7598c4 30%, transparent)} .ask-panel .hero-kick i{background:#7598c4}
   .ak-beta{font-weight:800;opacity:.75;margin-left:2px}
-  .ak-h{font:800 24px/1.15 var(--font-display);letter-spacing:-.03em;margin:10px 0 8px;color:var(--ink);max-width:18ch}
+  .ak-h{font:800 24px/1.15 var(--font-display);letter-spacing:-.03em;margin:10px 0 8px;color:var(--ink);max-width:18ch;box-sizing:border-box}
   .ak-h em{font-style:normal;color:var(--accent);-webkit-text-fill-color:currentColor;background:none}   /* solid (6.166): the gradient text drew an empty box on the owner's phone */
-  .ak-sub{font-size:13px;line-height:1.5;color:var(--ink-2);margin:0 0 14px;max-width:46ch} .ak-sub i{font-style:normal;color:var(--ink)}
-  .ak-chips{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -18px 14px;padding:2px 18px 4px}
+  .ak-sub{font-size:13px;line-height:1.5;color:var(--ink-2);margin:0 0 14px;max-width:46ch;box-sizing:border-box} .ak-sub i{font-style:normal;color:var(--ink)}
+  .ak-chips{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 0 14px 0;padding:2px 0 4px;width:100%;max-width:100%;box-sizing:border-box}
 
   /* Floating Action Button for Ask Finny */
   #ak-fab {
@@ -1230,14 +1247,14 @@
     padding:7px 13px 7px 8px;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--ink-2);font:600 12.5px/1.3 var(--font-ui);cursor:pointer;transition:border-color .15s,color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ak-chips button:hover,.ak-chips button:focus-visible{border-color:color-mix(in srgb, var(--accent) 50%, transparent);color:var(--ink)}
   .ak-chips .pt-ic{width:22px;height:22px;border-radius:50%;margin:0;flex:none} .ak-chips .pt-ic svg{width:12px;height:12px}
-  .ak-form{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--glass-line);box-shadow:0 10px 26px -16px rgba(0,0,0,.5)}
+  .ak-form{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--glass-line);box-shadow:0 10px 26px -16px rgba(0,0,0,.5);width:100%;max-width:100%;box-sizing:border-box}
   .ak-form:focus-within{border-color:color-mix(in srgb, var(--lime) 70%, transparent);box-shadow:0 0 0 3px var(--accent-soft)}
   .ak-form svg{width:18px;height:18px;flex:none;fill:none;stroke:#7598c4;stroke-width:1.8;stroke-linejoin:round}
-  #ask-panel .ak-form input{flex:1;min-width:0;border:0!important;background:transparent!important;outline:none;box-shadow:none;color:var(--ink);font:500 15px var(--font-ui);padding:9px 0}
+  #ask-panel .ak-form input{flex:1 1 0%;min-width:0;width:100%;border:0!important;background:transparent!important;outline:none;box-shadow:none;color:var(--ink);font:500 15px var(--font-ui);padding:9px 0}
   .ak-form button{flex:none;padding:10px 20px;border-radius:999px;border:0;background:var(--lime);color:var(--lime-ink);font:700 14px var(--font-ui);cursor:pointer} .ak-form button:disabled{opacity:.5}
-  .ak-out:empty{display:none} .ak-out{margin-top:16px}
+  .ak-out:empty{display:none!important} .ak-out{width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:hidden!important;margin-top:16px}
   /* Trading 212 order card in Ask Finny (6.165, owner only) */
-  .ak-order{margin:12px 0 4px 44px;padding:14px 14px 12px;border-radius:18px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 9%,var(--glass-2))}
+  .ak-order{margin:12px 0 4px 38px;padding:14px 14px 12px;border-radius:18px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 9%,var(--glass-2));width:calc(100% - 38px);max-width:calc(100% - 38px);box-sizing:border-box}
   .ak-order.sell{border-color:color-mix(in srgb,#c9776a 55%,transparent);background:color-mix(in srgb,#c9776a 9%,var(--glass-2))}
   .ak-o-h{display:flex;flex-direction:column;gap:2px} .ak-o-k{font:700 10.5px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
   .ak-o-h b{font:800 19px var(--font-display);color:var(--ink)} .ak-o-h small{font-size:12px;color:var(--muted)}
@@ -1247,14 +1264,14 @@
   .ak-o-ok{padding:10px 18px;border-radius:999px;border:0;background:var(--accent);color:#10261a;font:700 14px var(--font-ui);cursor:pointer} .ak-o-ok:disabled,.ak-o-no:disabled{opacity:.5}
   .ak-o-no{padding:10px 16px;border-radius:999px;border:1px solid var(--glass-line);background:transparent;color:var(--ink-2);font:600 14px var(--font-ui);cursor:pointer}
   .ak-o-t{font-size:12.5px;color:var(--muted)} .ak-order.done .ak-o-t{color:var(--accent);font-weight:600} .ak-order.off{opacity:.8}
-  .ak-card{padding:6px 2px 0;background:none;border:0}
-  .ak-who{display:flex;align-items:center;gap:10px;margin-bottom:10px} .ak-who img{width:30px;height:30px;border-radius:9px} .ak-who b{font:700 14px var(--font-display);color:var(--ink)} .ak-who span{display:block;font-size:11px;color:var(--muted)}
-  .ak-q{width:fit-content;max-width:85%;margin:0 0 16px auto;padding:10px 16px;border-radius:18px 18px 4px 18px;background:var(--surface-2);color:var(--ink);font:500 14px/1.5 var(--font-ui);border:1px solid var(--glass-line)}
-  .ak-a{display:flex;gap:12px;align-items:flex-start;margin:0 0 4px}
-  .ak-av{flex:none;width:30px;height:30px;border-radius:10px;margin-top:2px;border:1px solid var(--glass-line)}
+  .ak-card{width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:hidden!important;padding:6px 2px 0;background:none;border:0}
+  .ak-who{display:flex;align-items:center;gap:10px;margin-bottom:10px;width:100%;box-sizing:border-box} .ak-who img{width:30px;height:30px;border-radius:999px} .ak-who b{font:700 14px var(--font-display);color:var(--ink)} .ak-who span{display:block;font-size:11px;color:var(--muted)}
+  .ak-q{width:fit-content;max-width:85%;margin:0 0 16px auto;padding:10px 16px;border-radius:18px 18px 4px 18px;background:var(--surface-2);color:var(--ink);font:500 14px/1.5 var(--font-ui);border:1px solid var(--glass-line);box-sizing:border-box;word-break:break-word;overflow-wrap:anywhere}
+  .ak-a{display:flex!important;gap:10px!important;align-items:flex-start!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;margin:0 0 6px!important;overflow-x:hidden!important}
+  .ak-av{flex:0 0 28px!important;width:28px!important;height:28px!important;border-radius:9px!important;margin-top:2px;border:1px solid var(--glass-line);box-sizing:border-box}
   .ak-av-fallback{display:grid;place-items:center;background:var(--surface-2);color:var(--accent);border:1px solid var(--glass-line);font:700 13px var(--font-display)}
-  .ak-bubble{flex:1;min-width:0;max-width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--glass-line);border-radius:6px 18px 18px 18px;padding:16px 18px;box-shadow:0 4px 18px -6px rgba(0,0,0,.45);overflow-x:hidden}
-  .ak-a-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--glass-line)}
+  .ak-bubble{flex:1 1 0%!important;min-width:0!important;max-width:calc(100% - 38px)!important;width:calc(100% - 38px)!important;box-sizing:border-box!important;background:var(--surface);border:1px solid var(--glass-line);border-radius:6px 18px 18px 18px;padding:14px 16px;box-shadow:0 4px 18px -6px rgba(0,0,0,.45);overflow-x:hidden;word-break:break-word;overflow-wrap:anywhere}
+  .ak-a-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--glass-line);width:100%;box-sizing:border-box}
   .ak-author{font:600 14.5px var(--font-display);color:var(--ink);letter-spacing:-.01em}
   .ak-chip{font:600 10px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
   .ak-chip-ai{background:rgba(136,195,161,.10);color:#88c3a1;border:1px solid rgba(136,195,161,.22)}
@@ -1292,7 +1309,7 @@
   .ak-a-body ol.ak-ol{margin:10px 0 14px;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
   .ak-a-body ol.ak-ol li{position:relative;display:block;padding:10px 14px 10px 36px;border-radius:12px;background:var(--surface-2);border:1px solid var(--glass-line);font-size:13.5px;line-height:1.65;color:var(--ink);box-sizing:border-box}
   .ak-a-body ol.ak-ol li::before{content:attr(data-n);position:absolute;left:10px;top:12px;width:18px;height:18px;border-radius:50%;background:rgba(178,162,216,.10);color:#b2a2d8;border:1px solid rgba(178,162,216,.20);font:600 10.5px var(--font-mono);display:grid;place-items:center}
-  .ak-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:12px 0 0 42px;font:500 12px var(--font-ui);color:var(--muted)}
+  .ak-meta{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:6px 12px!important;margin:12px 0 0 38px!important;width:calc(100% - 38px)!important;max-width:calc(100% - 38px)!important;box-sizing:border-box!important;font:500 12px var(--font-ui);color:var(--muted)}
   .ak-meta>span{display:inline-flex;align-items:center;gap:5px} .ak-meta>span i{width:5px;height:5px;border-radius:50%;background:#88c3a1;opacity:.85}
   .ak-meta details{flex-basis:auto} .ak-meta summary{display:inline;cursor:pointer;list-style:none;color:var(--muted)} .ak-meta summary::-webkit-details-marker{display:none}
   .ak-meta summary:hover{color:var(--ink-2)} .ak-meta details[open] summary{color:var(--ink-2)}
@@ -1360,7 +1377,7 @@
   .an-chev{flex:none;width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .an-open{position:relative} .an-hide{position:absolute;top:12px;right:12px;z-index:4;padding:5px 11px;border-radius:999px;border:1px solid var(--glass-line);background:color-mix(in srgb,var(--surface) 80%,transparent);color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer}
   .an-col .an-hide{display:none}
-  .ak-go{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 0 42px} .ak-go>span{display:none}
+  .ak-go{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px!important;margin:12px 0 0 38px!important;width:calc(100% - 38px)!important;max-width:calc(100% - 38px)!important;box-sizing:border-box!important} .ak-go>span{display:none}
   .ak-go button{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;border:1px solid var(--glass-line);background:var(--surface-2);color:var(--ink-2);font:500 12.5px var(--font-ui);cursor:pointer;transition:all .14s ease}
   .ak-go button:hover{border-color:color-mix(in srgb,var(--accent) 35%,var(--glass-line));background:var(--surface-3);color:var(--ink)}
   .ak-go button:active{transform:scale(.97)}
@@ -1372,10 +1389,15 @@
   .ak-think{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13px;padding:6px 2px} .ak-think i{width:6px;height:6px;border-radius:50%;background:#7598c4;animation:akB 1s infinite ease-in-out}
   .ak-think i:nth-child(2){animation-delay:.15s} .ak-think i:nth-child(3){animation-delay:.3s} .ak-think span{margin-left:6px} @keyframes akB{0%,100%{opacity:.25}50%{opacity:1}}
   @media (max-width:899px){
+    .ak-drag-handle {
+      display: block !important;
+    }
     .ak-backdrop.ak-open {
       display: block !important;
       position: fixed;
       inset: 0;
+      width: 100vw;
+      height: 100vh;
       background: rgba(0, 0, 0, 0.65);
       -webkit-backdrop-filter: blur(4px);
       backdrop-filter: blur(4px);
@@ -1387,20 +1409,22 @@
       bottom: 0 !important;
       left: 0 !important;
       right: 0 !important;
-      width: 100% !important;
-      max-width: 100% !important;
+      width: 100vw !important;
+      max-width: 100vw !important;
       height: 85vh !important;
       max-height: calc(100dvh - 24px) !important;
       border-radius: 24px 24px 0 0 !important;
       border: 1px solid var(--glass-line) !important;
       border-bottom: 0 !important;
       margin: 0 !important;
-      padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+      padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+      box-sizing: border-box !important;
       z-index: 10002 !important;
       box-shadow: 0 -12px 40px rgba(0,0,0,0.6) !important;
       animation: akSheetUp .25s cubic-bezier(.16, 1, .3, 1) both !important;
       display: flex !important;
       flex-direction: column !important;
+      overflow-x: hidden !important;
     }
     @keyframes akSheetUp {
       from { transform: translateY(100%); }
@@ -1423,9 +1447,14 @@
       right: 16px;
       max-width: calc(100vw - 32px);
     }
-    .ask-panel{padding:22px 16px 16px;border-radius:22px} .ak-h{font-size:24px} .ak-chips{margin:0 -16px 14px;padding:2px 16px 4px} .ak-wm{width:96px;height:96px}
-    .ak-a{gap:10px} .ak-av{width:26px;height:26px;border-radius:8px} .ak-bubble{padding:13px 14px;border-radius:6px 16px 16px 16px}
-    .ak-go,.ak-meta{margin-left:36px}
+    .ak-h{font-size:22px !important}
+    .ak-chips{margin:0 0 12px 0 !important;padding:2px 0 4px !important;width:100% !important;max-width:100% !important;box-sizing:border-box !important}
+    .ak-wm{width:96px;height:96px}
+    .ak-a{gap:10px !important;width:100% !important;max-width:100% !important}
+    .ak-av{width:28px !important;height:28px !important;border-radius:9px !important}
+    .ak-bubble{padding:12px 14px !important;width:calc(100% - 38px) !important;max-width:calc(100% - 38px) !important}
+    .ak-go,.ak-meta{margin-left:0 !important;width:100% !important;max-width:100% !important}
+    .ak-order{margin:12px 0 4px 0 !important;width:100% !important;max-width:100% !important}
   }
 :root{--bg:#eeece6; --surface:#faf8f3; --surface-2:#f3f0e9; --surface-3:#e8e4db; --border:rgba(60,55,40,.09);
     --glass:rgba(255,253,248,.62); --glass-2:rgba(255,253,248,.46); --glass-line:rgba(255,255,255,.72);
@@ -1727,6 +1756,7 @@
   </section>
 
   <section class="panel ask-panel" id="ask-panel" data-view="analyze">
+    <div class="ak-drag-handle" aria-hidden="true"></div>
     <div class="kente" aria-hidden="true"></div><svg class="adk-wm ak-wm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12C9 7 4 9 6 13s6 1 6-1zM12 12c5-3 3-8-1-6s-1 6 1 6zM12 12c3 5 8 3 6-1s-6-1-6 1zM12 12c-5 3-3 8 1 6s1-6-1-6z"/></svg>
     <div class="ak-top-bar">
       <div class="ak-top-title">
@@ -7646,7 +7676,7 @@ function akTestCard() {
 }
 { const f = akShow; akShow = function (...x) { const r = f.apply(this, x); try { akTestCard(); } catch (e) { console.error('test card', e); } return r; }; }
 { const f = akShow; akShow = function (...x) { const r = f.apply(this, x); try { akCard(); } catch (e) { console.error('order card', e); } return r; }; }
-function akNew() { AK.chat = null; AK.turns = []; akSave(); const out = document.getElementById('ak-out'); if (out) out.innerHTML = ''; document.getElementById('ak-q')?.focus(); }
+function akNew() { AK.chat = null; AK.turns = []; akSave(); const out = document.getElementById('ak-out'); if (out) out.innerHTML = ''; const qIn = document.getElementById('ak-q'); if (qIn) { try { qIn.focus({preventScroll: true}); } catch (e) { qIn.focus(); } const p = document.getElementById('ask-panel'), sb = document.getElementById('ak-scroll-body'); if (p) p.scrollLeft = 0; if (sb) sb.scrollLeft = 0; } }
 async function akPast() {                                     // the user's saved conversations (RLS: own rows only)
   const out = document.getElementById('ak-out'); if (!out) return;
   out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Loading your past chats…</span></div>';
@@ -7669,7 +7699,7 @@ document.addEventListener('click', async e => {
   if (t.classList.contains('ak-close')) return AK.turns.length ? akShow() : (document.getElementById('ak-out').innerHTML = '');
   if (t.classList.contains('ak-open')) { const c = (AK.past || []).find(x => x.id === t.dataset.chat); if (!c) return;
     AK.chat = c.id; AK.turns = (c.turns || []).slice(-10); akSave();
-    akShow(`Saved chat · ${esc(akWhen(c.updated_at))}. The numbers are as they were then; ask a follow-up to continue with fresh numbers.`); document.getElementById('ak-q')?.focus(); return; }
+    akShow(`Saved chat · ${esc(akWhen(c.updated_at))}. The numbers are as they were then; ask a follow-up to continue with fresh numbers.`); const qIn = document.getElementById('ak-q'); if (qIn) { try { qIn.focus({preventScroll: true}); } catch (e) { qIn.focus(); } const p = document.getElementById('ask-panel'), sb = document.getElementById('ak-scroll-body'); if (p) p.scrollLeft = 0; if (sb) sb.scrollLeft = 0; } return; }
   try {
     if (t.classList.contains('ak-del')) { await akDelete('id=eq.' + encodeURIComponent(t.dataset.del)); if (t.dataset.del === AK.chat) { AK.chat = null; AK.turns = []; akSave(); } return akPast(); }
     if (t.classList.contains('ak-delall') && confirm('Delete all your saved chats? This cannot be undone.')) { await akDelete('id=not.is.null'); AK.chat = null; AK.turns = []; akSave(); return akPast(); }
@@ -8931,7 +8961,7 @@ function libInit() {
   root.querySelectorAll('#lib-f button').forEach(b => b.onclick = () => { LIB.v = b.dataset.v; root.querySelectorAll('#lib-f button').forEach(x => x.classList.toggle('on', x === b)); libRender(); });
   const qi = document.getElementById('lib-q'); if (qi) qi.oninput = () => { LIB.q = qi.value; libRender(); };
   const ask = document.getElementById('lib-ask');
-  if (ask) ask.onclick = () => { const i = document.getElementById('ak-q'); if (i) { i.value = 'Does my strategy have an edge? My rules: '; i.focus(); i.scrollIntoView({block: 'center'}); } };
+  if (ask) ask.onclick = () => { const i = document.getElementById('ak-q'); if (i) { i.value = 'Does my strategy have an edge? My rules: '; try { i.focus({preventScroll: true}); } catch (e) { i.focus(); } const p = document.getElementById('ask-panel'), sb = document.getElementById('ak-scroll-body'); if (p) p.scrollLeft = 0; if (sb) sb.scrollLeft = 0; } };
 }
 const v2viewSetLIB = viewSet; viewSet = function (v, push) { v2viewSetLIB(v, push); if (VIEW.cur === 'research') { libInit(); libLoad(); } };
 
@@ -8950,9 +8980,28 @@ function initAskWidget() {
   let currentSuggestion = "What are this month's picks?";
   let toastDismissed = false;
 
+  function lockScrollLeft() {
+    if (panel && panel.scrollLeft !== 0) panel.scrollLeft = 0;
+    if (scrollBody && scrollBody.scrollLeft !== 0) scrollBody.scrollLeft = 0;
+  }
+  if (panel) panel.addEventListener('scroll', lockScrollLeft, { passive: true });
+  if (scrollBody) scrollBody.addEventListener('scroll', lockScrollLeft, { passive: true });
+
+  function focusInput() {
+    if (!qInput) return;
+    try {
+      qInput.focus({ preventScroll: true });
+    } catch (e) {
+      qInput.focus();
+    }
+    lockScrollLeft();
+  }
+
   function openPanel(prefill) {
     if (!panel) return;
     panel.classList.add('ak-open');
+    panel.scrollLeft = 0;
+    if (scrollBody) scrollBody.scrollLeft = 0;
     if (fab) fab.classList.add('ak-active');
     if (backdrop) {
       backdrop.hidden = false;
@@ -8961,12 +9010,15 @@ function initAskWidget() {
     hideToast();
     if (prefill && qInput) {
       qInput.value = prefill;
-      setTimeout(() => qInput.focus(), 120);
+      setTimeout(focusInput, 120);
     } else if (qInput) {
-      setTimeout(() => qInput.focus(), 120);
+      setTimeout(focusInput, 120);
     }
     if (scrollBody) {
-      setTimeout(() => { scrollBody.scrollTop = scrollBody.scrollHeight; }, 100);
+      setTimeout(() => {
+        scrollBody.scrollTop = scrollBody.scrollHeight;
+        lockScrollLeft();
+      }, 100);
     }
     window.dispatchEvent(new Event('resize'));
   }
