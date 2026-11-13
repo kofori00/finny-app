@@ -7348,7 +7348,7 @@ function akShow(note) {                                       // the open conver
   const out = document.getElementById('ak-out'), T = AK.turns; if (!out) return; if (!T.length) { out.innerHTML = ''; return; }
   const t = T[T.length - 1], r = akTurn(t), earlier = T.slice(0, -1).slice(-8), logo = document.querySelector('.brand-mark img')?.src || '';
   out.innerHTML = `<div class="ak-card">${note ? `<p class="ak-saved">${note}</p>` : ''}
-    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${r.go}
+    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${t.strats?.length && typeof spChipAttr === 'function' ? `<div class="ak-strats"><span>Strategies in this answer · tap for what they do</span>${t.strats.map(x => { const n = String(x.name || x.id), v = (n.match(/\[(v\d+)/) || [])[1]; const b = n.replace(/\s*\[.*$/, ''); return `<button type="button" class="ak-sc" data-sp="${spChipAttr(x)}">${esc((b.length > 34 ? b.slice(0, 33) + '…' : b) + (v ? ' ' + v : ''))}</button>`; }).join('')}</div>` : ''}${r.go}
     <div class="ak-meta">${r.live.length ? `<span title="${esc(r.live.join(', '))}"><i></i>Live data</span>` : ''}${r.html}
       <span class="ak-dis" title="AI answer (${esc(r.model)}) from Finny's research only${t.at ? ', ' + esc(akWhen(t.at)) : ''}">AI · can be wrong · not advice</span>
       ${earlier.length ? `<details class="ak-hist"><summary>Earlier (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><div class="ak-a-body"><p>${akFmt(akTurn(h).text)}</p></div></div>`).join('')}</details>` : ''}
@@ -7464,7 +7464,7 @@ async function akAsk() {
   AK.busy = true; const btn = document.getElementById('ak-go'); btn.disabled = true;
   out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Reading Finny\'s research…</span></div>';
   try {
-    const ctx = akContext(), token = await getToken(), calls = [];
+    const ctx = akContext(), token = await getToken(), calls = [], strats = [];   // 2026-11-13: strategies the lookups returned -> chips under the answer
     const post = b => fetch(`${SB_URL}/functions/v1/ask-finny`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(b)})
       .then(r => r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})));
     const history = AK.turns.slice(-4).map(h => ({q: h.q, a: akGoParse(h.a || '').body.slice(0, 1500)}));   // fallback; with a saved chat the function reads its own turns
@@ -7473,11 +7473,12 @@ async function akAsk() {
       const need = j.need || []; need.forEach(c => calls.push(c));
       out.innerHTML = `<div class="ak-think"><i></i><i></i><i></i><span>Checking ${esc(need.map(akLabel).join(', '))}…</span></div>`;
       const results = await Promise.all(need.map((c, i) => i < 10 ? akRun(c) : {error: 'at most 10 lookups at once'}));
+      if (typeof spCollect === 'function') spCollect(results, 8).forEach(x => { if (strats.length < 8 && !strats.some(y => (y.id || y.name) === (x.id || x.name))) strats.push(x); });
       j = await post({pending: j.pending, results});
     }
     if (!j.ok) throw new Error(j.error || 'no answer');
     if (j.chat) AK.chat = j.chat;
-    AK.turns.push({q, a: j.answer || '', sources: j.sources || [], lookups: j.lookups?.length ? j.lookups : calls, model: j.model, at: new Date().toISOString()});
+    AK.turns.push({q, a: j.answer || '', sources: j.sources || [], lookups: j.lookups?.length ? j.lookups : calls, model: j.model, strats, at: new Date().toISOString()});
     AK.turns = AK.turns.slice(-10); akSave(); if (box) box.value = '';
     akShow();
     const sb = document.getElementById('ak-scroll-body');

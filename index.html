@@ -1601,6 +1601,15 @@
   .ssf-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px} .ssf-tags em{font:600 11px var(--font-ui);font-style:normal;padding:3px 8px;border-radius:999px;border:1px solid var(--glass-line);color:var(--muted)}
   .ssf-tags em.on,.ssf-tags em.c-proven{color:var(--good);border-color:var(--good)} .ssf-tags em.sh{color:var(--bad,#e0705a);border-color:var(--bad,#e0705a)} .ssf-tags em.c-promising{color:#c9a227;border-color:#c9a227}
   .ssf-rules{margin:10px 0 0;font:500 12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2,var(--muted));overflow-wrap:anywhere}
+  /* 2026-11-13 strategy_plain.js: plain-language description (card + sheet) and Ask Finny's strategy chips */
+  .ssf-plain,.sp-plain{margin:8px 0 0;font:500 13px/1.5 var(--font-ui);color:var(--ink)}
+  .sp-sheet{position:fixed;inset:0;z-index:9000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45)} .sp-sheet.on{display:flex}
+  .sp-in{position:relative;width:min(560px,100%);max-height:85vh;overflow:auto;padding:18px 16px 22px;border-radius:18px 18px 0 0;background:var(--bg,#111);color:var(--ink);border:1px solid var(--glass-line)}
+  .sp-x{position:absolute;top:8px;right:10px;width:36px;height:36px;border:0;background:none;color:var(--muted);font-size:24px;cursor:pointer}
+  .sp-name{display:block;padding-right:36px;font:600 15px/1.3 var(--font-ui);overflow-wrap:anywhere} .sp-var{display:block;margin-top:3px;font-size:11.5px;color:var(--muted)}
+  .sp-raw{margin-top:10px} .sp-raw summary{cursor:pointer;font-size:12px;color:var(--muted)} .sp-foot{margin:12px 0 0;font-size:11px;color:var(--muted)}
+  .ak-strats{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0 44px} .ak-strats span{flex-basis:100%;font-size:11px;color:var(--muted)}
+  .ak-sc{font:600 11.5px var(--font-ui);padding:6px 10px;border-radius:999px;border:1px solid var(--glass-line);background:var(--surface);color:var(--ink);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ng-n.top-winner .ng-l{font-weight:700!important;fill:var(--ink)!important}
   .ng-n.top-winner .ng-t{fill:var(--good)!important;font-weight:700!important}
   .ng-e.top-winner{stroke:var(--good)!important;stroke-width:3.2px!important;opacity:1!important}
@@ -7620,7 +7629,7 @@ function akShow(note) {                                       // the open conver
   const out = document.getElementById('ak-out'), T = AK.turns; if (!out) return; if (!T.length) { out.innerHTML = ''; return; }
   const t = T[T.length - 1], r = akTurn(t), earlier = T.slice(0, -1).slice(-8), logo = document.querySelector('.brand-mark img')?.src || '';
   out.innerHTML = `<div class="ak-card">${note ? `<p class="ak-saved">${note}</p>` : ''}
-    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${r.go}
+    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${t.strats?.length && typeof spChipAttr === 'function' ? `<div class="ak-strats"><span>Strategies in this answer · tap for what they do</span>${t.strats.map(x => { const n = String(x.name || x.id), v = (n.match(/\[(v\d+)/) || [])[1]; const b = n.replace(/\s*\[.*$/, ''); return `<button type="button" class="ak-sc" data-sp="${spChipAttr(x)}">${esc((b.length > 34 ? b.slice(0, 33) + '…' : b) + (v ? ' ' + v : ''))}</button>`; }).join('')}</div>` : ''}${r.go}
     <div class="ak-meta">${r.live.length ? `<span title="${esc(r.live.join(', '))}"><i></i>Live data</span>` : ''}${r.html}
       <span class="ak-dis" title="AI answer (${esc(r.model)}) from Finny's research only${t.at ? ', ' + esc(akWhen(t.at)) : ''}">AI · can be wrong · not advice</span>
       ${earlier.length ? `<details class="ak-hist"><summary>Earlier (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><div class="ak-a-body"><p>${akFmt(akTurn(h).text)}</p></div></div>`).join('')}</details>` : ''}
@@ -7736,7 +7745,7 @@ async function akAsk() {
   AK.busy = true; const btn = document.getElementById('ak-go'); btn.disabled = true;
   out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Reading Finny\'s research…</span></div>';
   try {
-    const ctx = akContext(), token = await getToken(), calls = [];
+    const ctx = akContext(), token = await getToken(), calls = [], strats = [];   // 2026-11-13: strategies the lookups returned -> chips under the answer
     const post = b => fetch(`${SB_URL}/functions/v1/ask-finny`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(b)})
       .then(r => r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})));
     const history = AK.turns.slice(-4).map(h => ({q: h.q, a: akGoParse(h.a || '').body.slice(0, 1500)}));   // fallback; with a saved chat the function reads its own turns
@@ -7745,11 +7754,12 @@ async function akAsk() {
       const need = j.need || []; need.forEach(c => calls.push(c));
       out.innerHTML = `<div class="ak-think"><i></i><i></i><i></i><span>Checking ${esc(need.map(akLabel).join(', '))}…</span></div>`;
       const results = await Promise.all(need.map((c, i) => i < 10 ? akRun(c) : {error: 'at most 10 lookups at once'}));
+      if (typeof spCollect === 'function') spCollect(results, 8).forEach(x => { if (strats.length < 8 && !strats.some(y => (y.id || y.name) === (x.id || x.name))) strats.push(x); });
       j = await post({pending: j.pending, results});
     }
     if (!j.ok) throw new Error(j.error || 'no answer');
     if (j.chat) AK.chat = j.chat;
-    AK.turns.push({q, a: j.answer || '', sources: j.sources || [], lookups: j.lookups?.length ? j.lookups : calls, model: j.model, at: new Date().toISOString()});
+    AK.turns.push({q, a: j.answer || '', sources: j.sources || [], lookups: j.lookups?.length ? j.lookups : calls, model: j.model, strats, at: new Date().toISOString()});
     AK.turns = AK.turns.slice(-10); akSave(); if (box) box.value = '';
     akShow();
     const sb = document.getElementById('ak-scroll-body');
@@ -9338,6 +9348,161 @@ function rpAxis(j) {
   return `<div class="rp-ax">${pick.map(i => `<span style="left:${(rpX(i, n) / RP_W * 100).toFixed(1)}%">${esc(lab(i))}</span>`).join('')}</div>`;
 }
 
+// ---------------- strategy_plain (2026-11-13, user: "a description for all the strategies in the app") ----------------
+// Turns a library strategy's rules text ("BUY when: rsi(2) < 10; sma_ratio(200) > 0. market filter: ... rank: ... SELL: hold 5 days, stop 2.5 ATR,
+// sell early if ...") into plain English, in the app, for every strategy (nothing stored in the database). Feature meanings follow the engine
+// (source/swing/engine/swing.py, idea_feats*.py); pattern features without a clear definition there get a neutral name, not a guessed meaning.
+// spPlain(rules, {side, name}) -> {text, unknown}; spOpen(strategy) opens a sheet (used by the strategy card and Ask Finny's strategy chips).
+// units: % fraction shown as percent, x multiple, n number, b yes/no pattern, r rank 0..1, $ dollars, $p price, d count of days, dow / mon calendar
+const SP_F = {
+  ad: ['Chaikin money flow ($1 days)', 'n'], adx: ['trend strength (ADX $1)', 'n'], atr_pct: ['average daily range (ATR $1) as a share of the price', '%'],
+  bb_pctb: ['position in its Bollinger band ($1 days; 0 = lower band, 1 = upper band)', 'n'], beta: ['beta to the market ($1 days)', 'n'],
+  breadth: ['share of S&P 500 stocks above their $1-day average', '%'], close_px: ['the closing price', '$p'], close_vs_high: ["the close vs yesterday's high", '%', ["it closes above yesterday's high", "it closes below yesterday's high"]],
+  corr_spy: ['correlation with the S&P 500 ($1 days)', 'n'], day_ret: ["today's open-to-close move", '%'], dist_sma_atr: ['distance from the $1-day average, in ATRs', 'n'],
+  dollar_vol: ['average daily dollar volume ($1 days)', '$'], dow: ['the day of the week', 'dow'], drawdown: ['the price|$1', 'dd'],
+  elder_impulse: ['Elder impulse (+1 green, -1 red)', 'n'], ema_ratio: ['the price vs its $1-day EMA', '%', ['the price is above its $1-day EMA', 'the price is below its $1-day EMA']],
+  er: ['trend efficiency ($1 days; 0 = noise, 1 = clean trend)', 'n'], force: ['Elder force index ($1 days)', 'n', ['buying pressure (Elder force $1) is positive', 'selling pressure (Elder force $1) dominates']],
+  fracdiff_z: ['fractionally differenced price (z-score)', 'n'], gap: ["the opening gap vs yesterday's close", '%'], hi_dist: ['the price|$1', 'dd'],
+  holp_level: ['the HOLP level ($1 days)', 'n'], hv_ratio: ['$1-day volatility vs $2-day volatility', 'x'], ibs: ["today's range", 'rng'],
+  intraday: ['average open-to-close move ($1 days)', '%'], lo_dist: ['distance above the $1-day low', '%'], lower_lows: ['days with a lower low in the last $1', 'd'],
+  max_ret: ['biggest 1-day gain in $1 days', '%'], min_ret: ['biggest 1-day loss in $1 days', '%'], mom_skip: ['the return from $1 to $2 days ago', '%'],
+  month: ['the month', 'mon'], new_high: ['a new $1-day closing high', 'b'], nr: ['the narrowest daily range in $1 days', 'b'], oops: ['a Williams "oops" reversal', 'b'],
+  overnight: ['average overnight move ($1 days)', '%'], price: ['the price', '$p'], range_pct: ["today's range as a share of the price", '%'],
+  rank_in_sector: ['its $1-day return rank within its sector', 'r'], rel_sector: ['its $1-day return vs its sector', '%'], rel_spy: ['its $1-day return vs the S&P 500', '%'],
+  ret: ['its $1-day return', '%'], ret_rank: ['its $1-day return rank among S&P 500 stocks', 'r'], rs_mom: ['relative-strength momentum ($1 days)', 'n'],
+  rs_z: ['relative strength vs its sector ETF ($1-day z-score)', 'n'], rsi: ['RSI ($1)', 'n'], seas: ['its average return in this calendar month (past $1 years)', '%'],
+  seas_hit: ['the share of up years in this calendar month (past $1 years)', '%'], sector_rank: ["its sector's $1-day return rank", 'r'], sector_ret: ["its sector's $1-day return", '%'],
+  skew: ['the skew of daily returns ($1 days)', 'n'], sma_ratio: ['the price vs its $1-day average', '%', ['the price is above its $1-day average', 'the price is below its $1-day average']],
+  smash_rev: ['a Williams smash-day reversal', 'b'], spy_drawdown: ['the S&P 500|$1', 'dd'], spy_er: ['S&P 500 trend efficiency ($1 days)', 'n'],
+  spy_hmm: ['the chance that the market is in its high-volatility state', '%'], spy_ret: ["the S&P 500's $1-day return", '%'], spy_rsi: ['the S&P 500 RSI ($1)', 'n'],
+  spy_sma_ratio: ['the S&P 500 vs its $1-day average', '%', ['the S&P 500 is above its $1-day average', 'the S&P 500 is below its $1-day average']],
+  spy_vol: ['S&P 500 daily volatility ($1 days)', '%'], squeeze: ['Bollinger / Keltner width ($1 days; below 1 = squeeze)', 'n'], streak: ['the up / down day streak', 'n'],
+  tdom: ['the trading day of the month', 'n'], tdom_rev: ['trading days left in the month', 'n'], up_ratio: ['the share of up days ($1 days)', '%'],
+  vix_proxy: ['the market fear gauge (S&P 500 volatility)', 'n'], vol_rank: ['its volatility rank among S&P 500 stocks ($1 days)', 'r'], vol_ratio: ['volume vs its $1-day average', 'x'],
+  volatility: ['daily volatility ($1 days)', '%'], vpci: ['volume-price confirmation ($1 days)', 'n'], xret: ['the $2-day return of a sector / index ETF', '%'],
+  xspread: ['the $3-day return spread between two ETFs', '%'], zscore: ['the price z-score vs its $1-day average', 'n'], ath: ['an all-time closing high', 'b'],
+  bear_hug: ['the "bear hug" pattern', 'b'], bowtie2: ['a Landry bowtie (moving averages turning to up order)', 'b'], breakout_fail: ['a failed breakout', 'b'],
+  cdl: ['a candlestick pattern', 'b'], darvas: ['the Darvas box signal', 'b'], days_since_hi: ['days since the $1-day high', 'd'], di_diff: ['+DI minus -DI ($1)', 'n'],
+  ema_cross_recent: ['the $1-day EMA crossing above the $2-day EMA within $3 days', 'b'], ema_slope: ['the slope of the $1-day EMA', '%'], fi_ret: ['the force-index return signal', 'n'],
+  fib_pull: ['a Fibonacci pullback ($1 days)', 'b'], fib_rebound: ['a Fibonacci rebound ($1 days)', 'b'], flag: ['a bull-flag breakout', 'b'], flagh: ['a bull-flag breakout above the flag high', 'b'],
+  fve: ['finite volume elements ($1 days)', 'n'], ichi: ['the Ichimoku signal', 'n'], inside_run: ['a run of inside days', 'd'], kama_d1z: ["the turn of Kaufman's adaptive average", 'n'],
+  landry_trend: ["Landry's trend filter", 'b'], low_vs_prev: ["today's low vs the prior $1 lows", '%'], magnet: ['the Farley 50-day EMA "magnet" setup', 'b'], mfi: ['money flow index ($1)', 'n'],
+  nm_in: ['a seasonal month-end setup', 'b'], nvi_ma_x: ['the negative volume index crossover', 'n'], obv: ['on-balance volume vs its extremes', 'n'], osc_run: ['the oscillator run', 'n'],
+  ou_kappa: ['mean-reversion speed ($1 days)', 'n'], ou_s: ['mean-reversion score ($1 days)', 'n'], ou_smod: ['adjusted mean-reversion score ($1 days)', 'n'],
+  ou_svol: ['volume-adjusted mean-reversion score ($1 days)', 'n'], outside_dn: ['a bearish outside day', 'b'], pca_resid: ['the return left after market factors (PCA residual)', 'n'],
+  prev_hi: ['the close vs the prior $1-day high', '%', ['it closes above the prior $1-day high', 'it closes below the prior $1-day high']],
+  prev_hic: ['the close vs the prior $1-day closing high', '%', ['it closes above the prior $1-day closing high', 'it closes below the prior $1-day closing high']],
+  prev_lo: ['the close vs the prior $1-day low', '%', ['it closes above the prior $1-day low', 'it closes below the prior $1-day low']],
+  prev_loc: ['the close vs the prior $1-day closing low', '%', ['it closes above the prior $1-day closing low', 'it closes below the prior $1-day closing low']],
+  pts: ['the PTS signal ($1)', 'n'], pv_touch: ['a touch of the floor-pivot support (S1)', 'b'], pvi_ma_x: ['the positive volume index crossover', 'n'], range_n: ['the $1-day high-to-low range', '%'],
+  ret_lag: ['the $1-day return ending $2 days ago', '%'], ret_sd: ['its return in standard deviations ($1 days)', 'n'], rs_ema_roc: ['the change in relative strength vs the S&P 500', '%'],
+  run_hl: ['the higher-high / lower-low run', 'n'], sma_both: ['the price vs both averages', 'n', ['the price is above both averages', 'the price is below both averages']],
+  sma_both_dn: ['the price vs both averages', 'n', ['the price is above both averages', 'the price is below both averages']], sma_slope: ['the slope of the $1-day average', '%'],
+  sma_x: ['the $1-day vs $2-day average', 'n', ['the $1-day average is above the $2-day average', 'the $1-day average is below the $2-day average']],
+  stoch_k: ['stochastic %K ($1)', 'n'], stoch_k_d1: ['the 1-day change of stochastic %K ($1)', 'n'], stoch_kd: ['stochastic %K minus %D ($1, $2)', 'n'], stoch_slow: ['the slow stochastic ($1, $2)', 'n'],
+  swing_trend: ['the Williams swing trend (+1 up, -1 down)', 'n'], third_watch: ['the Farley "3rd watch" breakout setup', 'b'], vfi: ['the volume flow indicator ($1)', 'n'],
+  vfi_ema: ['volume flow vs its average', 'n'], vpci2: ['volume-price confirmation (Dormeier)', 'n'], vroc: ['the volume rate of change ($1 days)', '%'], vzo: ['the volume zone oscillator ($1)', 'n'],
+  wammie: ['a second touch of support ("Wammie")', 'b'], wk_ema_slope: ['the weekly $1-week EMA slope', 'n'], wk_macdh_slope: ['the weekly MACD histogram slope', 'n'],
+  wk_stoch_chg: ['the change of the $1-week stochastic', 'n'], wk_stoch_k: ['the $1-week stochastic %K', 'n'], wvad: ['Williams accumulation / distribution ($1)', 'n'],
+  xdisp_etf: ['the dispersion vs its ETF', 'n'], rect: ['a rectangle breakout', 'b'], perfect_order: ['moving averages in perfect up order', 'b'],
+};
+const SP_DOW = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const SP_MON = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function spSplit(s, sep) {                                       // split on sep outside brackets (bb_pctb(20,2) keeps its comma)
+  const out = []; let d = 0, cur = '';
+  for (const ch of String(s)) { if (ch === '(' || ch === '[') d++; if (ch === ')' || ch === ']') d--; if (ch === sep && d === 0) { out.push(cur.trim()); cur = ''; } else cur += ch; }
+  if (cur.trim()) out.push(cur.trim()); return out;
+}
+function spFeat(tok) {                                           // "rsi(2)" -> {name, args, label, unit, zero}
+  const m = String(tok).trim().match(/^([a-z_][a-z_0-9]*)\((.*)\)$/); if (!m) return null;
+  const args = m[2] === '' ? [] : m[2].split(',').map(a => a.trim()), f = SP_F[m[1]];
+  const fill = t => t.replace(/\$(\d)/g, (_, i) => args[+i - 1] ?? '');
+  return f ? {name: m[1], args, label: fill(f[0]), unit: f[1], zero: f[2]?.map(fill)} : {name: m[1], args, label: `${m[1]}(${m[2]})`, unit: 'n', unknown: true};
+}
+function spNum(v, unit) {                                        // a threshold in words
+  const x = +v; if (!isFinite(x)) return String(v);
+  const r = (n, d = 2) => +n.toFixed(d) + '';
+  if (unit === '%') return r(x * 100, 2) + '%';
+  if (unit === 'x') return r(x) + '×';
+  if (unit === '$') return x >= 1e9 ? '$' + r(x / 1e9, 1) + 'B' : x >= 1e6 ? '$' + r(x / 1e6, 1) + 'M' : '$' + r(x / 1e3, 1) + 'K';
+  if (unit === '$p') return '$' + r(x);
+  if (unit === 'dow') return SP_DOW[Math.round(x)] || r(x);
+  if (unit === 'mon') return SP_MON[Math.round(x)] || r(x);
+  return r(x);
+}
+function spCond(c) {                                             // one condition -> words; null if it does not parse
+  let m = c.match(/^(.+?)\s+crosses (above|below)\s+(.+)$/);
+  if (m) { const f = spFeat(m[1]); if (!f) return null; const g = spFeat(m[3]); return {text: `${f.label} crosses ${m[2]} ${g ? g.label : spNum(m[3], f.unit)}`, unknown: f.unknown ? [f.name] : []}; }
+  m = c.match(/^(.+?)\s+between\s*\[?\s*([-\d.e]+)\s*(?:,|and)\s*([-\d.e]+)\s*\]?$/);
+  if (m) { const f = spFeat(m[1]); if (!f) return null; return {text: `${f.label} is between ${spNum(m[2], f.unit)} and ${spNum(m[3], f.unit)}`, unknown: f.unknown ? [f.name] : []}; }
+  m = c.match(/^(.+?)\s*(>=|<=|≥|≤|>|<|=)\s*(.+)$/); if (!m) return null;
+  const f = spFeat(m[1]); if (!f) return null; const op = m[2], v = m[3].trim(), g = spFeat(v), x = +v, up = op === '>' || op === '>=' || op === '≥', unk = f.unknown ? [f.name] : [];
+  if (g) return {text: `${f.label} is ${up ? 'above' : op === '=' ? 'equal to' : 'below'} ${g.label}`, unknown: unk.concat(g.unknown ? [g.name] : [])};
+  if (f.unit === 'b') return {text: (up ? x < 1 : op === '=' ? x >= 0.5 : x > 0) ? `there is ${f.label}` : `there is no ${f.label}`, unknown: unk};
+  if (f.zero && isFinite(x) && x === 0 && op !== '=') return {text: up ? f.zero[0] : f.zero[1], unknown: unk};
+  if (f.unit === 'rng' && isFinite(x) && x >= 0 && x <= 1) return {text: up ? `it closed in the top ${Math.round((1 - x) * 100)}% of today's range` : `it closed in the bottom ${Math.round(x * 100)}% of today's range`, unknown: unk};
+  if (f.unit === 'dd' && isFinite(x) && x <= 0) { const [who, n] = f.label.split('|'); return {text: x === 0 ? (up ? `${who} is at its ${n}-day high` : `${who} is below its ${n}-day high`)
+    : `${who} is ${up ? 'less' : 'more'} than ${+(-x * 100).toFixed(2)}% below its ${n}-day high`, unknown: unk}; }
+  if (f.unit === 'r' && isFinite(x) && x >= 0 && x <= 1 && op !== '=') return {text: up ? `${f.label} is in the top ${Math.round((1 - x) * 100)}%` : `${f.label} is in the bottom ${Math.round(x * 100)}%`, unknown: unk};
+  if (f.unit === 'dow' || f.unit === 'mon') return {text: op === '=' ? `it is ${spNum(v, f.unit)}` : `${f.label} is ${up ? 'after' : 'before'} ${spNum(v, f.unit)}`, unknown: unk};
+  const w = {'>': 'is above', '<': 'is below', '>=': 'is at least', '≥': 'is at least', '<=': 'is at most', '≤': 'is at most', '=': 'equals'}[op];
+  return {text: `${f.label} ${w} ${spNum(v, f.unit)}`, unknown: unk};
+}
+const spJoin = L => L.length <= 1 ? (L[0] || '') : L.slice(0, -1).join(', ') + ' and ' + L[L.length - 1];
+function spPlain(rules, o = {}) {
+  const R = String(rules || '').trim(), out = {text: '', unknown: [], bad: []}; if (!R) return out;
+  const short = o.side === 'short' || (!o.side && /:\s*short\b/i.test(o.name || '')), verb = short ? 'Shorts' : 'Buys', sec = {};
+  for (const part of R.split(/\.\s+(?=(?:market filter|rank|SELL):)/)) { const m = part.match(/^(BUY when|SHORT when|market filter|rank|SELL):\s*(.*?)\.?$/); if (m) sec[m[1]] = m[2]; else out.bad.push(part); }
+  const conds = s => spSplit(s || '', ';').map(c => { const r = spCond(c); if (!r) { out.bad.push(c); return c; } out.unknown.push(...r.unknown); return r.text; });
+  const trivial = c => /^(price|close_px)\(\)\s*(>|>=|≥)\s*0(\.0+)?$/.test(c.trim());   // "price() > 0" = no entry condition (rank-only strategies)
+  const entry = conds(spSplit(sec['BUY when'] || sec['SHORT when'] || '', ';').filter(c => !trivial(c)).join(';')), filt = conds(sec['market filter']);
+  const S = entry.length ? [`${verb} a stock when ${spJoin(entry)}.`] : [];
+  if (filt.length) S.push(`Only when ${spJoin(filt)}.`);
+  if (sec.rank) { const m = sec.rank.match(/^(.+?)\s+(asc|desc)(?:,\s*max\s+(\d+)\s+stocks?)?$/); const f = m && spFeat(m[1]);
+    if (f) { if (f.unknown) out.unknown.push(f.name); const lab = f.unit === 'rng' ? 'close in its daily range' : f.unit === 'dd' ? `distance from the ${f.label.split('|')[1]}-day high` : f.label.replace(/^(its|the) /, '');
+      S.push(`${entry.length ? 'Of those, each day it' : 'Each day it'} ${short ? 'shorts' : 'buys'} the ${m[3] ? m[3] + ' ' : ''}stock${m[3] === '1' ? '' : 's'} with the ${m[2] === 'desc' ? 'highest' : 'lowest'} ${lab}.`); } else out.bad.push(sec.rank); }
+  if (sec.SELL) { const ex = []; let hold = '';
+    const parts = spSplit(sec.SELL, ',').reduce((a, c) => (/^[-\d.]/.test(c) && a.length ? (a[a.length - 1] += ', ' + c) : a.push(c), a), []);   // "between 2, 4" stays one clause
+    for (const c of parts) {
+      let m = c.match(/^hold (\d+) days?$/); if (m) { hold = `${short ? 'Covers' : 'Sells'} after ${m[1]} trading day${m[1] === '1' ? '' : 's'}`; continue; }
+      m = c.match(/^stop ([\d.]+) ATR$/); if (m) { ex.push(`with a stop-loss ${+m[1]}× the average daily range ${short ? 'above' : 'below'} the entry`); continue; }
+      m = c.match(/^sell early if (.+)$/); if (m) { const r = spCond(m[1]); if (r) { out.unknown.push(...r.unknown); ex.push(`or earlier when ${r.text}`); } else out.bad.push(c); continue; }
+      out.bad.push(c);
+    }
+    S.push((hold || (short ? 'Covers' : 'Sells') + ' by its exit rules') + (ex.length ? ', ' + ex.join(', ') : '') + '.'); }
+  out.text = S.join(' ').replace(/\s+/g, ' ').replace(/\b1 days\b/g, '1 day'); out.unknown = [...new Set(out.unknown)]; return out;
+}
+// ---- the sheet: name, the plain description, the exact rules, our verdict (one strategy; from the strategy card and Ask Finny's chips)
+const SP_CL = {proven: 'Has an edge', promising: 'Promising', no_edge: 'No edge'};
+function spOpen(x) {
+  if (!x) return; let el = document.getElementById('sp-sheet');
+  if (!el) { document.body.insertAdjacentHTML('beforeend', '<div id="sp-sheet" class="sp-sheet" role="dialog" aria-modal="true" aria-label="About this strategy"><div class="sp-in"></div></div>'); el = document.getElementById('sp-sheet');
+    el.addEventListener('click', e => { if (e.target === el || e.target.closest('.sp-x')) el.classList.remove('on'); }); }
+  const nm = String(x.name || x.id || ''), base = nm.replace(/\s*\[.*$/, ''), vr = (nm.match(/\[(v\d+[^\]]*)/)?.[1] || '').replace(/\s*\([^)]*$/, '');
+  const side = x.side || (/:\s*short\b/i.test(nm) ? 'short' : 'long'), p = spPlain(x.rules, {side, name: nm}), cls = x.class || x.cls;
+  const sh = x.sharpe_2021 ?? x.sharpe; const e = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
+  el.querySelector('.sp-in').innerHTML = `<button type="button" class="sp-x" aria-label="Close">×</button><b class="sp-name">${e(base)}</b>${vr ? `<small class="sp-var">${e(vr)}</small>` : ''}
+    ${p.text ? `<p class="sp-plain">${e(p.text)}</p>` : '<p class="sp-plain">No rules stored for this strategy.</p>'}
+    <div class="ssf-tags">${cls ? `<em class="c-${e(cls)}">${e(SP_CL[cls] || cls)}</em>` : ''}${sh != null ? `<em>Sharpe ${(+sh).toFixed(2)} since 2021</em>` : ''}${side === 'short' ? '<em class="sh">Short strategy</em>' : ''}</div>
+    ${x.rules ? `<details class="sp-raw"><summary>Exact rules</summary><p class="ssf-rules">${e(side === 'short' ? String(x.rules).replace(/^BUY when/, 'SHORT when') : x.rules)}</p></details>` : ''}
+    <p class="sp-foot">Plain-language version of the strategy's rules · past backtest results, not advice</p>`;
+  el.classList.add('on');
+}
+// strategies inside lookup results (Ask Finny): every object with rules text and a name or id, deduped, at most 8
+function spCollect(results, max = 8) {
+  const seen = new Map(), walk = (o, d) => { if (!o || d > 6 || seen.size >= max) return;
+    if (Array.isArray(o)) return o.forEach(v => walk(v, d + 1));
+    if (typeof o !== 'object') return;
+    const rules = o.rules || o.rule, nm = o.name || o.strategy || o.label, id = o.id || o.sid || o.spec_id;
+    if (typeof rules === 'string' && /^(BUY|SHORT) when/.test(rules) && (nm || id) && !seen.has(id || nm))
+      seen.set(id || nm, {id: id || null, name: nm || id, rules, side: o.side || null, class: o.class || o.cls || null, sharpe_2021: o.sharpe_2021 ?? null});
+    Object.values(o).forEach(v => walk(v, d + 1)); };
+  walk(results, 0); return [...seen.values()];
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-sp]'); if (!b) return;
+  try { spOpen(JSON.parse(decodeURIComponent(b.dataset.sp))); } catch (err) { console.warn('strategy sheet', err); } });
+const spChipAttr = x => encodeURIComponent(JSON.stringify(x));
+
 // connection graph (2026-11-08, Bible 6.194; user: "the data and connections of the items most prominent rather than text"; "depending on whether I click
 // for ticker or strategy comparison the ticker or strategy should be at the centre"). One radial graph: the chosen item in the centre, the connected items
 // around it. Edge width = strength (0-1), solid green = active (would buy / gaining), dashed = waiting, node size = weight, node ring colour = its value.
@@ -9855,6 +10020,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
       const o = x.on_stock;
       info.innerHTML = `<button class="ng-chip ssf-back">‹ ${esc(f.family)}</button>
         <div class="ssf-one${x.buy ? ' on' : ''}"><b class="ssf-name">${esc(libBase(x.name || x.id))}</b>${libVar(x.name) ? `<small class="ssf-var">${esc(libVar(x.name))}</small>` : ''}
+          ${typeof spPlain === 'function' && x.rules ? `<p class="ssf-plain">${esc(spPlain(x.rules, {side: x.side, name: x.name}).text)}</p>` : ''}
           <div class="ssf-stats">${o?.trades_2021 ? `<span><b>${Math.round(o.won_pct_2021)}%</b><small>won on ${esc(S)}</small></span><span><b>${o.trades_2021}</b><small>trades</small></span>
             <span><b>${o.avg_trade_pct_2021 >= 0 ? '+' : ''}${(+o.avg_trade_pct_2021).toFixed(1)}%</b><small>avg trade</small></span>` : `<span class="wide"><small>Few trades on ${esc(S)}</small></span>`}
             ${x.sharpe_2021 != null ? `<span><b>${(+x.sharpe_2021).toFixed(2)}</b><small>Sharpe</small></span>` : ''}</div>
