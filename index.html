@@ -1592,6 +1592,15 @@
   .ss-range-summary .ss-trophy{color:#f59e0b;font-size:12px}
   .ng-n.top-winner .ng-c{stroke:#10b981!important;stroke-width:2.8px!important;filter:drop-shadow(0 0 6px rgba(16,185,129,0.35))}
   .ng-n.top-winner .ng-in{fill:#fef08a!important;font-size:13px!important;font-weight:900!important}
+  /* 2026-11-13 one library strategy: stacked card (was a two-column tile that squeezed the name to "Fisc…") */
+  .ssf-one{margin-top:8px;padding:12px 14px;border-radius:14px;border:1px solid var(--glass-line);background:var(--surface);color:var(--ink)}
+  .ssf-one.on{border-color:var(--good);box-shadow:inset 3px 0 0 var(--good)}
+  .ssf-name{display:block;font:600 14px/1.3 var(--font-ui);overflow-wrap:anywhere} .ssf-var{display:block;margin-top:3px;font-size:11.5px;color:var(--muted);line-height:1.35}
+  .ssf-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px} .ssf-stats span{min-width:0} .ssf-stats .wide{grid-column:span 3}
+  .ssf-stats b{display:block;font:700 16px var(--font-ui);font-variant-numeric:tabular-nums;white-space:nowrap} .ssf-stats small{display:block;font-size:10.5px;color:var(--muted)}
+  .ssf-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px} .ssf-tags em{font:600 11px var(--font-ui);font-style:normal;padding:3px 8px;border-radius:999px;border:1px solid var(--glass-line);color:var(--muted)}
+  .ssf-tags em.on,.ssf-tags em.c-proven{color:var(--good);border-color:var(--good)} .ssf-tags em.sh{color:var(--bad,#e0705a);border-color:var(--bad,#e0705a)} .ssf-tags em.c-promising{color:#c9a227;border-color:#c9a227}
+  .ssf-rules{margin:10px 0 0;font:500 12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2,var(--muted));overflow-wrap:anywhere}
   .ng-n.top-winner .ng-l{font-weight:700!important;fill:var(--ink)!important}
   .ng-n.top-winner .ng-t{fill:var(--good)!important;font-weight:700!important}
   .ng-e.top-winner{stroke:var(--good)!important;stroke-width:3.2px!important;opacity:1!important}
@@ -7980,8 +7989,11 @@ function ssCard(A) {
     const buy = L.filter(x => x.signal_now), wait = L.filter(x => !x.signal_now);
     // 6.197 (user: "why is Williams the default?"): lead = a buying strategy, else the one closest to a buy (share of rules met), then the best past
     // win rate on this stock; chips let you switch the chart to any strategy
+    // 2026-11-13 (user: "the suggested strategy for watching rules fire is not Williams but the best performing"): lead = the best record on this stock
+    // (win rate shrunk to 50% by 10 trades, as the graph's "past wins"), then the higher average trade; no trades yet -> the old rule (closest to a buy)
     const met0 = x => x.conditions.length ? x.conditions.filter(c => c.ok === true).length / x.conditions.length : 0;
-    const lead = buy.find(x => x.tier === 'edge') || buy[0] || [...L].sort((a, b) => met0(b) - met0(a) || ((b.record?.win || 0) - (a.record?.win || 0)))[0];
+    const perf0 = x => { const rc = x.record || {}; return rc.trades ? (rc.win * rc.trades + 5) / (rc.trades + 10) : -1; };
+    const lead = [...L].sort((a, b) => perf0(b) - perf0(a) || ((b.record?.avg || 0) - (a.record?.avg || 0)) || met0(b) - met0(a))[0];
     el.innerHTML = `<div class="ss-top"><b>Strategies on ${esc(S)}</b></div>
       <div class="ss-verdict${n ? ' on' : ''}"><span class="ss-vi">${n ? IC.buy : IC.wait}</span><div><b>${n} of ${L.length}</b><span>${n ? 'would buy' : 'would buy'} ${esc(S)} ${r.live ? 'now' : 'at the last close'}</span></div></div>
       <div class="ss-range-bar" role="tablist" aria-label="Strategy performance timeframe">
@@ -9347,7 +9359,7 @@ function ngDraw(box, center, nodes, opts = {}) {
       ${d.inner ? `<text x="${x.toFixed(1)}" y="${(y + (isTop ? 4.5 : 3.5)).toFixed(1)}" class="ng-in" text-anchor="middle">${esc(d.inner)}</text>` : ''}
       <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="ng-l" text-anchor="${anc}">${esc(d.label)}</text>
       ${d.tag ? `<text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" class="ng-t ${d.tagCls || ''}" text-anchor="${anc}">${esc(d.tag)}</text>` : ''}</g>`; }).join('');
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="ng-svg" role="img" aria-label="${esc(center.label)} and ${n} connected items">${edges}
+  box.innerHTML = `<svg viewBox="${-(opts.pad || 0)} 0 ${W + 2 * (opts.pad || 0)} ${H}" class="ng-svg" role="img" aria-label="${esc(center.label)} and ${n} connected items">${edges}
     <g class="ng-ctr ${center.state || ''}"><circle cx="${cx}" cy="${cy}" r="${center.edge ? 36 : 34}" class="ng-cc"/>
       <text x="${cx}" y="${center.edge ? cy - 6 : cy - 2}" class="ng-cl" text-anchor="middle">${esc(center.label)}</text>
       ${center.edge ? `<text x="${cx}" y="${cy + 6}" class="ng-cs ${center.edgeCls || ''}" text-anchor="middle">${esc(center.edge)}</text>` : ''}
@@ -9596,6 +9608,16 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
   if (!box) return; const host = box.parentNode; let info = host.querySelector('.ssf-info');
   if (!info) { box.insertAdjacentHTML('afterend', '<div class="ssf-info"></div>'); info = host.querySelector('.ssf-info'); }
   const CL = {proven: 'Has an edge', promising: 'Promising', no_edge: 'No edge'}, short = t => t.length > 16 ? t.slice(0, 15) + '…' : t;
+  // 2026-11-13 (user: "fix this busy section"): library names are "<Author> <idea>: <rule> [vNN: <change>]" and 13 of them start "Fischer-Krauss …";
+  // label = author initials + buy/short + variant ("F-K short v03"), the card shows the full name and the variant on their own lines
+  const libBase = t => String(t || '').replace(/\s*\[.*$/, ''), libVar = t => (String(t || '').match(/\[(v\d+[^\]]*)/)?.[1] || '').replace(/\s*\([^)]*$/, '').trim();
+  const libLabel = t => { const b = libBase(t), v = (libVar(t).match(/^v\d+/) || [''])[0], [head, rest = ''] = b.split(/:\s*/);
+    if (!v) return short(b.replace(/^Williams 3-bar channel.*/, 'Williams 3-bar').replace(/^Turtle System (\d).*/, 'Turtle $1'));
+    const w = head.split(/\s+/)[0], a = w.length > 8 && w.includes('-') ? w.split('-').map(p => p[0]).join('-') : short(w), d = (rest.match(/^(buy|short|sell)\b/i) || [''])[0].toLowerCase();
+    return [a, d, v].filter(Boolean).join(' '); };
+  // best performing = verdict class first (has an edge > promising > no edge), then 2021+ Sharpe, then the win rate on this stock shrunk to 50% by 10 trades
+  const libScore = x => { const o = x.on_stock, w = o?.trades_2021 ? (o.won_pct_2021 / 100 * o.trades_2021 + 5) / (o.trades_2021 + 10) : 0.5;
+    return ({proven: 2, promising: 1}[x.class] || 0) * 100 + (x.sharpe_2021 ?? -5) * 10 + w; };
   const famLeg = '<span class="lg"><i class="ng-grad"></i>past win rate</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>success size</span><span class="lg" style="color:#f59e0b">★ top winner</span><span class="lg tap">tap ›</span>';
 
   let curRng = window.SS_RNG || '1Y';
@@ -9744,7 +9766,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
         };
       });
 
-      ngDraw(box, {label: S, sub: `${curRng}: ${short(best.label)}`, state: R.buying ? 'up' : ''}, nodes, {h: 330, legend: famLeg});
+      ngDraw(box, {label: S, sub: `${curRng}: ${short(best.label)}`, state: R.buying ? 'up' : ''}, nodes, {h: 330, pad: 40, legend: famLeg});
 
       const vd = host.closest('#ss-card')?.querySelector('.ss-verdict');
       const fmt = x => Number(x).toLocaleString('en-US'), day = R.day ? new Date(R.day + 'T12:00:00Z').toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : 'last';
@@ -9790,7 +9812,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
         };
       });
 
-      ngDraw(box, {label: S, sub: `Swing · ${curRng}`, state: nSwing ? 'up' : ''}, nodes, {h: 330, legend: famLeg});
+      ngDraw(box, {label: S, sub: `Swing · ${curRng}`, state: nSwing ? 'up' : ''}, nodes, {h: 330, pad: 40, legend: famLeg});
       info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">Our 8 swing strategies, evaluated for ${curRng} on ${esc(S)}.</p>`;
       info.querySelector('.ssf-back').onclick = top;
     };
@@ -9798,11 +9820,11 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
     fam = f => {
       curView = {type: 'fam', f};
       const it = (f.items || []).slice(0, 12);
-      const scores = it.map(x => (x.on_stock?.won_pct_2021 ?? 45) + (x.buy ? 20 : 0) + (x.sharpe_2021 ? x.sharpe_2021 * 10 : 0));
+      const scores = it.map(libScore);
       let bestIdx = 0, maxScore = -Infinity;
       scores.forEach((s, idx) => { if (s > maxScore) { maxScore = s; bestIdx = idx; } });
       const best = it[bestIdx];
-      if (best) setSummary(short(best.name || best.id), best.on_stock?.won_pct_2021, best.on_stock?.avg_trade_pct_2021, best.on_stock?.trades_2021, best.buy ? 1 : 0);
+      if (best) setSummary(libLabel(best.name || best.id), best.on_stock?.won_pct_2021, best.on_stock?.avg_trade_pct_2021, best.on_stock?.trades_2021, best.buy ? 1 : 0);
 
       ngDraw(box, {label: short(f.family), sub: `${curRng}: ${f.n_buy}/${f.n}`, state: f.n_buy ? 'up' : ''}, it.map((x, idx) => {
         const isTop = idx === bestIdx;
@@ -9811,10 +9833,10 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
         const size = isTop ? 120 : Math.max(0.2, (x.sharpe_2021 ?? 0.3) + 0.5 + (win ? win / 100 : 0));
         const heat = isTop ? 1.0 : (x.buy ? 0.9 : x.class === 'proven' ? 0.65 : x.class === 'promising' ? 0.45 : 0.15);
         const tag = isTop ? `★ ${win != null ? Math.round(win) + '% won' : (x.buy ? 'buy' : CL[x.class] || '')}${o?.trades_2021 ? ` · ${o.trades_2021} tr` : ''}`
-          : `${x.buy ? 'buy · ' : ''}${CL[x.class] || x.class || ''}${win != null ? ` · ${Math.round(win)}% won` : ''}`;
+          : `${x.short ? 'short · ' : ''}${win != null ? `${Math.round(win)}% · ` : ''}${CL[x.class] || x.class || ''}`;
 
         return {
-          label: short((x.name || x.id).replace(/^Williams 3-bar channel.*/, 'Williams 3-bar').replace(/^Turtle System (\d).*/, 'Turtle $1')),
+          label: libLabel(x.name || x.id),
           size,
           heat,
           strength: isTop ? 1.0 : (x.buy ? 0.8 : 0.4),
@@ -9823,18 +9845,21 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
           tag,
           onTap: () => one(f, x)
         };
-      }), {h: 330, legend: famLeg});
+      }), {h: 330, pad: 40, legend: famLeg});
 
-      info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">${f.family}: ${f.n} strategies, ${f.n_buy} would buy ${esc(S)}, ${f.n_good} proven or promising. Showing top performers for ${curRng}.</p>`;
+      info.innerHTML = `<button class="ng-chip ssf-back">‹ All families</button><p class="ss-foot">${f.family}: ${f.n} strategies, ${f.n_buy} would buy ${esc(S)}${f.n_short ? `, ${f.n_short} would short it` : ''}, ${f.n_good} proven or promising. Showing top performers for ${curRng}.</p>`;
       info.querySelector('.ssf-back').onclick = top;
     };
 
     one = (f, x) => {
       const o = x.on_stock;
       info.innerHTML = `<button class="ng-chip ssf-back">‹ ${esc(f.family)}</button>
-        <div class="ss-tile${x.buy ? ' on' : ''}"><span class="ss-mid"><b>${esc(x.name || x.id)}</b><small>${esc(CL[x.class] || x.class || '')}${x.sharpe_2021 != null ? ` · 2021+ Sharpe ${(+x.sharpe_2021).toFixed(2)}` : ''}${x.buy ? ` · would buy ${esc(S)}` : ''}</small></span>
-        <span class="ss-num">${o?.trades_2021 ? `<b>${Math.round(o.won_pct_2021)}%</b><small>won · ${o.trades_2021} trades on ${esc(S)} (2021+) · avg ${o.avg_trade_pct_2021 >= 0 ? '+' : ''}${o.avg_trade_pct_2021}%</small>` : '<small>few trades on this stock</small>'}</span></div>
-        <p class="ss-foot">${esc(x.rules || '')}</p>`;
+        <div class="ssf-one${x.buy ? ' on' : ''}"><b class="ssf-name">${esc(libBase(x.name || x.id))}</b>${libVar(x.name) ? `<small class="ssf-var">${esc(libVar(x.name))}</small>` : ''}
+          <div class="ssf-stats">${o?.trades_2021 ? `<span><b>${Math.round(o.won_pct_2021)}%</b><small>won on ${esc(S)}</small></span><span><b>${o.trades_2021}</b><small>trades</small></span>
+            <span><b>${o.avg_trade_pct_2021 >= 0 ? '+' : ''}${(+o.avg_trade_pct_2021).toFixed(1)}%</b><small>avg trade</small></span>` : `<span class="wide"><small>Few trades on ${esc(S)}</small></span>`}
+            ${x.sharpe_2021 != null ? `<span><b>${(+x.sharpe_2021).toFixed(2)}</b><small>Sharpe</small></span>` : ''}</div>
+          <div class="ssf-tags"><em class="c-${esc(x.class || '')}">${esc(CL[x.class] || x.class || '')}</em>${x.buy ? `<em class="on">Would buy ${esc(S)}</em>` : ''}${x.short ? `<em class="sh">Would short ${esc(S)}</em>` : ''}${x.side === 'short' && !x.short ? '<em>Short strategy</em>' : ''}<em>Since 2021</em></div>
+          ${x.rules ? `<p class="ssf-rules">${esc(x.side === 'short' ? String(x.rules).replace(/^BUY when/, 'SHORT when') : x.rules)}</p>` : ''}</div>`;
       info.querySelector('.ssf-back').onclick = () => fam(f);
     };
 
