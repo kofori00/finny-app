@@ -10063,7 +10063,8 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
         <div class="ssf-one${x.buy ? ' on' : ''}"><b class="ssf-name">${esc(libBase(x.name || x.id))}</b>${libVar(x.name) ? `<small class="ssf-var">${esc(libVar(x.name))}</small>` : ''}
           ${typeof spPlain === 'function' && x.rules ? `<p class="ssf-plain">${esc(spPlain(x.rules, {side: x.side, name: x.name}).text)}</p>` : ''}
           <div class="ssf-stats">${o?.trades_2021 ? `<span><b>${Math.round(o.won_pct_2021)}%</b><small>won on ${esc(S)}</small></span><span><b>${o.trades_2021}</b><small>trades</small></span>
-            <span><b>${o.avg_trade_pct_2021 >= 0 ? '+' : ''}${(+o.avg_trade_pct_2021).toFixed(1)}%</b><small>avg trade</small></span>` : `<span class="wide"><small>Few trades on ${esc(S)}</small></span>`}
+            ${o.total_pct_2021 != null ? `<span><b class="${o.total_pct_2021 >= 0 ? 'v2-up' : 'v2-dn'}">${o.total_pct_2021 >= 0 ? '+' : ''}${(+o.total_pct_2021).toFixed(1)}%</b><small>total return</small></span>`   /* 2026-11-14 (user): compounded, not the average */
+              : `<span><b>${o.avg_trade_pct_2021 >= 0 ? '+' : ''}${(+o.avg_trade_pct_2021).toFixed(1)}%</b><small>avg trade</small></span>`}` : `<span class="wide"><small>Few trades on ${esc(S)}</small></span>`}
             ${x.sharpe_2021 != null ? `<span><b>${(+x.sharpe_2021).toFixed(2)}</b><small>Sharpe</small></span>` : ''}</div>
           <div class="ssf-tags"><em class="c-${esc(x.class || '')}">${esc(CL[x.class] || x.class || '')}</em>${x.buy ? `<em class="on">Would buy ${esc(S)}</em>` : ''}${x.short ? `<em class="sh">Would short ${esc(S)}</em>` : ''}${x.side === 'short' && !x.short ? '<em>Short strategy</em>' : ''}<em>Since 2021</em></div>
           ${x.rules ? `<p class="ssf-rules">${esc(x.side === 'short' ? String(x.rules).replace(/^BUY when/, 'SHORT when') : x.rules)}</p>` : ''}</div>`;
