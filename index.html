@@ -1648,6 +1648,18 @@
   .rp-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .rp-h b{font:700 16px var(--font-display);color:var(--ink);display:block} .rp-h small{color:var(--muted);font-size:12px}
   .rp-x{border:0;background:var(--glass-2);color:var(--ink);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer;flex:none}
   .rp-range{display:flex;gap:6px;margin:12px 0 8px} .rp-range button{flex:1;padding:7px 0;border-radius:10px;border:1px solid var(--glass-line);background:transparent;color:var(--muted);font:600 12px var(--font-ui)} .rp-range button.on{background:var(--glass-2);color:var(--ink)}
+  /* 2026-11-14 (user: "more appealing like the rest of the cards"): rule replay in the strategy card's style */
+  .rp-h b{font:700 17px var(--font-display);letter-spacing:-.01em} .rp-h small{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+  .rp-range{display:flex;gap:3px;margin:12px 0 10px;padding:3px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line)}
+  .rp-range button{flex:1;padding:6px 0;border:0;border-radius:999px;background:transparent;color:var(--ink-2);font:600 12px var(--font-ui);cursor:pointer;transition:all .15s ease}
+  .rp-range button:hover{color:var(--ink);background:var(--glass-2)} .rp-range button.on{background:var(--good);color:#fff;font-weight:700;box-shadow:0 1px 4px rgba(34,197,94,.22)}
+  .rp-read{padding:12px 14px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line);margin:0 0 10px;transition:background .2s ease,border-color .2s ease}
+  .rp-read.sig{background:color-mix(in srgb, var(--good) 14%, var(--surface-2));border-color:color-mix(in srgb, var(--good) 40%, transparent)}
+  .rp-read .rp-rh b{font:700 15px var(--font-display);font-variant-numeric:tabular-nums} .rp-read .rp-rh span{font:600 14px var(--font-ui);color:var(--ink-2)}
+  .rp-stats{gap:8px} .rp-stats div{padding:12px 8px;border-radius:16px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .rp-stats b{font:800 22px var(--font-display)} .rp-stats span{display:block;margin-top:2px;font:600 10.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .rp-tr summary{display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:14px;border:1px solid var(--glass-line);background:var(--glass);cursor:pointer;list-style:none;color:var(--ink-2);font:600 13px var(--font-ui)}
+  .rp-tr summary::-webkit-details-marker{display:none} .rp-tr summary::after{content:"›";margin-left:auto;font-size:18px;transition:transform .15s} .rp-tr[open] summary::after{transform:rotate(90deg)}
   .rp-read{font:500 12px/1.5 var(--font-ui);color:var(--ink-2);background:var(--glass);border:1px solid var(--glass-line);border-radius:12px;padding:8px 10px;margin:6px 0 10px;min-height:46px;font-variant-numeric:tabular-nums}
   .rp-read span{display:inline-block;margin-right:10px} .rp-ok{color:var(--good)} .rp-no{color:var(--muted)}
   .rp-p{margin:0 0 10px} .rp-lab b{display:block;font:600 12.5px var(--font-ui);color:var(--ink)} .rp-lab span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
@@ -9200,7 +9212,7 @@ function rpOpen(sym, key, name) {
   el.classList.add('on'); document.body.classList.add('rp-lock');
   const card = el.querySelector('.rp-card'); card.dataset.k = sym + '|' + key;
   const head = d => `<div class="rp-h"><div><b>${esc(name)} · ${esc(sym)}</b><small>Each rule, each day</small></div><button class="rp-x" aria-label="Close">×</button></div>
-    <div class="rp-range" role="tablist">${[[125, '6 mo'], [250, '1 yr'], [500, '2 yr'], [1250, '5 yr']].map(([n, l]) => `<button data-n="${n}" class="${n === d ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    <div class="rp-range" role="tablist">${[[5, '1 wk'], [21, '1 mo'], [125, '6 mo'], [250, '1 yr'], [500, '2 yr'], [1250, '5 yr']].map(([n, l]) => `<button data-n="${n}" class="${n === d ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const load = days => {
     card.innerHTML = head(days) + '<p class="note">Running the strategy on ' + esc(sym) + '…</p>'; card.querySelector('.rp-x').onclick = rpClose;
     card.querySelectorAll('.rp-range button').forEach(b => b.onclick = () => load(+b.dataset.n));
@@ -9269,9 +9281,14 @@ function rpBody(j) {
       <svg viewBox="0 0 ${RP_W} ${PH}" preserveAspectRatio="none" class="rp-svg" data-h="${PH}">${rpBands(p.holds.map(Boolean), n, PH, p.role === 'exit' ? 'rp-onx' : 'rp-on')}${thr}<path class="rp-line rp-f" d="${rpPath(p.value, n, yy)}"/><line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${PH}"/></svg></div>`;
   }).join('');
   const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
-  const exitTxt = Object.entries(j.exit || {}).filter(([k]) => k !== 'exit_if').map(([k, v]) => k === 'hold' ? `sell after ${v} days` : `${k.replace(/_/g, ' ')} ${v}`).join(', ');
+  // 2026-11-14: exit settings in words (an object value printed "target dyn [object Object]")
+  const EXW = {hold: v => `sell after ${v} day${+v === 1 ? '' : 's'}`, stop_atr: v => `stop ${+v}× ATR`, target_atr: v => `target ${+v}× ATR`, trail_atr: v => `trailing stop ${+v}× ATR`,
+    stop_pct: v => `stop ${+(v * 100).toFixed(1)}%`, target_pct: v => `target ${+(v * 100).toFixed(1)}%`, max_risk: v => `max risk ${+(v * 100).toFixed(1)}%`,
+    target_dyn: () => 'dynamic target', stop_level: () => 'stop at a chart level', target_level: () => 'target at a chart level', stop_close: v => v ? 'stop on the close' : ''};
+  const exitTxt = Object.entries(j.exit || {}).filter(([k]) => k !== 'exit_if').map(([k, v]) => EXW[k] ? EXW[k](v)
+    : v !== null && typeof v === 'object' ? k.replace(/_/g, ' ') : `${k.replace(/_/g, ' ')} ${v}`).filter(Boolean).join(', ');
   return `<div class="rp-read" aria-live="polite"></div>${price}${rpStrips(j)}<details class="rp-raw"><summary>Show values</summary>${panels}</details>
-    <div class="rp-stats"><div><b>${done.length}</b><span>trades</span></div><div><b>${done.length ? Math.round(win / done.length * 100) + '%' : '–'}</b><span>won</span></div>
+    <div class="rp-stats"><div><b>${done.length}</b><span>trades</span></div><div><b class="${done.length ? (win / done.length >= 0.5 ? 'v2-up' : 'v2-dn') : ''}">${done.length ? Math.round(win / done.length * 100) + '%' : '–'}</b><span>won</span></div>
       <div><b class="${done.length && done.reduce((a, t) => a + t.ret, 0) >= 0 ? 'v2-up' : 'v2-dn'}">${done.length ? pc(done.reduce((a, t) => a + t.ret, 0) / done.length) : '–'}</b><span>avg trade</span></div></div>
     <details class="rp-tr"><summary>${IC.chart} All trades${exitTxt ? ` · ${esc(exitTxt)}` : ''}</summary>${done.length ? `<table><tr><th>Buy</th><th>Sell</th><th>In</th><th>Out</th><th>Result</th><th>Why sold</th></tr>${done.map(t => `<tr><td>${esc(t.entry)}</td><td>${esc(t.exit)}</td><td>$${(+t.px).toFixed(2)}</td><td>$${(+t.xt).toFixed(2)}</td><td class="${t.ret >= 0 ? 'v2-up' : 'v2-dn'}">${pc(t.ret)}</td><td>${esc(t.why)}</td></tr>`).join('')}</table>` : '<p class="note">No completed trade in this window.</p>'}
       <button class="rp-csv">${IC.dl} CSV</button></details>
@@ -9282,6 +9299,7 @@ function rpWire(card, j) {
   const show = i => {
     card.querySelectorAll('.rp-cur').forEach(l => { const x = rpX(i, n); l.setAttribute('x1', x); l.setAttribute('x2', x); });
     const fmt = v => v == null ? '–' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3);
+    read.classList.toggle('sig', !!j.signal[i]);   // 2026-11-14: the day card turns green on a signal day, like the verdict cards
     read.innerHTML = `<div class="rp-rh"><b>${esc(j.days[i])}</b><span>$${fmt(j.close[i])}</span>${j.signal[i] ? `<em class="rp-sigc">${IC.buy}signal</em>` : ''}</div><div class="rp-chips">` + j.panels.map(p =>
       `<span class="rp-c ${p.holds[i] ? 'ok' : 'no'}" title="${esc(p.rule)}: ${fmt(p.value[i])} vs ${fmt(p.threshold[i])}">${p.holds[i] ? '✓' : p.holds[i] === null ? '·' : '✗'} ${esc(rpShort(p))}</span>`).join('') + '</div>';
   };
@@ -9304,7 +9322,7 @@ function rpTeaser(box, sym, key, name, targetDays) {
   const days = targetDays || 250;
   if (box.dataset.drawn === sym + '|' + key + '|' + days) return; box.dataset.drawn = sym + '|' + key + '|' + days;
   box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>loading…</span></div>`;
-  const lbl = days <= 60 ? 'past month' : days <= 125 ? 'past 6 months' : days <= 250 ? 'past year' : 'all history';
+  const lbl = days <= 5 ? 'past week' : days <= 60 ? 'past month' : days <= 125 ? 'past 6 months' : days <= 250 ? 'past year' : 'all history';
   const draw = (j, label) => { const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
     box.innerHTML = `<div class="rp-tz-h"><b>${esc(name)}: past trades on ${esc(sym)}</b><span>${label || lbl} · ${done.length} trade${done.length === 1 ? '' : 's'}${done.length ? ` · ${win} won` : ''}${j.open ? ' · 1 open now' : ''}</span></div>
       ${rpPrice(j, 120)}<button class="rp-tz-go">${IC.play} Watch the rules fire</button>`;
