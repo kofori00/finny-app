@@ -7365,15 +7365,29 @@ function akTurn(t) {                                          // one saved turn 
   return {text: src.text, html: src.html, go: akGoHtml([...gp.go, ...akGoFromLookups(t.lookups || [])]), live: [...new Set((t.lookups || []).map(akLabel))], model: String(t.model || 'Gemini').replace(' (cached)', '')};
 }
 const akWhen = iso => { try { return new Date(iso).toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); } catch (e) { return ''; } };
+function akLinkNames(root, strats) {                          // 2026-11-14: names of looked-up strategies in the answer text -> strategy card buttons
+  if (!root || !strats?.length) return;
+  const names = strats.filter(x => x.id).map(x => ({id: x.id, n: String(x.name || '').replace(/\s*\[.*$/, '').trim()})).filter(x => x.n.length >= 8)
+    .sort((a, b) => b.n.length - a.n.length);
+  if (!names.length) return;
+  const re = new RegExp('(' + names.map(x => x.n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+  const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), hits = [];
+  while (walk.nextNode()) { const t = walk.currentNode; if (t.parentElement?.closest('button,a,code')) continue; re.lastIndex = 0; if (re.test(t.nodeValue)) hits.push(t); }
+  for (const t of hits) { const frag = document.createDocumentFragment(); let last = 0; re.lastIndex = 0; let m;
+    while ((m = re.exec(t.nodeValue))) { frag.append(t.nodeValue.slice(last, m.index)); const x = names.find(y => y.n.toLowerCase() === m[0].toLowerCase());
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ak-strat-btn'; b.dataset.rs = x.id; b.textContent = m[0]; frag.append(b); last = m.index + m[0].length; }
+    frag.append(t.nodeValue.slice(last)); t.replaceWith(frag); }
+}
 function akShow(note) {                                       // the open conversation: the latest turn in full, earlier ones folded
   const out = document.getElementById('ak-out'), T = AK.turns; if (!out) return; if (!T.length) { out.innerHTML = ''; return; }
   const t = T[T.length - 1], r = akTurn(t), earlier = T.slice(0, -1).slice(-8), logo = document.querySelector('.brand-mark img')?.src || '';
   out.innerHTML = `<div class="ak-card">${note ? `<p class="ak-saved">${note}</p>` : ''}
-    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${t.strats?.length && typeof spChipAttr === 'function' ? `<div class="ak-strats"><span>Strategies in this answer · tap for what they do</span>${t.strats.map(x => { const n = String(x.name || x.id), v = (n.match(/\[(v\d+)/) || [])[1]; const b = n.replace(/\s*\[.*$/, ''); return `<button type="button" class="ak-sc" data-sp="${spChipAttr(x)}">${esc((b.length > 34 ? b.slice(0, 33) + '…' : b) + (v ? ' ' + v : ''))}</button>`; }).join('')}</div>` : ''}${r.go}
+    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${t.strats?.length && typeof spChipAttr === 'function' ? `<div class="ak-strats"><span>Strategies in this answer · tap for the strategy card</span>${t.strats.map(x => { const n = String(x.name || x.id), v = (n.match(/\[(v\d+)/) || [])[1]; const b = n.replace(/\s*\[.*$/, ''); return `<button type="button" class="ak-sc" data-sp="${spChipAttr(x)}">${esc((b.length > 34 ? b.slice(0, 33) + '…' : b) + (v ? ' ' + v : ''))}</button>`; }).join('')}</div>` : ''}${r.go}
     <div class="ak-meta">${r.live.length ? `<span title="${esc(r.live.join(', '))}"><i></i>Live data</span>` : ''}${r.html}
       <span class="ak-dis" title="AI answer (${esc(r.model)}) from Finny's research only${t.at ? ', ' + esc(akWhen(t.at)) : ''}">AI · can be wrong · not advice</span>
       ${earlier.length ? `<details class="ak-hist"><summary>Earlier (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><div class="ak-a-body"><p>${akFmt(akTurn(h).text)}</p></div></div>`).join('')}</details>` : ''}
       <button type="button" class="ak-new ak-past">Past chats</button><button type="button" class="ak-new ak-fresh" title="Start a new conversation (this one stays saved)">New chat</button></div></div>`;
+  try { akLinkNames(out.querySelector('.ak-a .ak-a-body'), t.strats); } catch (e) { console.warn('strategy links', e); }
 }
 // ---- Trading 212 order card (6.165, owner only): shows the draft under Finny's answer; only a tap on Confirm sends it (t212-chat execute, once, within 2 minutes)
 async function akT212(body) {
@@ -7494,7 +7508,7 @@ async function akAsk() {
       const need = j.need || []; need.forEach(c => calls.push(c));
       out.innerHTML = `<div class="ak-think"><i></i><i></i><i></i><span>Checking ${esc(need.map(akLabel).join(', '))}…</span></div>`;
       const results = await Promise.all(need.map((c, i) => i < 10 ? akRun(c) : {error: 'at most 10 lookups at once'}));
-      if (typeof spCollect === 'function') spCollect(results, 8).forEach(x => { if (strats.length < 8 && !strats.some(y => (y.id || y.name) === (x.id || x.name))) strats.push(x); });
+      if (typeof spCollect === 'function') spCollect(results, 12, true).forEach(x => { if (strats.length < 12 && !strats.some(y => (y.id || y.name) === (x.id || x.name))) strats.push(x); });
       j = await post({pending: j.pending, results});
     }
     if (!j.ok) throw new Error(j.error || 'no answer');

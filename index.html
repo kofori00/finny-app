@@ -1610,6 +1610,15 @@
   .sp-raw{margin-top:10px} .sp-raw summary{cursor:pointer;font-size:12px;color:var(--muted)} .sp-foot{margin:12px 0 0;font-size:11px;color:var(--muted)}
   .ak-strats{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0 44px} .ak-strats span{flex-basis:100%;font-size:11px;color:var(--muted)}
   .ak-sc{font:600 11.5px var(--font-ui);padding:6px 10px;border-radius:999px;border:1px solid var(--glass-line);background:var(--surface);color:var(--ink);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* 2026-11-14 strategy card (strategy_card.js): picks network + sector chips + list */
+  .sc-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 6px} .sc-h b{font:600 13.5px var(--font-ui);color:var(--ink)}
+  .sc-what{font-size:12px;color:var(--muted);display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+  .sc-secs{margin:4px 0 6px} .sc-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;flex:none;vertical-align:baseline}
+  .sc-cap{font-size:11px;color:var(--muted);margin:2px 0 6px}
+  .sc-list{display:grid;gap:4px;margin-top:6px} .sc-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-line)}
+  .sc-tk{flex:1;min-width:0} .sc-tk b{display:block;font:700 13px var(--font-ui)} .sc-tk small{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sc-sec{font-size:11px;color:var(--muted);white-space:nowrap} .sc-btn{font:600 11.5px var(--font-ui);padding:6px 9px;border-radius:999px;border:1px solid var(--glass-line);background:var(--surface);color:var(--ink);cursor:pointer}
+  .ssf-card{margin-top:10px;width:100%}
   .ng-n.top-winner .ng-l{font-weight:700!important;fill:var(--ink)!important}
   .ng-n.top-winner .ng-t{fill:var(--good)!important;font-weight:700!important}
   .ng-e.top-winner{stroke:var(--good)!important;stroke-width:3.2px!important;opacity:1!important}
@@ -7659,15 +7668,29 @@ function akTurn(t) {                                          // one saved turn 
   return {text: src.text, html: src.html, go: akGoHtml([...gp.go, ...akGoFromLookups(t.lookups || [])]), live: [...new Set((t.lookups || []).map(akLabel))], model: String(t.model || 'Gemini').replace(' (cached)', '')};
 }
 const akWhen = iso => { try { return new Date(iso).toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); } catch (e) { return ''; } };
+function akLinkNames(root, strats) {                          // 2026-11-14: names of looked-up strategies in the answer text -> strategy card buttons
+  if (!root || !strats?.length) return;
+  const names = strats.filter(x => x.id).map(x => ({id: x.id, n: String(x.name || '').replace(/\s*\[.*$/, '').trim()})).filter(x => x.n.length >= 8)
+    .sort((a, b) => b.n.length - a.n.length);
+  if (!names.length) return;
+  const re = new RegExp('(' + names.map(x => x.n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+  const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), hits = [];
+  while (walk.nextNode()) { const t = walk.currentNode; if (t.parentElement?.closest('button,a,code')) continue; re.lastIndex = 0; if (re.test(t.nodeValue)) hits.push(t); }
+  for (const t of hits) { const frag = document.createDocumentFragment(); let last = 0; re.lastIndex = 0; let m;
+    while ((m = re.exec(t.nodeValue))) { frag.append(t.nodeValue.slice(last, m.index)); const x = names.find(y => y.n.toLowerCase() === m[0].toLowerCase());
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ak-strat-btn'; b.dataset.rs = x.id; b.textContent = m[0]; frag.append(b); last = m.index + m[0].length; }
+    frag.append(t.nodeValue.slice(last)); t.replaceWith(frag); }
+}
 function akShow(note) {                                       // the open conversation: the latest turn in full, earlier ones folded
   const out = document.getElementById('ak-out'), T = AK.turns; if (!out) return; if (!T.length) { out.innerHTML = ''; return; }
   const t = T[T.length - 1], r = akTurn(t), earlier = T.slice(0, -1).slice(-8), logo = document.querySelector('.brand-mark img')?.src || '';
   out.innerHTML = `<div class="ak-card">${note ? `<p class="ak-saved">${note}</p>` : ''}
-    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${t.strats?.length && typeof spChipAttr === 'function' ? `<div class="ak-strats"><span>Strategies in this answer · tap for what they do</span>${t.strats.map(x => { const n = String(x.name || x.id), v = (n.match(/\[(v\d+)/) || [])[1]; const b = n.replace(/\s*\[.*$/, ''); return `<button type="button" class="ak-sc" data-sp="${spChipAttr(x)}">${esc((b.length > 34 ? b.slice(0, 33) + '…' : b) + (v ? ' ' + v : ''))}</button>`; }).join('')}</div>` : ''}${r.go}
+    <div class="ak-q">${esc(t.q)}</div><div class="ak-a">${logo ? `<img class="ak-av" src="${logo}" alt="Finny">` : '<div class="ak-av ak-av-fallback">F</div>'}<div class="ak-bubble"><div class="ak-a-head"><span class="ak-author">Finny</span><span class="ak-chip ak-chip-ai">Research AI</span>${r.model ? `<span class="ak-chip ak-chip-model">${esc(r.model)}</span>` : ''}</div><div class="ak-a-body"><p>${akFmt(r.text)}</p></div></div></div>${t.strats?.length && typeof spChipAttr === 'function' ? `<div class="ak-strats"><span>Strategies in this answer · tap for the strategy card</span>${t.strats.map(x => { const n = String(x.name || x.id), v = (n.match(/\[(v\d+)/) || [])[1]; const b = n.replace(/\s*\[.*$/, ''); return `<button type="button" class="ak-sc" data-sp="${spChipAttr(x)}">${esc((b.length > 34 ? b.slice(0, 33) + '…' : b) + (v ? ' ' + v : ''))}</button>`; }).join('')}</div>` : ''}${r.go}
     <div class="ak-meta">${r.live.length ? `<span title="${esc(r.live.join(', '))}"><i></i>Live data</span>` : ''}${r.html}
       <span class="ak-dis" title="AI answer (${esc(r.model)}) from Finny's research only${t.at ? ', ' + esc(akWhen(t.at)) : ''}">AI · can be wrong · not advice</span>
       ${earlier.length ? `<details class="ak-hist"><summary>Earlier (${earlier.length})</summary>${earlier.slice().reverse().map(h => `<div class="ak-hq"><b>${esc(h.q)}</b><div class="ak-a-body"><p>${akFmt(akTurn(h).text)}</p></div></div>`).join('')}</details>` : ''}
       <button type="button" class="ak-new ak-past">Past chats</button><button type="button" class="ak-new ak-fresh" title="Start a new conversation (this one stays saved)">New chat</button></div></div>`;
+  try { akLinkNames(out.querySelector('.ak-a .ak-a-body'), t.strats); } catch (e) { console.warn('strategy links', e); }
 }
 // ---- Trading 212 order card (6.165, owner only): shows the draft under Finny's answer; only a tap on Confirm sends it (t212-chat execute, once, within 2 minutes)
 async function akT212(body) {
@@ -7788,7 +7811,7 @@ async function akAsk() {
       const need = j.need || []; need.forEach(c => calls.push(c));
       out.innerHTML = `<div class="ak-think"><i></i><i></i><i></i><span>Checking ${esc(need.map(akLabel).join(', '))}…</span></div>`;
       const results = await Promise.all(need.map((c, i) => i < 10 ? akRun(c) : {error: 'at most 10 lookups at once'}));
-      if (typeof spCollect === 'function') spCollect(results, 8).forEach(x => { if (strats.length < 8 && !strats.some(y => (y.id || y.name) === (x.id || x.name))) strats.push(x); });
+      if (typeof spCollect === 'function') spCollect(results, 12, true).forEach(x => { if (strats.length < 12 && !strats.some(y => (y.id || y.name) === (x.id || x.name))) strats.push(x); });
       j = await post({pending: j.pending, results});
     }
     if (!j.ok) throw new Error(j.error || 'no answer');
@@ -9112,6 +9135,8 @@ function initAskWidget() {
       backdrop.hidden = true;
     }
   }
+  window.akClosePanel = closePanel;   // 2026-11-14: the strategy card closes the chat before opening a stock
+
 
   function togglePanel() {
     if (!panel) return;
@@ -9560,19 +9585,91 @@ function spOpen(x) {
   el.classList.add('on');
 }
 // strategies inside lookup results (Ask Finny): every object with rules text and a name or id, deduped, at most 8
-function spCollect(results, max = 8) {
+function spCollect(results, max = 8, any = false) {             // any: also strategies without rules (id + name; the strategy card fetches the rest)
   const seen = new Map(), walk = (o, d) => { if (!o || d > 6 || seen.size >= max) return;
     if (Array.isArray(o)) return o.forEach(v => walk(v, d + 1));
     if (typeof o !== 'object') return;
     const rules = o.rules || o.rule, nm = o.name || o.strategy || o.label, id = o.id || o.sid || o.spec_id;
-    if (typeof rules === 'string' && /^(BUY|SHORT) when/.test(rules) && (nm || id) && !seen.has(id || nm))
-      seen.set(id || nm, {id: id || null, name: nm || id, rules, side: o.side || null, class: o.class || o.cls || null, sharpe_2021: o.sharpe_2021 ?? null});
+    const isSpec = typeof id === 'string' && /^[A-Za-z][A-Za-z0-9_|]*\d[A-Za-z0-9_]*$/.test(id) && (nm || o.class || o.cls || o.verdict);
+    if (((typeof rules === 'string' && /^(BUY|SHORT) when/.test(rules)) || (any && isSpec)) && (nm || id) && !seen.has(id || nm))
+      seen.set(id || nm, {id: id || null, name: nm || id, rules: typeof rules === 'string' ? rules : null, side: o.side || null, class: o.class || o.cls || null, sharpe_2021: o.sharpe_2021 ?? null});
     Object.values(o).forEach(v => walk(v, d + 1)); };
   walk(results, 0); return [...seen.values()];
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-sp]'); if (!b) return;
-  try { spOpen(JSON.parse(decodeURIComponent(b.dataset.sp))); } catch (err) { console.warn('strategy sheet', err); } });
+  try { const x = JSON.parse(decodeURIComponent(b.dataset.sp)); if (x.id && typeof scOpen === 'function') scOpen(x.id); else spOpen(x); } catch (err) { console.warn('strategy sheet', err); } });   // 2026-11-14: strategy card
 const spChipAttr = x => encodeURIComponent(JSON.stringify(x));
+
+// ---------------- strategy card (2026-11-14, user: "click a strategy -> a card with all the stocks it holds, networked, filterable by sector") ----------------
+// scOpen(id or exact name): one library strategy: plain description (strategy_plain), verdict, backtest summary, and the stocks it picks on the
+// latest nightly close as a network (strategy in the centre, stocks around it coloured by sector) with sector chips and an S&P-only / what-ifs
+// toggle; tap a stock -> open it (odGo), Replay -> the rule replay of this strategy on that stock (replay.js, lib). Data: rpc strategy_card.
+const SC = {cache: new Map(), cur: null};
+const SC_COL = {'Information Technology': '#5b8def', 'Health Care': '#e0707a', 'Financials': '#d4a72c', 'Energy': '#b9774a', 'Consumer Discretionary': '#c06fd0',
+  'Consumer Staples': '#6fbf8e', 'Industrials': '#8a9bb0', 'Utilities': '#4fb3bf', 'Materials': '#a3b45a', 'Real Estate': '#d38b5d', 'Communication Services': '#7f7fe0', 'Other': '#7d8590'};
+const SC_SHORT = {'Information Technology': 'Tech', 'Health Care': 'Health', 'Financials': 'Financials', 'Energy': 'Energy', 'Consumer Discretionary': 'Cons. disc.',
+  'Consumer Staples': 'Staples', 'Industrials': 'Industrials', 'Utilities': 'Utilities', 'Materials': 'Materials', 'Real Estate': 'Real estate', 'Communication Services': 'Comm.', 'Other': 'Other'};
+const scEsc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
+async function scFetch(strat) {
+  const k = String(strat), c = SC.cache.get(k); if (c && Date.now() - c.at < 10 * 6e4) return c.v;
+  const token = await getToken();
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/strategy_card`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({strat: k})});
+  if (!r.ok) throw new Error('strategy card: HTTP ' + r.status);
+  const v = await r.json(); SC.cache.set(k, {at: Date.now(), v}); return v;
+}
+function scSheet() {
+  let el = document.getElementById('sc-sheet');
+  if (!el) { document.body.insertAdjacentHTML('beforeend', '<div id="sc-sheet" class="sp-sheet sc-sheet" role="dialog" aria-modal="true" aria-label="Strategy card"><div class="sp-in sc-in"></div></div>');
+    el = document.getElementById('sc-sheet'); el.addEventListener('click', e => { if (e.target === el || e.target.closest('.sp-x')) el.classList.remove('on'); }); }
+  el.classList.add('on'); return el.querySelector('.sc-in');
+}
+async function scOpen(strat, opt = {}) {
+  if (!strat) return; const box = scSheet();
+  box.innerHTML = `<button type="button" class="sp-x" aria-label="Close">×</button><p class="note">Loading the strategy card…</p>`;
+  try { const c = await scFetch(strat);
+    if (!c) { box.innerHTML = `<button type="button" class="sp-x" aria-label="Close">×</button><p class="note">No library strategy found for “${scEsc(strat)}”.</p>`; return; }
+    SC.cur = {c, sector: opt.sector || 'All', what: !!opt.what, more: false}; scRender(box);
+  } catch (e) { box.innerHTML = `<button type="button" class="sp-x" aria-label="Close">×</button><p class="note">Could not load the strategy card: ${scEsc(e.message)}</p>`; }
+}
+function scRender(box) {
+  const {c, sector, what, more} = SC.cur, nm = String(c.name || c.id), base = nm.replace(/\s*\[.*$/, ''), vr = (nm.match(/\[(v\d+[^\]]*)/)?.[1] || '').replace(/\s*\([^)]*$/, '');
+  const plain = typeof spPlain === 'function' ? spPlain(c.rules, {side: c.side, name: nm}).text : '', CL = {proven: 'Has an edge', promising: 'Promising', no_edge: 'No edge'};
+  const all = c.picks || [], pool = what ? all : all.filter(p => p.m), nMem = all.filter(p => p.m).length, nOut = all.length - nMem;
+  const counts = {}; for (const p of pool) counts[p.s] = (counts[p.s] || 0) + 1;
+  const secs = Object.entries(counts).sort((a, b) => b[1] - a[1]), shown = sector === 'All' ? pool : pool.filter(p => p.s === sector);
+  const short = base.length > 22 ? base.split(':')[0].slice(0, 21) + '…' : base, pct = v => v == null ? '–' : (v >= 0 ? '+' : '') + (+v).toFixed(1) + '%';
+  const verb = c.side === 'short' ? 'shorts' : 'picks';
+  box.innerHTML = `<button type="button" class="sp-x" aria-label="Close">×</button>
+    <b class="sp-name">${scEsc(base)}</b>${vr ? `<small class="sp-var">${scEsc(vr)}</small>` : ''}
+    ${plain ? `<p class="sp-plain">${scEsc(plain)}</p>` : ''}
+    <div class="ssf-tags"><em class="c-${scEsc(c.class)}">${scEsc(CL[c.class] || c.class)}</em>${c.sharpe_2021 != null ? `<em>Sharpe ${(+c.sharpe_2021).toFixed(2)} since 2021</em>` : ''}
+      ${c.trades ? `<em>${(+c.trades).toLocaleString()} trades · ${c.win_rate != null ? Math.round(c.win_rate * (c.win_rate <= 1 ? 100 : 1)) + '% won' : ''}</em>` : ''}${c.side === 'short' ? '<em class="sh">Short strategy</em>' : ''}</div>
+    <div class="sc-h"><b>${all.length ? `It ${verb} ${nMem} S&amp;P 500 stock${nMem === 1 ? '' : 's'} at the ${scEsc(c.day)} close` : `No picks at the ${scEsc(c.day)} close`}</b>
+      ${nOut ? `<label class="sc-what"><input type="checkbox"${what ? ' checked' : ''}> + ${nOut.toLocaleString()} outside the S&amp;P (what-ifs)</label>` : ''}</div>
+    ${secs.length > 1 ? `<div class="ng-chips sc-secs"><button class="ng-chip${sector === 'All' ? ' on' : ''}" data-sec="All">All ${pool.length}</button>${secs.map(([s, n]) =>
+      `<button class="ng-chip${sector === s ? ' on' : ''}" data-sec="${scEsc(s)}"><i class="sc-dot" style="background:${SC_COL[s] || SC_COL.Other}"></i>${scEsc(SC_SHORT[s] || s)} ${n}</button>`).join('')}</div>` : ''}
+    <div class="ng-box sc-ng"></div>
+    ${shown.length > 24 ? `<p class="sc-cap">The network shows 24 of ${shown.length.toLocaleString()} (S&amp;P first); all are listed below.</p>` : ''}
+    <div class="sc-list">${(more ? shown : shown.slice(0, 40)).map(p => `<div class="sc-row"><i class="sc-dot" style="background:${SC_COL[p.s] || SC_COL.Other}"></i>
+        <span class="sc-tk"><b>${scEsc(p.t)}</b><small>${scEsc(p.n || '')}${p.m ? '' : ' · what-if'}</small></span><span class="sc-sec">${scEsc(SC_SHORT[p.s] || p.s)}</span>
+        <button type="button" class="sc-btn" data-open="${scEsc(p.t)}">Open</button><button type="button" class="sc-btn" data-rep="${scEsc(p.t)}">Replay</button></div>`).join('')}
+      ${!more && shown.length > 40 ? `<button type="button" class="ak-new sc-more">Show all ${shown.length.toLocaleString()}</button>` : ''}</div>
+    <p class="sp-foot">Picks from the nightly library run (latest close) · S&amp;P 500 stocks are what the strategy was tested on; others are what-ifs · past results, not advice</p>`;
+  const g = box.querySelector('.sc-ng'), nodes = shown.slice(0, 24).map(p => ({label: p.t, tag: SC_SHORT[p.s] || p.s, size: p.m ? 1.2 : 0.8, fill: SC_COL[p.s] || SC_COL.Other,
+    state: p.m ? 'on' : '', onTap: () => scStock(p.t)}));
+  if (typeof ngDraw === 'function' && nodes.length) ngDraw(g, {label: short, sub: `${shown.length.toLocaleString()} ${verb}`, state: 'up'}, nodes, {h: 300, pad: 40});
+  else g.innerHTML = '';
+  box.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => { SC.cur.sector = b.dataset.sec; SC.cur.more = false; scRender(box); });
+  const w = box.querySelector('.sc-what input'); if (w) w.onchange = () => { SC.cur.what = w.checked; SC.cur.sector = 'All'; SC.cur.more = false; scRender(box); };
+  const m = box.querySelector('.sc-more'); if (m) m.onclick = () => { SC.cur.more = true; scRender(box); };
+  box.querySelectorAll('[data-open]').forEach(b => b.onclick = () => scStock(b.dataset.open));
+  box.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => { if (typeof rpOpen === 'function') rpOpen(b.dataset.rep, c.id, short, true); });
+}
+function scStock(t) {                                                // open the stock in the app
+  const el = document.getElementById('sc-sheet'); if (el) el.classList.remove('on');
+  document.getElementById('sp-sheet')?.classList.remove('on'); if (typeof window.akClosePanel === 'function') window.akClosePanel();
+  if (typeof odGo === 'function') odGo(t);
+}
 
 // connection graph (2026-11-08, Bible 6.194; user: "the data and connections of the items most prominent rather than text"; "depending on whether I click
 // for ticker or strategy comparison the ticker or strategy should be at the centre"). One radial graph: the chosen item in the centre, the connected items
@@ -9591,7 +9688,7 @@ function ngDraw(box, center, nodes, opts = {}) {
     const lx = x + (x < cx - 4 ? -1 : x > cx + 4 ? 1 : 0) * (r + 5), anc = x < cx - 4 ? 'end' : x > cx + 4 ? 'start' : 'middle';
     const ly = Math.abs(x - cx) <= 4 ? y + (y < cy ? -r - 16 : r + 13) : y + 4;
     return `<g class="ng-n ${d.state || ''}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(d.label)}${d.tag ? ', ' + esc(d.tag) : ''}" style="animation-delay:${(120 + i * 35)}ms">
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 6).toFixed(1)}" class="ng-hit"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" class="ng-c"${d.heat != null ? ` style="fill:color-mix(in srgb, var(--good) ${(18 + 82 * d.heat).toFixed(0)}%, var(--surface));stroke:color-mix(in srgb, var(--good) ${(40 + 60 * d.heat).toFixed(0)}%, var(--surface))"` : ''}/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r + 6).toFixed(1)}" class="ng-hit"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" class="ng-c"${d.fill ? ` style="fill:color-mix(in srgb, ${d.fill} 62%, var(--surface));stroke:${d.fill}"` : d.heat != null ? ` style="fill:color-mix(in srgb, var(--good) ${(18 + 82 * d.heat).toFixed(0)}%, var(--surface));stroke:color-mix(in srgb, var(--good) ${(40 + 60 * d.heat).toFixed(0)}%, var(--surface))"` : ''}/>
       ${d.inner ? `<text x="${x.toFixed(1)}" y="${(y + (isTop ? 4.5 : 3.5)).toFixed(1)}" class="ng-in" text-anchor="middle">${esc(d.inner)}</text>` : ''}
       <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="ng-l" text-anchor="${anc}">${esc(d.label)}</text>
       ${d.tag ? `<text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" class="ng-t ${d.tagCls || ''}" text-anchor="${anc}">${esc(d.tag)}</text>` : ''}</g>`; }).join('');
@@ -10099,9 +10196,11 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
             ${x.sharpe_2021 != null ? `<span><b>${(+x.sharpe_2021).toFixed(2)}</b><small>Sharpe</small></span>` : ''}</div>
           <div class="ssf-tags"><em class="c-${esc(x.class || '')}">${esc(CL[x.class] || x.class || '')}</em>${x.buy ? `<em class="on">Would buy ${esc(S)}</em>` : ''}${x.short ? `<em class="sh">Would short ${esc(S)}</em>` : ''}${x.side === 'short' && !x.short ? '<em>Short strategy</em>' : ''}<em>Since 2021</em></div>
           ${x.rules ? `<p class="ssf-rules">${esc(x.side === 'short' ? String(x.rules).replace(/^BUY when/, 'SHORT when') : x.rules)}</p>` : ''}
+          <button type="button" class="ak-new ssf-card">Strategy card: all its stocks today</button>
           <button type="button" class="rp-tz-go ssf-replay">${typeof IC !== 'undefined' && IC.play ? IC.play : ''} Watch the rules fire on ${esc(S)}</button></div>`;   /* 2026-11-14: library replays (gh-data) */
       info.querySelector('.ssf-back').onclick = () => fam(f);
       const rb = info.querySelector('.ssf-replay'); if (rb) rb.onclick = () => rpOpen(S, x.id, libLabel(x.name || x.id), true);
+      const cb = info.querySelector('.ssf-card'); if (cb) cb.onclick = () => scOpen(x.id);
     };
 
     wireRangeBar();
@@ -10365,7 +10464,7 @@ async function rsGo(x) {
     return;
   }
   const k = rsKey(cleanX);
-  if (!k) return (typeof fwdToast === 'function') ? fwdToast('There is no research page for this one yet.', true) : null;
+  if (!k) return typeof scOpen === 'function' ? scOpen(cleanX) : (typeof fwdToast === 'function') ? fwdToast('There is no research page for this one yet.', true) : null;   // 2026-11-14: library strategies -> strategy card
   if (typeof SI_ACCOUNTS !== 'undefined' && SI_ACCOUNTS[k]) return siOpen(k);
   const row = (typeof STRATEGY_ROWS !== 'undefined') ? STRATEGY_ROWS.find(r => r.key === k) : null;
   const code = row ? rsCode(row) : cleanX;
