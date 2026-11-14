@@ -9211,7 +9211,37 @@ else setTimeout(initAskWidget, 0);
 // periods shaded; below it one panel per rule: the feature, its threshold (fixed, a second feature, or the day's cross-sectional cut) and the days
 // it holds shaded. The days all entry rules hold are the signals. Data: stock-signals op replay (same engine and data as the card).
 const RP = {};
-async function rpFetch(sym, key, days) {
+// 2026-11-14 library rule replays: written by the per-stock run from the engine's own trade trace (fill prices, exit reasons) and rule checks,
+// read from GitHub through gh-data, adapted here to the stock-signals replay shape so the same screen draws them (dots = traced fills = trade log)
+const RPL = {};
+async function rpLibStock(sym) {                                    // the stock's replay item (all its replayed strategies), cached 30 min
+  const c = RPL[sym]; if (c && Date.now() - c.at < 30 * 6e4) return c.v;
+  const token = await getToken();
+  const r = await fetch(`${SB_URL}/functions/v1/gh-data`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'},
+    body: JSON.stringify({op: 'get', kind: 'replay', key: sym})});
+  const j = await r.json().catch(() => ({ok: false})); if (!j.ok) throw new Error(j.error || 'replay data unavailable');
+  RPL[sym] = {at: Date.now(), v: j.data || null}; return j.data || null;
+}
+const RP_OPW = {lt: '<', gt: '>', le: '<=', ge: '>=', eq: '=', '==': '=', cross_above: 'crosses above', cross_below: 'crosses below'};
+function rpLibAdapt(sym, key, st, days) {
+  const sp = st?.specs?.[key]; if (!sp) return null;
+  const n = st.days.length, k0 = Math.max(0, n - days), cut = a => a.slice(k0), bits = x => [...String(x || '')].map(ch => ch === '1' ? true : ch === '0' ? false : null);
+  const words = p => { const op = RP_OPW[p.op] || p.op;
+    if (p.op === 'rank') return `in the day's ${p.rank?.order === 'asc' ? 'lowest' : 'highest'} ${p.rank?.max} by ${typeof spFeat === 'function' ? (spFeat(p.feature)?.label || p.feature) : p.feature}`;
+    const txt = p.op === 'between' ? `${p.feature} between ${(p.band || []).join(',')}` : `${p.feature} ${op} ${p.v}`;
+    return typeof spCond === 'function' ? (spCond(txt)?.text || txt) : txt; };
+  const panels = (sp.panels || []).map(p => ({role: p.role, rule: words(p), label: typeof spFeat === 'function' ? (spFeat(p.feature)?.label || null) : null, feature: p.feature,
+    op: p.op === 'rank' ? (p.rank?.order === 'asc' ? '<=' : '>=') : (RP_OPW[p.op] || p.op), band: p.band, threshold_kind: p.threshold_kind, value: cut(p.value || []),
+    threshold: cut(Array.isArray(p.threshold) ? p.threshold : Array(n).fill(p.threshold ?? null)), holds: cut(bits(p.holds))}));
+  const d0 = st.days[k0];
+  return {ok: true, lib: true, symbol: sym, key, name: sp.name, exit: sp.exit || {}, fill: sp.fill, side: sp.side, member: true,
+    days: cut(st.days), close: cut(st.close), high: cut(st.high), low: cut(st.low), signal: cut(bits(sp.signal)), panels,
+    trades: (sp.trades || []).filter(t => t.exit >= d0 || t.entry >= d0), open: sp.open || null};
+}
+async function rpFetch(sym, key, days, lib = false) {
+  if (lib) { const st = await rpLibStock(sym), j = rpLibAdapt(sym, key, st, days);
+    if (!j) throw new Error(`No rule replay stored for this strategy on ${sym}. Replays are kept for each stock's 10 best strategies (2021+ record) and the proven / promising ones that traded it; they are rebuilt by the per-stock run.`);
+    return j; }
   const k = `${sym}|${key}|${days}`; if (RP[k] && Date.now() - RP[k].at < 60000) return RP[k].v;
   const token = await getToken();
   const r = await fetch(`${SB_URL}/functions/v1/stock-signals`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'},
@@ -9225,20 +9255,20 @@ const RP_WORDS = {ret_rank: 'return rank vs all S&P 500 stocks', rank_in_sector:
 const RP_ROLE = {entry: 'Buy rule', regime: 'Market filter', exit: 'Sell rule'};
 const RP_SHORT = {ret_rank: 'Leader vs market', rank_in_sector: 'Leader in sector', max_ret: 'Big up-day lately', ibs: 'Closed near the low', spy_sma_ratio: 'Market in uptrend',
   sma_ratio: 'Above its average', beta: 'Moves more than market', vol_slope: 'Volume fading', squeeze: 'Calm before move', vzo: 'Volume pressure', swing_trend: 'Higher swing highs'};
-const rpShort = p => { const f = p.feature.replace(/\(.*$/, ''); return f === 'ibs' && /^>/.test(p.op) ? 'Closed near the high' : (RP_SHORT[f] || f); };
+const rpShort = p => { if (p.label) return p.label.replace(/^(its|the) /, ''); const f = p.feature.replace(/\(.*$/, ''); return f === 'ibs' && /^>/.test(p.op) ? 'Closed near the high' : (RP_SHORT[f] || f); };
 const rpIcon = r => r === 'exit' ? IC.out : r === 'regime' ? IC.shield : IC.in;
-function rpOpen(sym, key, name) {
+function rpOpen(sym, key, name, lib = false) {                    // lib: a library strategy (replay from the per-stock run, 250 days)
   let el = document.getElementById('rp-sheet');
   if (!el) { document.body.insertAdjacentHTML('beforeend', '<div id="rp-sheet" class="rp-sheet" role="dialog" aria-modal="true" aria-label="Rule chart"><div class="rp-bg"></div><div class="rp-card"></div></div>');
     el = document.getElementById('rp-sheet'); el.querySelector('.rp-bg').onclick = rpClose; document.addEventListener('keydown', e => { if (e.key === 'Escape') rpClose(); }); }
   el.classList.add('on'); document.body.classList.add('rp-lock');
   const card = el.querySelector('.rp-card'); card.dataset.k = sym + '|' + key;
   const head = d => `<div class="rp-h"><div><b>${esc(name)} · ${esc(sym)}</b><small>Each rule, each day</small></div><button class="rp-x" aria-label="Close">×</button></div>
-    <div class="rp-range" role="tablist">${[[5, '1 wk'], [21, '1 mo'], [125, '6 mo'], [250, '1 yr'], [500, '2 yr'], [1250, '5 yr']].map(([n, l]) => `<button data-n="${n}" class="${n === d ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    <div class="rp-range" role="tablist">${[[5, '1 wk'], [21, '1 mo'], [125, '6 mo'], [250, '1 yr'], [500, '2 yr'], [1250, '5 yr']].filter(([n]) => !lib || n <= 250).map(([n, l]) => `<button data-n="${n}" class="${n === d ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const load = days => {
     card.innerHTML = head(days) + '<p class="note">Running the strategy on ' + esc(sym) + '…</p>'; card.querySelector('.rp-x').onclick = rpClose;
     card.querySelectorAll('.rp-range button').forEach(b => b.onclick = () => load(+b.dataset.n));
-    rpFetch(sym, key, days).then(j => { if (card.dataset.k !== sym + '|' + key) return; card.innerHTML = head(days) + rpBody(j); card.querySelector('.rp-x').onclick = rpClose;
+    rpFetch(sym, key, days, lib).then(j => { if (card.dataset.k !== sym + '|' + key) return; card.innerHTML = head(days) + rpBody(j); card.querySelector('.rp-x').onclick = rpClose;
       card.querySelectorAll('.rp-range button').forEach(b => b.onclick = () => load(+b.dataset.n)); rpWire(card, j); })
       .catch(e => { card.innerHTML = head(days) + `<p class="note">Could not run it: ${esc(e.message)}</p>`; card.querySelector('.rp-x').onclick = rpClose; });
   };
@@ -9807,6 +9837,7 @@ const SSF = {};
 async function ssFamFetch(S) {
   if (SSF[S] && Date.now() - SSF[S].at < 6e5) return SSF[S].v;
   const token = await getToken();
+  if (typeof rpLibStock === 'function') rpLibStock(S).catch(() => {});   // 2026-11-14: prefetch the stock's rule replays (GitHub via gh-data) while the graph loads
   const r = await fetch(`${SB_URL}/rest/v1/rpc/stock_library_families`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({sym: S})});
   const v = await r.json().catch(() => null); if (!r.ok || !v) throw new Error('library families not available'); SSF[S] = {at: Date.now(), v}; return v;
 }
@@ -10067,8 +10098,10 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
               : `<span><b>${o.avg_trade_pct_2021 >= 0 ? '+' : ''}${(+o.avg_trade_pct_2021).toFixed(1)}%</b><small>avg trade</small></span>`}` : `<span class="wide"><small>Few trades on ${esc(S)}</small></span>`}
             ${x.sharpe_2021 != null ? `<span><b>${(+x.sharpe_2021).toFixed(2)}</b><small>Sharpe</small></span>` : ''}</div>
           <div class="ssf-tags"><em class="c-${esc(x.class || '')}">${esc(CL[x.class] || x.class || '')}</em>${x.buy ? `<em class="on">Would buy ${esc(S)}</em>` : ''}${x.short ? `<em class="sh">Would short ${esc(S)}</em>` : ''}${x.side === 'short' && !x.short ? '<em>Short strategy</em>' : ''}<em>Since 2021</em></div>
-          ${x.rules ? `<p class="ssf-rules">${esc(x.side === 'short' ? String(x.rules).replace(/^BUY when/, 'SHORT when') : x.rules)}</p>` : ''}</div>`;
+          ${x.rules ? `<p class="ssf-rules">${esc(x.side === 'short' ? String(x.rules).replace(/^BUY when/, 'SHORT when') : x.rules)}</p>` : ''}
+          <button type="button" class="rp-tz-go ssf-replay">${typeof IC !== 'undefined' && IC.play ? IC.play : ''} Watch the rules fire on ${esc(S)}</button></div>`;   /* 2026-11-14: library replays (gh-data) */
       info.querySelector('.ssf-back').onclick = () => fam(f);
+      const rb = info.querySelector('.ssf-replay'); if (rb) rb.onclick = () => rpOpen(S, x.id, libLabel(x.name || x.id), true);
     };
 
     wireRangeBar();
