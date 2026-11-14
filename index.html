@@ -4030,6 +4030,27 @@ async function signOut() {
   document.getElementById('account-btns').style.display = 'none'; showLogin();
 }
 
+// v2 data layer (2026-11-14): strategy_returns curves come from GitHub shards through the gh-data function (the 17 "book" curves stay in the
+// database); any key gh-data cannot give (or an error) falls back to the database while the table still has it. localStorage finny_sr_v1=1 = old path.
+const SR_V2 = (() => { try { return localStorage.getItem('finny_sr_v1') !== '1'; } catch (e) { return true; } })();
+const srIn = ks => '(' + ks.map(k => '"' + String(k).replace(/"/g, '') + '"').join(',') + ')';
+async function srRows(keys, cfg = null) {                          // rows {strategy_key, cfg, calendar_id, offset_idx, returns} of these keys (and cfg)
+  keys = [...new Set(keys)].filter(Boolean); if (!keys.length) return [];
+  const viaDb = async ks => { const out = []; for (let i = 0; i < ks.length; i += 20) out.push(...await sb(`strategy_returns?select=strategy_key,cfg,calendar_id,offset_idx,returns${cfg ? '&cfg=eq.' + encodeURIComponent(cfg) : ''}&strategy_key=in.${encodeURIComponent(srIn(ks.slice(i, i + 20)))}`)); return out; };
+  if (!SR_V2 || cfg === 'book') return viaDb(keys);
+  const out = [], miss = [];
+  try {
+    const token = await getToken();
+    for (let i = 0; i < keys.length; i += 40) {
+      const r = await fetch(`${SB_URL}/functions/v1/gh-data`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({op: 'mget', kind: 'curves', keys: keys.slice(i, i + 40)})});
+      const j = await r.json().catch(() => ({ok: false}));
+      if (!j.ok) { miss.push(...keys.slice(i, i + 40)); continue; }
+      for (const k of keys.slice(i, i + 40)) { const rows = j.data?.[k]; if (!rows) { miss.push(k); continue; }
+        for (const x of rows) if (!cfg || x.cfg === cfg) out.push({strategy_key: k, ...x}); }
+    }
+  } catch (e) { console.warn('gh-data curves', e); return viaDb(keys); }
+  return miss.length ? out.concat(await viaDb(miss)) : out;
+}
 async function sb(path) {
   const token = await getToken();
   if (!token) throw Object.assign(new Error('Not signed in'), {auth: true});
@@ -4186,7 +4207,7 @@ async function finnyBoot() {
     status.textContent = `Loading ${books.length + selCurves.length} curves…`;
     const [bookRets, selRets, replays] = await Promise.all([
       sb('strategy_returns?select=strategy_key,cfg,calendar_id,offset_idx,returns&cfg=eq.book'),
-      selCurves.length ? sb(`strategy_returns?select=strategy_key,cfg,calendar_id,offset_idx,returns&strategy_key=${encodeURIComponent(inList([...new Set(selCurves.map(s => s.key))]))}`) : [],
+      selCurves.length ? srRows(selCurves.map(s => s.key)) : [],   // v2: gh-data
       sb(`replays?select=strategy_key,data&strategy_key=${encodeURIComponent(inList(books.map(b => b.key).concat(selCurves.map(x => x.key))))}`),
     ]);
     const wanted = new Set(selCurves.map(s => `${s.key}~${s.cfg}`));
@@ -4725,7 +4746,7 @@ const IS_END = '2020-12-31', OOS_START = '2021-01-01';
 async function pbLoadCurves(keys) {
   const need = keys.filter(k => !PB.cache.has(k));
   for (let i = 0; i < need.length; i += 20) {
-    const rows = await sb(`strategy_returns?select=strategy_key,offset_idx,returns&cfg=eq.${MAIN}&strategy_key=${encodeURIComponent(inList(need.slice(i, i + 20)))}`);
+    const rows = await srRows(need.slice(i, i + 20), MAIN);         // v2: gh-data
     rows.forEach(r => PB.cache.set(r.strategy_key, r));
   }
   if (!PB.cal) PB.cal = (await sb('calendars?select=dates&id=eq.battery_2015'))[0].dates;
@@ -4964,7 +4985,7 @@ const LT = {equity: [], fills: [], deps: [], limits: null, journal: [], bt: new 
 async function btSeries(key) {                          // backtest daily returns [[date, r]] of a strategy (headline curve)
   if (LT.bt.has(key)) return LT.bt.get(key);
   const row = STRATEGY_ROWS.find(r => r.key === key), cfg = row && row.source !== 'revalidation' ? 'book' : MAIN;
-  const [c] = await sb(`strategy_returns?select=calendar_id,offset_idx,returns&strategy_key=eq.${encodeURIComponent(key)}&cfg=eq.${cfg}`);
+  const [c] = await srRows([key], cfg);                            // v2: gh-data (book curves from the database)
   if (!c) { LT.bt.set(key, null); return null; }
   const d = (await sb(`calendars?select=dates&id=eq.${c.calendar_id}`))[0].dates;
   const out = c.returns.map((v, i) => [d[c.offset_idx + i], v]).filter(([t]) => t >= '2016-01-01');
