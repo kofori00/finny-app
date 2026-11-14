@@ -1631,6 +1631,7 @@
   @keyframes ngIn{from{opacity:0}to{opacity:1}} @media(prefers-reduced-motion:reduce){.ng-e,.ng-n{animation:none}}
   .rp-pr{background:transparent!important} .rp-grid{stroke:var(--glass-line);stroke-dasharray:3 5;stroke-width:1;vector-effect:non-scaling-stroke}
   .rp-pl{stroke:var(--good);stroke-width:2.2;stroke-linecap:round} .rp-glow{fill:none;stroke:var(--good);stroke-width:5;opacity:.35} .rp-ha{opacity:1}
+  .rp-fill{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 2;vector-effect:non-scaling-stroke;opacity:.8}
   .rp-in circle{fill:var(--good)} .rp-out circle{fill:#e8957f} .rp-halo{opacity:.25} .rp-now{fill:var(--good);stroke:var(--surface);stroke-width:1.5} .rp-now-h{fill:var(--good);opacity:.2}
   .rp-leg .up{color:var(--good)} .rp-leg .dn{color:#e8957f}
   .rp-tl{margin:6px 0 10px;padding:10px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .rp-tlh b{display:block;font:700 13px var(--font-ui);color:var(--ink)} .rp-tlh span{display:block;font-size:11px;color:var(--muted);margin:2px 0 8px}
@@ -9242,7 +9243,8 @@ function rpPrice(j, H) {                          // price with buys (▲), sell
   if (j.open && idx[j.open.entry] != null) { for (let i = idx[j.open.entry]; i < n; i++) held[i] = true; marks.push({i: idx[j.open.entry], up: true, t: {entry: j.open.entry, px: j.open.px, why: 'still open'}}); }
   // 6.198 (user: the backtest chart should look like the hero chart): smooth line with a soft glow and a fading sage area, dashed guide lines,
   // buys / sells as glowing dots on the line, holding periods as a brighter stretch of the area; fixed aspect so dots stay round
-  const sc = rpScale(j.close.filter(v => v != null), 0.12); const y = v => H - 8 - (H - 16) * (v - sc[0]) / (sc[1] - sc[0]);
+  const fills = marks.map(m => +(m.up ? m.t.px : m.t.xt)).filter(v => isFinite(v) && v > 0);
+  const sc = rpScale(j.close.filter(v => v != null).concat(fills), 0.12); const y = v => H - 8 - (H - 16) * (v - sc[0]) / (sc[1] - sc[0]);
   const pts = j.close.map((v, i) => v == null ? null : [rpX(i, n), y(v)]), P = pts.filter(Boolean);
   const smooth = Q => { if (!Q.length) return ''; let d = `M${Q[0][0].toFixed(1)} ${Q[0][1].toFixed(1)}`;
     for (let i = 1; i < Q.length; i++) { const p0 = Q[i - 2] || Q[i - 1], p1 = Q[i - 1], p2 = Q[i], p3 = Q[i + 1] || p2;
@@ -9254,8 +9256,8 @@ function rpPrice(j, H) {                          // price with buys (▲), sell
     if (Q.length > 1) heldArea += `<path class="rp-ha" d="${smooth(Q)}L${Q[Q.length - 1][0].toFixed(1)} ${H}L${Q[0][0].toFixed(1)} ${H}Z"/>`; a = -1; } }
   const gid = 'g' + Math.random().toString(36).slice(2, 7);
   const grid = [0.25, 0.5, 0.75].map(f => `<line class="rp-grid" x1="0" x2="${RP_W}" y1="${(H * f).toFixed(1)}" y2="${(H * f).toFixed(1)}"/>`).join('');
-  const mk = marks.map(m => { const x = rpX(m.i, n), yy = y(j.close[m.i] ?? sc[0]);
-    return `<g class="${m.up ? 'rp-in' : 'rp-out'}"><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="6" class="rp-halo"/><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="3"/><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></g>`; }).join('');
+  const mk = marks.map(m => { const x = rpX(m.i, n), fp = +(m.up ? m.t.px : m.t.xt), yc = y(j.close[m.i] ?? sc[0]), yy = isFinite(fp) && fp > 0 ? y(fp) : yc;   // 2026-11-14: dot at the fill price
+    return `<g class="${m.up ? 'rp-in' : 'rp-out'}">${Math.abs(yy - yc) > 2 ? `<line class="rp-fill" x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${yc.toFixed(1)}" y2="${yy.toFixed(1)}"/>` : ''}<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="6" class="rp-halo"/><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="3"/><title>${m.up ? 'Buy' : 'Sell'} ${esc(m.up ? m.t.entry : m.t.exit)} at $${(+(m.up ? m.t.px : m.t.xt)).toFixed(2)}${m.up ? '' : ` · ${pc(m.t.ret)} · ${esc(m.t.why)}`}</title></g>`; }).join('');
   const last = P[P.length - 1];
   const price = `<div class="rp-p"><div class="rp-lab rp-l2"><b>${esc(j.symbol)}</b><span class="rp-leg"><i class="up">●</i>buy <i class="dn">●</i>sell <i class="hd"></i>held</span></div>
     <svg viewBox="0 0 ${RP_W} ${H}" preserveAspectRatio="none" class="rp-svg rp-pr" style="aspect-ratio:${RP_W}/${H}" data-h="${H}">
@@ -9280,7 +9282,7 @@ function rpBody(j) {
     return `<div class="rp-p" data-k="${k}"><div class="rp-lab rp-l2" title="${esc(RP_ROLE[p.role] || p.role)}: ${esc(p.rule)} (${esc(words)}; dashed line = ${esc(p.threshold_kind === 'fixed' ? 'threshold' : p.threshold_kind)})"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpShort(p))}</b><em>${on}d</em></div>
       <svg viewBox="0 0 ${RP_W} ${PH}" preserveAspectRatio="none" class="rp-svg" data-h="${PH}">${rpBands(p.holds.map(Boolean), n, PH, p.role === 'exit' ? 'rp-onx' : 'rp-on')}${thr}<path class="rp-line rp-f" d="${rpPath(p.value, n, yy)}"/><line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${PH}"/></svg></div>`;
   }).join('');
-  const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length;
+  const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length; const cum = done.reduce((a, t) => a * (1 + (+t.ret || 0)), 1) - 1;   // 2026-11-14 (user): compounded total return of the finished trades, not the average
   // 2026-11-14: exit settings in words (an object value printed "target dyn [object Object]")
   const EXW = {hold: v => `sell after ${v} day${+v === 1 ? '' : 's'}`, stop_atr: v => `stop ${+v}× ATR`, target_atr: v => `target ${+v}× ATR`, trail_atr: v => `trailing stop ${+v}× ATR`,
     stop_pct: v => `stop ${+(v * 100).toFixed(1)}%`, target_pct: v => `target ${+(v * 100).toFixed(1)}%`, max_risk: v => `max risk ${+(v * 100).toFixed(1)}%`,
@@ -9289,7 +9291,7 @@ function rpBody(j) {
     : v !== null && typeof v === 'object' ? k.replace(/_/g, ' ') : `${k.replace(/_/g, ' ')} ${v}`).filter(Boolean).join(', ');
   return `<div class="rp-read" aria-live="polite"></div>${price}${rpStrips(j)}<details class="rp-raw"><summary>Show values</summary>${panels}</details>
     <div class="rp-stats"><div><b>${done.length}</b><span>trades</span></div><div><b class="${done.length ? (win / done.length >= 0.5 ? 'v2-up' : 'v2-dn') : ''}">${done.length ? Math.round(win / done.length * 100) + '%' : '–'}</b><span>won</span></div>
-      <div><b class="${done.length && done.reduce((a, t) => a + t.ret, 0) >= 0 ? 'v2-up' : 'v2-dn'}">${done.length ? pc(done.reduce((a, t) => a + t.ret, 0) / done.length) : '–'}</b><span>avg trade</span></div></div>
+      <div><b class="${done.length && cum >= 0 ? 'v2-up' : 'v2-dn'}">${done.length ? pc(cum) : '–'}</b><span>total return</span></div></div>
     <details class="rp-tr"><summary>${IC.chart} All trades${exitTxt ? ` · ${esc(exitTxt)}` : ''}</summary>${done.length ? `<table><tr><th>Buy</th><th>Sell</th><th>In</th><th>Out</th><th>Result</th><th>Why sold</th></tr>${done.map(t => `<tr><td>${esc(t.entry)}</td><td>${esc(t.exit)}</td><td>$${(+t.px).toFixed(2)}</td><td>$${(+t.xt).toFixed(2)}</td><td class="${t.ret >= 0 ? 'v2-up' : 'v2-dn'}">${pc(t.ret)}</td><td>${esc(t.why)}</td></tr>`).join('')}</table>` : '<p class="note">No completed trade in this window.</p>'}
       <button class="rp-csv">${IC.dl} CSV</button></details>
     <p class="rp-disc">${IC.info} Hypothetical backtest · adjusted daily prices · entry at the close · no costs here${j.member ? '' : ' · ranked as if in the S&amp;P 500'} · not advice</p>`;
