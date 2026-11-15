@@ -1723,6 +1723,7 @@
   .sw-bars{display:flex;align-items:center;gap:3px;height:64px;margin:10px 0 4px;background:linear-gradient(transparent calc(50% - .5px),var(--glass-line) calc(50% - .5px),var(--glass-line) calc(50% + .5px),transparent calc(50% + .5px))}
   .sw-bar{flex:1;min-width:6px;height:100%;padding:0;border:0;background:none;display:flex;cursor:pointer;position:relative} .sw-bar i{display:block;width:100%;border-radius:3px;position:absolute;left:0}
   .sw-bar.up i{bottom:50%;max-height:50%;background:hsl(140,55%,45%)} .sw-bar.dn i{top:50%;max-height:50%;background:hsl(14,75%,52%)} .sw-bar.on i{outline:2px solid var(--ink);outline-offset:1px}
+  .sw-hero-name{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:10px} .sw-hero-name b{font:700 15px var(--font-ui)}
   .sw-filt{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px} .sw-fbtn{margin-left:auto}
   .sw-fpanel{display:grid;gap:8px;padding:10px 12px;margin:0 0 10px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .sw-fpanel>div{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .sw-fpanel small{width:100%;font:700 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
   .hs-s2.on{background:color-mix(in srgb,var(--good) 12%,var(--glass));border-color:var(--good)} .sw-gl{font:600 10.5px var(--font-ui);white-space:nowrap} .sw-gl.sw-g-core{color:var(--good)} .sw-gl.sw-g-reg{color:#7fb2ff} .sw-gl.sw-g-trend{color:#f0a24b}
@@ -8405,9 +8406,9 @@ async function hsExtraLoad0() {
 function hsExtraRows(base) {
   if (HS.swX) return HS.swX; const X = HS.extra; if (!X) return HS.swX = [];
   const seen = new Set(base.map(e => e.key)), out = [], shortName = n => String(n || '').replace(/\s*\[.*$/, '').replace(/:.*$/, '').trim();
-  for (const r of X.registry || []) { if (seen.has(r.key)) continue; seen.add(r.key);
+  for (const r of X.registry || []) { const b0 = base.find(x => x.key === r.key); if (b0) { b0.perf = r.perf; continue; } if (seen.has(r.key)) continue; seen.add(r.key);
     out.push({key: r.key, label: `${shortName(r.name)} (${r.key})`, kind: 'signal', xtra: 'reg', verdict: r.tier === 'edge' ? 'proven' : r.tier, spec: {hold: r.hold || 5, signal: r.key},
-      metrics: r.metrics || {}, held: (r.open || []).map(o => o.t), dates: Object.fromEntries((r.open || []).map(o => [o.t, o.d])), scan_day: X.scan_day}); }
+      metrics: r.metrics || {}, perf: r.perf, held: (r.open || []).map(o => o.t), dates: Object.fromEntries((r.open || []).map(o => [o.t, o.d])), scan_day: X.scan_day}); }
   const tr = {};
   for (const t of X.trending || []) { const k = t.id; if (seen.has(k) && !tr[k]) continue;
     const e = tr[k] ||= {key: k, label: `${shortName(t.name)} (${k})`, kind: 'signal', xtra: 'trend', verdict: t.class, side: t.side, spec: {hold: t.hold, signal: k},
@@ -8711,6 +8712,8 @@ function hsSwing(el) {
       const w = HS.rng === '1W' ? 10 : 21, rc = e.recent?.[w], nOpen = all.filter(h => h.by.includes(e)).length;
       if (rc) { raw = rc.avg / 100; fmt = `${rc.avg >= 0 ? '+' : ''}${(+rc.avg).toFixed(1)}% avg · ${rc.signals} sig.`; }
       else { raw = -1 + nOpen * 1e-4; fmt = `– no ${HS.rng} data`; }
+    } else if ((HS.rng === '6M' || HS.rng === '1Y') && e.perf?.[HS.rng]?.trades) {   // replayed portfolio, closed trades (live swing set)
+      raw = e.perf[HS.rng].ret; fmt = `${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(1)}% portfolio`;
     } else if (HS.rng === '6M') {
       raw = m.cagr != null ? m.cagr / 2 : -1;
       fmt = m.cagr != null ? `≈${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(1)}% (backtest pace)` : 'no backtest data';
@@ -8766,29 +8769,31 @@ function hsSwing(el) {
   const chips = ['core', 'reg', 'trend'].map(g => { const L = SR.filter(e => hsGrp(e).k === g); if (!L.length) return '';
     return `<span class="sw-grp sw-g-${g}">${esc(hsGrp(L[0]).label)}${g === 'trend' ? ' (this week / month)' : ''}</span>` + L.map(chip).join(''); }).join('');
 
-  // hero: one number for the timeframe, labelled live (recent nightly signals) or backtest (hypothetical)
-  const VAL = swingEvaluated.filter(x => x.edge.key !== 'no_edge'), live = HS.rng === '1W' || HS.rng === '1M', w = HS.rng === '1W' ? 10 : 21;
-  let heroV = null, heroS = '';
-  if (live) { const R = VAL.map(x => x.e.recent?.[w]).filter(Boolean), n = R.reduce((a, r) => a + r.signals, 0);
-    if (n) { heroV = R.reduce((a, r) => a + r.avg * r.signals, 0) / n; heroS = `avg trade · ${n} signals · ${Math.round(R.reduce((a, r) => a + r.won * r.signals, 0) / n)}% won`; } }
-  else { const C = VAL.map(x => HS.rng === 'All' ? x.e.metrics?.sharpe : x.e.metrics?.cagr).filter(v => v != null && isFinite(v)).sort((a, b) => a - b);
-    if (C.length) { const md = C[Math.floor(C.length / 2)]; heroV = HS.rng === 'All' ? md : (HS.rng === '6M' ? md / 2 : md) * 100; heroS = HS.rng === 'All' ? 'median Sharpe' : HS.rng === '6M' ? 'median half-year pace' : 'median a year'; } }
-  const nOpen = new Set(all.filter(h => h.by.some(e => VAL.some(x => x.e === e))).map(h => h.t)).size;
-  const heroTxt = heroV == null ? '–' : HS.rng === 'All' ? heroV.toFixed(2) : `${heroV >= 0 ? '+' : ''}${heroV.toFixed(1)}%`;
-  // 2026-11-15 (user: "what is this 3 percent? confusing"): the main number is now "k of n strategies gained" with one bar per strategy
-  // (tap = show it in the network); the pooled average of all trades stays as a small second line
-  const per = VAL.map(x => ({e: x.e, v: live ? x.e.recent?.[w]?.avg : HS.rng === 'All' ? x.e.metrics?.sharpe : x.e.metrics?.cagr != null ? x.e.metrics.cagr * 100 * (HS.rng === '6M' ? 0.5 : 1) : null}))
-    .filter(x => x.v != null && isFinite(x.v)).sort((a, b) => b.v - a.v);
-  const nUp = per.filter(x => x.v > 0).length, vmax = Math.max(1e-9, ...per.map(x => Math.abs(x.v)));
-  const bars = per.length ? `<div class="sw-bars" role="list">${per.map(x => `<button type="button" class="sw-bar ${x.v >= 0 ? 'up' : 'dn'}${x.e.key === HS.swSel ? ' on' : ''}" data-sel="${esc(x.e.key)}" role="listitem"
-      title="${esc(x.e.label)}: ${HS.rng === 'All' ? 'Sharpe ' + x.v.toFixed(2) : (x.v >= 0 ? '+' : '') + x.v.toFixed(1) + '%'}"><i style="height:${Math.max(3, Math.abs(x.v) / vmax * 50).toFixed(0)}%"></i></button>`).join('')}</div>` : '';
-  const what = live ? `average trade per strategy, signals of the last ${w} trading days` : HS.rng === 'All' ? 'backtest Sharpe per strategy' : HS.rng === '6M' ? 'half a year at each strategy\'s backtest pace' : 'backtest growth a year per strategy';
-  const hero = `<div class="sw-hero"><div class="sw-hero-top"><span class="sw-badge ${live ? 'live' : 'bt'}">${live ? '● Recent signals' : '◇ Backtest · hypothetical'}</span>
+  // hero (2026-11-15, user: "I want the selected strategy's performance for the selected timeframe"): best real source first:
+  // 1) live swing set: the replayed portfolio's closed trades in the window (nightly scan, 1/max_pos each, compounded);
+  // 2) 1W / 1M: the average trade of its recent signals (nightly run, last 10 / 21 trading days, holding period ended);
+  // 3) 6M / 1Y: backtest pace (hypothetical); All: backtest Sharpe / growth / worst drop.
+  const S0 = SR.find(x => x.key === HS.swSel), w = HS.rng === '1W' ? 10 : 21, pct = v => `${v >= 0 ? '+' : ''}${(+v).toFixed(1)}%`;
+  let hb = '', hn = '–', hc = '', hs = '', hk = [];
+  if (S0) { const P = S0.perf?.[HS.rng], rc = (HS.rng === '1W' || HS.rng === '1M') ? S0.recent?.[w] : null, m = S0.metrics || {}, mp = +S0.spec?.max_pos || 10;
+    const nOpen = all.filter(h => h.by.includes(S0)).length;
+    if (P && HS.rng !== 'All') { hb = '<span class="sw-badge live">● Portfolio · closed trades</span>'; hn = P.trades ? pct(P.ret * 100) : '0 trades'; hc = P.trades ? (P.ret >= 0 ? 'v2-up' : 'v2-dn') : '';
+      hs = P.trades ? `account result over ${HS.rng} · ${P.trades} closed trade${P.trades === 1 ? '' : 's'} · ${Math.round(P.won / P.trades * 100)}% won` : `no trade closed in the last ${HS.rng}`; }
+    else if (rc) { hb = '<span class="sw-badge live">● Recent signals</span>'; hn = pct(rc.avg); hc = rc.avg >= 0 ? 'v2-up' : 'v2-dn';
+      hs = `average trade · ${rc.signals} signals in ${w} trading days · ${Math.round(rc.won)}% won · ${pct(rc.vs_spy)} vs SPY`; }
+    else if (HS.rng === 'All') { hb = '<span class="sw-badge bt">◇ Backtest · hypothetical</span>'; hn = m.sharpe != null ? (+m.sharpe).toFixed(2) : '–';
+      hs = `Sharpe${m.cagr != null ? ' · ' + pct(m.cagr * 100) + ' a year' : ''}${m.maxdd != null ? ' · worst drop ' + pct(m.maxdd * 100) : ''}`; }
+    else { hb = '<span class="sw-badge bt">◇ Backtest pace · hypothetical</span>'; const v = m.cagr != null ? m.cagr * 100 * (HS.rng === '6M' ? 0.5 : HS.rng === '1Y' ? 1 : 0) : null;
+      hn = v != null && (HS.rng === '6M' || HS.rng === '1Y') ? pct(v) : '–'; hc = v != null ? (v >= 0 ? 'v2-up' : 'v2-dn') : '';
+      hs = v != null && (HS.rng === '6M' || HS.rng === '1Y') ? `${HS.rng === '6M' ? 'half a year' : 'a year'} at its backtest growth rate, not a measured result` : `no ${HS.rng} data for this strategy yet`; }
+    hk = [`<span><b>${nOpen}/${mp}</b> open</span>`, `<span><b>${S0.spec?.hold || 5}d</b> max hold</span>`, m.sharpe != null ? `<span><b>${(+m.sharpe).toFixed(2)}</b> Sharpe</span>` : ''];
+  }
+  const E0 = S0 ? hsEdge(S0) : null;
+  const hero = `<div class="sw-hero"><div class="sw-hero-top">${hb}
       <div class="ss-ranges sw-rng">${['1W', '1M', '6M', '1Y', 'All'].map(r => `<button class="ss-range-btn${HS.rng === r ? ' on' : ''}" data-hsrng="${r}">${r}</button>`).join('')}</div></div>
-    <div class="sw-hero-n">${per.length ? `<span class="${nUp * 2 >= per.length ? 'v2-up' : 'v2-dn'}">${nUp}</span><small> of ${per.length} ${live ? 'strategies gained' : HS.rng === 'All' ? 'with Sharpe above 0' : 'positive'}</small>` : '–'}</div>
-    ${bars}<div class="sw-hero-s">each bar = one validated strategy, ${what} · tap a bar</div>
-    ${heroV != null ? `<div class="sw-hero-s2">${live ? `All their trades together: <b class="${heroV >= 0 ? 'v2-up' : 'v2-dn'}">${heroTxt}</b> ${esc(heroS)}` : `Typical: <b>${heroTxt}</b> ${esc(heroS)}`}</div>` : ''}
-    <div class="sw-hero-k"><span><b>${VAL.length}</b> validated</span><span><b>${nOpen}</b> stocks held</span><span><b>${swingEvaluated.length - VAL.length}</b> no edge</span></div></div>`;
+    ${S0 ? `<div class="sw-hero-name"><b>${esc(S0.label)}</b><span class="v2-tag ${E0.cls}">${E0.label}</span></div>` : ''}
+    <div class="sw-hero-n ${hc}">${hn}</div><div class="sw-hero-s">${esc(hs)}</div>
+    <div class="sw-hero-k">${hk.join('')}</div></div>`;
   const vc = swingEvaluated.filter(x => x.edge.key !== 'no_edge').length, grpN = g => swingEvaluated.filter(x => hsGrp(x.e).k === g).length;
   const fchip = (k, l, cur, attr) => `<button class="hs-tier-chip${cur === k ? ' on' : ''}" ${attr}="${k}">${l}</button>`;
   const filt = `<div class="sw-filt">${fchip('valid', `✓ Validated ${vc}`, HS.swTier, 'data-swtier')}${fchip('all', `All ${swingEvaluated.length}`, HS.swTier, 'data-swtier')}
