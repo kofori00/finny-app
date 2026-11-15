@@ -1705,7 +1705,7 @@
   .hs-bk{display:flex;gap:14px;margin-top:6px;font-size:11px;color:var(--muted)} .hs-bk .sp{display:inline-block;width:0;height:10px;border-left:2px dashed var(--ink-2);margin-right:5px;vertical-align:-1px} .hs-bk svg{color:#c9a227;fill:#c9a227;stroke:none;width:11px;height:11px}
   .hs-how{margin-top:10px} .hs-how summary{cursor:pointer;font-size:12px;color:var(--muted);list-style:none} .hs-how summary::-webkit-details-marker{display:none} .hs-how p{font-size:11.5px;color:var(--muted);line-height:1.45;margin:6px 0 0}
   .hs-lh2{display:flex;align-items:baseline;justify-content:space-between;margin:16px 2px 8px} .hs-lh2 b{font:700 15px var(--font-display);color:var(--ink)} .hs-lh2 span{font-size:11.5px;color:var(--muted)}
-  .hs-stl{display:grid;gap:8px} @media(min-width:640px){.hs-stl{grid-template-columns:1fr 1fr}}
+  .hs-stl{display:grid;gap:8px;grid-template-columns:minmax(0,1fr)} @media(min-width:640px){.hs-stl{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}} .hs-st{min-width:0} /* 2026-11-15: long names widened the grid past the screen */ .hs-sigall{background:none;border:0;padding:0;color:var(--good);font:inherit;text-decoration:underline;cursor:pointer}
   .hs-st,.hs-st *{box-sizing:border-box} .hs-st{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:16px;border:1px solid var(--glass-line);background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;transition:transform .12s}
   .hs-st:active{transform:scale(.98)} .hs-sm{flex:1;min-width:0} .hs-sm b{display:block;font:600 14px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hs-hb{display:block;height:5px;border-radius:3px;background:var(--glass-2);margin:6px 0 4px;overflow:hidden} .hs-hb i{display:block;height:100%;background:var(--ink-2);border-radius:3px}
@@ -8680,8 +8680,8 @@ function hsSwing(el) {
     </div>
     <div class="ng-chips" role="tablist" aria-label="Pick a swing strategy">${chips}</div>
     <div class="ng-box" id="sw-ng"></div>
-    <div class="hs-lh2"><b>All open signals</b><span>${all.length} stocks · as of ${esc(day(TL.asof))}</span></div>
-    <div class="hs-stl">${all.map(card).join('') || `<p class="note">No open swing signals at the ${esc(day(TL.asof))} close.</p>`}</div>
+    <div class="hs-lh2 hs-sigh"></div>
+    <div class="hs-stl"></div>
     <div class="v2-lh"><b>The ${swFiltered.length} swing strategies</b><span>tap for its research · long-press to follow it in a forward test</span></div>
     <div class="hs-strats">${swFiltered.map(strat).join('')}</div>
     <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. "Has an edge" = passed all luck tests (placebos, plateau, 2016-20 out of sample); "Promising" = research candidates actively forward-tested since 26 Oct 2026.
@@ -8697,6 +8697,13 @@ function hsSwing(el) {
     const e = SR.find(x => x.key === HS.swSel); if (!e) return;
     const edge = hsEdge(e);
     const mine = all.filter(h => h.by.includes(e));
+    // 2026-11-15 (user: "why does this have all stocks and not just the one I selected?"): the list follows the selected strategy; a toggle shows all
+    const list = HS.swAllSig ? all : mine, sh = el.querySelector('.hs-sigh'), sl = el.querySelector('.hs-stl');
+    if (sh) { sh.innerHTML = `<b>${HS.swAllSig ? 'All open signals' : `Open signals · ${esc(e.key)}`}</b><span>${list.length} stock${list.length === 1 ? '' : 's'} · as of ${esc(day(TL.asof))} ·
+      <button type="button" class="hs-sigall">${HS.swAllSig ? `only ${esc(e.key)}` : `all ${all.length}`}</button></span>`;
+      sh.querySelector('.hs-sigall').onclick = () => { HS.swAllSig = !HS.swAllSig; drawSel(); }; }
+    if (sl) { sl.innerHTML = list.map(card).join('') || `<p class="note">${HS.swAllSig ? 'No open swing signals' : `${esc(e.key)} holds nothing`} at the ${esc(day(TL.asof))} close.</p>`;
+      sl.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t)); }
     const fmap = TL.fmap || (TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.f || {}])) : {});
     const field = HS.rng === '1W' ? 'ret_5d' : HS.rng === '1M' ? 'mom1m' : HS.rng === '6M' ? 'mom6m' : 'mom12m';
     const getRet = t => {
