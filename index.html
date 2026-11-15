@@ -1705,6 +1705,14 @@
   .hs-bk{display:flex;gap:14px;margin-top:6px;font-size:11px;color:var(--muted)} .hs-bk .sp{display:inline-block;width:0;height:10px;border-left:2px dashed var(--ink-2);margin-right:5px;vertical-align:-1px} .hs-bk svg{color:#c9a227;fill:#c9a227;stroke:none;width:11px;height:11px}
   .hs-how{margin-top:10px} .hs-how summary{cursor:pointer;font-size:12px;color:var(--muted);list-style:none} .hs-how summary::-webkit-details-marker{display:none} .hs-how p{font-size:11.5px;color:var(--muted);line-height:1.45;margin:6px 0 0}
   .hs-lh2{display:flex;align-items:baseline;justify-content:space-between;margin:16px 2px 8px} .hs-lh2 b{font:700 15px var(--font-display);color:var(--ink)} .hs-lh2 span{font-size:11.5px;color:var(--muted)}
+  .ifold{display:flex;flex-wrap:wrap;justify-content:flex-end;margin:6px 0 2px} .ifold>p{flex-basis:100%;margin:8px 0 0!important}
+  .ifold-b,.v-info>summary{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 8px;border-radius:13px;border:1px solid var(--glass-line);background:var(--glass);color:var(--muted);font:700 12px/1 var(--font-ui);cursor:pointer;list-style:none}
+  .ifold-b{width:26px;padding:0;font-style:italic;font-family:Georgia,serif;font-size:14px} .ifold-b.on{color:var(--good);border-color:var(--good)} .v-info>summary::-webkit-details-marker{display:none} .v-info{margin:6px 0;text-align:right} .v-info>p{text-align:left}
+  .hs-s2{grid-template-columns:1fr auto;grid-template-areas:"t v" "i i";row-gap:6px} .hs-st2{grid-area:t;min-width:0;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center} .hs-st2 b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .hs-sv{grid-area:v;text-align:right} .hs-sv b{display:block;font:800 16px var(--font-display);font-variant-numeric:tabular-nums} .hs-sv small{font-size:10.5px;color:var(--muted)}
+  .hs-ic{grid-area:i;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font:600 11.5px var(--font-ui);color:var(--muted)} .hs-ic .v2-tag{margin-left:auto}
+  .hs-slot{display:inline-flex;align-items:center;gap:5px} .hs-slot>i{display:inline-block;width:44px;height:6px;border-radius:3px;background:var(--glass-2);overflow:hidden} .hs-slot>i>i{display:block;height:100%;background:var(--good);border-radius:3px}
+  .hs-s2.sw-c-reg{border-left:3px solid #7fb2ff} .hs-s2.sw-c-trend{border-left:3px solid #f0a24b} .hs-s2.sw-c-core{border-left:3px solid var(--good)} .hs-cnt{font-weight:600;color:var(--muted);margin-left:4px}
   .sw-grp{flex:none;align-self:center;font:700 10.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;padding:0 4px 0 10px;border-left:2px solid var(--glass-line);margin-left:4px;white-space:nowrap}
   .sw-grp:first-child{border-left:0;margin-left:0;padding-left:2px} .sw-g-core{color:var(--good)} .sw-g-reg{color:#7fb2ff} .sw-g-trend{color:#f0a24b}
   .ng-chip.sw-c-reg{border-color:rgba(127,178,255,.45)} .ng-chip.sw-c-trend{border-color:rgba(240,162,75,.5)} .sw-tr{font-size:11px;color:#f0a24b;white-space:nowrap}
@@ -8562,7 +8570,7 @@ function hsRender() {
     ${allPicks.length > 10 && !HS.all ? `<button class="nw-more" id="hs-more">Show all ${allPicks.length}</button>` : ''}
     <details class="about"><summary>${IC.info} The ${filtered.length} strategies and how they were re-tested</summary><div class="hs-strats">${filtered.map(strat).join('')}</div>
       <p class="v2-note">${V ? `Re-tested ${v2Day(V.date)}: the code reproduces the stored picks (13 of 14 identical on all 22 rebalances since 2015, VX09 on 21) and the backtest numbers. ` : ''}"Has an edge" = equal-weight Sharpe 1.2+ and 1.0+ in both 2016-20 and 2021-26; "Promising" = sizing-dependent edge awaiting forward verification; "No edge" = failed out-of-sample or equal-weight tests.
-      SXG4 uses Account 1\'s actual SX25 targets. Visible to you only.</p></details>`;
+      SXG4 uses Account 1\'s actual SX25 targets. Visible to you only.</p>`;
 
   const drawLongNet = () => {
     const box = el.querySelector('#hs-long-ng');
@@ -8712,10 +8720,17 @@ function hsSwing(el) {
 
   const strat = item => {
     const e = item.e, edge = item.edge, m = e.metrics || {}, n = H.size ? [...H.values()].filter(h => h.by.includes(e)).length : 0;
-    return `<div class="hs-s" data-sw="${esc(e.key)}" data-rs="${esc(e.key)}" role="button" tabindex="0" title="Tap: its research · long-press: follow it in a forward test"><div><b>${esc(e.label)} ›</b>
-      <small>${e.side === 'short' ? 'short · ' : ''}holds up to ${e.spec?.hold || 5} days · ${n ? n + ' open now' : 'nothing open'}${m.cagr != null ? ' · ' + Math.round(m.cagr * 100) + '% a year' : ''}${e.top?.[10] ? ` · #${e.top[10]} this week` : ''}${e.top?.[21] ? ` · #${e.top[21]} this month` : ''}${e.xtra === 'reg' ? ' · live swing set' : ''}</small></div>
-      <div class="hs-sn"><span>${HS.rng === 'All' ? 'Sharpe' : HS.rng}</span><i></i><b>${item.fmt}</b></div>
-      <span class="v2-tag ${edge.cls}">${edge.label}</span></div>`;
+    // 2026-11-15 (user: "less with words and more with visuals"): icons + a slot meter instead of the sentence; the range's number big and coloured
+    const mp = +e.spec?.max_pos || 10, f = String(item.fmt || ''), sh = /^Sharpe /.test(f), mm = sh ? [f.slice(7), 'Sharpe'] : (f.match(/^(\S*\d\S*)\s*(.*)$/) || [null, '–', f]).slice(1);
+    const num = parseFloat(String(mm[0]).replace(/[≈+%]/g, '')), cls = sh ? '' : !isFinite(num) ? '' : num >= 0 ? 'v2-up' : 'v2-dn';
+    const tr = [e.top?.[10] ? `#${e.top[10]} wk` : '', e.top?.[21] ? `#${e.top[21]} mo` : ''].filter(Boolean).join(' · ');
+    return `<div class="hs-s hs-s2 sw-c-${hsGrp(e).cls}" data-sw="${esc(e.key)}" data-rs="${esc(e.key)}" role="button" tabindex="0" title="${esc(e.label)}: tap for its research · long-press to follow it in a forward test">
+      <div class="hs-st2"><b>${esc(e.label)}</b>${tr ? `<span class="sw-tr">🔥 ${tr}</span>` : ''}</div>
+      <div class="hs-sv"><b class="${cls}">${esc(mm[0])}</b><small>${esc(String(mm[1] || '').replace(/[()]/g, '').replace('backtest pace', 'pace'))}</small></div>
+      <div class="hs-ic"><span title="holds up to ${e.spec?.hold || 5} trading days">⏱ ${e.spec?.hold || 5}d</span>
+        <span class="hs-slot" title="${n} of ${mp} positions open"><i><i style="width:${Math.min(100, n / mp * 100).toFixed(0)}%"></i></i>${n}/${mp}</span>
+        ${m.cagr != null ? `<span title="backtest growth a year" class="${m.cagr >= 0 ? 'v2-up' : 'v2-dn'}">↗ ${Math.round(m.cagr * 100)}%/yr</span>` : ''}${e.side === 'short' ? '<span title="short strategy (bets on falls)">↘ short</span>' : ''}
+        <span class="v2-tag ${edge.cls}">${edge.label}</span></div></div>`;
   };
 
   const used = SR.filter(e => all.some(h => h.by.includes(e)));
@@ -8742,13 +8757,13 @@ function hsSwing(el) {
     <div class="ng-box" id="sw-ng"></div>
     <div class="hs-lh2 hs-sigh"></div>
     <div class="hs-stl"></div>
-    <div class="v2-lh"><b>The ${swFiltered.length} swing strategies</b><span>tap for its research · long-press to follow it in a forward test</span></div>
+    <div class="v2-lh"><b>Swing strategies <span class="hs-cnt">${swFiltered.length}</span></b><span>tap › research · hold › forward test</span></div>
     <div class="hs-strats">${['core', 'reg', 'trend'].map(g => { const L = swFiltered.filter(x => hsGrp(x.e).k === g); if (!L.length) return '';
-      return `<div class="sw-sh sw-g-${g}"><b>${esc(hsGrp(L[0].e).label)}</b><span>${{core: 'our tested swing research', reg: 'the swing strategies on every stock card', trend: 'best swing strategies of the last 10 / 21 trading days in the nightly run; most failed the luck tests'}[g]}</span></div>` + L.map(strat).join(''); }).join('')}</div>
+      return `<div class="sw-sh sw-g-${g}"><b>${esc(hsGrp(L[0].e).label)} · ${L.length}</b><span>${{core: 'tested', reg: 'on every stock card', trend: 'nightly top · 10 / 21 days'}[g]}</span></div>` + L.map(strat).join(''); }).join('')}</div>
     <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. "Has an edge" = passed all luck tests (placebos, plateau, 2016-20 out of sample); "Promising" = research candidates actively forward-tested since 26 Oct 2026.
       The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks.
       Also listed: the live swing set from the stock cards (open positions from the nightly scan${HS.extra?.scan_day ? ' of ' + esc(HS.extra.scan_day) : ''}) and the nightly run's top 12 swing strategies (holding up to 20 days) by the last 10 trading days ("this week") and 21 ("this month") of signals; they change every night and most are "No edge" (failed our luck tests).
-      1W / 1M = average trade of those recent signals; 6M = half the backtest's yearly growth, a pace, not a result. Visible to you only.</p>`;
+      1W / 1M = average trade of those recent signals; 6M = half the backtest's yearly growth, a pace, not a result. ⏱ = longest hold, the bar = open positions of its maximum, ↗ = backtest growth a year. Visible to you only.</p>`;
 
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
   const score = (e, t) => { const parts = [], o = MV.odds?.[t], ss = SS[t]?.v?.strategies?.find(x => x.key === e.key)?.record;
@@ -10773,6 +10788,23 @@ function lcPaint() {
 }
 const lcSafe = () => { try { lcPaint(); } catch (e) { console.warn('live check', e); } };     // never let the live check break the odds view
 const v1odShowA = odShowA; odShowA = function (A) { v1odShowA(A); OD.lastA = A; if (LC.days) lcSafe(); else lcLoad().catch(e => console.warn('live check', e)); };
+
+// ---------------- info fold (2026-11-15, user: "less with words and more with visuals" / "hide all the words in an i button") ----------------
+// Every explanatory note (v2-note, ss-foot, tl-foot, rp-disc, sp-foot) of 60+ characters is folded behind a small ⓘ button where it stood;
+// tap shows / hides it. Runs on every render (MutationObserver), so cards drawn later fold too. Status and error lines (class "note") stay visible.
+(function () {
+  const SEL = 'p.v2-note, p.ss-foot, p.tl-foot, p.rp-disc, p.sp-foot';
+  const fold = root => (root.matches?.(SEL) ? [root] : [...(root.querySelectorAll?.(SEL) || [])]).forEach(p => {
+    if (p.dataset.fold || p.closest('.ifold, details')) return;          // inside a fold-out section already: one tap is enough
+    if (p.textContent.trim().length < 60) return;
+    p.dataset.fold = '1'; const w = document.createElement('div'), b = document.createElement('button');
+    w.className = 'ifold'; b.type = 'button'; b.className = 'ifold-b'; b.setAttribute('aria-label', 'More information'); b.setAttribute('aria-expanded', 'false'); b.textContent = 'i';
+    p.replaceWith(w); w.append(b, p); p.hidden = true;
+    b.onclick = ev => { ev.stopPropagation(); p.hidden = !p.hidden; b.classList.toggle('on', !p.hidden); b.setAttribute('aria-expanded', String(!p.hidden)); };
+  });
+  const run = () => { fold(document.body); new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) fold(n); }).observe(document.body, {childList: true, subtree: true}); };
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', run) : run();
+})();
 
 </script>
 
