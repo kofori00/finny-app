@@ -7891,6 +7891,20 @@ function elStrat(e) {
 function elHeld(e) {
   if (e.kind === 'static') return e.holdings || [];
   if (e.kind === 'signal' && e.held) return e.held;                     // 2026-11-15: registry (nightly scan) and trending (nightly picks) rows
+  if (e.kind === 'signal' && e.spec?.max_pos) {                         // 2026-11-15 (user approved): at most max_pos open, as the strategy trades:
+    // each signal day (oldest first) free the slots of positions older than the holding window, then take that day's signals best rank first
+    // (rank rule [feature, order]; value from the signal log's info) while slots are free. Early rule exits are not modelled (as before).
+    const sg = e.spec.signal || e.key, hd = e.spec.hold || 5, mp = +e.spec.max_pos, [rf, ro] = e.spec.rank || [], days = {};
+    for (const x of TL.sigAll || TL.signals || []) if (x.strategy === sg && elTd(x.as_of, TL.asof) < hd * 3) (days[x.as_of] ||= []).push(x);
+    let held = [];
+    for (const d of Object.keys(days).sort()) {
+      held = held.filter(h => elTd(h.as_of, d) < hd);
+      const v = x => { const y = x.info?.[rf]; return y == null || !isFinite(y) ? null : +y; };
+      const c = days[d].sort((a, b) => (v(a) == null) !== (v(b) == null) ? (v(a) == null ? 1 : -1) : ro === 'asc' ? v(a) - v(b) : v(b) - v(a));
+      for (const x of c) { if (held.length >= mp) break; if (!held.some(h => h.ticker === x.ticker)) held.push(x); }
+    }
+    return held.filter(h => elTd(h.as_of, TL.asof) < hd).map(h => h.ticker);
+  }
   if (e.kind === 'signal') { const sg = e.spec?.signal || e.key, hd = e.spec?.hold || 5;          // swing rows (6.91): their own signal and holding window
     return [...new Set((TL.sigAll || TL.signals || []).filter(x => x.strategy === sg && elTd(x.as_of, TL.asof) < hd).map(x => x.ticker))]; }
   if (e.kind === 'spec') { const S = tlSelect({...e.spec.family, short: e.label}, e.spec.variant || {}); return S.na ? [] : [...S.top]; }
@@ -8353,7 +8367,9 @@ function hsBenchmark(rng) {
 // + the live swing registry (Analyze card's strategies; open positions from the nightly scan, swing_reg_open) and the nightly run's top swing
 // strategies (hold <= 20 days) of the last 10 and 21 trading days of signals (rpc swing_tab_extra; most are "No edge": failed the luck tests).
 async function hsExtraLoad() {
-  try { const token = await getToken(), r = await fetch(`${SB_URL}/rest/v1/rpc/swing_tab_extra`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({top: 12})});
+  try { if (typeof tlLoad === 'function') await tlLoad().catch(() => {});
+    const keys = (EL.rows || []).filter(e => e.kind === 'signal').map(e => e.key);
+    const token = await getToken(), r = await fetch(`${SB_URL}/rest/v1/rpc/swing_tab_data`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({top: 12, keys})});
     HS.extra = r.ok ? await r.json() : null; } catch (e) { HS.extra = null; }
   HS.swX = null;
 }
@@ -8368,7 +8384,10 @@ function hsExtraRows(base) {
     const e = tr[k] ||= {key: k, label: `${shortName(t.name)} (${k})`, kind: 'signal', xtra: 'trend', verdict: t.class, side: t.side, spec: {hold: t.hold, signal: k},
       metrics: {sharpe: t.sharpe, cagr: t.cagr, maxdd: t.maxdd, basis: '2021+ backtest (library)'}, held: (t.picks || []).map(p => p.t), dates: Object.fromEntries((t.picks || []).map(p => [p.t, p.d])), recent: {}, top: {}};
     e.recent[t.w] = {signals: t.signals, avg: t.avg_trade_pct, won: t.won_pct, vs_spy: t.vs_spy_pct, rank: t.rank, of: t.of}; e.top[t.w] = t.k; seen.add(k); }
-  out.push(...Object.values(tr)); return HS.swX = out;
+  out.push(...Object.values(tr));
+  for (const e of base.concat(out)) { const rc = X.recent?.[e.key]; if (!rc) continue; e.recent ||= {};   // 10 / 21-day nightly traction for curated + registry rows
+    for (const w of [10, 21]) if (rc[w] && !e.recent[w]) e.recent[w] = {signals: rc[w].signals, avg: rc[w].avg_trade_pct, won: rc[w].won_pct, vs_spy: rc[w].vs_spy_pct}; }
+  return HS.swX = out;
 }
 const hsSw = () => { const base = (EL.rows || []).filter(e => e.kind === 'signal'); return base.concat(hsExtraRows(base)).sort((a, b) => (b.metrics?.sharpe || 0) - (a.metrics?.sharpe || 0)); };
 
