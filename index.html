@@ -7890,6 +7890,7 @@ function elStrat(e) {
 }
 function elHeld(e) {
   if (e.kind === 'static') return e.holdings || [];
+  if (e.kind === 'signal' && e.held) return e.held;                     // 2026-11-15: registry (nightly scan) and trending (nightly picks) rows
   if (e.kind === 'signal') { const sg = e.spec?.signal || e.key, hd = e.spec?.hold || 5;          // swing rows (6.91): their own signal and holding window
     return [...new Set((TL.sigAll || TL.signals || []).filter(x => x.strategy === sg && elTd(x.as_of, TL.asof) < hd).map(x => x.ticker))]; }
   if (e.kind === 'spec') { const S = tlSelect({...e.spec.family, short: e.label}, e.spec.variant || {}); return S.na ? [] : [...S.top]; }
@@ -8294,12 +8295,15 @@ const SW_RES = [{k: 'HB', code: 'S4P23', lab: 'high-beta leader dip', hold: 5}, 
 function swSigs() { return v2Owner() ? [...SW_DEF, ...SW_RES] : SW_DEF; }
 async function hsLoad() {
   if (!v2Owner() || HS.busy || HS.rows) return; HS.busy = true;
+  const xp = hsExtraLoad();
   try { HS.rows = await sb('v2_hs_holdings?select=key,name,family,as_of,picks,sharpe,cagr,maxdd,sharpe_equal_weight,source,validation,perf&order=sharpe.desc'); } catch (e) { HS.err = e.message; }
+  await xp;
   HS.busy = false; hsRender(); if (HERO.last) v2Hero(HERO.last);
 }
 const hsEdge = r => {
   const v = r.validation?.verdict || r.verdict;
   if (v === 'holds up' || v === 'edge' || v === 'proven' || r.key === 'R18L26') return { key: 'edge', label: 'Has an edge', cls: 'edge', star: true };
+  if (v === 'no_edge') return { key: 'no_edge', label: 'No edge', cls: 'no-edge', star: false };   // 2026-11-15: trending library rows
   if (v === 'sizing-dependent' || v === 'promising' || r.kind === 'signal') return { key: 'promising', label: 'Promising', cls: 'promising', star: false };
   return { key: 'no_edge', label: 'No edge', cls: 'no-edge', star: false };
 };
@@ -8345,7 +8349,28 @@ function hsBenchmark(rng) {
   return { val: p0?.spy, fmt: pc(p0?.spy), label: 'SPY', raw: p0?.spy };
 }
 
-const hsSw = () => (EL.rows || []).filter(e => e.kind === 'signal').sort((a, b) => (b.metrics?.sharpe || 0) - (a.metrics?.sharpe || 0));
+// 2026-11-15 (user: "extend the swing strategies [to] all swing strategies" / "make it dynamic, each week's and month's top swing strategies"):
+// + the live swing registry (Analyze card's strategies; open positions from the nightly scan, swing_reg_open) and the nightly run's top swing
+// strategies (hold <= 20 days) of the last 10 and 21 trading days of signals (rpc swing_tab_extra; most are "No edge": failed the luck tests).
+async function hsExtraLoad() {
+  try { const token = await getToken(), r = await fetch(`${SB_URL}/rest/v1/rpc/swing_tab_extra`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({top: 12})});
+    HS.extra = r.ok ? await r.json() : null; } catch (e) { HS.extra = null; }
+  HS.swX = null;
+}
+function hsExtraRows(base) {
+  if (HS.swX) return HS.swX; const X = HS.extra; if (!X) return HS.swX = [];
+  const seen = new Set(base.map(e => e.key)), out = [], shortName = n => String(n || '').replace(/\s*\[.*$/, '').replace(/:.*$/, '').trim();
+  for (const r of X.registry || []) { if (seen.has(r.key)) continue; seen.add(r.key);
+    out.push({key: r.key, label: `${shortName(r.name)} (${r.key})`, kind: 'signal', xtra: 'reg', verdict: r.tier === 'edge' ? 'proven' : r.tier, spec: {hold: r.hold || 5, signal: r.key},
+      metrics: r.metrics || {}, held: (r.open || []).map(o => o.t), dates: Object.fromEntries((r.open || []).map(o => [o.t, o.d])), scan_day: X.scan_day}); }
+  const tr = {};
+  for (const t of X.trending || []) { const k = t.id; if (seen.has(k) && !tr[k]) continue;
+    const e = tr[k] ||= {key: k, label: `${shortName(t.name)} (${k})`, kind: 'signal', xtra: 'trend', verdict: t.class, side: t.side, spec: {hold: t.hold, signal: k},
+      metrics: {sharpe: t.sharpe, cagr: t.cagr, maxdd: t.maxdd, basis: '2021+ backtest (library)'}, held: (t.picks || []).map(p => p.t), dates: Object.fromEntries((t.picks || []).map(p => [p.t, p.d])), recent: {}, top: {}};
+    e.recent[t.w] = {signals: t.signals, avg: t.avg_trade_pct, won: t.won_pct, vs_spy: t.vs_spy_pct, rank: t.rank, of: t.of}; e.top[t.w] = t.k; seen.add(k); }
+  out.push(...Object.values(tr)); return HS.swX = out;
+}
+const hsSw = () => { const base = (EL.rows || []).filter(e => e.kind === 'signal'); return base.concat(hsExtraRows(base)).sort((a, b) => (b.metrics?.sharpe || 0) - (a.metrics?.sharpe || 0)); };
 
 function hsTabBar() {
   const n = hsSw().length;
@@ -8607,7 +8632,7 @@ document.addEventListener('click', e => {
 function hsSwing(el) {
   if (!TL.loaded || !EL.rows) { el.innerHTML = hsTabBar() + '<p class="note">Loading the swing signals…</p>'; tlLoad().then(() => { if (HS.tab === 'swing') hsRender(); }); return; }
   const SR = hsSw(), H = new Map(), last = (sg, t) => (TL.sigAll || []).filter(x => x.strategy === sg && x.ticker === t).reduce((m, x) => x.as_of > m ? x.as_of : m, '');
-  for (const e of SR) for (const t of elHeld(e)) { const d = last(e.spec?.signal || e.key, t), h = H.get(t) || {t, by: [], d: ''}; h.by.push(e); if (d > h.d) h.d = d; H.set(t, h); }
+  for (const e of SR) for (const t of elHeld(e)) { const d = e.dates?.[t] || last(e.spec?.signal || e.key, t), h = H.get(t) || {t, by: [], d: ''}; h.by.push(e); if (d > h.d) h.d = d; H.set(t, h); }
   const all = [...H.values()].sort((a, b) => b.by.length - a.by.length || b.d.localeCompare(a.d) || a.t.localeCompare(b.t));
   const nm = t => { const p = TL.prof?.find(r => r.ticker === t); return p ? tlTitle(p.name) : ''; };
   const day = d => d ? new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : '';
@@ -8619,19 +8644,18 @@ function hsSwing(el) {
     if (HS.rng === 'All') {
       raw = m.sharpe != null ? +m.sharpe : 0;
       fmt = 'Sharpe ' + raw.toFixed(2);
-    } else if (HS.rng === '1W') {
-      const nOpen = all.filter(h => h.by.includes(e)).length;
-      raw = nOpen * 0.05 + (edge.key === 'edge' ? 0.02 : 0);
-      fmt = `${nOpen} open signal${nOpen === 1 ? '' : 's'}`;
-    } else if (HS.rng === '1M') {
-      raw = (m.cagr || 0.2) / 12;
-      fmt = (raw >= 0 ? '+' : '') + (raw * 100).toFixed(1) + '%';
+    } else if (HS.rng === '1W' || HS.rng === '1M') {
+      // 2026-11-15: real recent numbers only (nightly run: signals of the last 10 / 21 trading days whose holding period ended, average trade);
+      // was CAGR / 12 shown as a 1-month return. Strategies without such data rank last and say so.
+      const w = HS.rng === '1W' ? 10 : 21, rc = e.recent?.[w], nOpen = all.filter(h => h.by.includes(e)).length;
+      if (rc) { raw = rc.avg / 100; fmt = `${rc.avg >= 0 ? '+' : ''}${(+rc.avg).toFixed(1)}% avg · ${rc.signals} sig.`; }
+      else { raw = -1 + nOpen * 1e-4; fmt = `${nOpen} open · no ${HS.rng} data`; }
     } else if (HS.rng === '6M') {
-      raw = (m.cagr || 0.2) / 2;
-      fmt = (raw >= 0 ? '+' : '') + (raw * 100).toFixed(1) + '%';
+      raw = m.cagr != null ? m.cagr / 2 : -1;
+      fmt = m.cagr != null ? `≈${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(1)}% (backtest pace)` : 'no backtest data';
     } else {
-      raw = m.cagr || 0.2;
-      fmt = (raw >= 0 ? '+' : '') + (raw * 100).toFixed(1) + '% a year';
+      raw = m.cagr ?? -1;
+      fmt = m.cagr != null ? (raw >= 0 ? '+' : '') + (raw * 100).toFixed(1) + '% a year' : 'no backtest data';
     }
     return { e, edge, raw, fmt };
   });
@@ -8655,7 +8679,7 @@ function hsSwing(el) {
   const strat = item => {
     const e = item.e, edge = item.edge, m = e.metrics || {}, n = H.size ? [...H.values()].filter(h => h.by.includes(e)).length : 0;
     return `<div class="hs-s" data-sw="${esc(e.key)}" data-rs="${esc(e.key)}" role="button" tabindex="0" title="Tap: its research · long-press: follow it in a forward test"><div><b>${esc(e.label)} ›</b>
-      <small>holds up to ${e.spec?.hold || 5} days · ${n ? n + ' open now' : 'nothing open'}${m.cagr != null ? ' · ' + Math.round(m.cagr * 100) + '% a year' : ''}</small></div>
+      <small>${e.side === 'short' ? 'short · ' : ''}holds up to ${e.spec?.hold || 5} days · ${n ? n + ' open now' : 'nothing open'}${m.cagr != null ? ' · ' + Math.round(m.cagr * 100) + '% a year' : ''}${e.top?.[10] ? ` · #${e.top[10]} this week` : ''}${e.top?.[21] ? ` · #${e.top[21]} this month` : ''}${e.xtra === 'reg' ? ' · live swing set' : ''}</small></div>
       <div class="hs-sn"><span>${HS.rng === 'All' ? 'Sharpe' : HS.rng}</span><i></i><b>${item.fmt}</b></div>
       <span class="v2-tag ${edge.cls}">${edge.label}</span></div>`;
   };
@@ -8685,7 +8709,9 @@ function hsSwing(el) {
     <div class="v2-lh"><b>The ${swFiltered.length} swing strategies</b><span>tap for its research · long-press to follow it in a forward test</span></div>
     <div class="hs-strats">${swFiltered.map(strat).join('')}</div>
     <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. "Has an edge" = passed all luck tests (placebos, plateau, 2016-20 out of sample); "Promising" = research candidates actively forward-tested since 26 Oct 2026.
-      The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks. Visible to you only.</p>`;
+      The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks.
+      Also listed: the live swing set from the stock cards (open positions from the nightly scan${HS.extra?.scan_day ? ' of ' + esc(HS.extra.scan_day) : ''}) and the nightly run's top 12 swing strategies (holding up to 20 days) by the last 10 trading days ("this week") and 21 ("this month") of signals; they change every night and most are "No edge" (failed our luck tests).
+      1W / 1M = average trade of those recent signals; 6M = half the backtest's yearly growth, a pace, not a result. Visible to you only.</p>`;
 
   el.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t));
   const score = (e, t) => { const parts = [], o = MV.odds?.[t], ss = SS[t]?.v?.strategies?.find(x => x.key === e.key)?.record;
