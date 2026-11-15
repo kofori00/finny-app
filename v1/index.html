@@ -6817,7 +6817,9 @@ const AK_LOOK = {
     const token = await getToken(), w = Math.min(Math.max(+window_days || 10, 1), 21), out = [];
     for (const st of [].concat(strategies).slice(0, 5)) {
       const r = await fetch(`${SB_URL}/rest/v1/rpc/nightly_strategy_picks`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({strat: String(st), wdays: w})});
-      out.push(await r.json().catch(() => ({error: 'not available', strategy: st})));
+      const j = await r.json().catch(() => ({error: 'not available', strategy: st}));
+      if (j?.rules && typeof spPlain === 'function') { try { j.rules_plain = spPlain(j.rules, {side: j.side, name: j.strategy}).text; } catch (e) {} }   // 2026-11-15: describe from these words, not the raw codes
+      out.push(j);
     }
     return {strategies: out};
   },

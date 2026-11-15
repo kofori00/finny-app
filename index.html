@@ -7121,7 +7121,9 @@ const AK_LOOK = {
     const token = await getToken(), w = Math.min(Math.max(+window_days || 10, 1), 21), out = [];
     for (const st of [].concat(strategies).slice(0, 5)) {
       const r = await fetch(`${SB_URL}/rest/v1/rpc/nightly_strategy_picks`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({strat: String(st), wdays: w})});
-      out.push(await r.json().catch(() => ({error: 'not available', strategy: st})));
+      const j = await r.json().catch(() => ({error: 'not available', strategy: st}));
+      if (j?.rules && typeof spPlain === 'function') { try { j.rules_plain = spPlain(j.rules, {side: j.side, name: j.strategy}).text; } catch (e) {} }   // 2026-11-15: describe from these words, not the raw codes
+      out.push(j);
     }
     return {strategies: out};
   },
@@ -9575,7 +9577,9 @@ function spNum(v, unit) {                                        // a threshold 
 }
 function spCond(c) {                                             // one condition -> words; null if it does not parse
   let m = c.match(/^(.+?)\s+crosses (above|below)\s+(.+)$/);
-  if (m) { const f = spFeat(m[1]); if (!f) return null; const g = spFeat(m[3]); return {text: `${f.label} crosses ${m[2]} ${g ? g.label : spNum(m[3], f.unit)}`, unknown: f.unknown ? [f.name] : []}; }
+  if (m) { const f = spFeat(m[1]); if (!f) return null; const g = spFeat(m[3]);
+    if (!g && f.zero && +m[3] === 0) return {text: (m[2] === 'above' ? f.zero[0] : f.zero[1]).replace(/^it /, 'it newly '), unknown: f.unknown ? [f.name] : []};   // 2026-11-15: "prev_lo(20) crosses below 0" -> "it newly closes below the prior 20-day low"
+    return {text: `${f.label} crosses ${m[2]} ${g ? g.label : spNum(m[3], f.unit)}`, unknown: f.unknown ? [f.name] : []}; }
   m = c.match(/^(.+?)\s+between\s*\[?\s*([-\d.e]+)\s*(?:,|and)\s*([-\d.e]+)\s*\]?$/);
   if (m) { const f = spFeat(m[1]); if (!f) return null; return {text: `${f.label} is between ${spNum(m[2], f.unit)} and ${spNum(m[3], f.unit)}`, unknown: f.unknown ? [f.name] : []}; }
   m = c.match(/^(.+?)\s*(>=|<=|≥|≤|>|<|=)\s*(.+)$/); if (!m) return null;
