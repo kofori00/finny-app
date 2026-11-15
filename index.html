@@ -1726,6 +1726,12 @@
   .sw-hero-name{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:10px} .sw-hero-name b{font:700 15px var(--font-ui)}
   .od-bh{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between} .od-st{font:600 11.5px var(--font-ui);color:var(--muted);padding:3px 9px;border-radius:999px;border:1px dashed var(--glass-line)}
   .od-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:4px 0 2px}
+  .spf{margin-top:16px} .spf-hero{margin-top:6px} .spf-bars{height:56px} .sw-bar.open i{opacity:.5}
+  .spf-hist{display:flex;align-items:flex-end;gap:4px;height:80px;margin:10px 0 0} .spf-hist>div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:9.5px;color:var(--muted)}
+  .spf-hist i{display:block;width:100%;border-radius:3px 3px 0 0} .spf-hist i.up{background:hsl(140,55%,45%)} .spf-hist i.dn{background:hsl(14,75%,52%)} .spf-hist b{font-size:10px;color:var(--ink)} .spf-hist span{white-space:nowrap}
+  .spf-list{display:flex;flex-direction:column;gap:6px;margin-top:10px} .spf-r{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-line)}
+  .spf-n{min-width:0} .spf-n b{display:block;font:600 12.5px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .spf-n small{font-size:10.5px;color:var(--muted)}
+  .spf-v{text-align:right;min-width:52px} .spf-v b{display:block;font:800 13.5px var(--font-display);font-variant-numeric:tabular-nums} .spf-v small{font-size:10px;color:var(--muted)} .spf-more{font-size:11.5px;color:var(--muted);margin:6px 0 0}
   .sw-filt{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px} .sw-fbtn{margin-left:auto}
   .sw-fpanel{display:grid;gap:8px;padding:10px 12px;margin:0 0 10px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .sw-fpanel>div{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .sw-fpanel small{width:100%;font:700 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
   .hs-s2.on{background:color-mix(in srgb,var(--good) 12%,var(--glass));border-color:var(--good)} .sw-gl{font:600 10.5px var(--font-ui);white-space:nowrap} .sw-gl.sw-g-core{color:var(--good)} .sw-gl.sw-g-reg{color:#7fb2ff} .sw-gl.sw-g-trend{color:#f0a24b}
@@ -8174,7 +8180,8 @@ function ssCard(A) {
         strength: met(x), heat: met(x), state: x.signal_now ? 'on' : '',
         tag: `${x.conditions.filter(c => c.ok === true).length}/${x.conditions.length} rules${x.record?.trades ? ` · ${Math.round(x.record.win * 100)}% won` : ''}`, onTap: () => rpOpen(S, x.key, x.name)})),
         {h: 300, legend: '<span class="lg"><i class="ng-grad"></i>rules met</span><span class="lg"><i class="ng-sz s"></i><i class="ng-sz b"></i>past wins</span><span class="lg tap">tap ›</span>'});
-      swingGraph(); ssFamilies(el.querySelector('#ss-ng'), S, swingGraph, n, L.length, L, r.as_of); } catch (e) { console.warn('graph', e); }   // 6.194 ticker in the centre; 6.211 library families
+      swingGraph(); ssFamilies(el.querySelector('#ss-ng'), S, swingGraph, n, L.length, L, r.as_of); } catch (e) { console.warn('graph', e); }
+    if (typeof spfRender === 'function') spfRender(el, S).catch(e => console.warn('spf', e));   // 2026-11-15: who bought it and how it went   // 6.194 ticker in the centre; 6.211 library families
     el.querySelectorAll('.ss-tile[data-rp]').forEach(b => b.onclick = () => rpOpen(S, b.dataset.rp, b.dataset.rpn));   // 6.192 rule replay: the whole row opens it
     const tz = el.querySelector('.rp-teaser'); if (tz && lead) rpTeaser(tz, S, lead.key, lead.name);
     el.querySelectorAll('[data-tz]').forEach(b => b.onclick = () => { const x = L.find(y => y.key === b.dataset.tz); if (!x || !tz) return;
@@ -10857,6 +10864,49 @@ function lcPaint() {
 }
 const lcSafe = () => { try { lcPaint(); } catch (e) { console.warn('live check', e); } };     // never let the live check break the odds view
 const v1odShowA = odShowA; odShowA = function (A) { v1odShowA(A); OD.lastA = A; if (LC.days) lcSafe(); else lcLoad().catch(e => console.warn('live check', e)); };
+
+// ---------------- who bought this stock, and how did it go (2026-11-15) ----------------
+// User: "for each stock, how the different strategies buying them performed ... then aggregate ... and the prior probability that it is up
+// after 1 week". Part 1 (here): every library strategy that signalled the stock in the nightly run's last 21 trading days (stock-signals
+// op strat_perf): return 5 trading days after its first signal in the window and since then; aggregate; validated (Has an edge / Promising,
+// incl. our curated swing set) by default, all on a toggle. Part 2 (P(up in 1 week) from the 2021+ calibration) shows when SPF_CAL is loaded.
+const SPF = {cache: {}, all: false};
+async function spfFetch(S) {
+  const c = SPF.cache[S]; if (c && Date.now() - c.at < 10 * 6e4) return c.v;
+  const token = await getToken(), r = await fetch(`${SB_URL}/functions/v1/stock-signals`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({op: 'strat_perf', symbol: S})});
+  const v = await r.json().catch(() => null); if (!r.ok || !v?.ok) throw new Error(v?.error || 'HTTP ' + r.status); SPF.cache[S] = {at: Date.now(), v}; return v;
+}
+const spfValid = x => x.class === 'proven' || x.class === 'promising' || (typeof EL !== 'undefined' && (EL.rows || []).some(e => e.kind === 'signal' && e.key === x.id))
+  || (typeof HS !== 'undefined' && (HS.extra?.registry || []).some(r => r.key === x.id));
+async function spfRender(card, S) {
+  let box = card.querySelector('.spf'); if (!box) { (card.querySelector('.ssf-info') || card.lastElementChild || card).insertAdjacentHTML('afterend', '<div class="spf"></div>'); box = card.querySelector('.spf'); }
+  if (!box) return; box.innerHTML = '<p class="note">Loading who bought it…</p>';
+  let v; try { v = await spfFetch(S); } catch (e) { box.innerHTML = `<p class="note">Could not load the strategies that bought ${esc(S)}: ${esc(e.message)}</p>`; return; }
+  const draw = () => {
+    const A = (v.strategies || []).map(x => ({...x, ok: spfValid(x)})), V = A.filter(x => x.ok), L = SPF.all ? A : V;
+    const pc = x => x == null ? '–' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}%`, cls = x => x == null ? '' : x >= 0 ? 'v2-up' : 'v2-dn';
+    const done = L.filter(x => x.r5 != null), up = done.filter(x => x.r5 > 0).length, avg = done.length ? done.reduce((a, x) => a + x.r5, 0) / done.length : null;
+    const srt = L.slice().sort((a, b) => (b.r5 ?? b.r_now ?? -9) - (a.r5 ?? a.r_now ?? -9)), mx = Math.max(0.01, ...srt.map(x => Math.abs(x.r5 ?? x.r_now ?? 0)));
+    const bars = srt.length <= 60 ? `<div class="sw-bars spf-bars">${srt.map(x => { const r = x.r5 ?? x.r_now; return r == null ? '' :
+        `<span class="sw-bar ${r >= 0 ? 'up' : 'dn'}${x.r5 == null ? ' open' : ''}" title="${esc(x.name)}: ${pc(r)}${x.r5 == null ? ' so far' : ' after 5 days'}"><i style="height:${Math.max(3, Math.abs(r) / mx * 50).toFixed(0)}%"></i></span>`; }).join('')}</div>`
+      : (() => { const B = [-.1, -.05, -.02, 0, .02, .05, .1], h = new Array(B.length + 1).fill(0); for (const x of done) h[B.filter(b => x.r5 >= b).length]++; const hm = Math.max(1, ...h);
+          const lab = ['< −10%', '−10…−5', '−5…−2', '−2…0', '0…2', '2…5', '5…10', '> 10%'];
+          return `<div class="spf-hist">${h.map((n, i) => `<div><i class="${i >= 4 ? 'up' : 'dn'}" style="height:${(n / hm * 100).toFixed(0)}%"></i><b>${n}</b><span>${lab[i]}</span></div>`).join('')}</div>`; })();
+    const rows = srt.slice(0, 12).map(x => `<div class="spf-r"><span class="spf-n"><b>${esc(String(x.name).replace(/\s*\[.*$/, '').slice(0, 42))}</b><small>${esc(x.id)} · since ${esc(x.first.slice(5))}${x.side === 'short' ? ' · short' : ''}</small></span>
+        <span class="v2-tag ${x.ok ? (x.class === 'proven' ? 'edge' : 'promising') : 'no-edge'}">${x.ok ? (x.class === 'proven' ? 'Has an edge' : 'Promising') : 'No edge'}</span>
+        <span class="spf-v"><b class="${cls(x.r5)}">${pc(x.r5)}</b><small>5 days</small></span><span class="spf-v"><b class="${cls(x.r_now)}">${pc(x.r_now)}</b><small>since</small></span></div>`).join('');
+    const cal = typeof spfCalTile === 'function' ? spfCalTile(S, V.length, A.length) : '';
+    box.innerHTML = `<div class="v2-lh"><b>Who bought ${esc(S)} lately</b><span>nightly run · last ${v.days} trading days</span></div>
+      <div class="sw-filt"><button class="hs-tier-chip${SPF.all ? '' : ' on'}" data-spf="v">✓ Validated ${V.length}</button><button class="hs-tier-chip${SPF.all ? ' on' : ''}" data-spf="a">All ${A.length}</button></div>
+      ${L.length ? `<div class="sw-hero spf-hero"><div class="sw-hero-n ${cls(avg)}">${pc(avg)}<small> average 5-day result</small></div>
+        <div class="sw-hero-s">${up} of ${done.length} were up 5 trading days after their buy signal${L.length > done.length ? ` · ${L.length - done.length} too recent` : ''}</div>${bars}</div>${cal}
+        <div class="spf-list">${rows}</div>${srt.length > 12 ? `<p class="spf-more">+ ${srt.length - 12} more</p>` : ''}`
+        : `<p class="note">No ${SPF.all ? '' : 'validated '}strategy bought ${esc(S)} in the last ${v.days} trading days${!SPF.all && A.length ? ` (${A.length} unvalidated ones did: tap All)` : ''}.</p>`}
+      <p class="v2-note">Each strategy counts once: its first buy signal for ${esc(S)} in the window (close of that day). "5 days" = the stock's move over the next 5 trading days (reversed for short strategies), "since" = to the latest close (${esc(v.as_of || '')}). This is the stock's move after the signal, not the strategy's own exit rule, and before costs. Validated = Has an edge or Promising in our tests.</p>`;
+    box.querySelectorAll('[data-spf]').forEach(b => b.onclick = () => { SPF.all = b.dataset.spf === 'a'; draw(); });
+  };
+  draw();
+}
 
 // ---------------- info fold (2026-11-15, user: "less with words and more with visuals" / "hide all the words in an i button") ----------------
 // Every explanatory note (v2-note, ss-foot, tl-foot, rp-disc, sp-foot) of 60+ characters is folded behind a small ⓘ button where it stood;
