@@ -8822,7 +8822,7 @@ function hsSwing(el) {
     if (P && HS.rng !== 'All') { hb = '<span class="sw-badge live">● Replayed portfolio</span>'; hn = P.trades ? pct(P.ret * 100) : '0 trades'; hc = P.trades ? (P.ret >= 0 ? 'v2-up' : 'v2-dn') : '';
       hs = P.trades ? `account result over ${HS.rng}, after costs · ${P.trades} closed trade${P.trades === 1 ? '' : 's'} · ${Math.round(P.won / P.trades * 100)}% won` : `no trade closed in the last ${HS.rng}`; }
     else if (rc) { hb = '<span class="sw-badge live">● Recent signals</span>'; hn = pct(rc.avg); hc = rc.avg >= 0 ? 'v2-up' : 'v2-dn';
-      hs = `average trade · ${rc.signals} signals in ${w} trading days · ${Math.round(rc.won)}% won · ${pct(rc.vs_spy)} vs SPY`; }
+      const hd = S0.spec?.hold || 5; hs = `average of ${rc.signals} closed trades: buy signals from ${hd}-${hd + w} trading days ago, each held ${hd} days, before costs · ${Math.round(rc.won)}% won · ${pct(rc.vs_spy)} vs SPY · not the stocks open now (network below)`; }   // 2026-11-15: user mixed this up with the open stocks
     else if (HS.rng === 'All') { hb = '<span class="sw-badge bt">◇ Backtest · hypothetical</span>'; hn = m.sharpe != null ? (+m.sharpe).toFixed(2) : '–';
       hs = `Sharpe${m.cagr != null ? ' · ' + pct(m.cagr * 100) + ' a year' : ''}${m.maxdd != null ? ' · worst drop ' + pct(m.maxdd * 100) : ''}`; }
     else { hb = '<span class="sw-badge bt">◇ Backtest pace · hypothetical</span>'; const v = m.cagr != null ? m.cagr * 100 * (HS.rng === '6M' ? 0.5 : HS.rng === '1Y' ? 1 : 0) : null;
