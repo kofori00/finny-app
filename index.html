@@ -4030,7 +4030,7 @@ async function getToken() {
   if (!s) return null;
   if (s.expires_at - 60 > Date.now() / 1000) { SESSION = s; return s.access_token; }
   try { const j = await authPost('token?grant_type=refresh_token', {refresh_token: s.refresh_token}); saveSession({...toSession(j), email: s.email}); return SESSION.access_token; }
-  catch (e) { saveSession(null); return null; }
+  catch (e) { if (e instanceof TypeError) return s.access_token; saveSession(null); return null; }   // 2026-11-15: no network (app was in the background) is not a logout
 }
 async function signIn(email, password) { saveSession(toSession(await authPost('token?grant_type=password', {email, password}))); }
 async function signOut() {
@@ -7412,7 +7412,10 @@ const AK_LABEL = {signal_history: a => `History of ${String(a.signal || 'R18L26'
 const akLabel = c => (AK_LABEL[c.name] || (() => c.name))(c.args || {});
 async function akRun(c) {
   const f = AK_LOOK[c.name]; if (!f) return {error: 'unknown lookup'};
-  try { return await f(c.args || {}); } catch (e) { return {error: e.message}; }
+  for (let i = 0; ; i++) {
+    try { return await f(c.args || {}); }
+    catch (e) { if (!(e instanceof TypeError) || i >= 2) return {error: e.message}; await akWake(); }   // cut off in the background: run it again once back
+  }
 }
 const akSep = l => /^\s*\|?\s*:?-{2,}/.test(l || '');
 const akPlain = s => String(s || '').split('\n').map((l, i, L) => {      // models sometimes still write markdown tables or headings: make them bullets / bold lines
@@ -7796,15 +7799,38 @@ document.addEventListener('click', async e => {
   } catch (err) { if (typeof fwdToast === 'function') fwdToast('Could not delete: ' + esc(err.message), true); }
 });
 
+// 2026-11-15 (user: "if I change apps or my phone goes to screensaving, I get this instead of a response"): the phone suspends the page and cuts the
+// request ("Failed to fetch"). Each post carries a request id; on a network failure wait until the app is visible and online again and resend it with
+// the same id: ask-finny keeps every answer by id for an hour and returns the stored one (or waits for the one still being written) instead of
+// asking the model twice.
+const akRid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+const akAwake = () => document.visibilityState === 'visible' && navigator.onLine !== false;
+const akWake = () => new Promise(res => { if (akAwake()) return res();
+  const f = () => { if (!akAwake()) return; document.removeEventListener('visibilitychange', f); window.removeEventListener('online', f); res(); };
+  document.addEventListener('visibilitychange', f); window.addEventListener('online', f); });
+async function akPost(b, out) {
+  for (let i = 0; ; i++) {
+    let r = null, t;
+    try { const token = await getToken();
+      r = await fetch(`${SB_URL}/functions/v1/ask-finny`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(b)});
+      t = await r.text();
+    } catch (e) {                                                        // the request or its answer was cut off
+      if (i >= 5) throw e;
+      const span = out?.querySelector('.ak-think span'); if (span && !akAwake()) span.textContent = 'Paused while the app is in the background, it resumes when you come back…';
+      await akWake(); if (span) span.textContent = 'Picking up where it stopped…';
+      await new Promise(z => setTimeout(z, 600 * (i + 1))); continue;
+    }
+    try { return JSON.parse(t); } catch (e) { return {ok: false, error: 'HTTP ' + r.status}; }
+  }
+}
 async function akAsk() {
   const box = document.getElementById('ak-q'), out = document.getElementById('ak-out'), q = (box?.value || '').trim(); if (!q || AK.busy) return;
   AK.q = q; AK.draft = null; AK.test = null;                                  // prepare_order checks the amount against these words (6.165)
   AK.busy = true; const btn = document.getElementById('ak-go'); btn.disabled = true;
   out.innerHTML = '<div class="ak-think"><i></i><i></i><i></i><span>Reading Finny\'s research…</span></div>';
   try {
-    const ctx = akContext(), token = await getToken(), calls = [], strats = [];   // 2026-11-13: strategies the lookups returned -> chips under the answer
-    const post = b => fetch(`${SB_URL}/functions/v1/ask-finny`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify(b)})
-      .then(r => r.json().catch(() => ({ok: false, error: 'HTTP ' + r.status})));
+    const ctx = akContext(), calls = [], strats = [];   // 2026-11-13: strategies the lookups returned -> chips under the answer
+    const post = b => akPost({...b, rid: akRid()}, out);   // 2026-11-15: survives the app going to the background (retry with the same id, the server keeps the answer)
     const history = AK.turns.slice(-4).map(h => ({q: h.q, a: akGoParse(h.a || '').body.slice(0, 1500)}));   // fallback; with a saved chat the function reads its own turns
     let j = await post({question: q, symbol: ctx?.symbol || null, context: ctx, history, chat: AK.chat});
     for (let round = 0; j.ok && j.pending && round < 3; round++) {        // Gemini asked for live numbers: run them here, send them back
