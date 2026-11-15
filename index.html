@@ -1744,6 +1744,8 @@
   .sw-pick select{width:100%;appearance:none;-webkit-appearance:none;background:var(--glass);color:var(--ink);border:1px solid var(--glass-line);border-radius:12px;padding:9px 30px 9px 12px;font:700 15px var(--font-ui);text-overflow:ellipsis}
   .sw-pick i{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);pointer-events:none} .sw-arrow{flex:none;width:34px;height:38px;border-radius:12px;border:1px solid var(--glass-line);background:var(--glass);color:var(--ink);font:700 20px/1 var(--font-ui)} .sw-arrow:disabled{opacity:.35}
   .sw-hero-name small{font-size:11.5px;color:var(--muted)} .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .sw-crumb{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:8px 0 2px;font-size:12.5px} .sw-crumb button{background:none;border:0;padding:2px 0;color:var(--good);font:600 12.5px var(--font-ui);cursor:pointer;text-decoration:underline}
+  .sw-crumb button.on{color:var(--ink);text-decoration:none} .sw-crumb i{font-style:normal;color:var(--muted)} .sw-crumb b{font:700 12.5px var(--font-ui)}
   .sw-filt{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px} .sw-fbtn{margin-left:auto}
   .sw-fpanel{display:grid;gap:8px;padding:10px 12px;margin:0 0 10px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .sw-fpanel>div{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .sw-fpanel small{width:100%;font:700 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
   .hs-s2.on{background:color-mix(in srgb,var(--good) 12%,var(--glass));border-color:var(--good)} .sw-gl{font:600 10.5px var(--font-ui);white-space:nowrap} .sw-gl.sw-g-core{color:var(--good)} .sw-gl.sw-g-reg{color:#7fb2ff} .sw-gl.sw-g-trend{color:#f0a24b}
@@ -8697,6 +8699,7 @@ document.addEventListener('click', e => {
   const swt = t.closest?.('[data-swtier]'); if (swt) { HS.swTier = swt.dataset.swtier; hsRender(); return; }
   const swg = t.closest?.('[data-swgrp]'); if (swg) { HS.swGrp = swg.dataset.swgrp; hsRender(); return; }
   const swf = t.closest?.('[data-swf]'); if (swf) { HS.swF = !HS.swF; hsRender(); return; }
+  const swl = t.closest?.('[data-swlvl]'); if (swl) { HS.swLvl = swl.dataset.swlvl; if (swl.dataset.swverd) HS.swVerd = swl.dataset.swverd; hsRender(); return; }
   const swm = t.closest?.('[data-swmap]'); if (swm) { HS.swMap = !HS.swMap; hsRender(); return; }
   const sws = t.closest?.('[data-swstep]'); if (sws && !sws.disabled) { const L = [...document.querySelectorAll('[data-swpick] option')].map(o => o.value), i = L.indexOf(HS.swSel), n = L[i + +sws.dataset.swstep]; if (n) { HS.swSel = n; HS.swSecDrill = null; hsRender(); } return; }
   const tier = t.closest?.('[data-hstier]');
@@ -8847,6 +8850,12 @@ function hsSwing(el) {
       </div>
     </div>
     <div class="ng-chips" role="tablist" aria-label="Pick a swing strategy">${chipsF || '<p class="note">No strategy matches these filters.</p>'}</div>
+    <div class="sw-crumb">${(() => { HS.swLvl ||= 'verdict'; const V = {edge: '✓ Has an edge', promising: '◐ Promising', no_edge: '⊘ No edge'}, sv = S0 ? hsEdge(S0).key : null;
+      const c = [`<button type="button" data-swlvl="verdict" class="${HS.swLvl === 'verdict' ? 'on' : ''}">All verdicts</button>`];
+      const vk = HS.swLvl === 'strats' ? HS.swVerd : HS.swLvl === 'stocks' ? sv : null;
+      if (vk) c.push(`<button type="button" data-swlvl="strats" data-swverd="${vk}" class="${HS.swLvl === 'strats' ? 'on' : ''}">${V[vk]}</button>`);
+      if (HS.swLvl === 'stocks' && S0) c.push(`<b>${esc(S0.key)}</b>`);
+      return c.join('<i>›</i>'); })()}</div>
     <div class="ng-box" id="sw-ng"></div>
     <div class="hs-lh2 hs-sigh"></div>
     <div class="hs-stl"></div>
@@ -8883,6 +8892,28 @@ function hsSwing(el) {
       return null;
     };
     if (!el.querySelector('#sw-ng')) return;                                // map hidden (default): list only
+    // 2026-11-15 (user: "add the verdict to the network, where they are supernodes"): level 1 = verdict supernodes, level 2 = the strategies of a
+    // verdict (colour / size = the timeframe's result), level 3 = the selected strategy's stocks (below)
+    if (HS.swLvl === 'verdict' || HS.swLvl === 'strats') {
+      const VC = {edge: ['✓ Has an edge', 'hsl(140,55%,42%)'], promising: ['◐ Promising', '#d4a72c'], no_edge: ['⊘ No edge', '#7d8590']};
+      const full = {'1W': 0.03, '1M': 0.03, '6M': 0.15, '1Y': 0.3}[HS.rng] || 0.1, val = x => HS.rng === 'All' ? ((x.e.metrics?.sharpe ?? 0) - 0.5) / 10 : x.raw;
+      if (HS.swLvl === 'verdict') {
+        const G = ['edge', 'promising', 'no_edge'].map(k => ({k, L: swFiltered.filter(x => x.edge.key === k)})).filter(g => g.L.length);
+        ngDraw(el.querySelector('#sw-ng'), {label: 'Swing', sub: `${swFiltered.length} strategies · ${HS.rng}`, state: 'up'}, G.map(g => {
+          const b = g.L.slice().sort((a, c) => c.raw - a.raw)[0];
+          return {label: VC[g.k][0], size: 0.6 + Math.sqrt(g.L.length), fill: VC[g.k][1], strength: 1, tag: `${g.L.length} strateg${g.L.length === 1 ? 'y' : 'ies'} · best ${b.e.key} ${/^–/.test(b.fmt) ? '(no ' + HS.rng + ' data)' : b.fmt.split(' ')[0]}`,
+            onTap: () => { HS.swLvl = 'strats'; HS.swVerd = g.k; hsRender(); }};
+        }), {h: 300, legend: '<span>tap a verdict to see its strategies</span><span>size = number of strategies</span>'});
+      } else {
+        const L = swFiltered.filter(x => x.edge.key === HS.swVerd).slice(0, 24);
+        ngDraw(el.querySelector('#sw-ng'), {label: VC[HS.swVerd]?.[0] || '', sub: `${L.length} strategies · ${HS.rng}`, state: HS.swVerd === 'edge' ? 'up' : ''}, L.map(x => {
+          const pf = ngPerf(val(x), null, full);
+          return {label: x.e.key, size: pf.size ?? 0.4, fill: pf.fill, strength: 0.6, tag: x.fmt, state: x.e.key === HS.swSel ? 'top-winner' : '',
+            onTap: () => { HS.swSel = x.e.key; HS.swLvl = 'stocks'; hsRender(); }};
+        }), {h: 330, legend: '<span style="color:hsl(140,70%,48%)">● green = up</span><span style="color:hsl(14,82%,52%)">● red = down</span><span>tap a strategy to see its stocks</span>'});
+      }
+      return;
+    }
     if (HS.swNgView === 'sector') {
       ngDrawSectorGraph(el.querySelector('#sw-ng'), {
         label: e.key,
@@ -8949,7 +8980,7 @@ function hsSwing(el) {
     const reg = inReg ? ts.filter(t => !SS[t]).slice(0, 8) : null;
     if (reg && reg.length && !HS.swReg?.[sel]) { (HS.swReg ||= {})[sel] = 1;
       (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) setTimeout(drawSel, 50); } })(); } };
-  el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; HS.swSecDrill = null; hsRender();
+  el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; HS.swSecDrill = null; HS.swLvl = 'stocks'; hsRender();
     setTimeout(() => document.getElementById('sw-ng')?.scrollIntoView({behavior: 'smooth', block: 'center'}), 60); });
   drawSel();
 }
