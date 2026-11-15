@@ -8748,9 +8748,10 @@ function hsSwing(el) {
       if (o?.v != null) parts.push(`${Math.round(o.v * 100)}% odds`);
       if (ss?.trades) parts.push(`${Math.round(ss.win * 100)}% won`);
       const tagStr = parts.join(' · ') || day(h.d);
+      const pf = ngPerf(ret, ss?.trades ? ss.win : (o?.v ?? null), {'1W': 0.05, '1M': 0.12, '6M': 0.3, '1Y': 0.5}[HS.rng] || 0.5);   // 2026-11-15: colour = return, size = return + win rate
       return {
         label: h.t,
-        size: sc == null ? 0.5 : 0.15 + sc,
+        size: pf.size ?? (sc == null ? 0.5 : 0.15 + sc), fill: pf.fill,
         strength: h.by.length / SR.length,
         heat: (h.by.length - 1) / Math.max(SR.length - 1, 1),
         tag: tagStr,
@@ -8759,7 +8760,7 @@ function hsSwing(el) {
       };
     }), {
       h: mine.length > 12 ? 340 : 300,
-      legend: `<span><i class="ng-grad"></i>darker = more hold it</span><span>${edge.label}</span><span>label = stock return (${HS.rng}) & odds</span><span>tap a stock</span>`
+      legend: `<span style="color:hsl(140,70%,48%)">● green = up</span><span style="color:hsl(14,82%,52%)">● orange-red = down</span><span>bigger = higher return &amp; win rate</span><span>label = stock return (${HS.rng}) & odds</span><span>tap a stock</span>`
     });
     el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel));
     const ts = mine.map(h => h.t), sel = HS.swSel;
@@ -9726,6 +9727,17 @@ function scStock(t) {                                                // open the
 // for ticker or strategy comparison the ticker or strategy should be at the centre"). One radial graph: the chosen item in the centre, the connected items
 // around it. Edge width = strength (0-1), solid green = active (would buy / gaining), dashed = waiting, node size = weight, node ring colour = its value.
 // Tap a node: its onTap. Pure SVG, theme colours via CSS classes.
+// 2026-11-15 (user: "high performing nodes greener and bigger, negative more orange-red; high win rate and big performance = bigger nodes"):
+// ret = return as a fraction (0.05 = +5%), win = 0..1, full = the return that counts as fully green / red in this view.
+function ngPerf(ret, win, full = 0.1) {
+  const r = ret == null || !isFinite(ret) ? null : +ret, w = win == null || !isFinite(win) ? null : +win;
+  if (r == null && w == null) return {fill: null, size: null};
+  const k = r == null ? 0 : Math.min(1, Math.abs(r) / full);
+  const fill = r == null ? (w >= 0.5 ? `hsl(140, 35%, ${30 + (w - 0.5) * 40}%)` : 'hsl(28, 45%, 40%)')
+    : r >= 0 ? `hsl(${138 + 6 * k}, ${40 + 40 * k}%, ${30 + 20 * k}%)` : `hsl(${Math.round(32 - 26 * k)}, ${70 + 15 * k}%, ${48 - 6 * k}%)`;
+  const size = 0.35 + (r != null && r > 0 ? 1.6 * k : 0) + (w != null ? Math.max(0, w - 0.45) * 2.4 : 0) - (r != null && r < 0 ? 0.25 * k : 0);
+  return {fill, size: Math.max(0.12, size)};
+}
 function ngDraw(box, center, nodes, opts = {}) {
   const W = 340, H = opts.h || 300, cx = W / 2, cy = H / 2, n = nodes.length;
   const R = Math.min(W, H) / 2 - 58, ring = n > 12 ? [R, R * 0.62] : [R];
@@ -9986,8 +9998,34 @@ async function ssFamFetch(S) {
   if (SSF[S] && Date.now() - SSF[S].at < 6e5) return SSF[S].v;
   const token = await getToken();
   if (typeof rpLibStock === 'function') rpLibStock(S).catch(() => {});   // 2026-11-14: prefetch the stock's rule replays (GitHub via gh-data) while the graph loads
-  const r = await fetch(`${SB_URL}/rest/v1/rpc/stock_library_families`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({sym: S})});
-  const v = await r.json().catch(() => null); if (!r.ok || !v) throw new Error('library families not available'); SSF[S] = {at: Date.now(), v}; return v;
+  // 2026-11-15 (user: "the nodes are not showing its performance or returns"): the database keeps only each stock's top 7 strategies; the full
+  // per-stock records (every strategy that traded it, 2021+) come from GitHub (gh-data kind records: [n, won, sum_r, n21, won21, sum_r21, logsum21]).
+  // With the family map (rpc library_family_ids, if deployed) each family's node pools ALL its strategies' 2021+ trades on this stock and the
+  // family's best performers on the stock are added to its list (rpc extra); without it, the pooled numbers use the strategies listed.
+  const H = {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'};
+  const [rec, fmap] = await Promise.all([
+    fetch(`${SB_URL}/functions/v1/gh-data`, {method: 'POST', headers: H, body: JSON.stringify({op: 'get', kind: 'records', key: S})}).then(r => r.json()).then(j => j?.ok ? j.data : null).catch(() => null),
+    ssFamMap(H)]);
+  const has = id => rec?.[id] && rec[id][3] > 0, extra = [];
+  if (rec && fmap) for (const ids of Object.values(fmap)) extra.push(...ids.filter(has).sort((a, b) => rec[b][5] / rec[b][3] - rec[a][5] / rec[a][3]).slice(0, 4));
+  let r = await fetch(`${SB_URL}/rest/v1/rpc/stock_library_families`, {method: 'POST', headers: H, body: JSON.stringify(extra.length ? {sym: S, extra} : {sym: S})});
+  if (!r.ok && extra.length) r = await fetch(`${SB_URL}/rest/v1/rpc/stock_library_families`, {method: 'POST', headers: H, body: JSON.stringify({sym: S})});
+  const v = await r.json().catch(() => null); if (!r.ok || !v) throw new Error('library families not available');
+  if (rec) for (const f of v.families || []) {
+    for (const it of f.items || []) { const x = rec[it.id];
+      if (x && x[3] > 0 && !it.on_stock?.trades_2021) it.on_stock = {trades_2021: x[3], won_pct_2021: x[4] / x[3] * 100, avg_trade_pct_2021: x[5] / x[3] * 100, total_pct_2021: (Math.exp(x[6]) - 1) * 100}; }
+    const ids = fmap?.[f.family] || (f.items || []).map(it => it.id); let n = 0, w = 0, sr = 0, k = 0;
+    for (const id of ids) { const x = rec[id]; if (x && x[3] > 0) { n += x[3]; w += x[4]; sr += x[5]; k++; } }
+    if (n) f.perf = {trades: n, win: w / n * 100, avg: sr / n * 100, strategies: k, all: !!fmap};
+  }
+  SSF[S] = {at: Date.now(), v}; return v;
+}
+let SSF_MAP = null;
+async function ssFamMap(H) {                                          // {family: [spec ids]}, changes only with the library: kept 6 h
+  if (SSF_MAP && Date.now() - SSF_MAP.at < 6 * 36e5) return SSF_MAP.v;
+  try { const r = await fetch(`${SB_URL}/rest/v1/rpc/library_family_ids`, {method: 'POST', headers: H, body: '{}'}); const v = r.ok ? await r.json() : null;
+    SSF_MAP = {at: Date.now(), v: v && typeof v === 'object' ? v : null}; } catch (e) { SSF_MAP = {at: Date.now(), v: null}; }
+  return SSF_MAP.v;
 }
 function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
   if (!box) return; const host = box.parentNode; let info = host.querySelector('.ssf-info');
@@ -10043,24 +10081,15 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
     const totTr2021 = items.reduce((a, it) => a + (it.on_stock?.trades_2021 || 0), 0);
     const avgWin2021 = items.length ? items.reduce((a, it) => a + (it.on_stock?.won_pct_2021 ?? 50), 0) / items.length : 0;
     const avgRet2021 = items.length ? items.reduce((a, it) => a + (it.on_stock?.avg_trade_pct_2021 ?? 0), 0) / items.length : 0;
-    let score = 0, trCount = totTr2021;
-    if (rng === '1W') {
-      score = (buyRate * 100) * 0.7 + (avgWin2021 > 0 ? avgWin2021 : 40) * 0.3 + (f.n_good_buy ? 15 : 0);
-      trCount = n_buy;
-    } else if (rng === '1M') {
-      score = (avgWin2021 > 0 ? avgWin2021 : 45) * 0.5 + (buyRate * 100) * 0.5;
-      trCount = Math.max(n_buy, Math.round(totTr2021 * 0.1));
-    } else if (rng === '6M') {
-      score = (avgWin2021 > 0 ? avgWin2021 : 48) * 0.7 + (avgRet2021 * 5) + (buyRate * 100) * 0.3;
-      trCount = Math.round(totTr2021 * 0.5);
-    } else if (rng === '1Y') {
-      score = (avgWin2021 > 0 ? avgWin2021 : 50) + (avgRet2021 * 4);
-      trCount = totTr2021;
-    } else {
-      score = (avgWin2021 > 0 ? avgWin2021 : 50) * 0.8 + Math.min(totTr2021, 100) * 0.2;
-      trCount = totTr2021;
-    }
-    return { score, win: avgWin2021, ret: avgRet2021, trades: trCount, n_buy, n, buyRate, items };
+    // 2026-11-15: real 2021+ numbers only (pooled over the family's strategies when f.perf is there); the old per-range trade counts were scaled
+    // guesses (x0.1, x0.5) and are gone. The timeframe only changes how families are ranked (1W leans on who would buy now).
+    const P = f.perf, win = P ? P.win : avgWin2021, ret = P ? P.avg : (items.length ? avgRet2021 : null), trCount = P ? P.trades : totTr2021;
+    const wq = trCount ? (win / 100 * trCount + 5) / (trCount + 10) * 100 : 45;   // win rate shrunk to 50% by 10 trades
+    let score;
+    if (rng === '1W') score = (buyRate * 100) * 0.7 + wq * 0.3 + (f.n_good_buy ? 15 : 0);
+    else if (rng === '1M') score = wq * 0.5 + (buyRate * 100) * 0.5;
+    else score = wq + (ret ?? 0) * 5;
+    return { score, win: trCount ? win : 0, ret, trades: trCount, n_buy, n, buyRate, items };
   };
 
   const swingPerf = (rng) => {
@@ -10118,7 +10147,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
       curView = 'top';
       const swP = swingPerf(curRng);
       const cands = [{
-        label: 'Swing set', isSwing: true, score: swP.score, win: swP.win, ret: 0, trades: swP.trades, n_buy: swP.n_buy, n: swP.n
+        label: 'Swing set', isSwing: true, score: swP.score, win: swP.win, ret: null, trades: swP.trades, n_buy: swP.n_buy, n: swP.n
       }].concat(R.families.map(f => {
         const fp = famPerf(f, curRng);
         return { label: short(f.family), f, isSwing: false, score: fp.score, win: fp.win, ret: fp.ret, trades: fp.trades, n_buy: fp.n_buy, n: fp.n };
@@ -10130,12 +10159,12 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
       setSummary(best.label, best.win, best.ret, best.trades, best.n_buy);
 
       const nodes = cands.map((c, idx) => {
-        const isTop = idx === bestIdx;
-        const size = isTop ? 135 : (c.win >= 55 ? 55 + c.win * 0.5 + Math.min(c.trades, 25) : Math.max(22, Math.min(50, c.n_buy * 4 + 20)));
+        const isTop = idx === bestIdx, pf = c.trades ? ngPerf(c.ret != null ? c.ret / 100 : null, c.win / 100, 0.03) : {fill: null, size: null};
+        const size = pf.size != null ? pf.size * 60 * (isTop ? 1.6 : 1) : isTop ? 135 : 18;   // no trades on this stock: small and neutral
         const heat = isTop ? 1.0 : (c.win >= 65 ? 0.9 : (c.win >= 50 ? 0.6 : (c.n_buy > 0 ? 0.45 : 0.15)));
         const strength = isTop ? 1.0 : (c.win >= 60 ? 0.85 : (c.n_buy > 0 ? 0.6 : 0.25));
         const state = (c.n_buy ? 'on' : '') + (isTop ? ' top-winner' : '');
-        const retTxt = c.ret != null && Math.abs(c.ret) > 0.01 ? (c.ret >= 0 ? '+' : '') + c.ret.toFixed(1) + '% · ' : '';
+        const retTxt = c.ret != null && c.trades ? (c.ret >= 0 ? '+' : '') + c.ret.toFixed(1) + '% avg · ' : '';
         const tag = isTop ? `★ ${retTxt}${Math.round(c.win)}% won${c.trades ? ` · ${c.trades} tr` : ` · ${c.n_buy} buy`}`
           : (c.win > 0 && c.trades > 0 ? `${retTxt}${Math.round(c.win)}% won · ${c.trades} tr` : `${retTxt}${c.n_buy} buy · ${c.n}`);
 
@@ -10147,6 +10176,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
           state,
           inner: isTop ? '★' : '',
           tag,
+          fill: pf.fill,
           onTap: c.isSwing ? showSwing : () => fam(c.f)
         };
       });
@@ -10160,7 +10190,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
         vd.innerHTML = `<span class="ss-vi">${k ? IC.buy : IC.wait}</span><div style="min-width:0"><b>${fmt(k)} <span style="font-weight:500;opacity:.7">of ${fmt(R.total + totSwing)}</span></b>
           <span>strategies would buy ${esc(S)}</span><small style="display:block;margin-top:6px;font-size:12px;opacity:.72;line-height:1.35">${nSwing}/${totSwing} swing live · ${fmt(R.buying)}/${fmt(R.total)} library at the ${esc(day)} close</small></div>`;
       }
-      info.innerHTML = `<p class="ss-foot">${IC.info} ${R.families.length} families · ${curRng} timeframe · tap a family to inspect its strategies</p>`;
+      info.innerHTML = `<p class="ss-foot">${IC.info} ${R.families.length} families · node = all their 2021+ trades on ${esc(S)} (green = gained, orange-red = lost, bigger = higher return &amp; win rate) · ${curRng} ranks who leads · tap a family</p>`;
     };
 
     showSwing = () => {
@@ -10215,7 +10245,8 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
         const isTop = idx === bestIdx;
         const o = x.on_stock;
         const win = o?.won_pct_2021;
-        const size = isTop ? 120 : Math.max(0.2, (x.sharpe_2021 ?? 0.3) + 0.5 + (win ? win / 100 : 0));
+        const pf = o?.trades_2021 ? ngPerf((o.total_pct_2021 ?? o.avg_trade_pct_2021) / 100, win / 100, o.total_pct_2021 != null ? 0.25 : 0.03) : {fill: null, size: null};   // 2026-11-15: colour = total return on the stock
+        const size = pf.size != null ? pf.size * (isTop ? 1.6 : 1) : isTop ? 120 : Math.max(0.2, (x.sharpe_2021 ?? 0.3) + 0.5 + (win ? win / 100 : 0));
         const heat = isTop ? 1.0 : (x.buy ? 0.9 : x.class === 'proven' ? 0.65 : x.class === 'promising' ? 0.45 : 0.15);
         const tag = isTop ? `★ ${win != null ? Math.round(win) + '% won' : (x.buy ? 'buy' : CL[x.class] || '')}${o?.trades_2021 ? ` · ${o.trades_2021} tr` : ''}`
           : `${x.short ? 'short · ' : ''}${win != null ? `${Math.round(win)}% · ` : ''}${CL[x.class] || x.class || ''}`;
@@ -10228,6 +10259,7 @@ function ssFamilies(box, S, swingGraph, nSwing, totSwing, L = [], asOf = null) {
           state: (x.buy ? 'on' : '') + (isTop ? ' top-winner' : ''),
           inner: isTop ? '★' : '',
           tag,
+          fill: pf.fill,
           onTap: () => one(f, x)
         };
       }), {h: 330, pad: 40, legend: famLeg});
