@@ -8777,8 +8777,8 @@ function hsSwing(el) {
   let hb = '', hn = '–', hc = '', hs = '', hk = [];
   if (S0) { const P = S0.perf?.[HS.rng], rc = (HS.rng === '1W' || HS.rng === '1M') ? S0.recent?.[w] : null, m = S0.metrics || {}, mp = +S0.spec?.max_pos || 10;
     const nOpen = all.filter(h => h.by.includes(S0)).length;
-    if (P && HS.rng !== 'All') { hb = '<span class="sw-badge live">● Portfolio · closed trades</span>'; hn = P.trades ? pct(P.ret * 100) : '0 trades'; hc = P.trades ? (P.ret >= 0 ? 'v2-up' : 'v2-dn') : '';
-      hs = P.trades ? `account result over ${HS.rng} · ${P.trades} closed trade${P.trades === 1 ? '' : 's'} · ${Math.round(P.won / P.trades * 100)}% won` : `no trade closed in the last ${HS.rng}`; }
+    if (P && HS.rng !== 'All') { hb = '<span class="sw-badge live">● Replayed portfolio</span>'; hn = P.trades ? pct(P.ret * 100) : '0 trades'; hc = P.trades ? (P.ret >= 0 ? 'v2-up' : 'v2-dn') : '';
+      hs = P.trades ? `account result over ${HS.rng}, after costs · ${P.trades} closed trade${P.trades === 1 ? '' : 's'} · ${Math.round(P.won / P.trades * 100)}% won · replayed on today's S&P 500 (stocks that left the index are missing, which flatters it)` : `no trade closed in the last ${HS.rng}`; }
     else if (rc) { hb = '<span class="sw-badge live">● Recent signals</span>'; hn = pct(rc.avg); hc = rc.avg >= 0 ? 'v2-up' : 'v2-dn';
       hs = `average trade · ${rc.signals} signals in ${w} trading days · ${Math.round(rc.won)}% won · ${pct(rc.vs_spy)} vs SPY`; }
     else if (HS.rng === 'All') { hb = '<span class="sw-badge bt">◇ Backtest · hypothetical</span>'; hn = m.sharpe != null ? (+m.sharpe).toFixed(2) : '–';
