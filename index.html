@@ -8728,7 +8728,7 @@ function hsSwing(el) {
 
   // 2026-11-15 redesign (user: "cluttered ... intuitive and simple for new users without losing elaborateness"; UX notebook a3 + web research:
   // one main number with its timeframe, 2 visible filters + a Filters panel, one ranked card list, holdings on demand, map behind a button)
-  HS.swTier ||= 'valid'; HS.swGrp ||= 'any';
+  HS.swTier ||= 'valid'; HS.swGrp ||= 'any'; if (HS.swMap == null) HS.swMap = true;   // 2026-11-15 (user: "bring back the network style"): map on by default
   const swFiltered = swingEvaluated.filter(x => (HS.swTier === 'all' || (HS.swTier === 'valid' ? x.edge.key !== 'no_edge' : x.edge.key === HS.swTier)) && (HS.swGrp === 'any' || hsGrp(x.e).k === HS.swGrp));
   swFiltered.sort((a, b) => b.raw - a.raw);
 
@@ -8786,8 +8786,6 @@ function hsSwing(el) {
   el.innerHTML = `${hsTabBar()}
     ${hero}
     ${filt}
-    <div class="v2-lh"><b>Strategies <span class="hs-cnt">${swFiltered.length}</span></b><span>ranked by ${HS.rng} · tap one to see its stocks</span></div>
-    <div class="hs-strats">${swFiltered.map(strat).join('') || '<p class="note">No strategy matches these filters.</p>'}</div>
     <div class="sw-hold" id="sw-hold">
       <div class="hs-lh2 hs-sigh"></div>
       <div class="sw-hold-act">${sel ? `<button type="button" class="hs-tier-chip" data-rs="${esc(sel.key)}">Research ›</button>` : ''}
@@ -8795,6 +8793,8 @@ function hsSwing(el) {
         ${HS.swMap ? `<div class="ng-view-toggle" role="group" aria-label="Map view"><button class="ng-view-btn${(HS.swNgView || 'stock') === 'stock' ? ' on' : ''}" data-swngview="stock">By stock</button><button class="ng-view-btn${HS.swNgView === 'sector' ? ' on' : ''}" data-swngview="sector">By sector</button></div>` : ''}</div>
       ${HS.swMap ? '<div class="ng-box" id="sw-ng"></div>' : ''}
       <div class="hs-stl"></div></div>
+    <div class="v2-lh"><b>Strategies <span class="hs-cnt">${swFiltered.length}</span></b><span>ranked by ${HS.rng} · tap one to show it in the network</span></div>
+    <div class="hs-strats">${swFiltered.map(strat).join('') || '<p class="note">No strategy matches these filters.</p>'}</div>
     <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. "Has an edge" = passed all luck tests (placebos, plateau, 2016-20 out of sample); "Promising" = research candidates actively forward-tested since 26 Oct 2026.
       The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks.
       Also listed: the live swing set from the stock cards (open positions from the nightly scan${HS.extra?.scan_day ? ' of ' + esc(HS.extra.scan_day) : ''}) and the nightly run's top 12 swing strategies (holding up to 20 days) by the last 10 trading days ("this week") and 21 ("this month") of signals; they change every night and most are "No edge" (failed our luck tests).
