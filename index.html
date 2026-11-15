@@ -1731,8 +1731,8 @@
   .spf-cal-bar{margin:4px 0 6px} .spf-cal-s{font-size:11.5px;color:var(--muted)}
   .spf-dh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;align-items:baseline} .spf-dh b{font:700 14px var(--font-ui)} .spf-dh span{font-size:12px;color:var(--muted)}
   .spf-days{display:flex;gap:6px;align-items:stretch;margin:10px 0 6px;overflow-x:auto;padding-bottom:2px} .spf-day{flex:1;min-width:44px;display:flex;flex-direction:column;align-items:center;gap:3px}
-  .spf-dv{font:800 11.5px var(--font-ui);font-variant-numeric:tabular-nums;white-space:nowrap} .spf-dbar{height:70px;width:100%;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px solid var(--glass-line)}
-  .spf-dbar i{display:block;width:70%;border-radius:4px 4px 0 0} .spf-dbar i.up{background:hsl(140,55%,45%)} .spf-dbar i.dn{background:hsl(14,75%,52%)} .spf-dbar i.open{opacity:.45}
+  .spf-dv{font:800 11.5px var(--font-ui);font-variant-numeric:tabular-nums;white-space:nowrap} .spf-dbar{height:90px;width:100%;position:relative;background:linear-gradient(transparent calc(50% - .5px),var(--glass-line) calc(50% - .5px),var(--glass-line) calc(50% + .5px),transparent calc(50% + .5px))}
+  .spf-dbar i{display:block;width:70%;position:absolute;left:15%} .spf-dbar i.up{bottom:50%;border-radius:4px 4px 0 0;background:hsl(140,55%,45%)} .spf-dbar i.dn{top:50%;border-radius:0 0 4px 4px;background:hsl(14,75%,52%)} .spf-dbar i.open{opacity:.45}
   .spf-dd{font-size:10.5px;color:var(--muted);white-space:nowrap} .spf-dn{font:700 10.5px var(--font-ui);color:var(--ink-2,var(--ink))}
   .spf-g{margin-top:12px} .spf-gh{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:6px 2px;border-bottom:1px solid var(--glass-line);margin-bottom:6px}
   .spf-gh b{font:700 13px var(--font-ui)} .spf-gh span{font-size:11.5px;color:var(--muted)} .spf-gh .spf-gv{margin-left:auto;font:700 12px var(--font-ui)} .spf-gh .spf-gv.v2-up{color:var(--good)} .spf-r2{grid-template-columns:1fr auto auto auto}
@@ -11047,9 +11047,9 @@ async function spfRender(card, S) {
     const dmx = Math.max(0.01, ...days.map(d => Math.abs(d.r5 ?? d.rn ?? 0))), dmo = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'});
     const dayBlock = `<div class="sw-hero spf-hero"><div class="spf-dh"><b>${esc(S)} after the buy days</b><span>${dk.length ? `up after ${dup} of ${dk.length} buy day${dk.length === 1 ? '' : 's'}` : 'too recent to tell'}</span></div>
       <div class="spf-days">${days.map(d => { const r = d.r5 ?? d.rn; return `<div class="spf-day" title="${esc(d.d)}: ${d.n} strateg${d.n === 1 ? 'y' : 'ies'} bought (${d.v} validated); ${S} ${pc(r)} ${d.r5 != null ? 'in the next 5 trading days' : 'so far'}">
-        <span class="spf-dv ${cls(r)}">${pc(r)}</span><span class="spf-dbar"><i class="${r == null ? '' : r >= 0 ? 'up' : 'dn'}${d.r5 == null ? ' open' : ''}" style="height:${r == null ? 0 : Math.max(4, Math.abs(r) / dmx * 100).toFixed(0)}%"></i></span>
+        <span class="spf-dv ${cls(r)}">${pc(r)}</span><span class="spf-dbar"><i class="${r == null ? '' : r >= 0 ? 'up' : 'dn'}${d.r5 == null ? ' open' : ''}" style="height:${r == null ? 0 : Math.max(3, Math.abs(r) / dmx * 50).toFixed(0)}%"></i></span>
         <span class="spf-dd">${esc(dmo(d.d))}</span><span class="spf-dn">${d.n}${d.v ? ` · ${d.v}✓` : ''}</span></div>`; }).join('')}</div>
-      <div class="sw-hero-s">bar = ${esc(S)}'s move in the 5 trading days after that day (faded = not 5 days yet) · number = strategies that bought that day (✓ validated)</div></div>`;
+      <div class="sw-hero-s">each bar = one day strategies bought ${esc(S)}: up = it rose, down = it fell in the next 5 trading days (faded = not 5 days yet) · below: date and how many strategies bought (✓ validated)</div></div>`;
     box.innerHTML = `<div class="v2-lh"><b>Who bought ${esc(S)} lately</b><span>nightly run · last ${v.days} trading days</span></div>
       <div class="sw-filt"><button class="hs-tier-chip${SPF.all ? '' : ' on'}" data-spf="v">✓ Validated ${V.length}</button><button class="hs-tier-chip${SPF.all ? ' on' : ''}" data-spf="a">All ${A.length}</button></div>
       ${L.length ? `${dayBlock}${cal}
