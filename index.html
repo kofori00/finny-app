@@ -8443,7 +8443,7 @@ function hsExtraRows(base) {
   const seen = new Set(base.map(e => e.key)), out = [], shortName = n => String(n || '').replace(/\s*\[.*$/, '').replace(/:.*$/, '').trim();
   for (const r of X.registry || []) { const b0 = base.find(x => x.key === r.key); if (b0) { b0.perf = r.perf; continue; } if (seen.has(r.key)) continue; seen.add(r.key);
     out.push({key: r.key, label: `${shortName(r.name)} (${r.key})`, kind: 'signal', xtra: 'reg', verdict: r.tier === 'edge' ? 'proven' : r.tier, spec: {hold: r.hold || 5, signal: r.key},
-      metrics: r.metrics || {}, perf: r.perf, held: (r.open || []).map(o => o.t), dates: Object.fromEntries((r.open || []).map(o => [o.t, o.d])), scan_day: X.scan_day}); }
+      metrics: r.metrics || {}, perf: r.perf, held: (r.open || []).map(o => o.t), pxm: Object.fromEntries((r.open || []).map(o => [o.t, o.px])), dates: Object.fromEntries((r.open || []).map(o => [o.t, o.d])), scan_day: X.scan_day}); }
   const tr = {};
   // 2026-11-15 (user: "same strategy with different versioning but same performance"): variants (_v01.._v08) share their entry signals, so the
   // recent numbers are identical: one row per base strategy (its best variant), with the number of variants
@@ -8890,7 +8890,14 @@ function hsSwing(el) {
       sl.querySelectorAll('[data-t]').forEach(r => r.onclick = () => odGo(r.dataset.t)); }
     const fmap = TL.fmap || (TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.f || {}])) : {});
     const field = HS.rng === '1W' ? 'ret_5d' : HS.rng === '1M' ? 'mom1m' : HS.rng === '6M' ? 'mom6m' : 'mom12m';
-    const getRet = t => {
+    // 2026-11-15 (user: "why same tickers from different date ranges when it's a swing?"): a swing position's number is its return SINCE ITS BUY
+    // SIGNAL (entry close), not the stock's 6M / 1Y move; the timeframe only changes the performance card. Buy price: nightly scan (live set) or
+    // the signal log (core); trending picks have no stored price (date only).
+    const pNow = t => { const p = TL.prof?.find(r => r.ticker === t); return p?.f?.price ?? p?.sig?.close ?? null; };
+    const bought = t => e.dates?.[t] || mine.find(h => h.t === t)?.d || null;
+    const entryPx = t => e.pxm?.[t] ?? (TL.sigAll || []).find(x => x.strategy === (e.spec?.signal || e.key) && x.ticker === t && x.as_of === bought(t))?.info?.close ?? null;
+    const getRet = t => { const a = +entryPx(t), b = +pNow(t); return a > 0 && b > 0 ? b / a - 1 : null; };
+    const getRetOld = t => {
       const v = fmap[t]?.[field];
       if (v != null && isFinite(v)) return v;
       for (const r of (HS.rows || [])) { const sv = r.perf?.stocks?.[t]; if (sv != null && isFinite(sv)) return sv; }
@@ -8963,8 +8970,9 @@ function hsSwing(el) {
       if (retTxt) parts.push(retTxt);
       if (o?.v != null) parts.push(`${Math.round(o.v * 100)}% odds`);
       if (ss?.trades) parts.push(`${Math.round(ss.win * 100)}% won`);
+      const bd = bought(h.t); if (bd) parts.push(`since ${day(bd)}`);
       const tagStr = parts.join(' · ') || day(h.d);
-      const pf = ngPerf(ret, ss?.trades ? ss.win : (o?.v ?? null), {'1W': 0.05, '1M': 0.12, '6M': 0.3, '1Y': 0.5}[HS.rng] || 0.5);   // 2026-11-15: colour = return, size = return + win rate
+      const pf = ngPerf(ret, ss?.trades ? ss.win : (o?.v ?? null), 0.06);   // colour = return since the buy signal (full colour at 6%), size = return + win rate
       return {
         label: h.t,
         size: pf.size ?? (sc == null ? 0.5 : 0.15 + sc), fill: pf.fill,
@@ -8976,7 +8984,7 @@ function hsSwing(el) {
       };
     }), {
       h: mine.length > 12 ? 340 : 300,
-      legend: `<span style="color:hsl(140,70%,48%)">● green = up</span><span style="color:hsl(14,82%,52%)">● orange-red = down</span><span>bigger = higher return &amp; win rate</span><span>label = stock return (${HS.rng}) & odds</span><span>tap a stock</span>`
+      legend: `<span style="color:hsl(140,70%,48%)">● green = up</span><span style="color:hsl(14,82%,52%)">● orange-red = down</span><span>bigger = higher return &amp; win rate</span><span>label = return since its buy signal, odds, buy day</span><span>tap a stock</span>`
     });
     el.querySelectorAll('[data-sel]').forEach(b => b.classList.toggle('on', b.dataset.sel === HS.swSel));
     const ts = mine.map(h => h.t), sel = HS.swSel;
