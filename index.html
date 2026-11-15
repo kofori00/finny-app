@@ -8382,7 +8382,15 @@ function hsExtraRows(base) {
   const tr = {};
   for (const t of X.trending || []) { const k = t.id; if (seen.has(k) && !tr[k]) continue;
     const e = tr[k] ||= {key: k, label: `${shortName(t.name)} (${k})`, kind: 'signal', xtra: 'trend', verdict: t.class, side: t.side, spec: {hold: t.hold, signal: k},
-      metrics: {sharpe: t.sharpe, cagr: t.cagr, maxdd: t.maxdd, basis: '2021+ backtest (library)'}, held: (t.picks || []).map(p => p.t), dates: Object.fromEntries((t.picks || []).map(p => [p.t, p.d])), recent: {}, top: {}};
+      metrics: {sharpe: t.sharpe, cagr: t.cagr, maxdd: t.maxdd, basis: '2021+ backtest (library)'}, recent: {}, top: {}};
+    if (!e.held) {   // 2026-11-15 (user: R2H08L_v03 showed 321 open): at most max_pos open (from its rules), each pick held for its holding period,
+      // filled day by day (oldest first) while slots are free; the nightly's own order within a day is not stored, so ties go by ticker
+      const mp = +((t.rules || '').match(/max (\d+) stocks/) || [])[1] || 10, hd = t.hold || 5, asof = X.run_day, byDay = {};
+      for (const p of t.picks || []) (byDay[p.d] ||= []).push(p);
+      let h = [];
+      for (const d of Object.keys(byDay).sort()) { h = h.filter(x => elTd(x.d, d) < hd); for (const p of byDay[d].sort((a, b) => a.t.localeCompare(b.t))) { if (h.length >= mp) break; h.push(p); } }
+      h = h.filter(x => elTd(x.d, asof) < hd); e.held = h.map(p => p.t); e.dates = Object.fromEntries(h.map(p => [p.t, p.d])); e.spec.max_pos = mp;
+    }
     e.recent[t.w] = {signals: t.signals, avg: t.avg_trade_pct, won: t.won_pct, vs_spy: t.vs_spy_pct, rank: t.rank, of: t.of}; e.top[t.w] = t.k; seen.add(k); }
   out.push(...Object.values(tr));
   for (const e of base.concat(out)) { const rc = X.recent?.[e.key]; if (!rc) continue; e.recent ||= {};   // 10 / 21-day nightly traction for curated + registry rows
@@ -8704,7 +8712,7 @@ function hsSwing(el) {
   };
 
   const used = SR.filter(e => all.some(h => h.by.includes(e)));
-  if (!HS.swSel || !SR.some(e => e.key === HS.swSel)) HS.swSel = (used.slice().sort((a, b) => all.filter(h => h.by.includes(b)).length - all.filter(h => h.by.includes(a)).length)[0] || SR[0])?.key;
+  if (!HS.swSel || !SR.some(e => e.key === HS.swSel)) HS.swSel = (topSwing && used.includes(topSwing.e) ? topSwing.e : used.slice().sort((a, b) => all.filter(h => h.by.includes(b)).length - all.filter(h => h.by.includes(a)).length)[0] || SR[0])?.key;
   const chips = SR.map(e => {
     const isTop = (topSwing && topSwing.e.key === e.key);
     const edge = hsEdge(e);
@@ -8790,7 +8798,7 @@ function hsSwing(el) {
       edgeCls: edge.cls,
       sub: `${mine.length} open · ${HS.rng}`,
       state: edge.key === 'edge' ? 'up' : ''
-    }, mine.map(h => {
+    }, mine.slice().sort((a, b) => (score(e, b.t) ?? -1) - (score(e, a.t) ?? -1)).slice(0, 24).map(h => {   // 2026-11-15: max 24 nodes, all in the list below
       const sc = score(e, h.t);
       const ret = getRet(h.t);
       const retTxt = ret != null ? (ret >= 0 ? '+' : '') + (ret * 100).toFixed(1) + '%' : '';
