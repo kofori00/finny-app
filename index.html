@@ -8771,7 +8771,7 @@ function hsSwing(el) {
   // 2026-11-15 redesign (user: "cluttered ... intuitive and simple for new users without losing elaborateness"; UX notebook a3 + web research:
   // one main number with its timeframe, 2 visible filters + a Filters panel, one ranked card list, holdings on demand, map behind a button)
   HS.swTier ||= 'valid'; HS.swGrp ||= 'any'; if (HS.swMap == null) HS.swMap = true;   // 2026-11-15 (user: "bring back the network style"): map on by default
-  const swFiltered = swingEvaluated.filter(x => (HS.swTier === 'all' || (HS.swTier === 'valid' ? x.edge.key !== 'no_edge' : x.edge.key === HS.swTier)) && (HS.swGrp === 'any' || hsGrp(x.e).k === HS.swGrp));
+  const swFiltered = swingEvaluated.filter(x => HS.tier === 'all' || !HS.tier || x.edge.key === HS.tier);   // 2026-11-15 (user: "like before with the networks"): verdict chips of the control bar again
   swFiltered.sort((a, b) => b.raw - a.raw);
 
   const card = x => `<button class="hs-st" data-t="${esc(x.t)}" title="${esc(x.by.map(e => e.label).join(', '))}"><span class="nw-av spx" style="--h:${nwHue(x.t)}">${esc(x.t.slice(0, 4))}</span>
@@ -8804,54 +8804,24 @@ function hsSwing(el) {
   const chips = ['core', 'reg', 'trend'].map(g => { const L = SR.filter(e => hsGrp(e).k === g); if (!L.length) return '';
     return `<span class="sw-grp sw-g-${g}">${esc(hsGrp(L[0]).label)}${g === 'trend' ? ' (this week / month)' : ''}</span>` + L.map(chip).join(''); }).join('');
 
-  // hero (2026-11-15, user: "I want the selected strategy's performance for the selected timeframe"): best real source first:
-  // 1) live swing set: the replayed portfolio's closed trades in the window (nightly scan, 1/max_pos each, compounded);
-  // 2) 1W / 1M: the average trade of its recent signals (nightly run, last 10 / 21 trading days, holding period ended);
-  // 3) 6M / 1Y: backtest pace (hypothetical); All: backtest Sharpe / growth / worst drop.
-  const S0 = SR.find(x => x.key === HS.swSel), w = HS.rng === '1W' ? 10 : 21, pct = v => `${v >= 0 ? '+' : ''}${(+v).toFixed(1)}%`;
-  let hb = '', hn = '–', hc = '', hs = '', hk = [];
-  if (S0) { const P = S0.perf?.[HS.rng], rc = (HS.rng === '1W' || HS.rng === '1M') ? S0.recent?.[w] : null, m = S0.metrics || {}, mp = +S0.spec?.max_pos || 10;
-    const nOpen = all.filter(h => h.by.includes(S0)).length;
-    if (P && HS.rng !== 'All') { hb = '<span class="sw-badge live">● Replayed portfolio</span>'; hn = P.trades ? pct(P.ret * 100) : '0 trades'; hc = P.trades ? (P.ret >= 0 ? 'v2-up' : 'v2-dn') : '';
-      hs = P.trades ? `account result over ${HS.rng}, after costs · ${P.trades} closed trade${P.trades === 1 ? '' : 's'} · ${Math.round(P.won / P.trades * 100)}% won · replayed on today's S&P 500 (stocks that left the index are missing, which flatters it)` : `no trade closed in the last ${HS.rng}`; }
-    else if (rc) { hb = '<span class="sw-badge live">● Recent signals</span>'; hn = pct(rc.avg); hc = rc.avg >= 0 ? 'v2-up' : 'v2-dn';
-      hs = `average trade · ${rc.signals} signals in ${w} trading days · ${Math.round(rc.won)}% won · ${pct(rc.vs_spy)} vs SPY`; }
-    else if (HS.rng === 'All') { hb = '<span class="sw-badge bt">◇ Backtest · hypothetical</span>'; hn = m.sharpe != null ? (+m.sharpe).toFixed(2) : '–';
-      hs = `Sharpe${m.cagr != null ? ' · ' + pct(m.cagr * 100) + ' a year' : ''}${m.maxdd != null ? ' · worst drop ' + pct(m.maxdd * 100) : ''}`; }
-    else { hb = '<span class="sw-badge bt">◇ Backtest pace · hypothetical</span>'; const v = m.cagr != null ? m.cagr * 100 * (HS.rng === '6M' ? 0.5 : HS.rng === '1Y' ? 1 : 0) : null;
-      hn = v != null && (HS.rng === '6M' || HS.rng === '1Y') ? pct(v) : '–'; hc = v != null ? (v >= 0 ? 'v2-up' : 'v2-dn') : '';
-      hs = v != null && (HS.rng === '6M' || HS.rng === '1Y') ? `${HS.rng === '6M' ? 'half a year' : 'a year'} at its backtest growth rate, not a measured result` : `no ${HS.rng} data for this strategy yet`; }
-    hk = [`<span><b>${nOpen}/${mp}</b> open</span>`, `<span><b>${S0.spec?.hold || 5}d</b> max hold</span>`, m.sharpe != null ? `<span><b>${(+m.sharpe).toFixed(2)}</b> Sharpe</span>` : ''];
-  }
-  const E0 = S0 ? hsEdge(S0) : null;
-  const hero = `<div class="sw-hero"><div class="sw-hero-top">${hb}
-      <div class="ss-ranges sw-rng">${['1W', '1M', '6M', '1Y', 'All'].map(r => `<button class="ss-range-btn${HS.rng === r ? ' on' : ''}" data-hsrng="${r}">${r}</button>`).join('')}</div></div>
-    ${S0 ? (() => { const L = swFiltered.map(x => x.e), i = L.findIndex(x => x.key === S0.key);   // 2026-11-15 (user: "where can I select the strategies?"): picker in the card
-      return `<div class="sw-pick-row"><button type="button" class="sw-arrow" data-swstep="-1" aria-label="Previous strategy"${i <= 0 ? ' disabled' : ''}>‹</button>
-        <label class="sw-pick"><span class="sr-only">Pick a strategy</span><select data-swpick aria-label="Pick a strategy">${L.map((x, k) => `<option value="${esc(x.key)}"${x.key === S0.key ? ' selected' : ''}>${k + 1}. ${esc(x.label)}</option>`).join('')}${i < 0 ? `<option value="${esc(S0.key)}" selected>${esc(S0.label)}</option>` : ''}</select><i>▾</i></label>
-        <button type="button" class="sw-arrow" data-swstep="1" aria-label="Next strategy"${i < 0 || i >= L.length - 1 ? ' disabled' : ''}>›</button></div>
-        <div class="sw-hero-name"><span class="v2-tag ${E0.cls}">${E0.label}</span><small>${i >= 0 ? `#${i + 1} of ${L.length} for ${HS.rng}` : ''} · tap the name to pick another</small></div>`; })() : ''}
-    <div class="sw-hero-n ${hc}">${hn}</div><div class="sw-hero-s">${esc(hs)}</div>
-    <div class="sw-hero-k">${hk.join('')}</div></div>`;
-  const vc = swingEvaluated.filter(x => x.edge.key !== 'no_edge').length, grpN = g => swingEvaluated.filter(x => hsGrp(x.e).k === g).length;
-  const fchip = (k, l, cur, attr) => `<button class="hs-tier-chip${cur === k ? ' on' : ''}" ${attr}="${k}">${l}</button>`;
-  const filt = `<div class="sw-filt">${fchip('valid', `✓ Validated ${vc}`, HS.swTier, 'data-swtier')}${fchip('all', `All ${swingEvaluated.length}`, HS.swTier, 'data-swtier')}
-      <button class="hs-tier-chip sw-fbtn${HS.swF ? ' on' : ''}" data-swf="1">⚙ Filters${HS.swGrp !== 'any' || !['valid', 'all'].includes(HS.swTier) ? ' •' : ''}</button></div>
-    ${HS.swF ? `<div class="sw-fpanel"><div><small>Verdict</small>${[['edge', '✓ Has an edge'], ['promising', '◐ Promising'], ['no_edge', '⊘ No edge']].map(([k, l]) => fchip(k, `${l} ${swTierCounts[k]}`, HS.swTier, 'data-swtier')).join('')}</div>
-      <div><small>Source</small>${[['any', 'Any'], ['core', 'Core research'], ['reg', 'Live swing set'], ['trend', '🔥 Trending']].map(([k, l]) => fchip(k, k === 'any' ? l : `${l} ${grpN(k)}`, HS.swGrp, 'data-swgrp')).join('')}</div></div>` : ''}`;
-  const sel = SR.find(x => x.key === HS.swSel);
+  // layout as before the redesign (user 2026-11-15: "I want it up like before with the networks" / "It's very confusing now"): control bar
+  // (timeframe + verdict chips + top performer), the swing signals network with grouped strategy chips, open signals, strategy cards
   el.innerHTML = `${hsTabBar()}
-    ${hero}
-    ${filt}
-    <div class="sw-hold" id="sw-hold">
-      <div class="hs-lh2 hs-sigh"></div>
-      <div class="sw-hold-act">${sel ? `<button type="button" class="hs-tier-chip" data-rs="${esc(sel.key)}">Research ›</button>` : ''}
-        <button type="button" class="hs-tier-chip${HS.swMap ? ' on' : ''}" data-swmap="1">${HS.swMap ? 'Hide map' : '◎ Map'}</button>
-        ${HS.swMap ? `<div class="ng-view-toggle" role="group" aria-label="Map view"><button class="ng-view-btn${(HS.swNgView || 'stock') === 'stock' ? ' on' : ''}" data-swngview="stock">By stock</button><button class="ng-view-btn${HS.swNgView === 'sector' ? ' on' : ''}" data-swngview="sector">By sector</button></div>` : ''}</div>
-      ${HS.swMap ? '<div class="ng-box" id="sw-ng"></div>' : ''}
-      <div class="hs-stl"></div></div>
-    <div class="v2-lh"><b>Strategies <span class="hs-cnt">${swFiltered.length}</span></b><span>ranked by ${HS.rng} · tap one to show it in the network</span></div>
-    <div class="hs-strats">${swFiltered.map(strat).join('') || '<p class="note">No strategy matches these filters.</p>'}</div>
+    ${hsControlBar(topInfo, swTierCounts)}
+    <div class="hs-lh2" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div><b>Swing signals network</b><span>${esc(HS.swSel)} · tap a chip to inspect</span></div>
+      <div class="ng-view-toggle" role="group" aria-label="Swing network view mode">
+        <button class="ng-view-btn${(HS.swNgView || 'stock') === 'stock' ? ' on' : ''}" data-swngview="stock">By Stock</button>
+        <button class="ng-view-btn${HS.swNgView === 'sector' ? ' on' : ''}" data-swngview="sector">By Sector</button>
+      </div>
+    </div>
+    <div class="ng-chips" role="tablist" aria-label="Pick a swing strategy">${chips}</div>
+    <div class="ng-box" id="sw-ng"></div>
+    <div class="hs-lh2 hs-sigh"></div>
+    <div class="hs-stl"></div>
+    <div class="v2-lh"><b>Swing strategies <span class="hs-cnt">${swFiltered.length}</span></b><span>tap one to show it in the network · hold › forward test</span></div>
+    <div class="hs-strats">${['core', 'reg', 'trend'].map(g => { const L = swFiltered.filter(x => hsGrp(x.e).k === g); if (!L.length) return '';
+      return `<div class="sw-sh sw-g-${g}"><b>${esc(hsGrp(L[0].e).label)} · ${L.length}</b><span>${{core: 'tested', reg: 'on every stock card', trend: 'nightly top · 10 / 21 days'}[g]}</span></div>` + L.map(strat).join(''); }).join('')}</div>
     <p class="v2-note">Sharpe: 2021+ backtest (R18L26: 2017-26), after costs, entering at the close. "Has an edge" = passed all luck tests (placebos, plateau, 2016-20 out of sample); "Promising" = research candidates actively forward-tested since 26 Oct 2026.
       The four high-beta rows (S4P23, S14L19, S14A10, S14L08) and S7P21 share one signal, so they mostly hold the same stocks.
       Also listed: the live swing set from the stock cards (open positions from the nightly scan${HS.extra?.scan_day ? ' of ' + esc(HS.extra.scan_day) : ''}) and the nightly run's top 12 swing strategies (holding up to 20 days) by the last 10 trading days ("this week") and 21 ("this month") of signals; they change every night and most are "No edge" (failed our luck tests).
@@ -8950,7 +8920,7 @@ function hsSwing(el) {
     if (reg && reg.length && !HS.swReg?.[sel]) { (HS.swReg ||= {})[sel] = 1;
       (async () => { for (let i = 0; i < reg.length; i += 4) { try { await ssFetch(reg.slice(i, i + 4)); } catch (_) {} if (HS.swSel === sel && HS.tab === 'swing' && document.getElementById('sw-ng')) setTimeout(drawSel, 50); } })(); } };
   el.querySelectorAll('[data-sel]').forEach(b => b.onclick = () => { HS.swSel = b.dataset.sel; HS.swSecDrill = null; hsRender();
-    setTimeout(() => document.getElementById('sw-hold')?.scrollIntoView({behavior: 'smooth', block: 'start'}), 60); });
+    setTimeout(() => document.getElementById('sw-ng')?.scrollIntoView({behavior: 'smooth', block: 'center'}), 60); });
   drawSel();
 }
 const v2HeroBase = v2Hero; v2Hero = function (A) {
