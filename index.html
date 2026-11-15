@@ -8798,7 +8798,7 @@ function hsSwing(el) {
   };
 
   const used = SR.filter(e => all.some(h => h.by.includes(e)));
-  if (!HS.swSel || !swFiltered.some(x => x.e.key === HS.swSel)) HS.swSel = (swFiltered[0]?.e || SR[0])?.key;   // default: the top of the ranked list
+  if (!HS.swSel || !SR.some(e => e.key === HS.swSel)) HS.swSel = (swFiltered[0]?.e || SR[0])?.key;   // a pick from the network stays, even if the filter hides it   // default: the top of the ranked list
   // 2026-11-15 (user: "not very clear which ones are the trending vs edge etc"): chips grouped (core research / live swing set / trending),
   // each group headed in the row; trending chips say their rank this week (10 trading days) / month (21)
   const chip = e => {
@@ -8850,8 +8850,8 @@ function hsSwing(el) {
       </div>
     </div>
     <div class="ng-chips" role="tablist" aria-label="Pick a swing strategy">${chipsF || '<p class="note">No strategy matches these filters.</p>'}</div>
-    <div class="sw-crumb">${(() => { HS.swLvl ||= 'verdict'; const V = {edge: '✓ Has an edge', promising: '◐ Promising', no_edge: '⊘ No edge'}, sv = S0 ? hsEdge(S0).key : null;
-      const c = [`<button type="button" data-swlvl="verdict" class="${HS.swLvl === 'verdict' ? 'on' : ''}">All verdicts</button>`];
+    <div class="sw-crumb">${(() => { HS.swLvl ||= 'verdict'; const V = {edge: '✓ Has an edge', promising: '◐ Promising', no_edge: '⊘ No edge', trend: '🔥 Trending', reg: 'Live swing set'}, sv = S0 ? (HS.swVerd && (HS.swVerd === 'trend' || HS.swVerd === 'reg') && hsGrp(S0).k === HS.swVerd ? HS.swVerd : hsEdge(S0).key) : null;
+      const c = [`<button type="button" data-swlvl="verdict" class="${HS.swLvl === 'verdict' ? 'on' : ''}">All groups</button>`];
       const vk = HS.swLvl === 'strats' ? HS.swVerd : HS.swLvl === 'stocks' ? sv : null;
       if (vk) c.push(`<button type="button" data-swlvl="strats" data-swverd="${vk}" class="${HS.swLvl === 'strats' ? 'on' : ''}">${V[vk]}</button>`);
       if (HS.swLvl === 'stocks' && S0) c.push(`<b>${esc(S0.key)}</b>`);
@@ -8895,17 +8895,19 @@ function hsSwing(el) {
     // 2026-11-15 (user: "add the verdict to the network, where they are supernodes"): level 1 = verdict supernodes, level 2 = the strategies of a
     // verdict (colour / size = the timeframe's result), level 3 = the selected strategy's stocks (below)
     if (HS.swLvl === 'verdict' || HS.swLvl === 'strats') {
-      const VC = {edge: ['✓ Has an edge', 'hsl(140,55%,42%)'], promising: ['◐ Promising', '#d4a72c'], no_edge: ['⊘ No edge', '#7d8590']};
+      // 2026-11-15 (user: "only one with edge? add no edge and also trending etc."): every group is a supernode, whatever the filter
+      const VC = {edge: ['✓ Has an edge', 'hsl(140,55%,42%)'], promising: ['◐ Promising', '#d4a72c'], no_edge: ['⊘ No edge', '#7d8590'], trend: ['🔥 Trending', '#f0a24b'], reg: ['Live swing set', '#7fb2ff']};
+      const inG = (x, k) => k === 'trend' || k === 'reg' ? hsGrp(x.e).k === k : x.edge.key === k;
       const full = {'1W': 0.03, '1M': 0.03, '6M': 0.15, '1Y': 0.3}[HS.rng] || 0.1, val = x => HS.rng === 'All' ? ((x.e.metrics?.sharpe ?? 0) - 0.5) / 10 : x.raw;
       if (HS.swLvl === 'verdict') {
-        const G = ['edge', 'promising', 'no_edge'].map(k => ({k, L: swFiltered.filter(x => x.edge.key === k)})).filter(g => g.L.length);
-        ngDraw(el.querySelector('#sw-ng'), {label: 'Swing', sub: `${swFiltered.length} strategies · ${HS.rng}`, state: 'up'}, G.map(g => {
+        const G = ['edge', 'promising', 'no_edge', 'trend', 'reg'].map(k => ({k, L: swingEvaluated.filter(x => inG(x, k))})).filter(g => g.L.length);
+        ngDraw(el.querySelector('#sw-ng'), {label: 'Swing', sub: `${swingEvaluated.length} strategies · ${HS.rng}`, state: 'up'}, G.map(g => {
           const b = g.L.slice().sort((a, c) => c.raw - a.raw)[0];
           return {label: VC[g.k][0], size: 0.6 + Math.sqrt(g.L.length), fill: VC[g.k][1], strength: 1, tag: `${g.L.length} strateg${g.L.length === 1 ? 'y' : 'ies'} · best ${b.e.key} ${/^–/.test(b.fmt) ? '(no ' + HS.rng + ' data)' : b.fmt.split(' ')[0]}`,
             onTap: () => { HS.swLvl = 'strats'; HS.swVerd = g.k; hsRender(); }};
-        }), {h: 300, legend: '<span>tap a verdict to see its strategies</span><span>size = number of strategies</span>'});
+        }), {h: 320, legend: '<span>tap a group to see its strategies</span><span>size = number of strategies</span><span>a strategy can be in two groups (e.g. trending + no edge)</span>'});
       } else {
-        const L = swFiltered.filter(x => x.edge.key === HS.swVerd).slice(0, 24);
+        const L = swingEvaluated.filter(x => inG(x, HS.swVerd)).slice().sort((a, c) => c.raw - a.raw).slice(0, 24);
         ngDraw(el.querySelector('#sw-ng'), {label: VC[HS.swVerd]?.[0] || '', sub: `${L.length} strategies · ${HS.rng}`, state: HS.swVerd === 'edge' ? 'up' : ''}, L.map(x => {
           const pf = ngPerf(val(x), null, full);
           return {label: x.e.key, size: pf.size ?? 0.4, fill: pf.fill, strength: 0.6, tag: x.fmt, state: x.e.key === HS.swSel ? 'top-winner' : '',
