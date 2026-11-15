@@ -1724,6 +1724,8 @@
   .sw-bar{flex:1;min-width:6px;height:100%;padding:0;border:0;background:none;display:flex;cursor:pointer;position:relative} .sw-bar i{display:block;width:100%;border-radius:3px;position:absolute;left:0}
   .sw-bar.up i{bottom:50%;max-height:50%;background:hsl(140,55%,45%)} .sw-bar.dn i{top:50%;max-height:50%;background:hsl(14,75%,52%)} .sw-bar.on i{outline:2px solid var(--ink);outline-offset:1px}
   .sw-hero-name{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:10px} .sw-hero-name b{font:700 15px var(--font-ui)}
+  .od-bh{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between} .od-st{font:600 11.5px var(--font-ui);color:var(--muted);padding:3px 9px;border-radius:999px;border:1px dashed var(--glass-line)}
+  .od-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:4px 0 2px}
   .sw-filt{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px} .sw-fbtn{margin-left:auto}
   .sw-fpanel{display:grid;gap:8px;padding:10px 12px;margin:0 0 10px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .sw-fpanel>div{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .sw-fpanel small{width:100%;font:700 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
   .hs-s2.on{background:color-mix(in srgb,var(--good) 12%,var(--glass));border-color:var(--good)} .sw-gl{font:600 10.5px var(--font-ui);white-space:nowrap} .sw-gl.sw-g-core{color:var(--good)} .sw-gl.sw-g-reg{color:#7fb2ff} .sw-gl.sw-g-trend{color:#f0a24b}
@@ -6417,6 +6419,15 @@ function odNextOpen() {
   const at = new Date(Date.now() + (575 - mins) * 60e3), h = Math.floor((575 - mins) / 60), m = (575 - mins) % 60;
   return `Today's odds arrive at ${at.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} your time (09:35 New York), in ${h ? h + ' h ' : ''}${m} min.`;
 }
+// 2026-11-15 (user: "clean this up"): short status chip for the board instead of a sentence banner
+function odNextShort() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false}).formatToParts(new Date()).map(x => [x.type, x.value]));
+  const mins = (+p.hour % 24) * 60 + +p.minute;
+  if (OD.open?.as_of === odEtToday()) return null;
+  if (p.weekday === 'Sat' || p.weekday === 'Sun') return '⏸ Weekend · new odds Mon 09:35 NY';
+  if (mins >= 575) return mins < 660 ? '⏳ Computing today…' : '⏸ No odds today';
+  const h = Math.floor((575 - mins) / 60), m = (575 - mins) % 60; return `⏳ New odds in ${h ? h + ' h ' : ''}${m} min`;
+}
 const odEtToday = () => new Intl.DateTimeFormat('en-CA', {timeZone: 'America/New_York'}).format(new Date());
 function odTodayTile(A) {                                // the one horizon with a robust edge: S&P 500, from today's open to the close
   const base = OD.openMeta?.base_up ?? 0.505;
@@ -6425,7 +6436,8 @@ function odTodayTile(A) {                                // the one horizon with
   const d = (A.op.p_up - base) * 100, old = A.op.as_of !== odEtToday();
   return `<div class="od-t on"><div class="od-tl">${old ? esc(A.op.as_of.slice(5)) : 'Today'} · open → close</div><div class="od-tv">${odP(A.op.p_up)}</div>
     <div class="od-bar"><i style="width:${Math.max(2, Math.min(98, A.op.p_up * 100))}%" class="on"></i><b style="left:${base * 100}%"></b></div>
-    <div class="od-ts">chance to close above the open</div><div class="od-ts">${esc(odRankTxt(A.op).band)}</div><div class="od-ts">${Math.abs(d) < 1 ? 'about normal' : d > 0 ? `${d.toFixed(1)} pts better than normal` : `${(-d).toFixed(1)} pts worse than normal`}</div></div>`;
+    <div class="od-ts">${Math.abs(d) < 1 ? '≈ coin flip' : d > 0 ? `▲ ${d.toFixed(1)} pts above normal` : `▼ ${(-d).toFixed(1)} pts below normal`}</div>
+    <p class="v2-note">Chance that ${esc(A.sym || 'this stock')} closes above its open${old ? ' (last trading day)' : ''}; ${esc(odRankTxt(A.op).band)}. Normal is ${odP(base)}. Model: recent price pattern + opening jump compared with all S&amp;P 500 stocks, 2021-26 out of sample.</p></div>`;
 }
 // ---- seasonality (Bible 6.71): this stock's own weekday / month / turn-of-month / pre-holiday / time-of-day patterns + the S&P 500 verdicts ----
 function odEtParts() { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: 'America/New_York', weekday: 'short', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false})
@@ -6581,8 +6593,10 @@ function odSignals() {                                 // the two things with a 
     const lab = today ? 'Today' : new Date(OD.open.as_of + 'T12:00:00Z').toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'});
     const row = x => { const d = (x.p_up - base) * 100;
       return `<button class="od-lr" data-t="${esc(x.ticker)}"><b>${esc(x.ticker)}</b><span class="od-lb"><i class="${d >= 0 ? 'up' : 'dn'}" style="width:${Math.min(100, Math.abs(d) / 4 * 100)}%"></i></span><em class="${d >= 0 ? 'pos' : 'neg'}">${odP(x.p_up)}</em></button>`; };
-    const nx = odNextOpen();
-    html += `<div class="od-board">${nx ? `<div class="od-next">${esc(nx)} Showing the last trading day.</div>` : ''}<div class="od-bh"><b>${lab} from the open</b><span>chance to close above the open · typical ${odP(base)}</span></div>
+    const nx = odNextShort();
+    html += `<div class="od-board"><div class="od-bh"><b>${lab} · open → close</b>${nx ? `<span class="od-st">${esc(nx)}</span>` : ''}</div>
+      <div class="od-scale"><span>chance to close above its open</span><span>50% = coin flip</span></div>
+      <p class="v2-note">How it works: just after the 09:30 New York open, a model compares each S&amp;P 500 stock's recent price pattern and opening jump with all the others, and shows how often similar stocks closed above their open in 2021-26 (tested out of sample). The bars show the distance from the typical ${odP(base)}: small differences, so read them as a slight tilt, not a forecast.</p>
       <div class="od-cols"><div><div class="od-ch">Best odds</div>${r.slice(0, 5).map(row).join('')}</div><div><div class="od-ch">Weakest</div>${r.slice(-5).reverse().map(row).join('')}</div></div></div>`;
   } else html += `<div class="od-board od-empty"><b>Today from the open</b><span>Odds for every S&amp;P 500 stock appear at about 09:35 New York time on trading days.</span></div>`;
   const SW = swList(), sm = new Map(), add = (t, c) => sm.set(t, [...new Set([...(sm.get(t) || []), c])]);
@@ -6590,7 +6604,7 @@ function odSignals() {                                 // the two things with a 
   for (const x of TL.sigAll || TL.signals || []) { const sw = SW.find(q => q.k === x.strategy); if (sw?.etf && x.as_of === TL.asof) add(x.ticker, sw.code); }   // ETF signals from the log
   const s = [...sm], tag = SW.length > 2;                                                                               // more than the two public signals: name them on the chip
   html += `<div class="od-swing"><span>Swing buy signals</span>${s.length ? s.map(([t, k]) => `<button class="od-chip" data-t="${esc(t)}" title="${esc(k.join(', '))}">${esc(t)}${tag ? `<small>${esc(k.join(' '))}</small>` : ''}</button>`).join('')
-    : `<em>none at the ${esc(TL.asof)} close${TL.prof[0]?.sig?.spy_above_200d === false ? ' (market below its 200-day average)' : ''}</em>`}</div>`;
+    : ''}</div>`.replace('<div class="od-swing"><span>Swing buy signals</span></div>', '');   // 2026-11-15: hidden when there are none
   el.innerHTML = html;
   el.querySelectorAll('button[data-t]').forEach(b => b.onclick = () => odGo(b.dataset.t));
 }
