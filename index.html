@@ -1726,6 +1726,9 @@
   .sw-hero-name{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:10px} .sw-hero-name b{font:700 15px var(--font-ui)}
   .od-bh{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between} .od-st{font:600 11.5px var(--font-ui);color:var(--muted);padding:3px 9px;border-radius:999px;border:1px dashed var(--glass-line)}
   .od-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:4px 0 2px}
+  .spf-cal{margin:10px 0;padding:12px 14px;border-radius:16px;background:var(--surface);border:1px solid var(--glass-line)} .spf-cal.pending b{display:block;margin-bottom:4px} .spf-cal.pending span{font-size:12px;color:var(--muted)}
+  .spf-cal-h{display:flex;justify-content:space-between;align-items:center;gap:8px} .spf-cal-n{font:800 30px/1.1 var(--font-display);margin:8px 0 4px;font-variant-numeric:tabular-nums} .spf-cal-n small{font:600 12px var(--font-ui);color:var(--muted)}
+  .spf-cal-bar{margin:4px 0 6px} .spf-cal-s{font-size:11.5px;color:var(--muted)}
   .spf{margin-top:16px} .spf-hero{margin-top:6px} .spf-bars{height:56px} .sw-bar.open i{opacity:.5}
   .spf-hist{display:flex;align-items:flex-end;gap:4px;height:80px;margin:10px 0 0} .spf-hist>div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:9.5px;color:var(--muted)}
   .spf-hist i{display:block;width:100%;border-radius:3px 3px 0 0} .spf-hist i.up{background:hsl(140,55%,45%)} .spf-hist i.dn{background:hsl(14,75%,52%)} .spf-hist b{font-size:10px;color:var(--ink)} .spf-hist span{white-space:nowrap}
@@ -10876,14 +10879,34 @@ async function spfFetch(S) {
   const token = await getToken(), r = await fetch(`${SB_URL}/functions/v1/stock-signals`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({op: 'strat_perf', symbol: S})});
   const v = await r.json().catch(() => null); if (!r.ok || !v?.ok) throw new Error(v?.error || 'HTTP ' + r.status); SPF.cache[S] = {at: Date.now(), v}; return v;
 }
-const spfValid = x => x.class === 'proven' || x.class === 'promising' || (typeof EL !== 'undefined' && (EL.rows || []).some(e => e.kind === 'signal' && e.key === x.id))
+const spfValidOld = x => x.class === 'proven' || x.class === 'promising' || (typeof EL !== 'undefined' && (EL.rows || []).some(e => e.kind === 'signal' && e.key === x.id))
   || (typeof HS !== 'undefined' && (HS.extra?.registry || []).some(r => r.key === x.id));
+// Part 2: P(up 5 trading days later) for stock-days like today's (calib_tables 'up5', nightly_signals.py --calib: S&P 500 member-days 2021+,
+// bucketed by how many validated and library long strategies signalled that day)
+let SPF_CAL = null, SPF_CALP = null;
+function spfCalLoad() { return SPF_CALP ||= (async () => { try { const r = await sb('calib_tables?select=updated_at,base:data->base,by_valid:data->by_valid,by_all:data->by_all,grid:data->grid,from:data->from,to:data->to&name=eq.up5');
+  SPF_CAL = r?.[0] || null; } catch (e) { SPF_CAL = null; } })(); }
+const spfVB = k => k >= 4 ? '4+' : String(k), spfAB = a => a <= 0 ? '0' : a <= 5 ? '1-5' : a <= 20 ? '6-20' : a <= 50 ? '21-50' : a <= 100 ? '51-100' : '101+';
+function spfCalTile(t) {
+  if (!t) return '';
+  const C = SPF_CAL, P = x => x == null ? '–' : Math.round(x * 100) + '%';
+  if (!C) return `<div class="spf-cal pending"><b>Chance up 1 week later</b><span>being calibrated on 2021+ history: every S&amp;P 500 stock-day, which strategies bought, and whether the stock was up 5 trading days later</span></div>`;
+  const kb = spfVB(t.valid), ab = spfAB(t.all), g = C.grid?.[`${kb}|${ab}`], use = g && g.n >= 300 ? g : C.by_valid?.[kb], why = g && g.n >= 300 ? `${t.valid} validated + ${t.all} library strategies buying` : `${t.valid} validated strategies buying`;
+  if (!use?.n) return '';
+  const d = (use.up - C.base.up) * 100, w = x => Math.max(2, Math.min(98, x * 100));
+  return `<div class="spf-cal"><div class="spf-cal-h"><b>Chance up 1 week later</b><span class="sw-badge bt">◇ 2021+ history</span></div>
+    <div class="spf-cal-n ${d >= 0 ? 'v2-up' : 'v2-dn'}">${P(use.up)}<small> vs ${P(C.base.up)} normal · ${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)} pts</small></div>
+    <div class="od-bar spf-cal-bar"><i style="width:${w(use.up)}%" class="on"></i><b style="left:${w(C.base.up)}%"></b></div>
+    <div class="spf-cal-s">${use.n.toLocaleString()} stock-days like today (${esc(why)}, ${esc(t.day || '')}) · 2021-23 ${P(use.h1?.up)} · 2024-26 ${P(use.h2?.up)}</div>
+    <p class="v2-note">How often an S&amp;P 500 stock closed higher 5 trading days later on past days when the same number of our validated strategies (and roughly as many library strategies) signalled a buy, ${esc(C.from || '')} to ${esc(C.to || '')}. The two periods show whether it held up over time. It is a historical rate, not a forecast; strategies overlap, so their signals are not independent votes.</p></div>`;
+}
 async function spfRender(card, S) {
+  spfCalLoad();
   let box = card.querySelector('.spf'); if (!box) { (card.querySelector('.ssf-info') || card.lastElementChild || card).insertAdjacentHTML('afterend', '<div class="spf"></div>'); box = card.querySelector('.spf'); }
   if (!box) return; box.innerHTML = '<p class="note">Loading who bought it…</p>';
-  let v; try { v = await spfFetch(S); } catch (e) { box.innerHTML = `<p class="note">Could not load the strategies that bought ${esc(S)}: ${esc(e.message)}</p>`; return; }
+  let v; try { [v] = await Promise.all([spfFetch(S), spfCalLoad()]); } catch (e) { box.innerHTML = `<p class="note">Could not load the strategies that bought ${esc(S)}: ${esc(e.message)}</p>`; return; }
   const draw = () => {
-    const A = (v.strategies || []).map(x => ({...x, ok: spfValid(x)})), V = A.filter(x => x.ok), L = SPF.all ? A : V;
+    const VS = new Set(v.valid_ids || []), A = (v.strategies || []).map(x => ({...x, ok: v.valid_ids ? VS.has(x.id) : spfValidOld(x)})), V = A.filter(x => x.ok), L = SPF.all ? A : V;
     const pc = x => x == null ? '–' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}%`, cls = x => x == null ? '' : x >= 0 ? 'v2-up' : 'v2-dn';
     const done = L.filter(x => x.r5 != null), up = done.filter(x => x.r5 > 0).length, avg = done.length ? done.reduce((a, x) => a + x.r5, 0) / done.length : null;
     const srt = L.slice().sort((a, b) => (b.r5 ?? b.r_now ?? -9) - (a.r5 ?? a.r_now ?? -9)), mx = Math.max(0.01, ...srt.map(x => Math.abs(x.r5 ?? x.r_now ?? 0)));
@@ -10895,7 +10918,7 @@ async function spfRender(card, S) {
     const rows = srt.slice(0, 12).map(x => `<div class="spf-r"><span class="spf-n"><b>${esc(String(x.name).replace(/\s*\[.*$/, '').slice(0, 42))}</b><small>${esc(x.id)} · since ${esc(x.first.slice(5))}${x.side === 'short' ? ' · short' : ''}</small></span>
         <span class="v2-tag ${x.ok ? (x.class === 'proven' ? 'edge' : 'promising') : 'no-edge'}">${x.ok ? (x.class === 'proven' ? 'Has an edge' : 'Promising') : 'No edge'}</span>
         <span class="spf-v"><b class="${cls(x.r5)}">${pc(x.r5)}</b><small>5 days</small></span><span class="spf-v"><b class="${cls(x.r_now)}">${pc(x.r_now)}</b><small>since</small></span></div>`).join('');
-    const cal = typeof spfCalTile === 'function' ? spfCalTile(S, V.length, A.length) : '';
+    const cal = spfCalTile(v.today);
     box.innerHTML = `<div class="v2-lh"><b>Who bought ${esc(S)} lately</b><span>nightly run · last ${v.days} trading days</span></div>
       <div class="sw-filt"><button class="hs-tier-chip${SPF.all ? '' : ' on'}" data-spf="v">✓ Validated ${V.length}</button><button class="hs-tier-chip${SPF.all ? ' on' : ''}" data-spf="a">All ${A.length}</button></div>
       ${L.length ? `<div class="sw-hero spf-hero"><div class="sw-hero-n ${cls(avg)}">${pc(avg)}<small> average 5-day result</small></div>
