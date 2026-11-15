@@ -10884,8 +10884,18 @@ const spfValidOld = x => x.class === 'proven' || x.class === 'promising' || (typ
 // Part 2: P(up 5 trading days later) for stock-days like today's (calib_tables 'up5', nightly_signals.py --calib: S&P 500 member-days 2021+,
 // bucketed by how many validated and library long strategies signalled that day)
 let SPF_CAL = null, SPF_CALP = null;
-function spfCalLoad() { return SPF_CALP ||= (async () => { try { const r = await sb('calib_tables?select=updated_at,base:data->base,by_valid:data->by_valid,by_all:data->by_all,grid:data->grid,from:data->from,to:data->to&name=eq.up5');
+function spfCalLoad() { return SPF_CALP ||= (async () => { try { const r = await sb('calib_tables?select=updated_at,base:data->base,by_valid:data->by_valid,by_all:data->by_all,grid:data->grid,from:data->from,to:data->to,cmp:data->models->compare,fin:data->models->final,post:data->models->per_spec_post&name=eq.up5');
   SPF_CAL = r?.[0] || null; } catch (e) { SPF_CAL = null; } })(); }
+const spfSig = z => 1 / (1 + Math.exp(-z));
+function spfModelP(F, t) {                                              // F = calib final (names, coef, cov, mu, sd, platt); 90% range from the Laplace covariance
+  if (!F?.coef || !t) return null;
+  const x = F.names.map(n => n === 'all_pct' ? (t.pct ?? 0.5) : Math.log1p(n === 'valid' ? t.valid : n === 'all' ? t.all : n === 'short' ? t.short : (t.fam?.[n.slice(4)] || 0)));
+  const z = [1, ...x.map((v, i) => (v - F.mu[i]) / F.sd[i])], lg = z.reduce((a, v, i) => a + v * F.coef[i], 0);
+  const vr = z.reduce((a, vi, i) => a + vi * z.reduce((b, vj, j) => b + F.cov[i][j] * vj, 0), 0), se = Math.sqrt(Math.max(0, vr));
+  const pl = F.platt || [0, 1], cal = l => spfSig(pl[0] + pl[1] * l);
+  return {raw: spfSig(lg), rlo: spfSig(lg - 1.645 * se), rhi: spfSig(lg + 1.645 * se), p: cal(lg), lo: cal(lg - 1.645 * se), hi: cal(lg + 1.645 * se)};
+}
+const SPF_MN = {M0: 'Base rate', M1: 'Frequency table', M2: 'Beta-Binomial (shrunk table)', M3: 'Bayesian logistic', M4: 'Bayesian logistic + Platt'};
 const spfVB = k => k >= 4 ? '4+' : String(k), spfAB = a => a <= 0 ? '0' : a <= 5 ? '1-5' : a <= 20 ? '6-20' : a <= 50 ? '21-50' : a <= 100 ? '51-100' : '101+';
 function spfCalTile(t) {
   if (!t) return '';
@@ -10893,12 +10903,17 @@ function spfCalTile(t) {
   if (!C) return `<div class="spf-cal pending"><b>Chance up 1 week later</b><span>being calibrated on 2021+ history: every S&amp;P 500 stock-day, which strategies bought, and whether the stock was up 5 trading days later</span></div>`;
   const kb = spfVB(t.valid), ab = spfAB(t.all), g = C.grid?.[`${kb}|${ab}`], use = g && g.n >= 300 ? g : C.by_valid?.[kb], why = g && g.n >= 300 ? `${t.valid} validated + ${t.all} library strategies buying` : `${t.valid} validated strategies buying`;
   if (!use?.n) return '';
-  const d = (use.up - C.base.up) * 100, w = x => Math.max(2, Math.min(98, x * 100));
+  // v2: the method that did best out of sample (lowest Brier, yearly walk-forward) decides what is shown; if none beats the base rate, say so
+  const cmp = C.cmp || {}, ms = Object.keys(cmp).filter(k => k !== 'M0'), best = ms.sort((a, b) => cmp[a].brier - cmp[b].brier)[0], beats = !!(best && cmp.M0 && cmp[best].brier < cmp.M0.brier);
+  const mp = beats && (best === 'M3' || best === 'M4') ? spfModelP(C.fin, t) : null, pm = mp ? (best === 'M4' ? [mp.p, mp.lo, mp.hi] : [mp.raw, mp.rlo, mp.rhi]) : null, shown = pm ? pm[0] : use.up;
+  const tbl = cmp.M0 ? `<p class="v2-note">Methods compared out of sample (each year predicted from earlier years only, 5-day gap): ${['M0', 'M1', 'M2', 'M3', 'M4'].filter(k => cmp[k]).map(k => `${SPF_MN[k]}: Brier ${cmp[k].brier.toFixed(5)}, AUC ${cmp[k].auc ?? '–'}, calibration error ${(cmp[k].ece * 100).toFixed(2)} pts`).join('; ')}. Lower Brier is better; AUC 0.5 = no ranking skill. ${beats ? `${SPF_MN[best]} did best and is shown.` : 'No method beat the plain base rate, so the number is the historical rate of similar days.'}</p>` : '';
+  const d = (shown - C.base.up) * 100, w = x => Math.max(2, Math.min(98, x * 100));
   return `<div class="spf-cal"><div class="spf-cal-h"><b>Chance up 1 week later</b><span class="sw-badge bt">◇ 2021+ history</span></div>
-    <div class="spf-cal-n ${d >= 0 ? 'v2-up' : 'v2-dn'}">${P(use.up)}<small> vs ${P(C.base.up)} normal · ${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)} pts</small></div>
-    <div class="od-bar spf-cal-bar"><i style="width:${w(use.up)}%" class="on"></i><b style="left:${w(C.base.up)}%"></b></div>
+    <div class="spf-cal-n ${d >= 0 ? 'v2-up' : 'v2-dn'}">${P(shown)}${pm ? `<small> (90%: ${P(pm[1])}–${P(pm[2])})</small>` : ''}<small> vs ${P(C.base.up)} normal · ${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)} pts</small></div>
+    <div class="od-bar spf-cal-bar"><i style="width:${w(shown)}%" class="on"></i><b style="left:${w(C.base.up)}%"></b></div>
+    <div class="spf-cal-m">${cmp.M0 ? (beats ? `◆ ${esc(SPF_MN[best])} · best of 5 methods out of sample` : '◇ no method beat the base rate out of sample') : ''}</div>
     <div class="spf-cal-s">${use.n.toLocaleString()} stock-days like today (${esc(why)}, ${esc(t.day || '')}) · 2021-23 ${P(use.h1?.up)} · 2024-26 ${P(use.h2?.up)}</div>
-    <p class="v2-note">How often an S&amp;P 500 stock closed higher 5 trading days later on past days when the same number of our validated strategies (and roughly as many library strategies) signalled a buy, ${esc(C.from || '')} to ${esc(C.to || '')}. The two periods show whether it held up over time. It is a historical rate, not a forecast; strategies overlap, so their signals are not independent votes.</p></div>`;
+    ${tbl}<p class="v2-note">How often an S&amp;P 500 stock closed higher 5 trading days later on past days when the same number of our validated strategies (and roughly as many library strategies) signalled a buy, ${esc(C.from || '')} to ${esc(C.to || '')}. The two periods show whether it held up over time. It is a historical rate, not a forecast; strategies overlap, so their signals are not independent votes.</p></div>`;
 }
 async function spfRender(card, S) {
   spfCalLoad();
@@ -10917,7 +10932,7 @@ async function spfRender(card, S) {
           return `<div class="spf-hist">${h.map((n, i) => `<div><i class="${i >= 4 ? 'up' : 'dn'}" style="height:${(n / hm * 100).toFixed(0)}%"></i><b>${n}</b><span>${lab[i]}</span></div>`).join('')}</div>`; })();
     const rows = srt.slice(0, 12).map(x => `<div class="spf-r"><span class="spf-n"><b>${esc(String(x.name).replace(/\s*\[.*$/, '').slice(0, 42))}</b><small>${esc(x.id)} · since ${esc(x.first.slice(5))}${x.side === 'short' ? ' · short' : ''}</small></span>
         <span class="v2-tag ${x.ok ? (x.class === 'proven' ? 'edge' : 'promising') : 'no-edge'}">${x.ok ? (x.class === 'proven' ? 'Has an edge' : 'Promising') : 'No edge'}</span>
-        <span class="spf-v"><b class="${cls(x.r5)}">${pc(x.r5)}</b><small>5 days</small></span><span class="spf-v"><b class="${cls(x.r_now)}">${pc(x.r_now)}</b><small>since</small></span></div>`).join('');
+        <span class="spf-v"><b class="${cls(x.r5)}">${pc(x.r5)}</b><small>5 days</small></span>${(() => { const q = SPF_CAL?.post?.[x.id]; return q ? `<span class="spf-v" title="historically up 5 days after its signals (pooled with its family), 90% range ${Math.round(q[1] * 100)}-${Math.round(q[2] * 100)}%"><b>${Math.round(q[0] * 100)}%</b><small>hist. up</small></span>` : ''; })()}<span class="spf-v"><b class="${cls(x.r_now)}">${pc(x.r_now)}</b><small>since</small></span></div>`).join('');
     const cal = spfCalTile(v.today);
     box.innerHTML = `<div class="v2-lh"><b>Who bought ${esc(S)} lately</b><span>nightly run · last ${v.days} trading days</span></div>
       <div class="sw-filt"><button class="hs-tier-chip${SPF.all ? '' : ' on'}" data-spf="v">✓ Validated ${V.length}</button><button class="hs-tier-chip${SPF.all ? ' on' : ''}" data-spf="a">All ${A.length}</button></div>
