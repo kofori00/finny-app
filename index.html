@@ -1746,6 +1746,7 @@
   .sw-hero-name small{font-size:11.5px;color:var(--muted)} .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   .sw-crumb{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:8px 0 2px;font-size:12.5px} .sw-crumb button{background:none;border:0;padding:2px 0;color:var(--good);font:600 12.5px var(--font-ui);cursor:pointer;text-decoration:underline}
   .sw-crumb button.on{color:var(--ink);text-decoration:none} .sw-crumb i{font-style:normal;color:var(--muted)} .sw-crumb b{font:700 12.5px var(--font-ui)}
+  .sw-ngnote{font-size:12px;color:var(--muted);margin:6px 0 0}
   .sw-filt{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px} .sw-fbtn{margin-left:auto}
   .sw-fpanel{display:grid;gap:8px;padding:10px 12px;margin:0 0 10px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .sw-fpanel>div{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .sw-fpanel small{width:100%;font:700 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
   .hs-s2.on{background:color-mix(in srgb,var(--good) 12%,var(--glass));border-color:var(--good)} .sw-gl{font:600 10.5px var(--font-ui);white-space:nowrap} .sw-gl.sw-g-core{color:var(--good)} .sw-gl.sw-g-reg{color:#7fb2ff} .sw-gl.sw-g-trend{color:#f0a24b}
@@ -8506,6 +8507,7 @@ function hsRender() {
   if (!HS.rows) { el.innerHTML = '<p class="note">Loading…</p>'; return; }
   if (!TL.loaded && !TL.busy && typeof tlLoad === 'function') { tlLoad().then(() => { if (HS.tab !== 'swing') hsRender(); }); }
   hsTabs(); if (HS.tab === 'swing') return hsSwing(el);
+  if (HS.rng === 'Now') HS.rng = '1W';                                   // 'Now' (open positions) exists on the swing tab only
 
   const LBL = {SXG4_V38_SPY200_TBill: 'SXG4 (Account 1)', NB069_SX25_V38: 'SX25 + V38', VX09_Deterministic_Drawdown_Stop_Circuit: 'VX09', ZX18_Volume_Adjusted_Moving_Average_VAMA: 'ZX18', SX30_Cross_Sleeve_Momentum_Shifter: 'SX30'};
   const short = r => LBL[r.name] || r.name.replace(/^(NB\d+|SXG\d+)_/, '').replace(/_/g, ' ').replace(/^SX25 Multi Sleeve Triple Parity$/, 'SX25').replace(/Deterministic Drawdown Stop Circuit/, '').trim();
@@ -8742,11 +8744,17 @@ function hsSwing(el) {
   const nm = t => { const p = TL.prof?.find(r => r.ticker === t); return p ? tlTitle(p.name) : ''; };
   const day = d => d ? new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : '';
 
+  // 2026-11-15 (user: "open trades right now is a separate date range"): helpers for the 'Now' range (return since the buy signal)
+  const swPNow = t => { const p = TL.prof?.find(r => r.ticker === t); return p?.f?.price ?? p?.sig?.close ?? null; };
+  const swOpenRet = (e, t) => { const d = e.dates?.[t] || H.get(t)?.d, a = +(e.pxm?.[t] ?? (TL.sigAll || []).find(x => x.strategy === (e.spec?.signal || e.key) && x.ticker === t && x.as_of === d)?.info?.close), b = +swPNow(t); return a > 0 && b > 0 ? b / a - 1 : null; };
   const swingEvaluated = SR.map(e => {
     const edge = hsEdge(e);
     const m = e.metrics || {};
     let raw = 0, fmt = '';
-    if (HS.rng === 'All') {
+    if (HS.rng === 'Now') {                                              // 2026-11-15: open positions, average return since their buy signal
+      const R_ = all.filter(h => h.by.includes(e)).map(h => swOpenRet(e, h.t)).filter(v => v != null);
+      raw = R_.length ? R_.reduce((a, v) => a + v, 0) / R_.length : -1; fmt = R_.length ? `${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(1)}% open · ${R_.length}` : `${all.filter(h => h.by.includes(e)).length} open`;
+    } else if (HS.rng === 'All') {
       raw = m.sharpe != null ? +m.sharpe : 0;
       fmt = 'Sharpe ' + raw.toFixed(2);
     } else if (HS.rng === '1W' || HS.rng === '1M') {
@@ -8819,7 +8827,10 @@ function hsSwing(el) {
   let hb = '', hn = '–', hc = '', hs = '', hk = [];
   if (S0) { const P = S0.perf?.[HS.rng], rc = (HS.rng === '1W' || HS.rng === '1M') ? S0.recent?.[w] : null, m = S0.metrics || {}, mp = +S0.spec?.max_pos || 10;
     const nOpen = all.filter(h => h.by.includes(S0)).length;
-    if (P && HS.rng !== 'All') { hb = '<span class="sw-badge live">● Replayed portfolio</span>'; hn = P.trades ? pct(P.ret * 100) : '0 trades'; hc = P.trades ? (P.ret >= 0 ? 'v2-up' : 'v2-dn') : '';
+    if (HS.rng === 'Now') { const R_ = all.filter(h => h.by.includes(S0)).map(h => swOpenRet(S0, h.t)).filter(v => v != null), av = R_.length ? R_.reduce((a, v) => a + v, 0) / R_.length : null;
+      hb = '<span class="sw-badge live">● Open now</span>'; hn = av != null ? pct(av * 100) : `${nOpen} open`; hc = av == null ? '' : av >= 0 ? 'v2-up' : 'v2-dn';
+      hs = av != null ? `average of ${R_.length} open position${R_.length === 1 ? '' : 's'} since their buy signal · ${R_.filter(v => v > 0).length} up · before costs` : 'open positions (no buy price stored for this strategy\'s picks)'; }
+    else if (P && HS.rng !== 'All') { hb = '<span class="sw-badge live">● Replayed portfolio</span>'; hn = P.trades ? pct(P.ret * 100) : '0 trades'; hc = P.trades ? (P.ret >= 0 ? 'v2-up' : 'v2-dn') : '';
       hs = P.trades ? `account result over ${HS.rng}, after costs · ${P.trades} closed trade${P.trades === 1 ? '' : 's'} · ${Math.round(P.won / P.trades * 100)}% won` : `no trade closed in the last ${HS.rng}`; }
     else if (rc) { hb = '<span class="sw-badge live">● Recent signals</span>'; hn = pct(rc.avg); hc = rc.avg >= 0 ? 'v2-up' : 'v2-dn';
       const hd = S0.spec?.hold || 5; hs = `average of ${rc.signals} closed trades: buy signals from ${hd}-${hd + w} trading days ago, each held ${hd} days, before costs · ${Math.round(rc.won)}% won · ${pct(rc.vs_spy)} vs SPY · not the stocks open now (network below)`; }   // 2026-11-15: user mixed this up with the open stocks
@@ -8832,7 +8843,7 @@ function hsSwing(el) {
   }
   const E0 = S0 ? hsEdge(S0) : null;
   const hero = `<div class="sw-hero"><div class="sw-hero-top">${hb}
-      <div class="ss-ranges sw-rng">${['1W', '1M', '6M', '1Y', 'All'].map(r => `<button class="ss-range-btn${HS.rng === r ? ' on' : ''}" data-hsrng="${r}">${r}</button>`).join('')}</div></div>
+      <div class="ss-ranges sw-rng">${['Now', '1W', '1M', '6M', '1Y', 'All'].map(r => `<button class="ss-range-btn${HS.rng === r ? ' on' : ''}" data-hsrng="${r}">${r}</button>`).join('')}</div></div>
     ${S0 ? `<div class="sw-hero-name"><b>${esc(S0.label)}</b><span class="v2-tag ${E0.cls}">${E0.label}</span></div>` : ''}
     <div class="sw-hero-n ${hc}">${hn}</div><div class="sw-hero-s">${esc(hs)}</div>
     <div class="sw-hero-k">${hk.join('')}</div></div>`;
@@ -8927,6 +8938,25 @@ function hsSwing(el) {
         }), {h: 330, legend: '<span style="color:hsl(140,70%,48%)">● green = up</span><span style="color:hsl(14,82%,52%)">● red = down</span><span>tap a strategy to see its stocks</span>'});
       }
       return;
+    }
+    if (HS.rng !== 'Now') {
+      const box = el.querySelector('#sw-ng');
+      if (!e.perf) { box.insertAdjacentHTML('beforebegin', `<p class="sw-ngnote">Closed trades per period are stored for the live swing set only; showing ${esc(e.key)}'s open positions (pick "Now" for their returns).</p>`); }
+      else {
+        const days = {'1W': 7, '1M': 30, '6M': 182, '1Y': 365, All: 365}[HS.rng] || 30, ck = `${e.key}|${days}`; HS.swClosed ||= {};
+        const drawClosed = T => {
+          if (HS.swSel !== e.key || !document.getElementById('sw-ng')) return;
+          const by = {}; for (const x of T) { const g = by[x.ticker] ||= {t: x.ticker, n: 0, w: 0, eq: 1, last: ''}; g.n++; g.w += +x.ret > 0; g.eq *= 1 + (+x.ret); if (x.exit > g.last) g.last = x.exit; }
+          const G = Object.values(by).map(g => ({...g, r: g.eq - 1})).sort((a, b) => Math.abs(b.r) - Math.abs(a.r)), top = G.slice(0, 24), tot = T.length;
+          ngDraw(document.getElementById('sw-ng'), {label: e.key, edge: edge.label, edgeCls: edge.cls, sub: `${tot} closed trade${tot === 1 ? '' : 's'} · ${HS.rng}`, state: edge.key === 'edge' ? 'up' : ''},
+            top.map(g => { const pf = ngPerf(g.r, g.w / g.n, 0.06); return {label: g.t, size: pf.size, fill: pf.fill, strength: Math.min(1, g.n / 5), tag: `${g.r >= 0 ? '+' : ''}${(g.r * 100).toFixed(1)}% · ${g.n} trade${g.n === 1 ? '' : 's'} · ${day(g.last)}`, tagCls: g.r >= 0 ? 'up' : 'dn', onTap: () => odGo(g.t)}; }),
+            {h: top.length > 12 ? 340 : 300, legend: `<span>closed trades in the last ${HS.rng === 'All' ? '1Y' : HS.rng} (replayed portfolio, after costs)</span><span>label = result per stock · trades · last exit</span>${G.length > 24 ? `<span>${G.length - 24} more stocks not drawn</span>` : ''}`});
+        };
+        if (HS.swClosed[ck]) drawClosed(HS.swClosed[ck]);
+        else { box.innerHTML = '<p class="note">Loading closed trades…</p>'; const cut = new Date(Date.parse(TL.asof || new Date().toISOString().slice(0, 10)) - days * 864e5).toISOString().slice(0, 10);
+          sb(`swing_reg_closed?select=ticker,entry,exit,ret&key=eq.${encodeURIComponent(e.key)}&exit=gt.${cut}&order=exit.desc&limit=5000`).then(T => { HS.swClosed[ck] = T || []; drawClosed(HS.swClosed[ck]); }).catch(() => { box.innerHTML = '<p class="note">Could not load the closed trades.</p>'; }); }
+        return;
+      }
     }
     if (HS.swNgView === 'sector') {
       ngDrawSectorGraph(el.querySelector('#sw-ng'), {
