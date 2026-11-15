@@ -1563,6 +1563,7 @@
   .rp-rh{display:flex;align-items:center;gap:8px} .rp-rh span{font-variant-numeric:tabular-nums} .rp-sigc{margin-left:auto;display:inline-flex;align-items:center;gap:3px;color:var(--good);font:700 11.5px var(--font-ui);font-style:normal} .rp-sigc svg{width:15px;height:15px}
   .rp-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px} .rp-c{padding:3px 8px;border-radius:999px;font:600 11px var(--font-ui);background:var(--glass-2);color:var(--muted)} .rp-c.ok{color:var(--good)}
   .rp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0} .rp-stats div{padding:10px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-line);text-align:center} .rp-stats b{display:block;font:800 18px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums} .rp-stats span{font-size:11px;color:var(--muted)}
+  .rp-open{font-size:12.5px;color:var(--ink-2,var(--ink));margin:10px 0 0;padding:10px 12px;border:1px solid var(--line,rgba(255,255,255,.08));border-radius:14px;line-height:1.45} .rp-open svg{width:14px;height:14px;vertical-align:-2px}
   .rp-disc{font-size:11px;color:var(--muted);margin:10px 0 0;display:flex;gap:6px;align-items:flex-start;line-height:1.4} .rp-disc svg{flex:none;width:15px;height:15px}
   .rp-tz-go{display:flex;align-items:center;justify-content:center;gap:6px} .rp-tz-go svg{fill:currentColor;stroke:none} .rp-csv{display:inline-flex;align-items:center;gap:6px}
   .rp-tz-h{display:flex;align-items:baseline;gap:8px} .rp-tz-h b{display:inline;font:700 14px var(--font-ui)} .rp-tz-h span{display:inline;margin:0 0 6px}
@@ -9307,6 +9308,20 @@ const RP_ROLE = {entry: 'Buy rule', regime: 'Market filter', exit: 'Sell rule'};
 const RP_SHORT = {ret_rank: 'Leader vs market', rank_in_sector: 'Leader in sector', max_ret: 'Big up-day lately', ibs: 'Closed near the low', spy_sma_ratio: 'Market in uptrend',
   sma_ratio: 'Above its average', beta: 'Moves more than market', vol_slope: 'Volume fading', squeeze: 'Calm before move', vzo: 'Volume pressure', swing_trend: 'Higher swing highs'};
 const rpShort = p => { if (p.label) return p.label.replace(/^(its|the) /, ''); const f = p.feature.replace(/\(.*$/, ''); return f === 'ibs' && /^>/.test(p.op) ? 'Closed near the high' : (RP_SHORT[f] || f); };
+// 2026-11-15 (user, CCL / VZO screenshot: two rows both "Volume pressure"): when two rules share a short name, add what each needs
+const RP_OPL = {cross_above: 'rises above', cross_below: 'falls below', 'crosses above': 'rises above', 'crosses below': 'falls below', '>': 'above', '>=': 'at least', '<': 'below', '<=': 'at most'};
+function rpLabel(p, all) {
+  const s = rpShort(p); if (!all || all.filter(q => rpShort(q) === s).length < 2) return s;
+  const t = p.threshold?.find(v => v != null), v = p.threshold_kind === 'fixed' && t != null ? +(+t).toPrecision(3) : '';
+  return `${s} ${RP_OPL[p.op] || p.op}${v !== '' ? ' ' + v : ''}`.trim();
+}
+// open position (also one bought before the window) + finished trades -> held flag per day
+function rpHeld(j) {
+  const n = j.days.length, idx = Object.fromEntries(j.days.map((d, i) => [d, i])), held = new Array(n).fill(false);
+  for (const t of j.trades) { const a = idx[t.entry] ?? 0, b = t.exit && idx[t.exit] != null ? idx[t.exit] : n - 1; for (let i = a; i <= b; i++) held[i] = true; }
+  if (j.open && (idx[j.open.entry] != null || j.open.entry < j.days[0])) for (let i = idx[j.open.entry] ?? 0; i < n; i++) held[i] = true;
+  return held;
+}
 const rpIcon = r => r === 'exit' ? IC.out : r === 'regime' ? IC.shield : IC.in;
 function rpOpen(sym, key, name, lib = false) {                    // lib: a library strategy (replay from the per-stock run, 250 days)
   let el = document.getElementById('rp-sheet');
@@ -9342,6 +9357,7 @@ function rpPrice(j, H) {                          // price with buys (▲), sell
   const held = new Array(n).fill(false); const marks = [];
   for (const t of j.trades) { const a = idx[t.entry] ?? 0, b = t.exit && idx[t.exit] != null ? idx[t.exit] : n - 1; for (let i = a; i <= b; i++) held[i] = true;
     if (idx[t.entry] != null) marks.push({i: a, up: true, t}); if (t.exit && idx[t.exit] != null) marks.push({i: b, up: false, t}); }
+  if (j.open && j.open.entry < j.days[0]) for (let i = 0; i < n; i++) held[i] = true;   // 2026-11-15: bought before the window, still held
   if (j.open && idx[j.open.entry] != null) { for (let i = idx[j.open.entry]; i < n; i++) held[i] = true; marks.push({i: idx[j.open.entry], up: true, t: {entry: j.open.entry, px: j.open.px, why: 'still open'}}); }
   // 6.198 (user: the backtest chart should look like the hero chart): smooth line with a soft glow and a fading sage area, dashed guide lines,
   // buys / sells as glowing dots on the line, holding periods as a brighter stretch of the area; fixed aspect so dots stay round
@@ -9381,7 +9397,7 @@ function rpBody(j) {
     const thr = fixed ? `<line class="rp-thr" x1="${RP_L}" x2="${RP_R}" y1="${yy(p.threshold.find(v => v != null)).toFixed(1)}" y2="${yy(p.threshold.find(v => v != null)).toFixed(1)}"/>`
       : `<path class="rp-thr" d="${rpPath(p.threshold, n, yy)}"/>`;
     const f = p.feature.replace(/\(.*$/, ''), words = RP_WORDS[f] || f;
-    return `<div class="rp-p" data-k="${k}"><div class="rp-lab rp-l2" title="${esc(RP_ROLE[p.role] || p.role)}: ${esc(p.rule)} (${esc(words)}; dashed line = ${esc(p.threshold_kind === 'fixed' ? 'threshold' : p.threshold_kind)})"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpShort(p))}</b><em>${on}d</em></div>
+    return `<div class="rp-p" data-k="${k}"><div class="rp-lab rp-l2" title="${esc(RP_ROLE[p.role] || p.role)}: ${esc(p.rule)} (${esc(words)}; dashed line = ${esc(p.threshold_kind === 'fixed' ? 'threshold' : p.threshold_kind)})"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpLabel(p, j.panels))}</b><em>${on}d</em></div>
       <svg viewBox="0 0 ${RP_W} ${PH}" preserveAspectRatio="none" class="rp-svg" data-h="${PH}">${rpBands(p.holds.map(Boolean), n, PH, p.role === 'exit' ? 'rp-onx' : 'rp-on')}${thr}<path class="rp-line rp-f" d="${rpPath(p.value, n, yy)}"/><line class="rp-cur" x1="-9" x2="-9" y1="0" y2="${PH}"/></svg></div>`;
   }).join('');
   const done = j.trades.filter(t => t.ret != null), win = done.filter(t => t.ret > 0).length; const cum = done.reduce((a, t) => a * (1 + (+t.ret || 0)), 1) - 1;   // 2026-11-14 (user): compounded total return of the finished trades, not the average
@@ -9391,9 +9407,14 @@ function rpBody(j) {
     target_dyn: () => 'dynamic target', stop_level: () => 'stop at a chart level', target_level: () => 'target at a chart level', stop_close: v => v ? 'stop on the close' : ''};
   const exitTxt = Object.entries(j.exit || {}).filter(([k]) => k !== 'exit_if').map(([k, v]) => EXW[k] ? EXW[k](v)
     : v !== null && typeof v === 'object' ? k.replace(/_/g, ' ') : `${k.replace(/_/g, ' ')} ${v}`).filter(Boolean).join(', ');
+  // 2026-11-15 (user: CCL showed 5 buy days but 0 trades): a position bought earlier is still held, so new buy days open nothing; say so
+  const o = j.open, last = [...j.close].reverse().find(v => v != null), sellIf = j.panels.filter(p => p.role === 'exit').map(p => rpLabel(p, j.panels).toLowerCase());
+  const openTxt = !o ? '' : `<p class="rp-open">${IC.info} <b>Still holding${o.entry < j.days[0] ? ' since before this range' : ''}:</b> bought ${esc(o.entry)} at $${(+o.px).toFixed(2)}${last ? `, now $${(+last).toFixed(2)} (<span class="${last >= o.px ? 'v2-up' : 'v2-dn'}">${pc((j.side === 'short' ? -1 : 1) * (last / o.px - 1))}</span>)` : ''}.
+      It holds one position at a time, so buy days while holding open nothing new. It sells when ${sellIf.length ? esc(sellIf.join(' or ')) : 'its exit rule hits'}${j.exit?.hold ? ` or after ${+j.exit.hold} trading days` : ''}. Not counted in the trades above until it is sold.</p>`;
   return `<div class="rp-read" aria-live="polite"></div>${price}${rpStrips(j)}<details class="rp-raw"><summary>Show values</summary>${panels}</details>
     <div class="rp-stats"><div><b>${done.length}</b><span>trades</span></div><div><b class="${done.length ? (win / done.length >= 0.5 ? 'v2-up' : 'v2-dn') : ''}">${done.length ? Math.round(win / done.length * 100) + '%' : '–'}</b><span>won</span></div>
       <div><b class="${done.length && cum >= 0 ? 'v2-up' : 'v2-dn'}">${done.length ? pc(cum) : '–'}</b><span>total return</span></div></div>
+    ${openTxt}
     <details class="rp-tr"><summary>${IC.chart} All trades${exitTxt ? ` · ${esc(exitTxt)}` : ''}</summary>${done.length ? `<table><tr><th>Buy</th><th>Sell</th><th>In</th><th>Out</th><th>Result</th><th>Why sold</th></tr>${done.map(t => `<tr><td>${esc(t.entry)}</td><td>${esc(t.exit)}</td><td>$${(+t.px).toFixed(2)}</td><td>$${(+t.xt).toFixed(2)}</td><td class="${t.ret >= 0 ? 'v2-up' : 'v2-dn'}">${pc(t.ret)}</td><td>${esc(t.why)}</td></tr>`).join('')}</table>` : '<p class="note">No completed trade in this window.</p>'}
       <button class="rp-csv">${IC.dl} CSV</button></details>
     <p class="rp-disc">${IC.info} Hypothetical backtest · adjusted daily prices · entry at the close · no costs here${j.member ? '' : ' · ranked as if in the S&amp;P 500'} · not advice</p>`;
@@ -9405,7 +9426,7 @@ function rpWire(card, j) {
     const fmt = v => v == null ? '–' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3);
     read.classList.toggle('sig', !!j.signal[i]);   // 2026-11-14: the day card turns green on a signal day, like the verdict cards
     read.innerHTML = `<div class="rp-rh"><b>${esc(j.days[i])}</b><span>$${fmt(j.close[i])}</span>${j.signal[i] ? `<em class="rp-sigc">${IC.buy}signal</em>` : ''}</div><div class="rp-chips">` + j.panels.map(p =>
-      `<span class="rp-c ${p.holds[i] ? 'ok' : 'no'}" title="${esc(p.rule)}: ${fmt(p.value[i])} vs ${fmt(p.threshold[i])}">${p.holds[i] ? '✓' : p.holds[i] === null ? '·' : '✗'} ${esc(rpShort(p))}</span>`).join('') + '</div>';
+      `<span class="rp-c ${p.holds[i] ? 'ok' : 'no'}" title="${esc(p.rule)}: ${fmt(p.value[i])} vs ${fmt(p.threshold[i])}">${p.holds[i] ? '✓' : p.holds[i] === null ? '·' : '✗'} ${esc(rpLabel(p, j.panels))}</span>`).join('') + '</div>';
   };
   card.querySelectorAll('.rp-svg').forEach(svg => {
     const at = e => { const r = svg.getBoundingClientRect(), x = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * RP_W; return Math.max(0, Math.min(n - 1, Math.round((x - RP_L) / (RP_R - RP_L) * (n - 1)))); };
@@ -9456,10 +9477,10 @@ function rpStrips(j) {
   const gauge = p => { const v = p.value[n - 1], t = p.threshold[n - 1]; if (v == null || t == null) return '';
     const lo = Math.min(v, t), hi = Math.max(v, t), pad = (hi - lo) * 0.6 || Math.abs(t) * 0.5 || 1, a = lo - pad, b = hi + pad, X = z => ((z - a) / (b - a) * 100).toFixed(1);
     const ok = p.holds[n - 1]; return `<span class="rp-g" title="now ${fmt(v)}, needs ${esc(p.op)} ${fmt(t)}"><i class="tr"></i><i class="th" style="left:${X(t)}%"></i><i class="vv ${ok ? 'ok' : 'no'}" style="left:${X(v)}%"></i></span>`; };
-  const buyRules = j.panels.filter(p => p.role !== 'exit');
-  const rows = j.panels.map(p => `<div class="rp-row"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpShort(p))}</b>${gauge(p)}<em class="${p.holds[n - 1] ? 'ok' : ''}">${p.holds[n - 1] ? '✓' : '✗'}</em></div>${strip(p.holds.map(Boolean), p.role === 'exit' ? 'rp-sx' : 'rp-sy')}`).join('');
+  const buyRules = j.panels.filter(p => p.role !== 'exit'), H = rpHeld(j), busy = j.signal.filter((f, i) => f && H[i] && !(j.trades.some(t => t.entry === j.days[i]) || j.open?.entry === j.days[i])).length;
+  const rows = j.panels.map(p => `<div class="rp-row"><span class="rp-ri ${p.role}">${rpIcon(p.role)}</span><b>${esc(rpLabel(p, j.panels))}</b>${gauge(p)}<em class="${p.holds[n - 1] ? 'ok' : ''}">${p.holds[n - 1] ? '✓' : '✗'}</em></div>${strip(p.holds.map(Boolean), p.role === 'exit' ? 'rp-sx' : 'rp-sy')}`).join('');
   return `<div class="rp-tl"><div class="rp-tlh"><b>When each rule was met</b><span>green = met that day · gauge = today vs the line it must cross</span></div>${rows}
-    <div class="rp-row all"><span class="rp-ri entry">${IC.buy}</span><b>All buy rules met</b><em>${j.signal.filter(Boolean).length} days</em></div>${strip(j.signal, 'rp-sall')}${rpAxis(j)}</div>`;
+    <div class="rp-row all"><span class="rp-ri entry">${IC.buy}</span><b>All buy rules met</b><em>${j.signal.filter(Boolean).length} day${j.signal.filter(Boolean).length === 1 ? '' : 's'}${busy ? ` · ${busy} while already holding` : ''}</em></div>${strip(j.signal, 'rp-sall')}${rpAxis(j)}</div>`;
 }
 
 // 6.200 (user: "maybe place a time x-axis?"): month ticks shared by the price chart and the rule timeline (same x positions)
