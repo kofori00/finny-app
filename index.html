@@ -1719,6 +1719,10 @@
   .sw-badge.live{color:var(--good);border-color:var(--good)} .sw-badge.bt{border-style:dashed}
   .sw-hero-n{font:800 40px/1.1 var(--font-display);font-variant-numeric:tabular-nums;margin:10px 0 2px} .sw-hero-s{font-size:12px;color:var(--muted)}
   .sw-hero-k{display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line);font-size:12px;color:var(--muted)} .sw-hero-k b{color:var(--ink);font:800 15px var(--font-display);margin-right:4px}
+  .sw-hero-n small{font:600 15px var(--font-ui);color:var(--muted)} .sw-hero-s2{font-size:12px;color:var(--muted);margin-top:4px} .sw-hero-s2 b{font-weight:800}
+  .sw-bars{display:flex;align-items:center;gap:3px;height:64px;margin:10px 0 4px;background:linear-gradient(transparent calc(50% - .5px),var(--glass-line) calc(50% - .5px),var(--glass-line) calc(50% + .5px),transparent calc(50% + .5px))}
+  .sw-bar{flex:1;min-width:6px;height:100%;padding:0;border:0;background:none;display:flex;cursor:pointer;position:relative} .sw-bar i{display:block;width:100%;border-radius:3px;position:absolute;left:0}
+  .sw-bar.up i{bottom:50%;max-height:50%;background:hsl(140,55%,45%)} .sw-bar.dn i{top:50%;max-height:50%;background:hsl(14,75%,52%)} .sw-bar.on i{outline:2px solid var(--ink);outline-offset:1px}
   .sw-filt{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px} .sw-fbtn{margin-left:auto}
   .sw-fpanel{display:grid;gap:8px;padding:10px 12px;margin:0 0 10px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)} .sw-fpanel>div{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .sw-fpanel small{width:100%;font:700 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
   .hs-s2.on{background:color-mix(in srgb,var(--good) 12%,var(--glass));border-color:var(--good)} .sw-gl{font:600 10.5px var(--font-ui);white-space:nowrap} .sw-gl.sw-g-core{color:var(--good)} .sw-gl.sw-g-reg{color:#7fb2ff} .sw-gl.sw-g-trend{color:#f0a24b}
@@ -8771,10 +8775,19 @@ function hsSwing(el) {
     if (C.length) { const md = C[Math.floor(C.length / 2)]; heroV = HS.rng === 'All' ? md : (HS.rng === '6M' ? md / 2 : md) * 100; heroS = HS.rng === 'All' ? 'median Sharpe' : HS.rng === '6M' ? 'median half-year pace' : 'median a year'; } }
   const nOpen = new Set(all.filter(h => h.by.some(e => VAL.some(x => x.e === e))).map(h => h.t)).size;
   const heroTxt = heroV == null ? '–' : HS.rng === 'All' ? heroV.toFixed(2) : `${heroV >= 0 ? '+' : ''}${heroV.toFixed(1)}%`;
+  // 2026-11-15 (user: "what is this 3 percent? confusing"): the main number is now "k of n strategies gained" with one bar per strategy
+  // (tap = show it in the network); the pooled average of all trades stays as a small second line
+  const per = VAL.map(x => ({e: x.e, v: live ? x.e.recent?.[w]?.avg : HS.rng === 'All' ? x.e.metrics?.sharpe : x.e.metrics?.cagr != null ? x.e.metrics.cagr * 100 * (HS.rng === '6M' ? 0.5 : 1) : null}))
+    .filter(x => x.v != null && isFinite(x.v)).sort((a, b) => b.v - a.v);
+  const nUp = per.filter(x => x.v > 0).length, vmax = Math.max(1e-9, ...per.map(x => Math.abs(x.v)));
+  const bars = per.length ? `<div class="sw-bars" role="list">${per.map(x => `<button type="button" class="sw-bar ${x.v >= 0 ? 'up' : 'dn'}${x.e.key === HS.swSel ? ' on' : ''}" data-sel="${esc(x.e.key)}" role="listitem"
+      title="${esc(x.e.label)}: ${HS.rng === 'All' ? 'Sharpe ' + x.v.toFixed(2) : (x.v >= 0 ? '+' : '') + x.v.toFixed(1) + '%'}"><i style="height:${Math.max(3, Math.abs(x.v) / vmax * 50).toFixed(0)}%"></i></button>`).join('')}</div>` : '';
+  const what = live ? `average trade per strategy, signals of the last ${w} trading days` : HS.rng === 'All' ? 'backtest Sharpe per strategy' : HS.rng === '6M' ? 'half a year at each strategy\'s backtest pace' : 'backtest growth a year per strategy';
   const hero = `<div class="sw-hero"><div class="sw-hero-top"><span class="sw-badge ${live ? 'live' : 'bt'}">${live ? '● Recent signals' : '◇ Backtest · hypothetical'}</span>
       <div class="ss-ranges sw-rng">${['1W', '1M', '6M', '1Y', 'All'].map(r => `<button class="ss-range-btn${HS.rng === r ? ' on' : ''}" data-hsrng="${r}">${r}</button>`).join('')}</div></div>
-    <div class="sw-hero-n ${heroV == null || HS.rng === 'All' ? '' : heroV >= 0 ? 'v2-up' : 'v2-dn'}">${heroTxt}</div>
-    <div class="sw-hero-s">${esc(heroS || 'no data for this timeframe')} · validated strategies</div>
+    <div class="sw-hero-n">${per.length ? `<span class="${nUp * 2 >= per.length ? 'v2-up' : 'v2-dn'}">${nUp}</span><small> of ${per.length} ${live ? 'strategies gained' : HS.rng === 'All' ? 'with Sharpe above 0' : 'positive'}</small>` : '–'}</div>
+    ${bars}<div class="sw-hero-s">each bar = one validated strategy, ${what} · tap a bar</div>
+    ${heroV != null ? `<div class="sw-hero-s2">${live ? `All their trades together: <b class="${heroV >= 0 ? 'v2-up' : 'v2-dn'}">${heroTxt}</b> ${esc(heroS)}` : `Typical: <b>${heroTxt}</b> ${esc(heroS)}`}</div>` : ''}
     <div class="sw-hero-k"><span><b>${VAL.length}</b> validated</span><span><b>${nOpen}</b> stocks held</span><span><b>${swingEvaluated.length - VAL.length}</b> no edge</span></div></div>`;
   const vc = swingEvaluated.filter(x => x.edge.key !== 'no_edge').length, grpN = g => swingEvaluated.filter(x => hsGrp(x.e).k === g).length;
   const fchip = (k, l, cur, attr) => `<button class="hs-tier-chip${cur === k ? ' on' : ''}" ${attr}="${k}">${l}</button>`;
