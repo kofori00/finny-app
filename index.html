@@ -1740,6 +1740,7 @@
   .spf-h2n{font:800 12px var(--font-ui);min-height:15px} .spf-h2b{height:80px;width:100%;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px solid var(--glass-line)}
   .spf-h2b i{display:block;width:80%;border-radius:4px 4px 0 0} .spf-h2b i.up{background:hsl(140,55%,45%)} .spf-h2b i.dn{background:hsl(14,75%,52%)}
   .spf-h2l{font-size:9.5px;color:var(--muted);text-align:center;line-height:1.15} .spf-h2s{font-size:9px;color:var(--muted);min-height:11px} .spf-dh .hs-sigall{margin-left:auto}
+  .spf-bx{font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.4}
   .spf{margin-top:16px} .spf-hero{margin-top:6px} .spf-bars{height:56px} .sw-bar.open i{opacity:.5}
   .spf-hist{display:flex;align-items:flex-end;gap:4px;height:80px;margin:10px 0 0} .spf-hist>div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:9.5px;color:var(--muted)}
   .spf-hist i{display:block;width:100%;border-radius:3px 3px 0 0} .spf-hist i.up{background:hsl(140,55%,45%)} .spf-hist i.dn{background:hsl(14,75%,52%)} .spf-hist b{font-size:10px;color:var(--ink)} .spf-hist span{white-space:nowrap}
@@ -11013,12 +11014,33 @@ function spfCalTile(t) {
     <p class="v2-note">${(tbl + (C.v3t ? (() => { const sk = Object.entries(C.v3t).flatMap(([tn, v]) => Object.entries(v.models || {}).filter(([m]) => m !== 'B0').map(([m, r]) => ({tn, m, sk: r.skill_vs_base, auc: r.auc}))).sort((a, b) => b.sk - a.sk)[0], M = C.v3m;
       return ` Also tested out of sample (2022-26): three targets (up, beats SPY, beats its sector fund) x regime-aware, recency-weighted, FDR-filtered and dynamically averaged models; best was ${esc(sk?.m || '')} on "${esc((sk?.tn || '').replace('_', ' '))}" with ${((sk?.sk || 0) * 100).toFixed(2)}% Brier skill (AUC ${sk?.auc ?? '–'}): too small to use. Strict multiple-testing filter: no library strategy passed on 2021-24 data.${M ? ` Meta-labeling ${M.trades.toLocaleString()} trades of our validated strategies (their own exits): ${Math.round((M.win_top_half + M.win_bottom_half) * 50)}% won, +${(M.avg_trade_all * 100).toFixed(2)}% average after costs; the meta-model did not beat each strategy's own win rate.` : ''}`; })() : '')).replace(/<\/?p[^>]*>/g, ' ')} Days like today (${esc(why)}) were higher a week later ${P(use.up)} of the time, not reliably different from normal. Data basis: ${use.n.toLocaleString()} past stock-days like today (${esc(why)}, ${esc(t.day || '')}); 2021-23 ${P(use.h1?.up)}, 2024-26 ${P(use.h2?.up)}. How often an S&amp;P 500 stock closed higher 5 trading days later on past days when the same number of our validated strategies (and roughly as many library strategies) signalled a buy, ${esc(C.from || '')} to ${esc(C.to || '')}. The two periods show whether it held up over time. It is a historical rate, not a forecast; strategies overlap, so their signals are not independent votes.</p></div>`;
 }
+// 2026-11-16 (user: "I want it done per stock"): per-stock Bayesian win rate of each strategy that bought the stock. Data = its trades on THIS
+// stock (per-stock records, GitHub via gh-data: [n, won, ...] all history, its own exits); prior = its overall win rate on all S&P 500 stocks
+// (library_results); prior weight M from this stock (empirical Bayes: how much the strategies' results on this stock spread around their overall
+// rates beyond chance). Posterior = (won + M p) / (n + M), 90% range (normal approximation of the Beta).
+const SPF_REC = {};
+async function spfRecords(S) {
+  if (SPF_REC[S]) return SPF_REC[S];
+  try { const token = await getToken(), r = await fetch(`${SB_URL}/functions/v1/gh-data`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({op: 'get', kind: 'records', key: S})});
+    const j = await r.json(); SPF_REC[S] = j?.ok ? j.data || {} : {}; } catch (e) { SPF_REC[S] = {}; }
+  return SPF_REC[S];
+}
+function spfStockBayes(strats, rec) {
+  const R = strats.filter(x => x.wr != null && rec?.[x.id]?.[0] > 0).map(x => ({id: x.id, n: rec[x.id][0], w: rec[x.id][1], p: x.wr}));
+  const B = R.filter(r => r.n >= 5); let M = 50;
+  if (B.length >= 5) { const N = B.reduce((a, r) => a + r.n, 0), dev = B.reduce((a, r) => a + r.n * (r.w / r.n - r.p) ** 2, 0) / N, noise = B.reduce((a, r) => a + r.p * (1 - r.p) / r.n, 0) / B.length;
+    const pb = B.reduce((a, r) => a + r.p, 0) / B.length, t2 = Math.max(1e-4, dev - noise); M = Math.min(500, Math.max(5, pb * (1 - pb) / t2 - 1)); }
+  const out = {}; for (const r of R) { const a = r.w + M * r.p, b = r.n - r.w + M * (1 - r.p), m = a / (a + b), sd = Math.sqrt(a * b / ((a + b) ** 2 * (a + b + 1)));
+    out[r.id] = {n: r.n, w: r.w, p: r.p, post: m, lo: Math.max(0, m - 1.645 * sd), hi: Math.min(1, m + 1.645 * sd)}; }
+  return {M, n: R.length, by: out};
+}
 async function spfRender(card, S) {
   spfCalLoad();
   let box = card.querySelector('.spf'); if (!box) { (card.querySelector('.ssf-info') || card.lastElementChild || card).insertAdjacentHTML('afterend', '<div class="spf"></div>'); box = card.querySelector('.spf'); }
   if (!box) return; box.innerHTML = '<p class="note">Loading who bought it…</p>';
-  let v; try { [v] = await Promise.all([spfFetch(S), spfCalLoad()]); } catch (e) { box.innerHTML = `<p class="note">Could not load the strategies that bought ${esc(S)}: ${esc(e.message)}</p>`; return; }
+  let v, rec; try { [v, , rec] = await Promise.all([spfFetch(S), spfCalLoad(), spfRecords(S)]); } catch (e) { box.innerHTML = `<p class="note">Could not load the strategies that bought ${esc(S)}: ${esc(e.message)}</p>`; return; }
   const draw = () => {
+    const SB = spfStockBayes(v.strategies || [], rec || {});
     const VS = new Set(v.valid_ids || []), A = (v.strategies || []).map(x => ({...x, ok: v.valid_ids ? VS.has(x.id) : spfValidOld(x)})), V = A.filter(x => x.ok), L = SPF.all ? A : V;
     const pc = x => x == null ? '–' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}%`, cls = x => x == null ? '' : x >= 0 ? 'v2-up' : 'v2-dn';
     const done = L.filter(x => x.r5 != null), up = done.filter(x => x.r5 > 0).length, avg = done.length ? done.reduce((a, x) => a + x.r5, 0) / done.length : null;
@@ -11034,9 +11056,11 @@ async function spfRender(card, S) {
     const vtag = x => `<span class="v2-tag ${x.ok ? (x.class === 'proven' ? 'edge' : 'promising') : 'no-edge'}">${x.ok ? (x.class === 'proven' ? 'Has an edge' : 'Promising') : 'No edge'}</span>`;
     const own = x => { const T = SPF_CAL?.ts?.[x.id], q = SPF_CAL?.post?.[x.id];
       return (T ? `<span class="spf-v" title="its own trades since 2021 (its exit rules, after 0.1% costs): ${T.trades} trades, average win ${pc(T.avg_win)}, average loss ${pc(T.avg_loss)}"><b class="${cls(T.avg)}">${Math.round(T.won * 100)}% · ${pc(T.avg)}</b><small>its trades</small></span>` : '')
-        + (q ? `<span class="spf-v" title="how often the stock was up 5 days after this strategy's signals since 2021 (pooled with its family), 90% range ${Math.round(q[1] * 100)}-${Math.round(q[2] * 100)}%"><b>${Math.round(q[0] * 100)}%</b><small>hist. up</small></span>` : ''); };
+        + (() => { const b = SB.by[x.id], P = v => Math.round(v * 100) + '%';
+            return b ? `<span class="spf-v" title="on ${esc(S)}: ${b.w} of ${b.n} trades won (${P(b.w / b.n)}); its win rate on all S&P 500 stocks ${P(b.p)}; Bayesian estimate for ${esc(S)} ${P(b.post)} (90%: ${P(b.lo)}-${P(b.hi)}), prior weight ${Math.round(SB.M)} trades"><b class="${b.post >= b.p ? 'v2-up' : 'v2-dn'}">${P(b.post)}</b><small>wins on ${esc(S)} · ${b.w}/${b.n}</small></span>`
+              : x.wr != null ? `<span class="spf-v" title="no trades on ${esc(S)} yet: its win rate on all S&P 500 stocks"><b>${P(x.wr)}</b><small>overall · 0 on ${esc(S)}</small></span>` : ''; })(); };
     const byDay = {}; for (const x of L) (byDay[x.first] ||= []).push(x);
-    const rank = x => (x.ok ? 1 : 0) * 10 + (SPF_CAL?.post?.[x.id]?.[0] ?? 0);
+    const rank = x => (x.ok ? 1 : 0) * 10 + (SB.by[x.id]?.post ?? x.wr ?? 0);
     const rowsF = () => Object.keys(byDay).sort().reverse().map(d => { const X = byDay[d].sort((a, b) => rank(b) - rank(a)), D0 = DY[d] || {}, r = D0.r5 ?? D0.rn;
       return `<div class="spf-g"><div class="spf-gh"><b>${esc(dmo(d))}</b><span>${X.length} strateg${X.length === 1 ? 'y' : 'ies'} bought${D0.v ? ` (${D0.v} validated)` : ''}</span>
           <span class="spf-gv ${cls(r)}">${r == null ? '' : `${S} ${pc(r)} ${D0.r5 != null ? 'in the next 5 days' : 'so far'}`}</span></div>
@@ -11066,6 +11090,7 @@ async function spfRender(card, S) {
     box.innerHTML = `<div class="v2-lh"><b>Who bought ${esc(S)} lately</b><span>nightly run · last ${v.days} trading days</span></div>
       <div class="sw-filt"><button class="hs-tier-chip${SPF.all ? '' : ' on'}" data-spf="v">✓ Validated ${V.length}</button><button class="hs-tier-chip${SPF.all ? ' on' : ''}" data-spf="a">All ${A.length}</button></div>
       ${L.length ? `${dayBlock}${cal}
+        <p class="spf-bx">Wins on ${esc(S)} = Bayesian estimate per strategy: its trades on ${esc(S)}, pulled toward its win rate on all S&amp;P 500 stocks (worth about ${Math.round(SB.M)} trades, estimated from ${esc(S)}). Green = better on ${esc(S)} than usual, red = worse.</p>
         <div class="spf-list">${rowsF()}</div>`
         : `<p class="note">No ${SPF.all ? '' : 'validated '}strategy bought ${esc(S)} in the last ${v.days} trading days${!SPF.all && A.length ? ` (${A.length} unvalidated ones did: tap All)` : ''}.</p>`}
       <p class="v2-note">Each strategy counts once: its first buy signal for ${esc(S)} in the window (close of that day). "5 days" = the stock's move over the next 5 trading days (reversed for short strategies), "since" = to the latest close (${esc(v.as_of || '')}). This is the stock's move after the signal, not the strategy's own exit rule, and before costs. Validated = Has an edge or Promising in our tests.</p>`;
