@@ -744,7 +744,7 @@
   #mv-panel .mv-eu-d{grid-column:1/-1;margin:0 0 4px} #mv-panel .mv-eu-d .mp-box{margin:0}
   #mv-panel .mv-c-mp{background:rgba(217,119,6,.13);color:#b45309} #mv-panel .mv-c-mpall{background:rgba(217,119,6,.28);font-weight:700}
   .mp-box{margin:12px 0 0;padding:12px 14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line);font-size:13px;color:var(--ink-2)}
-  .mp-box summary{cursor:pointer;line-height:1.45} .mp-box summary b{color:var(--ink)} .mp-warn{margin:8px 0;font-size:12px;color:#b45309;line-height:1.45}
+  .mp-box summary{cursor:pointer;line-height:1.45} .mp-box summary b{color:var(--ink)} .mp-warn{margin:8px 0;font-size:12px;color:#b45309;line-height:1.45} .mp-spike{background:#fef3c7;border-left:3px solid #d97706;padding:6px 8px;border-radius:6px;color:#92400e}
   .mp-f{margin:8px 0 4px;line-height:1.5} .mp-r{margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--glass-line)}
   .mp-rh{display:flex;justify-content:space-between;gap:8px} .mp-rh b{color:var(--ink)} .mp-rh .mp-all{color:#b45309;font-weight:700}
   .mp-r ul{list-style:none;margin:4px 0 0;padding:0} .mp-r li{margin:2px 0;line-height:1.4} .mp-r li.ok{color:var(--good)} .mp-r li.no{color:var(--muted)}
@@ -9213,14 +9213,19 @@ function mpLoad(force) {
   return MP.busy;
 }
 const mpBest = r => Object.values(r?.rules || {}).sort((a, b) => (b.all - a.all) || (b.met / b.of - a.met / a.of))[0] || null;
+// 2026-11-16 (user, GMM +176% on news, "Leader Dip 4/5": "it applies but with a warning"): a >= 20% move today is a news spike or a collapse,
+// not the dip / pullback these rules were built for. The scorecard stays, with this warning above it (card, mover chip, Ask Finny).
+const mpSpike = r => { const p = +r?.pct; return !isFinite(p) || Math.abs(p) < 20 ? '' : p > 0
+  ? `Today is a news spike (+${Math.round(p)}%), not a dip: "closes weak" and "down since the open" are true because the spike is fading, and part of the 60-day return is today's jump. The dip rules were built for small pullbacks in strong stocks, not for this.`
+  : `Today is a collapse (${Math.round(p)}%), not a pullback: these rules were built for small dips, not for a drop this size, which often has news behind it.`; };
 const mpPc = (x, d = 0) => x == null ? '–' : (x >= 0 ? '+' : '') + (x * 100).toFixed(d) + '%';
 const v2mvRenderMP = mvRender; mvRender = function () {
   v2mvRenderMP(); if (MV.scope !== 'all') return;
   if (!MP.rows || Date.now() - MP.at > 5 * 60e3) { if (!MP.busy) mpLoad(true).then(() => { if (MV.scope === 'all') mvRender(); }); if (!MP.rows) return; }
   document.querySelectorAll('#mv-body .mv-row').forEach(row => {
     const r = MP.rows[row.dataset.od], b = mpBest(r); if (!b || row.querySelector('.mv-c-mp')) return;
-    const tip = `${b.name}: ${b.met} of ${b.of} conditions met (${b.conds.filter(c => !c.ok).map(c => 'missing: ' + c.t).join('; ') || 'all met'}). Our swing rules were tested on S&P 500 stocks only: untested here, not a signal.`;
-    row.querySelector('.mv-tags')?.insertAdjacentHTML('afterbegin', `<span class="mv-chip mv-c-mp${b.all ? ' mv-c-mpall' : ''}" title="${esc(tip)}">${esc(b.name)} ${b.met}/${b.of}</span>`);
+    const sp = mpSpike(r), tip = `${b.name}: ${b.met} of ${b.of} conditions met (${b.conds.filter(c => !c.ok).map(c => 'missing: ' + c.t).join('; ') || 'all met'}). Our swing rules were tested on S&P 500 stocks only: untested here, not a signal.${sp ? ' Warning: ' + sp : ''}`;
+    row.querySelector('.mv-tags')?.insertAdjacentHTML('afterbegin', `<span class="mv-chip mv-c-mp${b.all ? ' mv-c-mpall' : ''}" title="${esc(tip)}">${sp ? '⚠ ' : ''}${esc(b.name)} ${b.met}/${b.of}</span>`);
   });
 };
 const v2HeroMP = v2Hero; v2Hero = function (A) {
@@ -9244,13 +9249,14 @@ const v2HeroMP = v2Hero; v2Hero = function (A) {
   const html = `<details class="mp-box" id="mp-box" open><summary><b>Mover check</b> · ${S} is a top ${r.list === 'losers' ? 'loser' : 'gainer'} outside the S&amp;P 500 · ${when}</summary>
     <p class="mp-warn"><b>Untested here.</b> Our swing rules were tested on S&amp;P 500 stocks only; small, fast-moving stocks behave differently
     (in our research, lottery-like spikes like these had the weakest returns afterwards). Information for your own judgement, not a signal.
-    During the session the day's range and close are approximate.</p>${body}</details>`;
+    During the session the day's range and close are approximate.</p>${mpSpike(r) ? `<p class="mp-warn mp-spike">⚠ <b>Warning:</b> ${esc(mpSpike(r))}</p>` : ''}${body}</details>`;
   if (box) box.outerHTML = html; else (document.getElementById('hs-line') || hs).insertAdjacentHTML('afterend', html);
 };
 const v2akContextMP = akContext; akContext = function () {
   const c = v2akContextMP(); if (!c || c.sp500_member) return c; const r = MP.rows?.[c.symbol]; if (!r?.rules) return c;
   return {...c, mover_check_untested_outside_sp500: {as_of: r.as_of, list: r.list, rank120_vs_sp500: r.f?.rank120, rank60_vs_sp500: r.f?.rank60,
     rules: Object.values(r.rules).map(x => ({rule: x.name, met: x.met, of: x.of, missing: x.conds.filter(k => !k.ok).map(k => k.t)})),
+    ...(mpSpike(r) ? {warning_big_move_today: mpSpike(r)} : {}),
     note: 'our swing rules applied to a stock outside the S&P 500: never tested on such stocks; information, not a signal'}};
 };
 // Ask Finny's strategy_fit lookup (runs here, in the app): for a stock outside the S&P 500 it also returns the mover check (6.143)
@@ -9262,6 +9268,7 @@ const v2akFitMP = AK_LOOK.strategy_fit; AK_LOOK.strategy_fit = async function (a
   if (!r.rules) return {...out, mover_check: {checked: true, as_of: r.as_of, rules_checked: false, days_of_history: r.f?.days,
     note: r.f?.too_new ? `Only ${r.f.days} days of trading: too little history to check the swing rules.` : 'No trade data for today yet; checked again within 15 minutes.'}};
   return {...out, mover_check: {checked: true, as_of: r.as_of, checked_at: r.at, list: r.list === 'losers' ? 'top loser' : 'top gainer', untested_outside_sp500: why,
+    ...(mpSpike(r) ? {warning_big_move_today: mpSpike(r)} : {}),
     return_120d: r.f?.ret120, beats_pct_of_sp500_120d: r.f?.rank120 == null ? null : Math.round(r.f.rank120 * 100),
     return_60d: r.f?.ret60, beats_pct_of_sp500_60d: r.f?.rank60 == null ? null : Math.round(r.f.rank60 * 100), beta_60d: r.f?.beta60, ibs_today: r.f?.ibs, days_of_history: r.f?.days,
     rules: Object.values(r.rules).sort((p, q) => (q.all - p.all) || (q.met / q.of - p.met / p.of)).map(x => ({rule: x.name, conditions_met: x.met, of: x.of, all_met: x.all,
