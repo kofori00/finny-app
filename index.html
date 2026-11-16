@@ -10971,7 +10971,7 @@ const v1odShowA = odShowA; odShowA = function (A) { v1odShowA(A); OD.lastA = A; 
 // after 1 week". Part 1 (here): every library strategy that signalled the stock in the nightly run's last 21 trading days (stock-signals
 // op strat_perf): return 5 trading days after its first signal in the window and since then; aggregate; validated (Has an edge / Promising,
 // incl. our curated swing set) by default, all on a toggle. Part 2 (P(up in 1 week) from the 2021+ calibration) shows when SPF_CAL is loaded.
-const SPF = {cache: {}, all: false};
+const SPF = {cache: {}, all: false, mode: 'succ'};   // mode: succ (default) | valid | all
 async function spfFetch(S) {
   const c = SPF.cache[S]; if (c && Date.now() - c.at < 10 * 6e4) return c.v;
   const token = await getToken(), r = await fetch(`${SB_URL}/functions/v1/stock-signals`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({op: 'strat_perf', symbol: S})});
@@ -11041,7 +11041,7 @@ async function spfRender(card, S) {
   let v, rec; try { [v, , rec] = await Promise.all([spfFetch(S), spfCalLoad(), spfRecords(S)]); } catch (e) { box.innerHTML = `<p class="note">Could not load the strategies that bought ${esc(S)}: ${esc(e.message)}</p>`; return; }
   const draw = () => {
     const SB = spfStockBayes(v.strategies || [], rec || {});
-    const VS = new Set(v.valid_ids || []), A = (v.strategies || []).map(x => ({...x, ok: v.valid_ids ? VS.has(x.id) : spfValidOld(x)})), V = A.filter(x => x.ok), L = SPF.all ? A : V;
+    const VS = new Set(v.valid_ids || []), A = (v.strategies || []).map(x => ({...x, ok: v.valid_ids ? VS.has(x.id) : spfValidOld(x)})), V = A.filter(x => x.ok), SC = A.filter(x => { const b = SB.by[x.id]; return b && b.n >= 5 && b.w / b.n > b.p && b.lo > 0.5; }), L = SPF.mode === 'all' ? A : SPF.mode === 'valid' ? V : SC;   // 2026-11-16 (user: 'only include successful ticker-strategies'): succ = per-stock Bayesian 90% lower bound > 50%
     const pc = x => x == null ? '–' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}%`, cls = x => x == null ? '' : x >= 0 ? 'v2-up' : 'v2-dn';
     const done = L.filter(x => x.r5 != null), up = done.filter(x => x.r5 > 0).length, avg = done.length ? done.reduce((a, x) => a + x.r5, 0) / done.length : null;
     const srt = L.slice().sort((a, b) => (b.r5 ?? b.r_now ?? -9) - (a.r5 ?? a.r_now ?? -9)), mx = Math.max(0.01, ...srt.map(x => Math.abs(x.r5 ?? x.r_now ?? 0)));
@@ -11088,13 +11088,14 @@ async function spfRender(card, S) {
       <div class="sw-hero-s">each bar = one day strategies bought ${esc(S)}: up = it rose, down = it fell in the next 5 trading days (faded = not 5 days yet) · below: date and how many strategies bought (✓ validated)</div>` : `${hist}
       <div class="sw-hero-s">bars = how many buy days ended in each range, 5 trading days later (tap a bar for the dates) · red = fell, green = rose${dk.length < days.length ? ` · ${days.length - dk.length} recent day${days.length - dk.length === 1 ? '' : 's'} not counted yet` : ''}</div>`}</div>`;
     box.innerHTML = `<div class="v2-lh"><b>Who bought ${esc(S)} lately</b><span>nightly run · last ${v.days} trading days</span></div>
-      <div class="sw-filt"><button class="hs-tier-chip${SPF.all ? '' : ' on'}" data-spf="v">✓ Validated ${V.length}</button><button class="hs-tier-chip${SPF.all ? ' on' : ''}" data-spf="a">All ${A.length}</button></div>
+      <div class="sw-filt"><button class="hs-tier-chip${SPF.mode === 'succ' ? ' on' : ''}" data-spf="s">★ Successful on ${esc(S)} ${SC.length}</button><button class="hs-tier-chip${SPF.mode === 'valid' ? ' on' : ''}" data-spf="v">✓ Validated ${V.length}</button><button class="hs-tier-chip${SPF.mode === 'all' ? ' on' : ''}" data-spf="a">All ${A.length}</button></div>
+      ${SPF.mode === 'succ' ? `<p class="spf-bx">★ = strategies that bought ${esc(S)} lately and won more often on ${esc(S)} than on other stocks, over at least 5 trades, and reliably more wins than losses there (Bayesian 90% range above 50%). Candidates to watch, not predictions: this selection is not yet tested on later weeks.</p>` : ''}
       ${L.length ? `${dayBlock}${cal}
         <p class="spf-bx">Wins on ${esc(S)} = Bayesian estimate per strategy: its trades on ${esc(S)}, pulled toward its win rate on all S&amp;P 500 stocks (worth about ${Math.round(SB.M)} trades, estimated from ${esc(S)}). Green = better on ${esc(S)} than usual, red = worse.</p>
         <div class="spf-list">${rowsF()}</div>`
-        : `<p class="note">No ${SPF.all ? '' : 'validated '}strategy bought ${esc(S)} in the last ${v.days} trading days${!SPF.all && A.length ? ` (${A.length} unvalidated ones did: tap All)` : ''}.</p>`}
+        : `<p class="note">${SPF.mode === 'succ' ? `None of the ${A.length} strategies that bought ${esc(S)} lately has a reliable winning record on ${esc(S)} (tap All to see them).` : `No ${SPF.mode === 'all' ? '' : 'validated '}strategy bought ${esc(S)} in the last ${v.days} trading days${SPF.mode !== 'all' && A.length ? ` (${A.length} others did: tap All)` : ''}.`}</p>`}
       <p class="v2-note">Each strategy counts once: its first buy signal for ${esc(S)} in the window (close of that day). "5 days" = the stock's move over the next 5 trading days (reversed for short strategies), "since" = to the latest close (${esc(v.as_of || '')}). This is the stock's move after the signal, not the strategy's own exit rule, and before costs. Validated = Has an edge or Promising in our tests.</p>`;
-    box.querySelectorAll('[data-spf]').forEach(b => b.onclick = () => { SPF.all = b.dataset.spf === 'a'; draw(); });
+    box.querySelectorAll('[data-spf]').forEach(b => b.onclick = () => { SPF.mode = {s: 'succ', v: 'valid', a: 'all'}[b.dataset.spf]; SPF.all = SPF.mode === 'all'; draw(); });
     const tv = box.querySelector('[data-spfv]'); if (tv) tv.onclick = () => { SPF.byDay = !SPF.byDay; draw(); };
   };
   draw();
