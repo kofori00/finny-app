@@ -744,7 +744,7 @@
   #mv-panel .mv-eu-d{grid-column:1/-1;margin:0 0 4px} #mv-panel .mv-eu-d .mp-box{margin:0}
   #mv-panel .mv-c-mp{background:rgba(217,119,6,.13);color:#b45309} #mv-panel .mv-c-mpall{background:rgba(217,119,6,.28);font-weight:700}
   .mp-box{margin:12px 0 0;padding:12px 14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line);font-size:13px;color:var(--ink-2)}
-  .mp-box summary{cursor:pointer;line-height:1.45} .mp-box summary b{color:var(--ink)} .mp-warn{margin:8px 0;font-size:12px;color:#b45309;line-height:1.45} .mp-spike{background:#fef3c7;border-left:3px solid #d97706;padding:6px 8px;border-radius:6px;color:#92400e}
+  .mp-box summary{cursor:pointer;line-height:1.45} .mp-box summary b{color:var(--ink)} .mp-warn{margin:8px 0;font-size:12px;color:#b45309;line-height:1.45} .mp-spike{background:#fef3c7;border-left:3px solid #d97706;padding:6px 8px;border-radius:6px;color:#92400e} .fd-card{margin:10px 0 14px;padding:12px;border-radius:12px;border:1px solid var(--line,#e5e7eb);background:var(--card,#fff)} .fd-h b{display:block;font-size:15px;color:var(--ink)} .fd-h span{font-size:12px;color:var(--muted,#6b7280)} .fd-facts{display:grid;gap:6px;margin:10px 0} .fd-f{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.35} .fd-f small{display:block;color:var(--muted,#6b7280);font-size:11.5px} .fd-i{flex:0 0 22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff} .fd-f.no .fd-i{background:#d9534f} .fd-f.yes .fd-i{background:#3f9d63} .fd-why{margin-top:8px} .fd-wh{font-size:12px;font-weight:600;margin-bottom:6px} .fd-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:8px;align-items:center;margin:5px 0} .fd-n b{display:block;font-size:12.5px} .fd-n small{display:block;font-size:11px;color:var(--muted,#6b7280);line-height:1.25} .fd-sb{display:flex;height:12px;border-radius:6px;overflow:hidden;background:#eef0f3} .fd-sb i{display:block;height:100%} .fd-leg{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted,#6b7280);margin-top:6px} .fd-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px} .spf-fd{font-size:12px;line-height:1.4;margin:6px 0;padding:6px 8px;border-radius:8px;background:#eef6f0;color:#245c3a}
   .mp-f{margin:8px 0 4px;line-height:1.5} .mp-r{margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--glass-line)}
   .mp-rh{display:flex;justify-content:space-between;gap:8px} .mp-rh b{color:var(--ink)} .mp-rh .mp-all{color:#b45309;font-weight:700}
   .mp-r ul{list-style:none;margin:4px 0 0;padding:0} .mp-r li{margin:2px 0;line-height:1.4} .mp-r li.ok{color:var(--good)} .mp-r li.no{color:var(--muted)}
@@ -1553,8 +1553,8 @@
   </section>
 
   <div class="panel od-panel" id="od-panel" data-view="analyze">
-    <div class="panel-title"><span class="pt-ic pt-odds" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/><circle cx="12" cy="16" r="1.4"/></svg></span>Odds checker</div>
-    <p class="od-lead">Any US stock or ETF. Separate tickers with commas to compare.</p>
+    <div class="panel-title">Stock check</div>
+    <p class="od-lead">Any US stock or ETF: what it is, how it moved, which strategy profiles it fits. No up/down odds (see below why).</p>
     <div class="od-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
       <input id="od-input" placeholder="Ticker, e.g. NVDA" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="od-go">Check</button><div id="od-sugg" class="tl-sugg" hidden></div></div>
     <div id="od-sig" class="od-sig"></div>
@@ -5797,6 +5797,7 @@ const mvList = (c, tab) => { if (!c) return []; const x = mvExt(c);
 // per-ticker 1-week odds (2026-10-24): the SAME headline as the odds checker (the stock's own record, or a tested swing signal), fetched
 // with ticker-odds for the rows on screen only, 4 symbols per call, cached 10 minutes by odOwn; failed fetches are retried after 2 minutes
 async function mvOddsLoad(syms) {
+  if (typeof ODDS_OFF !== 'undefined' && ODDS_OFF) return;   // 2026-11-17: no odds fetches while they are hidden
   const now = Date.now(), need = syms.filter(s => !MV.busy.has(s) && !(MV.odds[s] && !(MV.odds[s].retry && now - MV.odds[s].at > 12e4)));
   if (!need.length) return; need.forEach(s => MV.busy.add(s));
   await Promise.all([tlLoad(), odLoad()]).catch(() => {});
@@ -5847,7 +5848,8 @@ function mvRender() {
   const pctCls = x => x == null ? '' : x >= 0 ? 'mv-up' : 'mv-dn';
   const fmtP = x => x == null ? '–' : x >= 100 ? x.toFixed(2) : x >= 1 ? x.toFixed(2) : x.toFixed(4);
   const spx = new Set((typeof TL !== 'undefined' && TL.loaded ? TL.prof : []).map(x => x.ticker));
-  const odds = r => { const o = MV.odds[r.symbol];
+  const odds = r => { if (typeof ODDS_OFF !== 'undefined' && ODDS_OFF) return '';   // 2026-11-17: odds hidden
+    const o = MV.odds[r.symbol];
     if (!o || (o.retry && MV.busy.has(r.symbol))) return '<span class="mv-chip mv-c-wait" title="Loading this stock\'s own record">1w odds …</span>';
     if (o.err) return /history/i.test(o.err) ? '<span class="mv-chip mv-c-wait" title="Too little trading history for odds">too new for odds</span>' : '';
     const p = Math.round(o.v * 100), yr = (o.first || '').slice(0, 4);
@@ -5896,6 +5898,7 @@ function mvInit() {
 //    later, in up- and down-markets, over the last 3 years and after days with a move like today's. A base rate for that stock, not a forecast.
 // Non-S&P stocks are scored with the S&P-trained pattern model against today's S&P 500 cross-section (approximate; not used for ETFs or
 // illiquid / sub-$5 stocks, where only the own record is shown).
+const ODDS_OFF = true;   // 2026-11-17 (user: "hide the odds part for now"): no probability / chance-up numbers anywhere; research_findings.js explains why
 const OD = {odds: null, busy: false, ticker: null, own: {}, cmp: []};
 const OD_H = [[5, '1 week'], [10, '2 weeks'], [21, '1 month'], [63, '3 months']];
 const OD_F = {ret_1d: ['f', 'ret_1d'], ret_5d: ['f', 'ret_5d'], mom1m: ['f', 'mom1m'], mom6_1: ['f', 'mom6_1'], mom12_1: ['f', 'mom12_1'], dist_52w_high: ['f', 'dist_52w_high'],
@@ -6139,6 +6142,13 @@ async function odSyncFit(sym) {
   await tlLoad(); if (!TL.loaded || box.value === sym || !TL.prof.some(r => r.ticker === sym)) return;
   pan.open = true; box.value = sym; setTimeout(() => document.getElementById('tl-go').click(), 400);
 }
+function odFindingsPlain(A, pl, rsw) {                  // ODDS_OFF: which strategy profiles the stock fits today, without any up / down odds
+  const on = A.member ? (A.sigs || []).filter(([, o]) => o).map(([k]) => k) : [], extra = (rsw || []).map(s => s.code), all = [...on, ...extra];
+  const keep = (pl || []).filter(x => /Why it moved|Calendar and time of day/.test(x));
+  return `<div class="od-plain"><div class="od-plh">What this means</div><ul>
+    <li><b>Strategy signals:</b> ${all.length ? `${esc(A.sym)} fits the profile of ${all.map(esc).join(', ')} today. That is a description, not a forecast: in our tests a buy day was no better than a random day of the same stock; a strategy's edge only shows across many trades.` : `no strategy signal for ${esc(A.sym)} today.`}</li>
+    <li><b>Up or down next?</b> Nothing we tested predicts it (past record, market dips, earnings, regime). Odds are hidden while we re-check them.</li>${keep.join('')}</ul></div>`;
+}
 function odShowA(A) {
   const el = document.getElementById('od-body'); if (!el) return; OD.ticker = A.sym;
   if (typeof heroOdds === 'function') heroOdds(A);                                 // Analyze hero chart follows the checked stock
@@ -6195,17 +6205,17 @@ function odShowA(A) {
         <div class="od-nm">${esc(tlTitle(A.name || ''))}${A.p?.sector ? ' · ' + esc(A.p.sector) : ''}</div></div>
       <div class="od-px">$${isFinite(A.f.price) ? (+A.f.price).toFixed(2) : '–'}<span class="${today >= 0 ? 'pos' : 'neg'}">${odS(today, 2)}</span></div></div>
     ${A.own?.spark ? `<div class="od-chart">${odSpark(A.own.spark, 320, 54)}<div class="od-chs"><span>1 year</span><span>${odS(A.f.mom12m ?? A.own.f?.mom12m)}</span></div></div>` : ''}
-    <div class="od-tiles">${odTodayTile(A)}${A.H.map(odTile).join('')}</div>
-    ${plain}
-    <details class="od-more"><summary>Show the evidence (${ev.length})</summary>
+    ${ODDS_OFF ? '' : `<div class="od-tiles">${odTodayTile(A)}${A.H.map(odTile).join('')}</div>`}
+    ${ODDS_OFF ? odFindingsPlain(A, pl, rsw) : plain}
+    ${ODDS_OFF ? '' : `<details class="od-more"><summary>Show the evidence (${ev.length})</summary>
     <div class="od-verdict ${R || A.op ? 'on' : ''}">${verdict}</div>
     <div class="od-ev">${ev.map(([k, v, s, t, tip]) => `<div class="od-evr"><span class="od-tag od-${t}">${TAG[t]}</span>
-      <div><div class="od-evk">${esc(k)}${v ? ` <b>${esc(v)}</b>` : ''}</div><div class="od-evs">${s}</div><div class="od-evt">${esc(tip)}</div></div></div>`).join('')}</div></details>
+      <div><div class="od-evk">${esc(k)}${v ? ` <b>${esc(v)}</b>` : ''}</div><div class="od-evs">${s}</div><div class="od-evt">${esc(tip)}</div></div></div>`).join('')}</div></details>`}
     ${odCatalyst(A)}
     ${odSeason(A)}
     ${A.modelOk && A.x ? `<details class="about"><summary>What drives the pattern score</summary>${odDrivers(A.x)}</details>` : ''}
     <div class="od-acts"><button class="od-act${inCmp ? ' on' : ''}" id="od-addcmp">${inCmp ? '✓ In compare' : '+ Compare'}</button>${A.member ? `<button class="od-act od-fitb" id="od-full"><span>Strategy fit</span><b>${cls ? esc(cls.label) + ' · ' + sc.toFixed(0) : 'Open'}</b><i>→</i></button>` : ''}</div>
-    <details class="about od-about"><summary>About these odds</summary><p class="tl-foot">${A.member ? 'Today from the open: LightGBM on 13 previous-close price ranks + the opening gap, walk-forward 2021-26 (Bible 6.70). Longer horizons: S&amp;P 500 backtests found no edge, so the tiles show the swing signal when active, else the stock\'s own record (a base rate). ' : ''}Own record from Alpaca daily bars (split and dividend adjusted)${A.own?.as_of ? ' through ' + esc(A.own.as_of) : ''}. History, not a promise; not investment advice.</p></details>`;
+    ${ODDS_OFF ? '' : `<details class="about od-about"><summary>About these odds</summary><p class="tl-foot">${A.member ? 'Today from the open: LightGBM on 13 previous-close price ranks + the opening gap, walk-forward 2021-26 (Bible 6.70). Longer horizons: S&amp;P 500 backtests found no edge, so the tiles show the swing signal when active, else the stock\'s own record (a base rate). ' : ''}Own record from Alpaca daily bars (split and dividend adjusted)${A.own?.as_of ? ' through ' + esc(A.own.as_of) : ''}. History, not a promise; not investment advice.</p></details>`}`;
   odCxWire(A);
   document.getElementById('od-addcmp').onclick = () => { odCmpToggle(A.sym); odShowA(A); };
   const full = document.getElementById('od-full'); if (full) full.onclick = () => { const box = document.getElementById('tl-input'), pan = document.getElementById('tl-panel'); if (pan) pan.open = true;
@@ -6252,6 +6262,7 @@ async function odCmp() {
 }
 function odSignals() {                                 // the two things with a tested edge right now: today's open odds and swing signals
   const el = document.getElementById('od-sig'); if (!el || !TL.loaded) return;
+  if (ODDS_OFF) { el.innerHTML = ''; return; }
   const base = OD.openMeta?.base_up ?? 0.505;
   let html = '';
   if (OD.open?.rows?.length) {
@@ -6547,6 +6558,13 @@ function heroTiles(A) {                                                      // 
     miss: '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4M17 8l4 4-4 4"/>'};
   const win = HERO.win === '3m' ? 'last 3 months' : 'last 12 months', S = esc(A.sym);
   const tile = (icon, val, label, src, tip = '') => `<div${tip ? ` title="${tip}"` : ''}>${ic(icon)}<b>${val}</b><span class="hs-l">${label}</span><span class="hs-s">${src}</span></div>`;
+  if (typeof ODDS_OFF !== 'undefined' && ODDS_OFF) {                           // 2026-11-17: facts only, no up/down chances (research_findings.js)
+    const nsig = A.member ? (A.sigs || []).filter(([, o]) => o).length : 0, y = A.f?.mom12m ?? A.own?.f?.mom12m;
+    box.innerHTML = tile(I.odds, String(nsig), `strategy profile${nsig === 1 ? '' : 's'} ${S} fits today`, 'a description, not a forecast')
+      + tile(I.hit, isFinite(y) ? (y >= 0 ? '+' : '') + (y * 100).toFixed(0) + '%' : '…', `${S} over the past year`, 'what already happened')
+      + tile(I.miss, isFinite(A.f?.vol20) ? (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '…', `${S}'s normal swing in a week, up or down`, 'risk: 1 standard deviation');
+    const acc0 = document.getElementById('hero-acc'); if (acc0) acc0.hidden = true; return;
+  }
   box.innerHTML = tile(I.odds, p == null ? '…' : Math.round(p * 100) + '%', `chance ${S} is higher in 1 week`, w?.head?.edge ? 'from a tested buy signal' : `from ${S}'s own history`, w?.head?.src ? esc(w.head.src) : '')
     + tile(I.hit, A.H?.[2]?.head?.v == null ? '…' : Math.round(A.H[2].head.v * 100) + '%', `chance ${S} is higher in 1 month`, `from ${S}'s own history`)
     + tile(I.miss, isFinite(A.f?.vol20) ? (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : '…', `${S}'s normal swing in a week, up or down`, `1 standard deviation: about 2 in 3 weeks move less than ${isFinite(A.f?.vol20) ? (A.f.vol20 / Math.sqrt(52) * 100).toFixed(1) + '%' : 'this'} (last 20 trading days)`);
@@ -6591,9 +6609,11 @@ function heroOdds(A) {                                                       // 
   document.querySelector('.hero-art')?.classList.remove('stale');
   document.body.classList.remove('an-empty');
   const w = A.H?.[0], p = w?.head?.v ?? null, vals = A.own?.spark;
-  const k = document.getElementById('h-k'); if (k) k.textContent = w?.head?.edge ? 'UP NEXT WEEK · SIGNAL' : 'UP NEXT WEEK';
+  const OFF = typeof ODDS_OFF !== 'undefined' && ODDS_OFF;
+  const k = document.getElementById('h-k'); if (k) k.textContent = OFF ? 'PAST YEAR' : w?.head?.edge ? 'UP NEXT WEEK · SIGNAL' : 'UP NEXT WEEK';
   HERO.last = A; heroTiles(A); if (typeof akChips === 'function') akChips();   // every update: the first quick estimate is replaced once the stock's own history arrives
-  if (vals) heroDraw(vals, p, `${A.sym} · past year`, A.own?.wf);
+  if (vals) { heroDraw(vals, OFF ? null : p, `${A.sym} · past year`, OFF ? null : A.own?.wf);
+    if (OFF) { const v = document.getElementById('h-v'), y = vals[vals.length - 1] / vals[0] - 1; if (v && isFinite(y)) { v.textContent = (y >= 0 ? '+' : '') + (y * 100).toFixed(0) + '%'; v.classList.toggle('neg', y < 0); } } }
   else if (fresh) { const c = document.getElementById('h-cap'); if (c) c.textContent = `${A.sym} · loading…`; const v = document.getElementById('h-v'); if (v) v.textContent = p == null ? '…' : Math.round(p * 100) + '%'; }
   if (fresh) { const g = document.getElementById('h-fit'); if (g) g.style.display = A.member ? '' : 'none'; if (A.member) document.getElementById('h-t').textContent = 'Strategy fit …';
     if (!A.member) { const tb = document.getElementById('tl-body'); if (tb) tb.innerHTML = `<p class="note">Strategy fit scores S&amp;P 500 stocks against every validated strategy; ${esc(A.sym)} is not in today's S&amp;P 500.</p>`; } }
