@@ -11247,6 +11247,15 @@ if (typeof odShowA === 'function') {
   const _fhShow = odShowA;
   odShowA = function (A) { const r = _fhShow.apply(this, arguments); try { if (A?.sym) fhFill(A.sym, isFinite(A.f?.price) ? +A.f.price : null); } catch (e) {} return r; };
 }
+if (typeof AK_LOOK === 'object' && AK_LOOK.compare_stocks) {               // compare_stocks has S&P 500 fundamentals only: add Finnhub for the others
+  const _fhCmp = AK_LOOK.compare_stocks;
+  AK_LOOK.compare_stocks = async function (a = {}) {
+    const o = await _fhCmp.call(this, a);
+    try { const mem = new Set((typeof TL !== 'undefined' && TL.prof ? TL.prof : []).map(r => r.ticker)), others = (a.symbols || []).map(s => String(s).toUpperCase()).filter(s => !mem.has(s)).slice(0, 6);
+      if (others.length && o && typeof o === 'object') o.non_sp500_company_facts = (await AK_LOOK.company_snapshot({symbols: others})).companies; } catch (e) {}
+    return o;
+  };
+}
 if (typeof AK_LOOK === 'object') AK_LOOK.company_snapshot = async ({symbol, symbols} = {}) => {   // one ticker or up to 6 (comparisons); ANY US stock
   const list = [...new Set([...(Array.isArray(symbols) ? symbols : []), ...(symbol ? [symbol] : [])].map(x => String(x).trim()).filter(Boolean))].slice(0, 6);
   const one = async t => { try { const s = await akSym(t); const j = await fhGet(s); return {symbol: s, as_of: j.at, ...(j.data || {})}; } catch (e) { return {symbol: t, error: e.message}; } };
