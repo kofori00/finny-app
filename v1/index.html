@@ -6967,16 +6967,44 @@ const AK_LOOK = {
     }
     await Promise.all([tlLoad(), odLoad()]); const base = OD.openMeta?.base_up ?? 0.505;
     const o = OD.open?.rows?.slice().sort((a, b) => b.p_up - a.p_up) || [], row = x => ({symbol: x.ticker, chance_close_above_open_pct: akPc(x.p_up)});
-    let premarket = null;
+    let premarket = null, moversCheck = null;
     try {
-      const mv = (await sb('live_movers?select=at,last_updated,ext&order=at.desc&limit=1'))[0];
-      if (mv?.ext && mv.ext.session === 'pre' && Date.now() - Date.parse(mv.at) < 30 * 60e3) {
-        const topGainers = (mv.ext.all?.gainers || []).slice(0, 5).map(x => ({ symbol: x.symbol, change_pct: x.pct, price: x.price }));
-        const topLosers = (mv.ext.all?.losers || []).slice(0, 5).map(x => ({ symbol: x.symbol, change_pct: x.pct, price: x.price }));
-        premarket = { session: 'premarket', as_of: mv.at, top_gainers: topGainers, top_losers: topLosers, note: 'Premarket moves vs last close. Swing strategies normally execute at Market-On-Close; for premarket what-if signals on specific stocks, use stock_swing_signals.' };
+      const mv = (await sb('live_movers?select=at,last_updated,gainers,losers,ext&order=at.desc&limit=1'))[0];
+      if (mv) {
+        const isPre = mv.ext?.session === 'pre' && Date.now() - Date.parse(mv.at) < 30 * 60e3;
+        const gainersList = (isPre ? (mv.ext.all?.gainers || mv.ext.gainers) : mv.gainers) || [];
+        const isJunk = r => (typeof mvJunk === 'function' ? mvJunk(r) : /\b(warrants?|units?|rights?)\b/i.test(r?.name || '') || (/[WUR]$/.test(r?.symbol) && /acquisition/i.test(r?.name || '')));
+        const nonSpGainers = gainersList.filter(x => x?.symbol && !isJunk(x) && !TL.prof.some(p => p.ticker === x.symbol) && (x.price == null || x.price >= 0.5)).slice(0, 4);
+        if (nonSpGainers.length && typeof ssFetch === 'function') {
+          const sigs = await ssFetch(nonSpGainers.map(x => x.symbol)).catch(() => ({}));
+          const list = nonSpGainers.map(x => {
+            const s = sigs?.[x.symbol], active = (s?.strategies || []).filter(st => st.signal_now).map(st => st.name);
+            return {
+              symbol: x.symbol,
+              name: x.name,
+              change_pct: x.pct,
+              price: x.price,
+              session: s?.session || (isPre ? 'premarket' : 'regular'),
+              active_swing_signals: active,
+              rule_matches: active.length ? active.join(', ') : 'none'
+            };
+          });
+          moversCheck = {
+            session: isPre ? 'premarket' : 'regular',
+            as_of: mv.at,
+            tested_universe_note: "Untested what-ifs outside S&P 500: our swing strategies were backtested on S&P 500 stocks.",
+            top_non_sp500_movers_checked: list
+          };
+        }
+        if (isPre) {
+          const topGainers = (mv.ext.all?.gainers || []).slice(0, 5).map(x => ({ symbol: x.symbol, change_pct: x.pct, price: x.price }));
+          const topLosers = (mv.ext.all?.losers || []).slice(0, 5).map(x => ({ symbol: x.symbol, change_pct: x.pct, price: x.price }));
+          premarket = { session: 'premarket', as_of: mv.at, top_gainers: topGainers, top_losers: topLosers, note: 'Premarket moves vs last close. Swing strategies normally execute at Market-On-Close; for premarket what-if signals on specific stocks, use stock_swing_signals.' };
+        }
       }
     } catch (_) {}
     return {swing_buy_signals: TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => ({symbol: r.ticker, signal: r.sig.R18L26 ? 'R18L26' : 'R18P12'})), swing_signals_as_of_close: TL.asof,
+      ...(moversCheck ? { non_sp500_movers_check: moversCheck } : {}),
       ...(premarket ? { premarket } : {}),
       from_the_open: o.length ? {date: OD.open.as_of, is_today: OD.open.as_of === odEtToday(), typical_chance_pct: akPc(base), best: o.slice(0, 5).map(row), weakest: o.slice(-5).reverse().map(row)} : 'not available yet today (appears about 09:35 New York time)'};
   }
