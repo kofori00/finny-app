@@ -6962,7 +6962,8 @@ const AK_LOOK = {
       if (!d) return {note: 'no signal log that far back', first_close_on_record: ds[ds.length - 1]};
       const rows = await sb(`live_signal_log?select=ticker,strategy&as_of=eq.${d}&strategy=in.(${codes.join(',')})&order=ticker`);
       const by = {}; for (const r of rows) (by[r.ticker] = by[r.ticker] || []).push(r.strategy);
-      return {signals_at_close_of: d, latest_close_on_record: ds[0], swing_buy_signals: Object.entries(by).map(([symbol, st]) => ({symbol, signals: st.map(c => `${c} (${lab[c] || c})`)})),
+      const nameOf = typeof TL !== 'undefined' && TL.prof ? Object.fromEntries(TL.prof.map(p => [p.ticker, p.name])) : {};
+      return {signals_at_close_of: d, latest_close_on_record: ds[0], swing_buy_signals: Object.entries(by).map(([symbol, st]) => ({symbol, name: nameOf[symbol] || symbol, signals: st.map(c => `${c} (${lab[c] || c})`)})),
         note: 'Signals fire at the close; the swing strategies buy at that close and hold about 5-10 trading days. Earlier closes: ' + ds.slice(0, 10).join(', ')};
     }
     await Promise.all([tlLoad(), odLoad()]); const base = OD.openMeta?.base_up ?? 0.505;
@@ -7003,7 +7004,7 @@ const AK_LOOK = {
         }
       }
     } catch (_) {}
-    return {swing_buy_signals: TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => ({symbol: r.ticker, signal: r.sig.R18L26 ? 'R18L26' : 'R18P12'})), swing_signals_as_of_close: TL.asof,
+    return {swing_buy_signals: TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => ({symbol: r.ticker, name: r.name || r.ticker, signal: r.sig.R18L26 ? 'R18L26' : 'R18P12'})), swing_signals_as_of_close: TL.asof,
       ...(moversCheck ? { non_sp500_movers_check: moversCheck } : {}),
       ...(premarket ? { premarket } : {}),
       from_the_open: o.length ? {date: OD.open.as_of, is_today: OD.open.as_of === odEtToday(), typical_chance_pct: akPc(base), best: o.slice(0, 5).map(row), weakest: o.slice(-5).reverse().map(row)} : 'not available yet today (appears about 09:35 New York time)'};
@@ -7190,7 +7191,11 @@ const akSep = l => /^\s*\|?\s*:?-{2,}/.test(l || '');
 const akPlain = s => String(s || '').split('\n').map((l, i, L) => {      // models sometimes still write markdown tables or headings: make them bullets / bold lines
   if (akSep(l) || akSep(L[i + 1])) return null;                        // the separator line and the table's header row
   if (/^\s*\|.*\|\s*$/.test(l)) { const c = l.trim().replace(/^\||\|$/g, '').split('|').map(x => x.trim()).filter(Boolean); return c.length ? '- ' + c[0] + (c.length > 1 ? ': ' + c.slice(1).join(' · ') : '') : null; }
-  const h = l.match(/^\s*#{1,6}\s+(.*)$/); return h ? `**${h[1].replace(/\*\*/g, '')}**` : l;
+  const h = l.match(/^\s*#{1,6}\s+(.*)$/); if (h) return `**${h[1].replace(/\*\*/g, '')}**`;
+  if (/^\s*[-*•]\s+([^:\n]+:)\s*$/.test(l) && L[i + 1] && /^\s{2,}[-*•]/.test(L[i + 1])) {
+    return `**${l.replace(/^\s*[-*•]\s+/, '').replace(/\*\*/g, '')}**`;
+  }
+  return l;
 }).filter(l => l !== null).join('\n');
 const AK_BASE_TICKERS = 'A,AAL,AAP,AAPL,ABBV,ABNB,ABT,ACGL,ACN,ADBE,ADI,ADM,ADP,ADSK,ADT,AEE,AEP,AES,AFL,AIG,AIV,AIZ,AJG,AKAM,ALB,ALGN,ALK,ALL,ALLE,ALLO,ALNY,AMAT,AMCR,AMD,AME,AMG,AMGN,AMP,AMT,AMTM,AMZN,AN,ANET,ANSS,AON,AOS,APA,APC,APD,APH,APO,APP,APTV,ARE,ARKK,ATO,AVB,AVGO,AVY,AWK,AXON,AXP,AYI,AZO,BA,BAC,BALL,BAX,BBT,BBY,BDX,BEN,BF.B,BG,BHF,BIIB,BIO,BK,BKNG,BKR,BLK,BLMN,BMY,BNY,BR,BRK.A,BRK.B,BRO,BSX,BWA,BX,BXP,C,CAG,CAH,CAM,CARR,CAT,CB,CBOE,CBRE,CCI,CCL,CDNS,CDW,CE,CEG,CF,CFG,CHD,CHRW,CHTR,CI,CINF,CL,CLX,CMA,CMCSA,CME,CMG,CMI,CMS,CNC,CNP,CNX,COF,COO,COP,COR,COST,COTY,CPB,CPAY,CPRT,CPT,CRL,CRM,CRWD,CSCO,CSGP,CSX,CTAS,CTLT,CTRA,CTSH,CTVA,CVS,CVX,CZR,D,DAL,DD,DDOG,DE,DECK,DELL,DFS,DG,DGX,DHI,DHR,DIA,DIS,DISH,DLR,DLTR,DOC,DOV,DOW,DPZ,DRI,DTE,DUK,DVA,DVN,DXCM,DXC,EA,EBAY,ECL,ED,EFX,EG,EIX,EL,ELV,EMC,EME,EMN,EMR,ENPH,EOG,EPAM,EQIX,EQR,EQT,ES,ESS,ETN,ETR,EVRG,EW,EXC,EXE,EXPD,EXPE,EXR,F,FANG,FAST,FB,FCX,FDS,FDX,FE,FFIV,FI,FICO,FIS,FITB,FIX,FLIR,FLR,FLS,FMC,FOX,FOXA,FRT,FSLR,FTI,FTNT,FTV,FXI,GD,GE,GEHC,GEN,GEV,GILD,GIS,GL,GLD,GLW,GM,GME,GNRC,GNW,GOOG,GOOGL,GPC,GPN,GRMN,GS,GT,GWW,HAL,HAS,HBAN,HCA,HD,HES,HIG,HII,HLT,HOG,HOLX,HON,HP,HPE,HPQ,HRB,HRL,HSIC,HST,HSY,HUBB,HUM,HWM,IBM,ICE,IDXX,IEX,IFF,ILMN,INCY,INTC,INTU,INVH,IP,IPG,IQV,IR,IRM,ISRG,IT,ITW,IVZ,IWM,J,JBHT,JBL,JCI,JEF,JKHY,JNJ,JNPR,JPM,K,KDP,KEY,KEYS,KHC,KIM,KKR,KLAC,KMB,KMI,KMX,KO,KR,KSS,KWEB,L,LB,LDOS,LEN,LH,LHX,LII,LIN,LKQ,LLY,LMT,LNC,LNT,LQD,LOW,LRCX,LULU,LUV,LVS,LW,LYB,LYV,M,MA,MAA,MAC,MAR,MAS,MAT,MCD,MCK,MCO,MDLZ,MDT,MET,META,MGM,MHK,MKC,MKTX,MLM,MMM,MNST,MO,MOH,MOS,MPC,MPWR,MRK,MRNA,MS,MSFT,MSI,MTB,MTCH,MTD,MU,MUR,NDAQ,NDSN,NE,NEE,NEM,NFLX,NI,NKE,NLOK,NOC,NOV,NOW,NRG,NSC,NTAP,NTRS,NUE,NVDA,NVR,NWL,NWS,NWSA,NXPI,O,ODFL,OGN,OI,OKE,OMC,ON,ONEOK,ORCL,ORLY,OTIS,OXY,PANW,PAYC,PAYX,PBI,PCAR,PCG,PCL,PEG,PEP,PFE,PFG,PG,PGR,PH,PHM,PKG,PLD,PLTR,PM,PNC,PNR,PNW,PODD,POM,POOL,PPG,PPL,PRU,PSA,PSX,PTC,PVH,PWR,PXD,Q,QCOM,QRVO,QQQ,R,RCL,REG,REGN,RF,RHI,RIG,RJF,RL,RMD,ROK,ROL,ROP,ROST,RRC,RSG,RTX,RVTY,SBAC,SBUX,SCHW,SE,SHW,SIG,SJM,SLB,SLG,SLV,SMCI,SMH,SNA,SNPS,SO,SOXX,SOXL,SPG,SPGI,SPY,SQQQ,SRE,STE,STI,STLD,STT,STX,STZ,SW,SWK,SWKS,SYF,SYK,SYY,T,TAP,TDG,TDY,TE,TECH,TEL,TER,TFC,TFX,TGT,THC,TJX,TKO,TLT,TMO,TMUS,TOWR,TPE,TPL,TPR,TPX,TQQQ,TRGP,TRMB,TROW,TRV,TSCO,TSLA,TSN,TT,TTD,TTWO,TXN,TXT,TYL,UA,UAA,UAL,UBER,UDR,UHS,ULTA,UNH,UNM,UNP,UPS,UPRO,URI,USB,V,VALE,VFC,VICI,VLO,VLTO,VMC,VNO,VNT,VRSK,VRSN,VRT,VRTX,VST,VTR,VTI,VOO,VZ,WAB,WAT,WBA,WDC,WEC,WELL,WFC,WHR,WM,WMB,WMT,WRB,WRK,WST,WTW,WU,WY,WYNN,XBI,XEL,XLB,XLC,XLE,XLF,XLI,XLK,XLP,XLRE,XLU,XLV,XLY,XOM,XRAY,XRX,XYL,XYZ,YUM,ZBH,ZBRA,ZION,ZTS';
 const AK_TICKERS = new Set(AK_BASE_TICKERS.split(','));
@@ -7309,6 +7314,20 @@ const akFmt = s => {
     .replace(/^\s*[-*•]\s+(.*)$/gm, '<li class="ak-li-bullet">$1</li>')
     .replace(/<li class="ak-li-bullet">\s*(?:<b>)?([A-Z]{1,5}(?:\.[A-Z])?)(?:<\/b>)?\s*\(([^)]+)\)(.*?)<\/li>/gi,
       '<li class="ak-item-ticker" data-t="$1"><button type="button" class="ak-sym" data-t="$1" title="Check odds and strategies for $1">$1</button><span class="ak-comp">$2</span><span class="ak-rest">$3</span><svg class="ak-chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></li>')
+    .replace(/<li class="ak-li-bullet">\s*(?:<b>)?([A-Z]{1,5}(?:\.[A-Z])?)(?:<\/b>)?\s*(?:[–—\-:]|\s[–—-]\s)\s*([^<]+?)<\/li>/gi, (m, sym, rest) => {
+      const s = sym.toUpperCase();
+      if (!akIsTicker(s)) return m;
+      let comp = rest.trim(), extra = '';
+      const par = comp.match(/^(.*?)\s*\(([^)]+)\)$/);
+      if (par) { comp = par[1]; extra = ' (' + par[2] + ')'; }
+      return `<li class="ak-item-ticker" data-t="${s}"><button type="button" class="ak-sym" data-t="${s}" title="Check odds and strategies for ${s}">${s}</button><span class="ak-comp">${comp}</span>${extra ? `<span class="ak-rest">${extra}</span>` : ''}<svg class="ak-chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></li>`;
+    })
+    .replace(/<li class="ak-li-bullet">\s*(?:<b>)?([A-Z]{1,5}(?:\.[A-Z])?)(?:<\/b>)?\s*<\/li>/gi, (m, sym) => {
+      const s = sym.toUpperCase();
+      if (!akIsTicker(s)) return m;
+      const comp = (typeof TL !== 'undefined' && TL.prof?.find(p => p.ticker === s)?.name) || s;
+      return `<li class="ak-item-ticker" data-t="${s}"><button type="button" class="ak-sym" data-t="${s}" title="Check odds and strategies for ${s}">${s}</button><span class="ak-comp">${comp}</span><svg class="ak-chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></li>`;
+    })
     .replace(/(<li class="ak-(?:li-bullet|item-ticker)"[\s\S]*?<\/li>\s*)+/gi, m => '<ul>' + m.replace(/\n/g, '') + '</ul>')
     .replace(/\n{2,}/g, '</p><p>')
     .replace(/\n/g, '<br>')
