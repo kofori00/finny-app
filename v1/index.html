@@ -6825,12 +6825,12 @@ const AK_LOOK = {
     const S = []; for (const x of [...new Set((Array.isArray(symbols) ? symbols : [symbols]).map(String))].slice(0, 4)) S.push(await akSym(x));
     const j = await ssFetch(S); const out = {};
     for (const s of S) { const r = j[s]; if (!r || r.error) { out[s] = {error: r?.error || 'no result'}; continue; }
-      out[s] = {as_of: r.as_of, at_live_price: r.live, price: r.price, in_sp500: r.member, sector_group: r.sector,
+      out[s] = {as_of: r.as_of, at_live_price: r.live, session: r.session || (r.live ? 'regular' : 'closed'), price: r.price, price_source: r.price_source || null, in_sp500: r.member, sector_group: r.sector,
         strategies: (r.strategies || []).filter(x => !x.error).map(x => ({name: x.name, key: x.key, tier: x.tier === 'edge' ? 'passed every test' : 'promising (not proven)',
           would_buy_now: x.signal_now, rules_not_met: x.conditions.filter(c => c.ok === false).map(c => c.rule), last_signal: x.last_signal,
           open_simulated_trade: x.open_trade, record_on_this_stock_since_2016: {trades: x.record.trades, win_rate: x.record.win, avg_trade: x.record.avg, last_3y: x.record.last3y},
           tested_on: x.tested_universe === 'both' ? 'S&P 500 stocks and ETFs' : 'S&P 500 stocks', inside_tested_universe: x.in_universe}))}; }
-    return {results: out, note: 'Our validated swing strategies run on this stock with their exact rules (ranks vs that day\'s S&P 500); would_buy_now uses the live price when the US market is open (else the last close). A record on one stock is a small sample; outside the tested universe the strategy was never tested.'};
+    return {results: out, note: 'Our validated swing strategies run on this stock with their exact rules (ranks vs that day\'s S&P 500); would_buy_now uses the live or premarket price when available (session indicates regular or premarket; else the last close). A record on one stock is a small sample; outside the tested universe the strategy was never tested.'};
   },
   async library_signals({symbol, date} = {}) {               // 6.201: the nightly run of the whole swing library on one stock
     const S = await akSym(symbol), token = await getToken();
@@ -6967,7 +6967,17 @@ const AK_LOOK = {
     }
     await Promise.all([tlLoad(), odLoad()]); const base = OD.openMeta?.base_up ?? 0.505;
     const o = OD.open?.rows?.slice().sort((a, b) => b.p_up - a.p_up) || [], row = x => ({symbol: x.ticker, chance_close_above_open_pct: akPc(x.p_up)});
+    let premarket = null;
+    try {
+      const mv = (await sb('live_movers?select=at,last_updated,ext&order=at.desc&limit=1'))[0];
+      if (mv?.ext && mv.ext.session === 'pre' && Date.now() - Date.parse(mv.at) < 30 * 60e3) {
+        const topGainers = (mv.ext.all?.gainers || []).slice(0, 5).map(x => ({ symbol: x.symbol, change_pct: x.pct, price: x.price }));
+        const topLosers = (mv.ext.all?.losers || []).slice(0, 5).map(x => ({ symbol: x.symbol, change_pct: x.pct, price: x.price }));
+        premarket = { session: 'premarket', as_of: mv.at, top_gainers: topGainers, top_losers: topLosers, note: 'Premarket moves vs last close. Swing strategies normally execute at Market-On-Close; for premarket what-if signals on specific stocks, use stock_swing_signals.' };
+      }
+    } catch (_) {}
     return {swing_buy_signals: TL.prof.filter(r => r.sig && (r.sig.R18L26 || r.sig.R18P12)).map(r => ({symbol: r.ticker, signal: r.sig.R18L26 ? 'R18L26' : 'R18P12'})), swing_signals_as_of_close: TL.asof,
+      ...(premarket ? { premarket } : {}),
       from_the_open: o.length ? {date: OD.open.as_of, is_today: OD.open.as_of === odEtToday(), typical_chance_pct: akPc(base), best: o.slice(0, 5).map(row), weakest: o.slice(-5).reverse().map(row)} : 'not available yet today (appears about 09:35 New York time)'};
   }
 };
