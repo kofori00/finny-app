@@ -7266,7 +7266,7 @@ function akLinkStrategies(html) {
   }
 
   // 2. Link standalone strategy codes
-  const STRAT_CODE_RE = /(<(?:button|a|svg|code)[^>]*>[\s\S]*?<\/(?:button|a|svg|code)>)|(<[^>]+>)|(\b[a-z0-9_]+\|[A-Za-z0-9_]+|[RS]\d{1,2}[A-Za-z0-9\-_]+|FB\d{2,3}|LE\d{2}|NB\d{3}|SXG\d+|VX\d{2}|ZX\d{2}|SX\d{2}|TA\d{2}|SP\d{2}|SA\d{2}|SL\d{2}|M\d{2}|Q\d{2,3}|CANSLIM|LMRR|SXN\d{2}|BLTRUE|BLMOM|BLTOP5|V38|K10|P6|P8\b)/g;
+  const STRAT_CODE_RE = /(<(?:button|a|svg|code)[^>]*>[\s\S]*?<\/(?:button|a|svg|code)>)|(<[^>]+>)|(\b[a-z0-9_]+\|[A-Za-z0-9_]+|[RS]\d{1,2}[A-Za-z0-9\-_]+|D30_[A-Za-z0-9\-_]+|FB\d{2,3}|LE\d{2}|NB\d{3}|SXG\d+|VX\d{2}|ZX\d{2}|SX\d{2}|TA\d{2}|SP\d{2}|SA\d{2}|SL\d{2}|M\d{2}|Q\d{2,3}|CANSLIM|LMRR|SXN\d{2}|BLTRUE|BLMOM|BLTOP5|V38|K10|P6|P8\b)/g;
   res = res.replace(STRAT_CODE_RE, (match, block, tag, code) => {
     if (block) return match;
     if (tag) return tag;

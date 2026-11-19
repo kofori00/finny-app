@@ -7628,7 +7628,7 @@ function akLinkStrategies(html) {
   }
 
   // 2. Link standalone strategy codes
-  const STRAT_CODE_RE = /(<(?:button|a|svg|code)[^>]*>[\s\S]*?<\/(?:button|a|svg|code)>)|(<[^>]+>)|(\b[a-z0-9_]+\|[A-Za-z0-9_]+|[RS]\d{1,2}[A-Za-z0-9\-_]+|FB\d{2,3}|LE\d{2}|NB\d{3}|SXG\d+|VX\d{2}|ZX\d{2}|SX\d{2}|TA\d{2}|SP\d{2}|SA\d{2}|SL\d{2}|M\d{2}|Q\d{2,3}|CANSLIM|LMRR|SXN\d{2}|BLTRUE|BLMOM|BLTOP5|V38|K10|P6|P8\b)/g;
+  const STRAT_CODE_RE = /(<(?:button|a|svg|code)[^>]*>[\s\S]*?<\/(?:button|a|svg|code)>)|(<[^>]+>)|(\b[a-z0-9_]+\|[A-Za-z0-9_]+|[RS]\d{1,2}[A-Za-z0-9\-_]+|D30_[A-Za-z0-9\-_]+|FB\d{2,3}|LE\d{2}|NB\d{3}|SXG\d+|VX\d{2}|ZX\d{2}|SX\d{2}|TA\d{2}|SP\d{2}|SA\d{2}|SL\d{2}|M\d{2}|Q\d{2,3}|CANSLIM|LMRR|SXN\d{2}|BLTRUE|BLMOM|BLTOP5|V38|K10|P6|P8\b)/g;
   res = res.replace(STRAT_CODE_RE, (match, block, tag, code) => {
     if (block) return match;
     if (tag) return tag;
@@ -10919,7 +10919,7 @@ async function rsGo(x) {
 document.addEventListener('click', e => { const b = e.target.closest?.('[data-rs]'); if (!b) return; e.preventDefault(); e.stopPropagation(); rsGo(b.dataset.rs); });
 document.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const b = e.target.closest?.('[data-rs][role=button]'); if (b) { e.preventDefault(); rsGo(b.dataset.rs); } });
 // swing-signal codes inside text (odds "What this means", strategy fit's signal banner and chip) become links
-const RS_RE = /\b(R18L26|R18P12|S4P23|S7P21|S1L20|S3A09|S12P15|S14L19|S14A10|S14L08|FB125|FB017|SXG4|SX25|VX09|ZX18|SX30|NB069|R27L10|R31L21|R30L26|R28L16|R11Q23|Q04|CANSLIM|LMRR)\b/, RS_REG = new RegExp(RS_RE.source, 'g');
+const RS_RE = /\b(R18L26|R18P12|S4P23|S7P21|S1L20|S3A09|S12P15|S14L19|S14A10|S14L08|D30_[A-Za-z0-9\-_]+|FB125|FB017|SXG4|SX25|VX09|ZX18|SX30|NB069|R27L10|R31L21|R30L26|R28L16|R11Q23|Q04|CANSLIM|LMRR)\b/, RS_REG = new RegExp(RS_RE.source, 'g');
 function rsLinkify(root) {
   root?.querySelectorAll('.od-plain li, .tl-alert b, .tl-chip').forEach(el => {
     const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), hits = []; let n;
