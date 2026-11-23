@@ -7752,7 +7752,28 @@ function akChips() {                                          // suggestions fol
     if (isFinite(A.f?.vol20)) Q.push(`Is ${S} more volatile than the market, and what does that mean for me?`);
     if (A.op && !OFF) Q.push(`What does today-from-the-open say about ${S}?`);
     Q.push(`Explain all of ${S}'s numbers in simple words`);
-  } else Q.push('Which stocks have a swing buy signal today?', "What are today's biggest gainers, and what's behind their moves?", 'Where in the app do I see if the strategies work live?', 'Which strategies passed every test?',
+    // 2026-11-23 (user: "I keep getting the same dull suggestions"): questions built from what the page knows about THIS stock, ranked first;
+    // the fixed ones above stay as a fallback. Choice rotates per day and stock (stable while you look at it).
+    const D = [], sp = typeof SPF !== 'undefined' ? SPF.cache?.[S]?.v : null, dmo = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, {day: 'numeric', month: 'short'});
+    const L = (sp?.strategies || []).filter(x => x.side !== 'short'), VS = new Set(sp?.valid_ids || []);
+    const val = L.filter(x => VS.has(x.id) || x.class === 'proven' || x.class === 'promising').sort((a, b) => b.first.localeCompare(a.first))[0];
+    if (val) D.push(`Why did ${String(val.name).replace(/\s*\[.*$/, '').replace(/:.*$/, '').slice(0, 40)} buy ${S} on ${dmo(val.first)}, and how did it go?`);
+    const fm = typeof SSF_MAP !== 'undefined' && SSF_MAP?.v; if (fm && L.length) { const fo = {}; for (const [f, ids] of Object.entries(fm)) for (const id of ids) fo[id] = f;
+      const c = {}; for (const x of L) { const f = fo[x.id]; if (f && f !== 'Other') c[f] = (c[f] || 0) + 1; } const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
+      if (top && top[1] >= 3) D.push(`${top[1]} ${top[0].toLowerCase()} strategies bought ${S} lately: what do their rules look at?`); }
+    if (L.length >= 20) D.push(`Which other stocks did the same strategies buy as ${S} this week?`);
+    const wr = typeof WL !== 'undefined' ? (WL.rows || []).find(r => r.ticker === S) : null, scr = wr?.source === 'screen' ? (String(wr.note || '').match(/^auto: ([^·]+)/) || [])[1] : null;
+    if (scr) D.push(`Why was ${S} added to my watchlist by "${scr.trim()}"?`); else if (wr) D.push(`What changed for ${S} since I saved it?`);
+    const q = typeof WLD !== 'undefined' ? WLD.quotes?.[S] : null, ch = q?.change_vs_previous_close_pct;
+    if (isFinite(ch) && Math.abs(ch) >= 3) D.push(`What's behind ${S}'s ${ch >= 0 ? '+' : ''}${(+ch).toFixed(1)}% today?`); else D.push(`What's the latest news on ${S}, and did it move the stock?`);
+    if (/cash/.test(String(window.__regime || ''))) D.push(`With V38 in cash, does any tested strategy still buy ${S}?`);
+    if (akOwn()) D.push(`Is ${S} near its yearly low or high, and which strategies buy it there?`);
+    const seed = [...(new Date().toISOString().slice(0, 10) + S)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7), rot = (arr, k) => arr.length ? [...arr.slice(k % arr.length), ...arr.slice(0, k % arr.length)] : arr;
+    const dyn = rot(D, seed), fixed = rot(Q.splice(0), seed >> 3); Q.push(...dyn.slice(0, 4), ...fixed);
+  } else Q.push(...(() => { const G = ['Which stocks have a swing buy signal today?', "What are today's biggest gainers, and what's behind their moves?", 'Which strategies did best over the past two weeks?',
+      'Which stocks near their yearly low have promising strategy buys?', 'Which companies are in the news today, and do any strategies buy them?', 'Which strategies passed every test?',
+      'Where in the app do I see if the strategies work live?', 'How does Strategy fit pick strategies?', 'What does V38 cash mean for the strategies right now?'].filter(x => akOwn() || !/yearly low/.test(x));
+    const k = new Date().getUTCDate() % G.length; return [...G.slice(k), ...G.slice(0, k)]; })(), 'Why do most weekly odds look like a coin flip?'); if (false) Q.push('Which stocks have a swing buy signal today?', "What are today's biggest gainers, and what's behind their moves?", 'Where in the app do I see if the strategies work live?', 'Which strategies passed every test?',
     'How does Strategy fit pick strategies?', 'Why do most weekly odds look like a coin flip?');
   const IC = {odds: ['pt-odds', '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4.5-5"/><circle cx="12" cy="16" r="1.4"/>'], fit: ['pt-fit', '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>'],
     hit: ['pt-news', '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>'], vol: ['pt-movers', '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4M17 8l4 4-4 4"/>'],
@@ -11228,6 +11249,7 @@ async function spfRender(card, S) {
     box.querySelectorAll('[data-spf]').forEach(b => b.onclick = () => { SPF.mode = {s: 'succ', v: 'valid', a: 'all'}[b.dataset.spf]; SPF.all = SPF.mode === 'all'; draw(); });
     const tv = box.querySelector('[data-spfv]'); if (tv) tv.onclick = () => { SPF.byDay = !SPF.byDay; draw(); };
     box.querySelectorAll('[data-spfw]').forEach(b => b.onclick = () => { SPF.win = +b.dataset.spfw; draw(); });
+    if (typeof akChips === 'function') try { akChips(); } catch (e) {}   // suggestions use this data (2026-11-23)
   };
   draw();
   if (typeof ssFamMap === 'function' && !(typeof SSF_MAP !== 'undefined' && SSF_MAP?.v)) getToken().then(t => ssFamMap({Authorization: 'Bearer ' + t, apikey: SB_KEY, 'Content-Type': 'application/json'})).then(() => draw()).catch(() => {});   // family rows
