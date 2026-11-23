@@ -11536,7 +11536,7 @@ function wlRender() {
 }
 async function wlRefresh() {                                         // rows + alerts, then prices and names in the background
   try { await Promise.all([wlLoad(true), alLoad()]); } catch (e) { const b = document.getElementById('wld-body'); if (b) b.innerHTML = `<p class="note">${/not signed in/.test(e.message) ? 'Sign in to keep a watchlist.' : esc(e.message)}</p>`; return; }
-  wlRender(); const T = (WL.rows || []).map(r => r.ticker); if (!T.length || !WLD.open) return;
+  wlRender(); const T = (WL.rows || []).map(r => r.ticker); if (!T.length) return;   // 2026-11-23: also when the panel is closed (it is in the page and gets copied / glanced at)
   // 2026-11-23 (user: "Is it better now?" -> every row showed –): prices, names and strategy wins load IN PARALLEL, each re-renders when it
   // arrives, and one slow or failing part no longer holds the others. Watchlist tickers are already canonical, so quotes go straight to odds-live
   // (no per-ticker lookup), 10 per call, 15 s timeout each.
@@ -11565,7 +11565,7 @@ function wlOpen(on) {
   document.getElementById('wl-go').onclick = async () => { const s = wlSym(document.getElementById('wl-in').value), n = document.getElementById('wl-note').value.trim();
     if (!/^[A-Z][A-Z0-9.\-]{0,9}$/.test(s)) return alert('Type a ticker, e.g. NVDA');
     try { await wlUpsert(s, n || null, n ? 'append' : 'keep', 'app'); document.getElementById('wl-in').value = ''; document.getElementById('wl-note').value = ''; await wlRefresh(); } catch (e) { alert(e.message); } };
-  setTimeout(() => { Promise.all([wlLoad(true), alLoad()]).then(wlRender).catch(() => {}); }, 2000);   // badge for new alerts
+  setTimeout(() => { wlRefresh().catch(() => {}); }, 2000);   // badge for new alerts + prices, names, strategy wins in the background (2026-11-23)
   setInterval(() => { if (!document.hidden) alLoad().then(wlRender).catch(() => {}); }, 5 * 6e4);
 })();
 // ---------------- phone notifications (2026-11-17, user: "make a notification when events are triggered for the watchlist") ----------------
