@@ -1,6 +1,6 @@
 // Finny app service worker: network-first for the page (always the newest published dashboard), cached copy only when offline.
 // Data never goes through this cache: Supabase requests are not intercepted.
-const CACHE = 'finny-shell-202611111718';
+const CACHE = 'finny-shell-202611232212';
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './manifest.webmanifest', './icon-192.png', './icon-512.png']))); });
 self.addEventListener('activate', e => e.waitUntil(
   caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
@@ -9,7 +9,9 @@ self.addEventListener('activate', e => e.waitUntil(
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.origin !== self.location.origin) return;          // Supabase, CDNs: straight to the network
-  e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); return r; })
+  // 2026-11-23: the page itself skips the browser's HTTP cache (GitHub Pages sends max-age=600), so a new publish shows on the next open, not 10 min later
+  const page = e.request.mode === 'navigate' || u.pathname.endsWith('/') || u.pathname.endsWith('.html');
+  e.respondWith((page ? fetch(e.request.url, {cache: 'no-cache', credentials: 'same-origin'}) : fetch(e.request)).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); return r; })
     .catch(() => caches.match(e.request).then(r => r || caches.match('./'))));
 });
 // 2026-11-17: alert notifications (Web Push from the push function). Payload {title, body, url, tag}; tapping opens / focuses the app on the watchlist.
