@@ -11447,7 +11447,7 @@ if (typeof AK_LOOK === 'object') {
 // ---------------- alerts (2026-11-17, user: "triggers ... go ahead"): alert_rules (own rows) checked every 5 min in market hours by alerts-check;
 // fired alerts in alert_events. Chat tools alert_add / alert_list / alert_remove / alerts_recent; the watchlist panel shows rules and new alerts.
 const AL = {rules: [], events: []};
-const AL_KIND = {price_above: v => `price above $${v}`, price_below: v => `price below $${v}`, move_pct: v => `moves ${v}%+ in a day`, earnings_within: v => `earnings within ${v} days`, signal: (v, s) => `a swing signal${s ? ' from ' + s : ''}`};
+const AL_KIND = {price_above: v => `price above $${v}`, price_below: v => `price below $${v}`, move_pct: v => `moves ${v}%+ in a day`, move_down_pct: v => `falls ${v}%+ in a day`, move_up_pct: v => `rises ${v}%+ in a day`, earnings_within: v => `earnings within ${v} days`, signal: (v, s) => `a swing signal${s ? ' from ' + s : ''}`};
 async function alLoad() {
   const [r, e] = await Promise.all([wlReq('GET', 'alert_rules?select=id,ticker,kind,value,strategy,note,active,last_fired_at&order=created_at.desc'),
     wlReq('GET', 'alert_events?select=id,ticker,kind,message,fired_at,seen&order=fired_at.desc&limit=30')]);
@@ -11455,7 +11455,7 @@ async function alLoad() {
 }
 if (typeof AK_LOOK === 'object') {
   AK_LOOK.alert_add = async ({symbol, kind, value = null, strategy = null, note = ''} = {}) => {
-    const s = await akSym(symbol); if (!AL_KIND[kind]) return {error: 'kind must be price_above, price_below, move_pct, earnings_within or signal'};
+    const s = await akSym(symbol); if (!AL_KIND[kind]) return {error: 'kind must be price_above, price_below, move_pct, move_down_pct, move_up_pct, earnings_within or signal'};
     if (kind !== 'signal' && !(isFinite(+value) && +value > 0)) return {error: 'this alert needs a positive value (price in $, % move, or days)'};
     await wlReq('POST', 'alert_rules', [{ticker: s, kind, value: kind === 'signal' ? null : +value, strategy: strategy || null, note: String(note || '').slice(0, 500)}], 'return=minimal');
     await wlUpsert(s, null, 'keep'); await wlLoad(true); wlRender();          // an alert also puts the ticker on the watchlist
@@ -11536,9 +11536,9 @@ function wlRender() {
 async function wlRefresh() {                                         // rows + alerts, then prices and names in the background
   try { await Promise.all([wlLoad(true), alLoad()]); } catch (e) { const b = document.getElementById('wld-body'); if (b) b.innerHTML = `<p class="note">${/not signed in/.test(e.message) ? 'Sign in to keep a watchlist.' : esc(e.message)}</p>`; return; }
   wlRender(); const T = (WL.rows || []).map(r => r.ticker); if (!T.length || !WLD.open) return;
-  try { const q = await AK_LOOK.stock_price({symbols: T.slice(0, 10)}); for (const x of q.quotes || []) WLD.quotes[x.symbol] = x; } catch (e) {}
+  for (let i = 0; i < Math.min(T.length, 40); i += 10) try { const q = await AK_LOOK.stock_price({symbols: T.slice(i, i + 10)}); for (const x of q.quotes || []) WLD.quotes[x.symbol] = x; } catch (e) {}   // all rows, not only the first 10 (2026-11-23)
   wlHits(T).then(wlRender).catch(() => {});   // strategy wins load in the background, then re-sort
-  await Promise.all(T.slice(0, 12).filter(t => !WLD.names[t]).map(async t => { try { const j = await fhGet(t); WLD.names[t] = {name: j.data?.profile?.name, logo: j.data?.profile?.logo}; } catch (e) { WLD.names[t] = {}; } }));
+  await Promise.all(T.slice(0, 40).filter(t => !WLD.names[t]).map(async t => { try { const j = await fhGet(t); WLD.names[t] = {name: j.data?.profile?.name, logo: j.data?.profile?.logo}; } catch (e) { WLD.names[t] = {}; } }));
   wlRender();
 }
 function wlOpen(on) {
