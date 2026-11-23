@@ -11488,8 +11488,9 @@ function wlHit(v) {
           win: !!(best && best.r_now > 0)};
 }
 async function wlHits(T) {
-  if (typeof spfFetch !== 'function') return; const todo = T.filter(t => !(t in WLD.hits)).slice(0, 15);
-  for (let i = 0; i < todo.length; i += 3) await Promise.all(todo.slice(i, i + 3).map(async t => { try { WLD.hits[t] = wlHit(await spfFetch(t)); } catch (e) { WLD.hits[t] = null; } }));
+  if (typeof spfFetch !== 'function') return; const todo = T.filter(t => !(t in WLD.hits)).slice(0, 30);
+  const to = p => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 15000))]);
+  for (let i = 0; i < todo.length; i += 3) { await Promise.all(todo.slice(i, i + 3).map(async t => { try { WLD.hits[t] = wlHit(await to(spfFetch(t))); } catch (e) { WLD.hits[t] = null; } })); if (WLD.open) wlRender(); }
 }
 const wlIcon = {star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
   bell: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>'};
@@ -11536,9 +11537,16 @@ function wlRender() {
 async function wlRefresh() {                                         // rows + alerts, then prices and names in the background
   try { await Promise.all([wlLoad(true), alLoad()]); } catch (e) { const b = document.getElementById('wld-body'); if (b) b.innerHTML = `<p class="note">${/not signed in/.test(e.message) ? 'Sign in to keep a watchlist.' : esc(e.message)}</p>`; return; }
   wlRender(); const T = (WL.rows || []).map(r => r.ticker); if (!T.length || !WLD.open) return;
-  for (let i = 0; i < Math.min(T.length, 40); i += 10) try { const q = await AK_LOOK.stock_price({symbols: T.slice(i, i + 10)}); for (const x of q.quotes || []) WLD.quotes[x.symbol] = x; } catch (e) {}   // all rows, not only the first 10 (2026-11-23)
-  wlHits(T).then(wlRender).catch(() => {});   // strategy wins load in the background, then re-sort
-  await Promise.all(T.slice(0, 40).filter(t => !WLD.names[t]).map(async t => { try { const j = await fhGet(t); WLD.names[t] = {name: j.data?.profile?.name, logo: j.data?.profile?.logo}; } catch (e) { WLD.names[t] = {}; } }));
+  // 2026-11-23 (user: "Is it better now?" -> every row showed –): prices, names and strategy wins load IN PARALLEL, each re-renders when it
+  // arrives, and one slow or failing part no longer holds the others. Watchlist tickers are already canonical, so quotes go straight to odds-live
+  // (no per-ticker lookup), 10 per call, 15 s timeout each.
+  const tmo = (p, ms = 15000) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms))]);
+  const quotes = async () => { const token = await getToken(); await Promise.all(Array.from({length: Math.ceil(Math.min(T.length, 40) / 10)}, (_, k) => T.slice(k * 10, k * 10 + 10)).map(async S => {
+    try { const r = await tmo(fetch(`${SB_URL}/functions/v1/odds-live`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({action: 'quote', symbols: S})}));
+      const j = await r.json(); for (const x of j.quotes || []) WLD.quotes[x.symbol] = x; } catch (e) {} })); wlRender(); };
+  const names = async () => { const todo = T.slice(0, 40).filter(t => !WLD.names[t]);
+    for (let i = 0; i < todo.length; i += 6) { await Promise.all(todo.slice(i, i + 6).map(async t => { try { const j = await tmo(fhGet(t)); WLD.names[t] = {name: j.data?.profile?.name, logo: j.data?.profile?.logo}; } catch (e) { WLD.names[t] = {}; } })); wlRender(); } };
+  await Promise.allSettled([quotes(), names(), tmo(wlHits(T), 40000).then(wlRender)]);
   wlRender();
 }
 function wlOpen(on) {
