@@ -11149,7 +11149,7 @@ function spfSummary(A, S) {
   return `<div class="spf-sum"><div class="spf-sum-h"><b>${X.length} strateg${X.length === 1 ? 'y' : 'ies'} bought ${esc(S)}</b>
       <span class="spf-sum-w">${[5, 10, 20].map(n => `<button type="button" class="spf-wc${SPF.win === n ? ' on' : ''}" data-spfw="${n}">${n}d</button>`).join('')}</span></div>
     <div class="spf-kp"><div><b>${X.length}</b><small>${esc(ver)}</small></div>
-      <div><b class="${cl(avg(d5))}">${pc(avg(d5))}</b><small>5 days later · ${d5.length ? `${up}/${d5.length} days up` : 'too recent'}</small></div>
+      <div><b class="${cl(avg(d5))}">${pc(avg(d5))}</b><small>5 days later, all strategies · ${d5.length ? `${up}/${d5.length} days up` : 'too recent'}</small></div>
       <div><b class="${cl(since)}">${pc(since)}</b><small>since the buy</small></div></div>
     ${bars ? `<div class="spf-fbs"><div class="spf-fbh"><span>by family</span><span>since</span></div>${bars}</div>` : ''}
     <p class="spf-sum-n" title="${esc(tip)}">ⓘ last ${w} trading day${w === 1 ? '' : 's'} · past moves, not a forecast</p></div>`;
@@ -11261,7 +11261,7 @@ async function spfRender(card, S) {
     const hmax = Math.max(1, ...HB.map(b => b.d)), avgD = dk.length ? dk.reduce((a, d) => a + d.r5, 0) / dk.length : null;
     const hist = `<div class="spf-h2">${HB.map((b, i) => `<div title="${b.d} buy day${b.d === 1 ? '' : 's'} (${b.n} strategy buys)${b.days.length ? ': ' + b.days.map(dmo).join(', ') : ''}">
         <span class="spf-h2n">${b.d || ''}</span><span class="spf-h2b"><i class="${i >= 4 ? 'up' : 'dn'}" style="height:${(b.d / hmax * 100).toFixed(0)}%"></i></span><span class="spf-h2l">${BL[i]}</span><span class="spf-h2s">${b.n ? b.n + ' buys' : ''}</span></div>`).join('')}</div>`;
-    const dayBlock = `<div class="sw-hero spf-hero"><div class="spf-dh"><b>${esc(S)} 5 days after the buy days</b><span>${dk.length ? `up after ${dup} of ${dk.length} buy day${dk.length === 1 ? '' : 's'}${avgD != null ? ` · average ${pc(avgD)}` : ''}` : 'too recent to tell'}</span>
+    const dayBlock = `<div class="sw-hero spf-hero"><div class="spf-dh"><b>${esc(S)} 5 days after the ${SPF.mode === 'valid' ? 'validated strategies\' ' : SPF.mode === 'succ' ? '★ strategies\' ' : ''}buy days</b><span>${dk.length ? `up after ${dup} of ${dk.length} buy day${dk.length === 1 ? '' : 's'}${avgD != null ? ` · average ${pc(avgD)}` : ''}` : 'too recent to tell'}</span>
         <button type="button" class="hs-sigall" data-spfv="1">${SPF.byDay ? 'histogram' : 'by day'}</button></div>
       ${SPF.byDay ? `<div class="spf-days">${days.map(d => { const r = d.r5 ?? d.rn; return `<div class="spf-day" title="${esc(d.d)}: ${d.n} strateg${d.n === 1 ? 'y' : 'ies'} bought (${d.v} validated); ${S} ${pc(r)} ${d.r5 != null ? 'in the next 5 trading days' : 'so far'}">
         <span class="spf-dv ${cls(r)}">${pc(r)}</span><span class="spf-dbar"><i class="${r == null ? '' : r >= 0 ? 'up' : 'dn'}${d.r5 == null ? ' open' : ''}" style="height:${r == null ? 0 : Math.max(3, Math.abs(r) / dmx * 50).toFixed(0)}%"></i></span>
