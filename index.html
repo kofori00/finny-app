@@ -11478,7 +11478,8 @@ if (typeof AK_LOOK === 'object') {
 const WLD = {quotes: {}, names: {}, open: false, hits: {}};
 // 2026-11-23 (user: "tickers that had success in past few days with a certain strategy should be highlighted in the watchlist. Pimp the watchlist up"):
 // per stock the best recent buy (last 10 library-run days) from the stock page's "who bought it lately" data (stock-signals op strat_perf, cached):
-// validated strategies first, then the stock's move since that buy. win = a validated strategy bought and the stock is up since.
+// validated strategies first, then the stock's move since that buy. win = a validated strategy bought and the stock is up >= WL_WIN since.
+const WL_WIN = 0.02;   // 2026-11-24 (user: "Yes raise the bar"): a win = the stock is up at least +2% since a validated strategy's buy (was > 0)
 function wlHit(v) {
   const L = (v?.strategies || []).filter(x => x.side !== 'short'), days = [...new Set(L.map(x => x.first))].sort().reverse(), cut = days[Math.min(10, days.length) - 1] || '';
   const VS = new Set(v?.valid_ids || []), R = L.filter(x => x.first >= cut && x.r_now != null);
@@ -11486,7 +11487,7 @@ function wlHit(v) {
   const val = R.filter(x => VS.has(x.id) || x.class === 'proven' || x.class === 'promising').sort((a, b) => b.r_now - a.r_now);
   const best = val[0] || null, n = R.length;
   return {n, best: best && {name: String(best.name || best.id).replace(/\s*\[.*$/, '').replace(/:.*$/, '').slice(0, 30), id: best.id, day: best.first, since: best.r_now},
-          win: !!(best && best.r_now > 0)};
+          win: !!(best && best.r_now >= WL_WIN)};
 }
 async function wlHits(T) {
   if (typeof spfFetch !== 'function') return; const todo = T.filter(t => !(t in WLD.hits)).slice(0, 30);
@@ -11525,7 +11526,7 @@ function wlRender() {
   const ev = (AL.events || []).slice(0, 5);
   body.innerHTML = `${ev.length ? `<div class="wld-al"><div class="wld-alh">${wlIcon.bell}<b>Alerts</b>${unseen ? `<span class="wld-n">${unseen} new</span><button type="button" id="al-seen">mark read</button>` : ''}</div>
       ${ev.map(x => `<div class="wld-ev${x.seen ? '' : ' new'}"><b>${esc(x.ticker)}</b><span>${esc(x.message.replace(new RegExp('^' + x.ticker + ':?\\s*'), ''))}</span><small>${esc(new Date(x.fired_at).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}))}</small></div>`).join('')}</div>` : ''}
-    ${R.length ? `<div class="wld-sum"><div><b>${R.length}</b><small>stocks</small></div><div class="ok"><b>${nWin}</b><small>🏆 strategy wins lately</small></div><div><b>${nScr}</b><small>⚡ auto-added</small></div></div>` : ''}
+    ${R.length ? `<div class="wld-sum"><div><b>${R.length}</b><small>stocks</small></div><div class="ok"><b>${nWin}</b><small>🏆 strategy wins (+2%+)</small></div><div><b>${nScr}</b><small>⚡ auto-added</small></div></div>` : ''}
     ${R.length ? R.map(wlCard).join('') : `<div class="wld-empty">${wlIcon.star}<p>Nothing saved yet.</p><small>Add a ticker above, or ask Finny: "save STEM to my watchlist" · "alert me if NVDA moves 5%".</small></div>`}
     <p class="wld-foot">Alerts are checked every 5 minutes while the US market is open. Facts, not forecasts.</p>`;
   body.querySelectorAll('[data-wlo]').forEach(c => c.onclick = ev => { if (ev.target.closest('button')) return; wlOpen(false); if (typeof odGo === 'function') odGo(c.dataset.wlo); });
