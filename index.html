@@ -11555,7 +11555,7 @@ function wlHit(v) {
           win: !!(best && best.r_now >= WL_WIN)};
 }
 async function wlHits(T) {
-  if (typeof spfFetch !== 'function') return; const todo = T.filter(t => !(t in WLD.hits)).slice(0, 30);
+  if (typeof spfFetch !== 'function') return; const todo = T.filter(t => !(t in WLD.hits)).slice(0, 60);
   const to = p => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 15000))]);
   for (let i = 0; i < todo.length; i += 3) { await Promise.all(todo.slice(i, i + 3).map(async t => { try { WLD.hits[t] = wlHit(await to(spfFetch(t))); } catch (e) { WLD.hits[t] = null; } })); if (WLD.open) wlRender(); }
 }
@@ -11650,10 +11650,10 @@ async function wlRefresh() {                                         // rows + a
   // arrives, and one slow or failing part no longer holds the others. Watchlist tickers are already canonical, so quotes go straight to odds-live
   // (no per-ticker lookup), 10 per call, 15 s timeout each.
   const tmo = (p, ms = 15000) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms))]);
-  const quotes = async () => { const token = await getToken(); await Promise.all(Array.from({length: Math.ceil(Math.min(T.length, 40) / 10)}, (_, k) => T.slice(k * 10, k * 10 + 10)).map(async S => {
+  const quotes = async () => { const token = await getToken(); await Promise.all(Array.from({length: Math.ceil(Math.min(T.length, 100) / 10)}, (_, k) => T.slice(k * 10, k * 10 + 10)).map(async S => {
     try { const r = await tmo(fetch(`${SB_URL}/functions/v1/odds-live`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({action: 'quote', symbols: S})}));
       const j = await r.json(); for (const x of j.quotes || []) WLD.quotes[x.symbol] = x; } catch (e) {} })); wlRender(); };
-  const names = async () => { const todo = T.slice(0, 40).filter(t => !WLD.names[t]);
+  const names = async () => { const todo = T.slice(0, 100).filter(t => !WLD.names[t]);
     for (let i = 0; i < todo.length; i += 6) { await Promise.all(todo.slice(i, i + 6).map(async t => { try { const j = await tmo(fhGet(t)); WLD.names[t] = {name: j.data?.profile?.name, logo: j.data?.profile?.logo}; } catch (e) { WLD.names[t] = {}; } })); wlRender(); } };
   await Promise.allSettled([quotes(), names(), tmo(wlHits(T), 40000).then(wlRender)]);
   wlRender();
