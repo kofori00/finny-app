@@ -2801,7 +2801,11 @@ async function loadRegime() {
     const word = !state ? 'V38 says cash' : gap < 0 ? 'SPY below 200-day' : cls === 'warn' ? 'invested, watch' : 'invested';
     window.__regime = `<span class="rg-dot ${cls}"></span><span class="rg-word">Market: ${word}</span><span class="rg-more"> · vol ${ratio.toFixed(2)}× (exit 1.5×) · SPY ${gap >= 0 ? '+' : ''}${(gap * 100).toFixed(1)}% vs 200-day · ${m.dates[n - 1]}</span>`;
     el.innerHTML = window.__regime;
-  } catch (e) { window.__regime = null; el.innerHTML = `<span class="rg-dot"></span>Market: ${esc(e.message).slice(0, 60)}`; }
+  } catch (e) {                                   // 2026-11-25: Alpaca's rate limit (429) while the nightly run downloads prices showed the raw error;
+    window.__regime = null; window.__regimeTry = (window.__regimeTry || 0) + 1;   // now a quiet "checking" with retries (30 s, 60 s, 120 s, ...)
+    el.innerHTML = `<span class="rg-dot"></span>Market: checking…`;
+    if (window.__regimeTry <= 6) setTimeout(loadRegime, 30000 * 2 ** (window.__regimeTry - 1)); else el.innerHTML = `<span class="rg-dot"></span>Market: data busy, try again later`;
+  }
 }
 loadRegime();
 
@@ -3692,7 +3696,7 @@ function renderStress(S) {
 }
 
 // ===== Supabase loader + strategy browser =====
-// Data lives in Supabase (project idmhauinbnrgoegdrfww). The publishable key alone reads nothing: RLS requires a signed-in, allow-listed account.
+// Data lives in Supabase (project oojtlqmlbncpzatftjnx since 2026-11-25). The publishable key alone reads nothing: RLS requires a signed-in, allow-listed account.
 const SB_URL = 'https://oojtlqmlbncpzatftjnx.supabase.co';
 const SB_KEY = 'sb_publishable_ndZeSG4iddBGMPQ343QFPQ_RYciXFxi';
 const MAX_CURVES = 12;
