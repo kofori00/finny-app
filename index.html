@@ -1496,6 +1496,20 @@
   #mv-panel .mv-pct.mv-up{color:var(--good)} #mv-panel .mv-pct.mv-dn{color:var(--bad)} html{background:var(--bg)} .hero h2 em{background:linear-gradient(95deg,var(--accent),#7ab8a2);-webkit-background-clip:text;background-clip:text}
   .v2-st b,.hero-stats b,.lt-v,.mv-pct,.sl-pct,.hs-big b,.fwd-st b,.rp-stats b,.ss-verdict b,.ha-k b{font-variant-numeric:tabular-nums;letter-spacing:-.02em} .sname .code,.mv-sym,.sl-id b,.fwd-tk,.rs-chip{letter-spacing:.02em}
 
+  .gt-panel{position:relative;overflow:hidden;border-radius:22px}
+  .gt-kick{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);padding:4px 11px;border-radius:999px;background:color-mix(in srgb,var(--accent) 13%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+  .gt-kick i{width:6px;height:6px;border-radius:50%;background:var(--accent)} .gt-h{margin:10px 0 4px;font-size:21px;letter-spacing:-.02em} .gt-sub{margin:0 0 12px;color:var(--muted);font-size:13px}
+  .gt-hero{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0 14px} .gt-m{padding:10px 12px;border-radius:14px;background:var(--glass-2);border:1px solid var(--glass-line)}
+  .gt-m b{display:block;font-size:13px;color:var(--ink)} .gt-m .gt-v{font-size:19px;font-weight:800;margin-top:2px} .gt-m small{display:block;font-size:11px;color:var(--muted)}
+  .gt-bar{position:relative;height:6px;border-radius:3px;background:var(--surface-2);margin-top:6px;overflow:hidden} .gt-bar i{position:absolute;top:0;bottom:0;border-radius:3px}
+  .gt-grid{overflow-x:auto;margin-top:4px} .gt-grid table{border-collapse:separate;border-spacing:4px;min-width:560px;width:100%}
+  .gt-grid th{font-size:11px;color:var(--muted);font-weight:700;text-align:center;padding:2px} .gt-grid th.l{text-align:left}
+  .gt-grid td.l{font-size:12.5px;color:var(--ink);white-space:nowrap;padding-right:6px} .gt-grid td.l small{display:block;font-size:10.5px;color:var(--muted)}
+  .gt-c{border:0;border-radius:9px;padding:7px 4px;min-width:58px;font:700 12px var(--font-ui);cursor:pointer;color:var(--ink);background:var(--glass-2)}
+  .gt-c.s2{background:color-mix(in srgb,var(--good) 42%,transparent)} .gt-c.s1{background:color-mix(in srgb,var(--good) 20%,transparent)} .gt-c.neg{background:color-mix(in srgb,var(--bad) 22%,transparent)} .gt-c.on{outline:2px solid var(--accent)}
+  .gt-leg{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted);margin:8px 0} .gt-leg span{display:inline-flex;align-items:center;gap:5px} .gt-leg i{width:12px;height:12px;border-radius:4px}
+  .gt-det{margin-top:10px;padding:12px;border-radius:14px;background:var(--glass-2);border:1px solid var(--glass-line);font-size:13px;color:var(--ink)} .gt-det p{margin:4px 0;color:var(--muted);font-size:12px}
+  .gt-note{font-size:11.5px;color:var(--muted);margin-top:10px;cursor:help}
   .v2-panel{position:relative;overflow:hidden;padding:24px 20px 18px;border-radius:24px;background:linear-gradient(165deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--surface) 90%);border:1px solid var(--glass-line)}
   .v2-wm{position:absolute;right:-18px;top:-10px;width:150px;height:150px;opacity:.05;fill:none;stroke:var(--ink);stroke-width:1.2}
   .v2-rec{margin:14px 0 6px;padding:14px;border-radius:18px;background:var(--glass-2);border:1px solid var(--glass-line)}
@@ -2066,6 +2080,13 @@
     <div id="lib-body"><p class="note">Loading…</p></div>
     <button type="button" class="nw-more lib-ask" id="lib-ask">Does my strategy have an edge? Ask Finny</button>
     <p class="lib-note">History and research, not advice. Backtests of chosen strategies overstate what real trading earns.</p>
+  </section>
+  <section class="panel gt-panel" id="gt-panel">
+    <div class="kente" aria-hidden="true"></div>
+    <span class="gt-kick"><i></i>Around the world</span>
+    <h2 class="gt-h">Do our strategies work outside the US?</h2>
+    <p class="gt-sub">Our 9 tested swing strategies on <b id="gt-n">1,553</b> stocks in 7 markets, 2015 to today, local currency, after local taxes.</p>
+    <div id="gt-body"><p class="note">Loading…</p></div>
   </section>
 <div class="panel" id="controls-panel">
     <div class="fld-l">Strategies <button type="button" class="ib" aria-label="About choosing strategies" data-tip="Choose up to 12 strategies or paper accounts to compare; their curves appear in every chart below. Sections that show one strategy at a time (trade replay, monthly returns, robustness checks) have their own 'Showing' switch with an About button.">i</button></div>
@@ -9744,6 +9765,46 @@ function initAskWidget() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAskWidget);
 else setTimeout(initAskWidget, 0);
+
+// ---------------- Around the world (2026-11-26, Bible 7.10; user: "add it to the app"): the 9 validated swing strategies on 1,553 current index
+// members in 7 non-US markets (Yahoo, local currency, local taxes), table global_test_results. Main measure: edge per trade over 500 random
+// entries in the same stocks on the same days (survivorship bias cancels out there; absolute returns are inflated by it).
+const GT = {rows: null, sel: null};
+const GT_M = {EU: 'Europe', UK: 'UK', JP: 'Japan', HK: 'Hong Kong', AU: 'Australia', CA: 'Canada', IN: 'India'}, GT_ORD = ['EU', 'CA', 'AU', 'JP', 'HK', 'IN', 'UK'];
+const GT_S = ['R18L26', 'S4P23', 'S14A10', 'FB017', 'FB125', 'LE01', 'LE02', 'R2A03_v06', 'R2D08_v08'];
+async function gtLoad() { if (GT.rows?.length) return GT.rows; try { const r = await sb('global_test_results?select=*'); if (r?.length) GT.rows = r; return r || []; } catch (e) { return []; } }   // empty (not signed in yet) is not cached
+function gtCls(x) { const e = +x.edge_per_trade, p = +x.p_value; return e > 0 && p < 0.01 ? 's2' : e > 0 && p < 0.05 ? 's1' : e < 0 && p > 0.9 ? 'neg' : ''; }
+async function gtRender() {
+  const el = document.getElementById('gt-body'); if (!el) return; const R = await gtLoad();
+  if (!R.length) { el.innerHTML = '<p class="note">Sign in to see the results.</p>'; return; }
+  const by = {}; for (const x of R) (by[x.spec_id] ||= {})[x.region] = x;
+  const pc = (v, d = 1) => v == null ? '–' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(d)}%`, n = new Set(R.map(x => x.region)).size;
+  document.getElementById('gt-n').textContent = R.filter(x => x.spec_id === 'R18L26').reduce((a, x) => a + (+x.stocks || 0), 0).toLocaleString();
+  const ld = GT_ORD.map(r => by.R18L26?.[r]).filter(Boolean), mx = Math.max(.2, ...ld.map(x => Math.abs(+x.cagr_2021)), ...ld.map(x => Math.abs(+x.index_cagr_2021)));
+  const hero = ld.map(x => { const w = v => `${Math.min(50, Math.abs(+v) / mx * 50).toFixed(0)}%`, pos = v => +v >= 0 ? `left:50%;width:${w(v)}` : `right:50%;width:${w(v)}`;
+    const beat = +x.cagr_2021 > +x.index_cagr_2021;
+    return `<div class="gt-m"><b>${GT_M[x.region]}</b><div class="gt-v ${+x.cagr_2021 >= 0 ? 'v2-up' : 'v2-dn'}">${pc(+x.cagr_2021)}<small style="display:inline;margin-left:4px">a year</small></div>
+      <small>index ${pc(+x.index_cagr_2021)} · ${beat ? '<b style="display:inline;color:var(--good)">beat it</b>' : 'behind'}</small>
+      <div class="gt-bar"><i style="${pos(x.cagr_2021)};background:var(--accent)"></i></div><div class="gt-bar"><i style="${pos(x.index_cagr_2021)};background:var(--muted)"></i></div>
+      <small>${+x.p_value < 0.01 && +x.edge_per_trade > 0 ? '✓ beats random entries' : +x.edge_per_trade > 0 ? 'edge could be luck' : '✗ no edge'}</small></div>`; }).join('');
+  const rows = GT_S.filter(k => by[k]).map(k => { const a = Object.values(by[k])[0];
+    return `<tr><td class="l">${esc(String(a.name).replace(/\s*\(.*$/, '').slice(0, 30))}<small>${a.tier === 'edge' ? 'proven edge in the US' : 'promising in the US'}</small></td>
+      ${GT_ORD.map(r => { const x = by[k][r]; return x ? `<td><button type="button" class="gt-c ${gtCls(x)}${GT.sel === k + '|' + r ? ' on' : ''}" data-gt="${k}|${r}">${pc(+x.edge_per_trade, 2)}</button></td>` : '<td></td>'; }).join('')}</tr>`; }).join('');
+  const sx = GT.sel && by[GT.sel.split('|')[0]]?.[GT.sel.split('|')[1]];
+  const det = sx ? `<div class="gt-det"><b>${esc(sx.name)} · ${GT_M[sx.region]}</b> (${sx.stocks} stocks, market ${esc(sx.market)})
+      <p>Edge over random entries: <b>${pc(+sx.edge_per_trade, 2)}</b> per trade, chance it is luck ${(+sx.p_value < 0.002 ? '&lt; 1 in 500' : (+sx.p_value * 100).toFixed(1) + '%')} · ${(+sx.trades).toLocaleString()} trades, ${Math.round(sx.win_rate * 100)}% won</p>
+      <p>After local taxes: ${pc(+sx.cagr_2021)} a year since 2021 (index ${pc(+sx.index_cagr_2021)}), Sharpe ${(+sx.sharpe_2021).toFixed(2)}, worst fall ${pc(+sx.mdd_2021, 0)} · 2016-20: ${pc(+sx.cagr_2016_20)} a year (index ${pc(+sx.index_cagr_2016_20)}), Sharpe ${(+sx.sharpe_2016_20).toFixed(2)}</p></div>` : '';
+  el.innerHTML = `<p class="gt-sub" style="margin:0 0 6px"><b style="color:var(--ink)">Leader Dip</b> (our strategy with a proven edge): yearly return since 2021 vs the market's index</p>
+    <div class="gt-hero">${hero}</div>
+    <p class="gt-sub" style="margin:0 0 4px"><b style="color:var(--ink)">Edge per trade over random entries</b>, every strategy and market · tap a cell</p>
+    <div class="gt-grid"><table><tr><th class="l">Strategy</th>${GT_ORD.map(r => `<th>${GT_M[r]}</th>`).join('')}</tr>${rows}</table></div>
+    <div class="gt-leg"><span><i style="background:color-mix(in srgb,var(--good) 42%,transparent)"></i>real edge (luck &lt; 1%)</span><span><i style="background:color-mix(in srgb,var(--good) 20%,transparent)"></i>probably (luck &lt; 5%)</span><span><i style="background:var(--glass-2)"></i>could be luck</span><span><i style="background:color-mix(in srgb,var(--bad) 22%,transparent)"></i>worse than random</span></div>
+    ${det}
+    <p class="gt-note" title="Stocks = today's members of each market's indices (Wikipedia), so companies that failed or left are missing: absolute returns are flattered. The edge column compares each trade with 500 random picks among the same stocks on the same days with the same holding period, which carries the same bias. Taxes: UK stamp duty 0.5% on buys (why the UK fails), France 0.3%, Spain 0.2%, Italy 0.1%, Hong Kong 0.1% / Belgium 0.35% / India 0.1% both ways, plus 0.05% costs a side. Japan and Hong Kong have no sector data (ranked within the market). 63 tests: some results will look good by luck. Not yet tested with historical index membership or next-day-open fills.">ⓘ Backtests on today's index members (flatters returns), after local taxes · ${n} markets · Williams 3-bar and VZO return a lot but have no edge: their return is the market's, not the signal's. Research, not advice.</p>`;
+  el.querySelectorAll('[data-gt]').forEach(b => b.onclick = () => { GT.sel = GT.sel === b.dataset.gt ? null : b.dataset.gt; gtRender(); });
+}
+setTimeout(() => { if (document.getElementById('gt-panel')) gtRender(); }, 3000);
+setInterval(() => { if (!GT.rows?.length && document.getElementById('gt-panel')?.offsetParent) gtRender(); }, 15000);   // retry after sign-in, while Research is open
 
 // rule replay (2026-11-08, Bible 6.192): one strategy on one stock, day by day. Price with every simulated entry (▲) and exit (▼) and the holding
 // periods shaded; below it one panel per rule: the feature, its threshold (fixed, a second feature, or the day's cross-sectional cut) and the days
