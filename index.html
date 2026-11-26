@@ -1497,6 +1497,9 @@
   .v2-st b,.hero-stats b,.lt-v,.mv-pct,.sl-pct,.hs-big b,.fwd-st b,.rp-stats b,.ss-verdict b,.ha-k b{font-variant-numeric:tabular-nums;letter-spacing:-.02em} .sname .code,.mv-sym,.sl-id b,.fwd-tk,.rs-chip{letter-spacing:.02em}
 
   .sc-gt{margin:6px 0 8px;font-size:12.5px;line-height:1.45;color:var(--ink);padding:8px 10px;border-radius:12px;background:var(--glass-2);border:1px solid var(--glass-line)} .sc-gt a{color:var(--accent);font-weight:700;white-space:nowrap}
+  .ig{position:relative;overflow:hidden;padding:16px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-line)} .ig-h{display:flex;justify-content:space-between;gap:10px;margin:10px 0 6px} .ig-h b{font-size:18px;color:var(--ink)} .ig-h small{display:block;color:var(--muted);font-size:12px}
+  .ig-p{text-align:right} .ig-p b{display:block;font-size:22px} .ig-ch{display:block;width:100%;height:90px} .ig-r{margin:4px 0 12px} .ig-r small{color:var(--muted);font-size:11.5px} .ig-t{margin:8px 0 6px;font-size:14px} .ig-sub{margin:10px 0 4px;font-size:12px;color:var(--muted);font-weight:700}
+  .ig-s{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 10px;margin-bottom:6px;border-radius:12px;background:var(--glass-2);border:1px solid var(--glass-line);font-size:13px} .ig-s span{color:var(--muted);font-size:11.5px} .ig-s em{font-style:normal;font-size:11.5px;margin-left:auto;color:var(--muted)} .ig-s em.ok{color:var(--good);font-weight:700} .ig-s em.no{color:#e0a458}
   .gt-panel{position:relative;overflow:hidden;border-radius:22px}
   .gt-kick{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);padding:4px 11px;border-radius:999px;background:color-mix(in srgb,var(--accent) 13%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
   .gt-kick i{width:6px;height:6px;border-radius:50%;background:var(--accent)} .gt-h{margin:10px 0 4px;font-size:21px;letter-spacing:-.02em} .gt-sub{margin:0 0 12px;color:var(--muted);font-size:13px}
@@ -9835,6 +9838,40 @@ function gtSummary(id) {
 }
 function gtGo() { if (typeof viewSet === 'function') viewSet('research'); setTimeout(() => document.getElementById('gt-panel')?.scrollIntoView({behavior: 'smooth', block: 'start'}), 120); gtRender(); }
 document.addEventListener('click', e => { if (e.target.closest?.('[data-gtgo]')) { e.preventDefault(); document.querySelector('.sp-x')?.click(); gtGo(); } });
+
+// ---------------- Global stock card (2026-11-26, phase 2 of "full functionality on all"; OWNER ONLY, Yahoo data): a search for a NON-US symbol
+// (exchange suffix, e.g. ASML.AS, SAP.DE, 7203.T, 0005.HK) shows price, 1-year chart (intl-quote function) and the 9 validated strategies' signals at
+// the latest close from the daily global run (table global_signals), each with its tested edge in that market (global_test_results).
+const INTL_SFX = /\.(DE|F|PA|AS|MC|SW|MI|L|ST|OL|CO|HE|BR|VI|LS|IR|AX|TO|V|NS|BO|T|HK|SS|SZ|KS|KQ|TW|SI|JK|NZ|SA|MX)$/;
+const INTL_REG = {DE: 'EU', F: 'EU', PA: 'EU', AS: 'EU', MC: 'EU', SW: 'EU', MI: 'EU', ST: 'EU', OL: 'EU', CO: 'EU', HE: 'EU', BR: 'EU', VI: 'EU', LS: 'EU', L: 'UK', T: 'JP', HK: 'HK', AX: 'AU', TO: 'CA', NS: 'IN', BO: 'IN'};
+async function intlGo(sym) {
+  const el = document.getElementById('od-body'); if (!el) return;
+  if (!(typeof akOwn === 'function' && akOwn())) { el.innerHTML = '<p class="note">Stocks outside the US are only available to the owner for now (Yahoo data).</p>'; return; }
+  el.innerHTML = `<p class="note">Loading ${esc(sym)} …</p>`;
+  const token = await getToken();
+  const [q, g] = await Promise.all([fetch(`${SB_URL}/functions/v1/intl-quote`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({symbol: sym})}).then(r => r.json()).catch(e => ({ok: false, error: e.message})),
+    sb(`global_signals?select=*&ticker=eq.${encodeURIComponent(sym)}`).catch(() => []), typeof gtLoad === 'function' ? gtLoad() : null]);
+  if (!q.ok) { el.innerHTML = `<p class="note">No data for ${esc(sym)}: ${esc(q.error || 'unknown symbol')}. Use Yahoo's symbol with the exchange suffix, e.g. ASML.AS, SAP.DE, 7203.T, 0005.HK.</p>`; return; }
+  const row = (g || [])[0], reg = row?.region || INTL_REG[(sym.match(INTL_SFX) || [])[1]] || null, pc = (v, d = 2) => v == null ? '–' : `${v >= 0 ? '+' : ''}${(+v).toFixed(d)}%`;
+  const C = q.closes || [], W = 320, H = 90, lo = Math.min(...C), hi = Math.max(...C), sp = hi - lo || 1;
+  const pts = C.map((v, i) => `${(i / Math.max(1, C.length - 1) * W).toFixed(1)},${(H - 4 - (v - lo) / sp * (H - 8)).toFixed(1)}`).join(' '), up = C.length > 1 && C.at(-1) >= C[0];
+  const pos = q.high_52w > q.low_52w ? (q.price - q.low_52w) / (q.high_52w - q.low_52w) : null;
+  const nm = k => (GT.rows || []).find(x => x.spec_id === k)?.name || k, gt = k => (GT.rows || []).find(x => x.spec_id === k && x.region === reg);
+  const verdict = x => !x ? '' : +x.edge_per_trade > 0 && +x.p_value < 0.01 && +x.sharpe_2021 > 0 ? `<em class="ok">✓ beats random here: ${pc(+x.edge_per_trade * 100)}/trade</em>` : +x.edge_per_trade > 0 && +x.p_value < 0.05 ? `<em>probably an edge here</em>` : `<em class="no">no edge here: untested what-if</em>`;
+  const line = (k, kind) => `<div class="ig-s"><b>${esc(String(nm(k)).replace(/\s*\(.*$/, ''))}</b><span>${kind}</span>${verdict(gt(k))}</div>`;
+  const buys = row?.buy || [], near = row?.one_rule_away || [];
+  el.innerHTML = `<div class="ig"><div class="kente" aria-hidden="true"></div>
+    <span class="gt-kick"><i></i>${esc(q.exchange || 'Outside the US')}${q.currency ? ' · ' + esc(q.currency) : ''}</span>
+    <div class="ig-h"><div><b>${esc(q.name)}</b><small>${esc(sym)}${row?.sector ? ' · ' + esc(row.sector) : ''}</small></div><div class="ig-p"><b>${(+q.price).toLocaleString(undefined, {maximumFractionDigits: 2})}</b><span class="${(q.change_pct ?? 0) >= 0 ? 'v2-up' : 'v2-dn'}">${pc(q.change_pct)}</span></div></div>
+    <svg class="ig-ch" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${up ? 'var(--good)' : 'var(--bad)'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+    <div class="ig-r"><small>52-week range ${(+q.low_52w).toLocaleString(undefined, {maximumFractionDigits: 2})} – ${(+q.high_52w).toLocaleString(undefined, {maximumFractionDigits: 2})}</small>${pos != null ? `<div class="gt-bar"><i style="left:0;width:${(pos * 100).toFixed(0)}%;background:var(--accent)"></i></div>` : ''}</div>
+    <h4 class="ig-t">Our 9 tested strategies${row ? ` at the ${esc(row.day)} close` : ''}</h4>
+    ${!row ? `<p class="note">${esc(sym)} is not in our global universe (today's members of the main indices in ${Object.values(GT_M).join(', ')}), so no strategy signals are computed for it.</p>`
+      : (buys.length ? buys.map(k => line(k, 'would buy')).join('') : '<p class="note">None of the 9 strategies would buy it at that close.</p>') + (near.length ? `<p class="ig-sub">One rule away</p>${near.map(k => line(k, '1 rule away')).join('')}` : '')}
+    <p class="gt-note" title="Signals come from the daily global run (after all markets close, today's index members, Yahoo prices). The strategies were developed and validated on US S&P 500 stocks; outside the US only the 'beats random here' ones showed an edge in our global test (Research > Around the world), and even those were tested on today's index members only. Owner only (Yahoo Finance, personal use).">ⓘ Untested for trading outside the US except where marked ✓ · Yahoo Finance, owner only · <a href="#" data-gtgo>the global test</a></p></div>`;
+}
+{ const f = odGo; odGo = async function (t) { const sym = String(t || '').toUpperCase().trim().split(/[\s,;]+/)[0];
+    if (INTL_SFX.test(sym)) { const box = document.getElementById('od-input'); if (box) box.value = sym; return intlGo(sym); } return f(t); }; }
 
 // rule replay (2026-11-08, Bible 6.192): one strategy on one stock, day by day. Price with every simulated entry (▲) and exit (▼) and the holding
 // periods shaded; below it one panel per rule: the feature, its threshold (fixed, a second feature, or the day's cross-sectional cut) and the days
