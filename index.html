@@ -11634,6 +11634,8 @@ function trgBlock() {
   const tm = t => new Date(t).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}), pc = v => v == null ? '' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`;
   const ST = TRG.stats || {}, by = new Map(); for (const x of TRG.rows) (by.get(x.key) || by.set(x.key, []).get(x.key)).push(x);
   const act = new Set(TRG.rows.filter(x => x.active).map(x => x.ticker)).size, today = TRG.rows[0]?.day;
+  // 2026-11-26 (Thanksgiving: the card still said "triggering now" for the 25 Nov list): "now" only while the last scan is < 30 min old
+  const fresh = TRG.run && Date.now() - Date.parse(TRG.run.at) < 30 * 60e3, dshort = today ? new Date(today + 'T12:00:00Z').toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'}) : '';
   const G = [...by.entries()].sort((a, b) => ((ST[b[0]]?.rel || 0) - (ST[a[0]]?.rel || 0)) || (b[1].length - a[1].length));
   const dots = n => `<span class="trg-rel" title="Reliability ${n}/4: 1 base + passed the luck tests (proven edge) + Sharpe 1.2+ since 2021 + held up in 2016-20 (Sharpe 0.8+). Backtests, not a promise.">${[1, 2, 3, 4].map(k => `<i class="${k <= n ? 'on' : ''}"></i>`).join('')}</span>`;
   const sec = ([k, L]) => { const s = ST[k] || {}, edge = (s.tier || L[0].tier) === 'edge', nm = String(L[0].name || k).replace(/\s*\(.*$/, '');
@@ -11643,8 +11645,8 @@ function trgBlock() {
       <div class="trg-sts">${stat(s.sh != null ? s.sh.toFixed(2) : null, 'Sharpe since 2021')}${stat(s.cagr != null ? pc(s.cagr) : null, 'a year since 2021')}${stat(s.s16 != null ? s.s16.toFixed(2) : null, 'Sharpe 2016-20')}${stat(s.won != null ? Math.round(s.won * 100) + '%' : null, s.trades ? `won · ${(+s.trades).toLocaleString()} trades` : 'trades won')}${s.same ? `<span class="trg-st"><small>same buy rules as ${esc(s.same)}</small></span>` : ''}</div>
       <div class="trg-cs">${chips}</div></div>`; };
   return `<div class="trg"><div class="kente" aria-hidden="true"></div>
-    <span class="trg-kick"><i class="${act ? 'on' : ''}"></i>Live scan · ${today ? esc(today) : 'today'}</span>
-    <div class="trg-hl"><b>${act}</b> stock${act === 1 ? '' : 's'} triggering now</div>
+    <span class="trg-kick"><i class="${act && fresh ? 'on' : ''}"></i>${fresh ? 'Live scan' : 'Last scan · US market closed'}</span>
+    <div class="trg-hl"><b>${act}</b> stock${act === 1 ? '' : 's'} ${fresh ? 'triggering now' : `triggered on ${esc(dshort)}`}</div>
     <p class="trg-sub">${TRG.run ? `last check ${tm(TRG.run.at)} · ${TRG.run.stocks} stocks checked` : 'no scan yet'} · the tested entry is at the close</p>
     ${G.length ? G.map(sec).join('') : '<p class="trg-e">Nothing triggering. Checked every 15 minutes while the US market is open.</p>'}
     <p class="trg-f" title="The 9 validated strategies at the live price (15 min delayed): stocks one rule away at the last close, today's 20 biggest S&P 500 fallers and this watchlist. Backtest numbers are the strategy's whole record (all S&P 500 stocks), not this stock's. A trigger before the last 15 minutes can still disappear.">ⓘ <i class="trg-u"></i> = outside the S&P 500 (untested) · grey = no longer triggering · % = move since the last close</p></div>`;
