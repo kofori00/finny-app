@@ -1500,6 +1500,8 @@
   .ig{position:relative;overflow:hidden;padding:16px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-line)} .ig-h{display:flex;justify-content:space-between;gap:10px;margin:10px 0 6px} .ig-h b{font-size:18px;color:var(--ink)} .ig-h small{display:block;color:var(--muted);font-size:12px}
   .ig-p{text-align:right} .ig-p b{display:block;font-size:22px} .ig-ch{display:block;width:100%;height:90px} .ig-r{margin:4px 0 12px} .ig-r small{color:var(--muted);font-size:11.5px} .ig-t{margin:8px 0 6px;font-size:14px} .ig-sub{margin:10px 0 4px;font-size:12px;color:var(--muted);font-weight:700}
   .ig-s{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 10px;margin-bottom:6px;border-radius:12px;background:var(--glass-2);border:1px solid var(--glass-line);font-size:13px} .ig-s span{color:var(--muted);font-size:11.5px} .ig-s em{font-style:normal;font-size:11.5px;margin-left:auto;color:var(--muted)} .ig-s em.ok{color:var(--good);font-weight:700} .ig-s em.no{color:#e0a458}
+  .gt-sn{border:0;background:none;padding:0;color:var(--ink);font:inherit;font-size:12.5px;cursor:pointer;text-align:left} .gt-mk{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0} .gt-h5{margin:12px 0 4px;font-size:13px}
+  .gt-h5n{font-size:11px;color:var(--muted);margin:4px 0} .gt-ol{margin:4px 0;padding-left:20px} .gt-ol li{display:flex;gap:10px;font-size:12.5px;padding:3px 0} .gt-ol li a{color:var(--accent);font-weight:700;min-width:84px} .gt-ol li span:last-child{margin-left:auto;font-weight:700}
   .gt-panel{position:relative;overflow:hidden;border-radius:22px}
   .gt-kick{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);padding:4px 11px;border-radius:999px;background:color-mix(in srgb,var(--accent) 13%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
   .gt-kick i{width:6px;height:6px;border-radius:50%;background:var(--accent)} .gt-h{margin:10px 0 4px;font-size:21px;letter-spacing:-.02em} .gt-sub{margin:0 0 12px;color:var(--muted);font-size:13px}
@@ -9807,7 +9809,7 @@ async function gtRender() {
       <div class="gt-bar"><i style="${pos(x.cagr_2021)};background:var(--accent)"></i></div><div class="gt-bar"><i style="${pos(x.index_cagr_2021)};background:var(--muted)"></i></div>
       <small>${+x.p_value < 0.01 && +x.edge_per_trade > 0 ? '✓ beats random entries' : +x.edge_per_trade > 0 ? 'edge could be luck' : '✗ no edge'}</small></div>`; }).join('');
   const rows = GT_S.filter(k => by[k]).map(k => { const a = Object.values(by[k])[0];
-    return `<tr><td class="l">${esc(String(a.name).replace(/\s*\(.*$/, '').slice(0, 30))}<small>${a.tier === 'edge' ? 'proven edge in the US' : 'promising in the US'}</small></td>
+    return `<tr><td class="l"><button type="button" class="gt-sn" data-gtk="${esc(k)}" title="Top 10 stocks per market">${esc(String(a.name).replace(/\s*\(.*$/, '').slice(0, 30))} ›</button><small>${a.tier === 'edge' ? 'proven edge in the US' : 'promising in the US'}</small></td>
       ${GT_ORD.map(r => { const x = by[k][r]; return x ? `<td><button type="button" class="gt-c ${gtCls(x)}${GT.sel === k + '|' + r ? ' on' : ''}" data-gt="${k}|${r}">${pc(+x.edge_per_trade, 2)}</button></td>` : '<td></td>'; }).join('')}</tr>`; }).join('');
   const sx = GT.sel && by[GT.sel.split('|')[0]]?.[GT.sel.split('|')[1]];
   const det = sx ? `<div class="gt-det"><b>${esc(sx.name)} · ${GT_M[sx.region]}</b> (${sx.stocks} stocks, market ${esc(sx.market)})
@@ -9818,9 +9820,11 @@ async function gtRender() {
     <p class="gt-sub" style="margin:0 0 4px"><b style="color:var(--ink)">Edge per trade over random entries</b>, every strategy and market · tap a cell</p>
     <div class="gt-grid"><table><tr><th class="l">Strategy</th>${GT_ORD.map(r => `<th>${GT_M[r]}</th>`).join('')}</tr>${rows}</table></div>
     <div class="gt-leg"><span><i style="background:color-mix(in srgb,var(--good) 42%,transparent)"></i>real edge (luck &lt; 1%)</span><span><i style="background:color-mix(in srgb,var(--good) 20%,transparent)"></i>probably (luck &lt; 5%)</span><span><i style="background:var(--glass-2)"></i>could be luck</span><span><i style="background:color-mix(in srgb,var(--bad) 22%,transparent)"></i>worse than random</span></div>
-    ${det}
+    ${det}${GT.k ? '<div id="gt-top10" class="gt-det"><p>Loading the top 10 …</p></div>' : ''}
     <p class="gt-note" title="Stocks = today's members of each market's indices (Wikipedia), so companies that failed or left are missing: absolute returns are flattered. The edge column compares each trade with 500 random picks among the same stocks on the same days with the same holding period, which carries the same bias. Taxes: UK stamp duty 0.5% on buys (why the UK fails), France 0.3%, Spain 0.2%, Italy 0.1%, Hong Kong 0.1% / Belgium 0.35% / India 0.1% both ways, plus 0.05% costs a side. Japan and Hong Kong have no sector data (ranked within the market). 63 tests: some results will look good by luck. Not yet tested with historical index membership or next-day-open fills.">ⓘ Backtests on today's index members (flatters returns), after local taxes · ${n} markets · Williams 3-bar and VZO return a lot but have no edge: their return is the market's, not the signal's. Research, not advice.</p>`;
   el.querySelectorAll('[data-gt]').forEach(b => b.onclick = () => { GT.sel = GT.sel === b.dataset.gt ? null : b.dataset.gt; gtRender(); });
+  el.querySelectorAll('[data-gtk]').forEach(b => b.onclick = () => { GT.k = GT.k === b.dataset.gtk ? null : b.dataset.gtk; GT.sel = null; gtRender(); });
+  if (GT.k) gtTop10();
 }
 setTimeout(() => { if (document.getElementById('gt-panel')) gtRender(); }, 3000);
 setInterval(() => { if (!GT.rows?.length && document.getElementById('gt-panel')?.offsetParent) gtRender(); }, 15000);   // retry after sign-in, while Research is open
@@ -9875,6 +9879,35 @@ async function intlGo(sym) {
 }
 { const f = odGo; odGo = async function (t) { const sym = String(t || '').toUpperCase().trim().split(/[\s,;]+/)[0];
     if (INTL_SFX.test(sym)) { const box = document.getElementById('od-input'); if (box) box.value = sym; return intlGo(sym); } return f(t); }; }
+
+// Top 10 per strategy (2026-11-27, user: "Also make top10 stocks per strategy" -> both; OWNER ONLY, Yahoo-based): for the tapped strategy and a market,
+// (1) today's top 10 picks from the daily / live global runs, in the strategy's own ranking order (global_signals.rank_val), and
+// (2) its 10 best stocks in the 2015-2026 backtest of that market (global_best_stocks, >= 5 trades, after tax; one stock's record is mostly luck)
+async function gtTop10() {
+  const box = document.getElementById('gt-top10'); if (!box) return;
+  if (!(typeof akOwn === 'function' && akOwn())) { box.innerHTML = '<p>The stock lists are for the owner only (Yahoo data).</p>'; return; }
+  const k = GT.k, TOP = (GT.top || []).filter(x => x.spec_id === k), regs = GT_ORD.filter(r => (GT.rows || []).some(x => x.spec_id === k && x.region === r));
+  if (!GT.m || !regs.includes(GT.m)) GT.m = (TOP.filter(x => x.cls !== 'weak').sort((a, b) => GT_ORD.indexOf(a.region) - GT_ORD.indexOf(b.region))[0] || {}).region || regs[0];
+  const reg = GT.m, cls = (TOP.find(x => x.region === reg) || {}).cls, name = String(((GT.rows || []).find(x => x.spec_id === k) || {}).name || k).replace(/\s*\(.*$/, '');
+  const [sig, best] = await Promise.all([sb(`global_signals?select=ticker,day,close,prev_close,rank_val&region=eq.${reg}&buy=cs.{${encodeURIComponent(k)}}`).catch(() => []),
+    sb(`global_best_stocks?select=ticker,trades,avg_trade,win_rate,total,pos&region=eq.${reg}&spec_id=eq.${encodeURIComponent(k)}&order=pos`).catch(() => [])]);
+  const pc = (v, d = 1) => v == null ? '–' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(d)}%`, rv = x => +(x.rank_val || {})[k];
+  const picks = (sig || []).sort((a, b) => (isFinite(rv(b)) ? rv(b) : -1e18) - (isFinite(rv(a)) ? rv(a) : -1e18)).slice(0, 10);
+  const day = picks[0]?.day || (sig || [])[0]?.day;
+  box.innerHTML = `<b>${esc(name)}</b> · top 10 stocks
+    <div class="gt-mk">${regs.map(r => `<button type="button" class="ng-chip${r === reg ? ' on' : ''}" data-gtm="${r}">${GT_M[r]}</button>`).join('')}</div>
+    <p>${cls === 'edge' ? '✓ edge in this market\'s backtest' : cls === 'promising' ? 'promising in this market\'s backtest' : cls === 'weak' ? 'weak here (fills the top 5)' : 'not in this market\'s top 5: no edge here'}</p>
+    <h5 class="gt-h5">Today's top 10 picks${day ? ` · ${esc(day)}` : ''}</h5>
+    ${picks.length ? `<ol class="gt-ol">${picks.map(x => `<li><a href="#" data-igo="${esc(x.ticker)}">${esc(x.ticker)}</a><span>${(+x.close).toLocaleString(undefined, {maximumFractionDigits: 2})}</span><span class="${(x.close / x.prev_close - 1) >= 0 ? 'v2-up' : 'v2-dn'}">${x.prev_close ? pc(x.close / x.prev_close - 1) : ''}</span></li>`).join('')}</ol>`
+      : '<p>No stock meets its rules at the latest run.</p>'}
+    <p class="gt-h5n">Ranked by the strategy's own ranking rule${(sig || []).length > 10 ? ` · ${sig.length} stocks qualify` : ''}. Daily after the close; before the close the live scan refreshes it (15 min delayed).</p>
+    <h5 class="gt-h5">Best 10 stocks in the backtest (2015-2026)</h5>
+    ${(best || []).length ? `<ol class="gt-ol">${best.map(x => `<li><a href="#" data-igo="${esc(x.ticker)}">${esc(x.ticker)}</a><span>${x.trades} trades · ${Math.round(x.win_rate * 100)}% won</span><span class="${x.total >= 0 ? 'v2-up' : 'v2-dn'}">${pc(+x.total, 0)} total</span></li>`).join('')}</ol>`
+      : '<p>Not available yet (the per-stock rerun of the global test is running).</p>'}
+    <p class="gt-h5n">⚠ One stock's record is mostly luck in our tests: history, not a list of what to buy. After local taxes; at least 5 trades.</p>`;
+  box.querySelectorAll('[data-gtm]').forEach(b => b.onclick = () => { GT.m = b.dataset.gtm; gtTop10(); });
+  box.querySelectorAll('[data-igo]').forEach(a => a.onclick = e => { e.preventDefault(); if (typeof viewSet === 'function') viewSet('analyze'); setTimeout(() => { odGo(a.dataset.igo); document.getElementById('od-panel')?.scrollIntoView({behavior: 'smooth'}); }, 120); });
+}
 
 // rule replay (2026-11-08, Bible 6.192): one strategy on one stock, day by day. Price with every simulated entry (▲) and exit (▼) and the holding
 // periods shaded; below it one panel per rule: the feature, its threshold (fixed, a second feature, or the day's cross-sectional cut) and the days
