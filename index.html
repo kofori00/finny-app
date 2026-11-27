@@ -7285,9 +7285,16 @@ const AK_LOOK = {
     if (!akOwn()) return {error: 'owner only'}; if (typeof trgLoad !== 'function') return {error: 'not available'};
     const T = await trgLoad(), tm = t => t ? new Date(t).toISOString().slice(11, 16) + ' UTC' : null;
     return {day: T.rows[0]?.day || null, last_scan: T.run ? {at: tm(T.run.at), stocks: T.run.stocks, signals: T.run.signals} : null,
-      triggering_now: T.rows.filter(x => x.active).map(x => ({symbol: x.ticker, strategy: x.name, tier: x.tier === 'edge' ? 'passed every test' : 'promising', price: x.price, move_since_last_close: x.move, since: tm(x.first_at), found_via: x.source, in_sp500: x.member})),
-      no_longer_triggering: T.rows.filter(x => !x.active).map(x => ({symbol: x.ticker, strategy: x.name, was_from: tm(x.first_at), gone_at: tm(x.last_at)})),
-      note: 'live-scan: the 9 validated swing strategies every 15 minutes while the US market is open, at the live price (15 min delayed), on the stocks one rule away at the last close, today\'s 20 biggest S&P 500 fallers and the watchlist. The tested entry is AT THE CLOSE: the 15:45 New York check matches it; an earlier trigger can still disappear. Outside the S&P 500: untested what-ifs.'};
+      // 2026-11-27 (chat said "the tools do not return 1-week returns, and both lists are truncated"): ONE compact row per stock (all its strategies),
+      // with the 1-week and 1-month return to the last nightly close, today's move, distance above the 52-week low, news tone and fundamentals grade
+      ...(() => { const C = T.ctx || {}, pc = v => v == null || !isFinite(v) ? null : Math.round(v * 1000) / 10, by = new Map();
+        for (const x of T.rows.filter(x => !String(x.session || '').startsWith('live-') || /(edge|promising|weak) here/.test(x.source || ''))) { const b = by.get(x.ticker) || {symbol: x.ticker, active: false, strategies: [], move_today_pct: pc(x.move), price: x.price, in_sp500: x.member, market: String(x.session || '').startsWith('live-') ? String(x.source || '').split(' live')[0] : 'US'};
+          if (x.active) b.active = true; const nm = String(x.name || x.key).replace(/\s*\(.*$/, ''); if (!b.strategies.includes(nm)) b.strategies.push(nm); by.set(x.ticker, b); }
+        const row = b => { const c = C[b.symbol] || {}; return {...b, ret_1w_pct: pc(c.r5), ret_1m_pct: pc(c.r21), above_52w_low_pct: pc(c.low), news_7d: c.n ? (c.tone > 0 ? 'positive' : c.tone < 0 ? 'negative' : 'neutral') : null, fundamentals: c.f != null ? (c.f >= 0.75 ? 'A' : c.f >= 0.5 ? 'B' : c.f >= 0.25 ? 'C' : 'D') : null}; };
+        const all = [...by.values()].map(row), act = all.filter(b => b.active).map(({active, ...r}) => r), gone = all.filter(b => !b.active).map(b => b.symbol);
+        return {triggering_now: act, triggering_count: act.length, no_longer_triggering: gone,
+          columns: 'ret_1w_pct / ret_1m_pct = return over the last 5 / 21 trading days to the LAST NIGHTLY CLOSE (not including today); move_today_pct = since the last close; above_52w_low_pct = % above the 52-week low; news_7d = tone of the last 7 days of headlines (null = no news found); fundamentals = A (strongest) to D among today\'s triggered stocks. null = no data (non-US stocks have only the 52-week low).'}; })(),
+      note: 'ALWAYS list every stock in triggering_now that the question asks about (sort as asked, e.g. by ret_1w_pct); never write a lead-in followed by an empty list. live-scan: the 9 validated swing strategies every 15 minutes while the US market is open, at the live price (15 min delayed), on the stocks one rule away at the last close, today\'s 20 biggest S&P 500 fallers and the watchlist. The tested entry is AT THE CLOSE: the 15:45 New York check matches it; an earlier trigger can still disappear. Outside the S&P 500: untested what-ifs.'};
   },
   async run_strategies_now({symbols = [], watchlist = false} = {}) {
     let S = [...new Set((Array.isArray(symbols) ? symbols : [symbols]).map(x => String(x).trim().toUpperCase()).filter(Boolean))];
@@ -11823,13 +11830,14 @@ async function trgCtx() {
   const [st, gs, pf, nw] = await Promise.all([
     us.length ? wlReq('GET', `nightly_stock_stats?select=ticker,day,from_52w_low&ticker=in.(${q(us)})&day=gte.${since}&order=day.desc`).catch(() => []) : [],
     intl.length ? wlReq('GET', `global_signals?select=ticker,from_52w_low&ticker=in.(${q(intl)})`).catch(() => []) : [],
-    us.length ? wlReq('GET', `live_profile?select=ticker,roe:f->roe,gp:f->gp_a,ocf:f->ocf_ta,ey:f->ey&ticker=in.(${q(us)})`).catch(() => []) : [],
+    us.length ? wlReq('GET', `live_profile?select=ticker,roe:f->roe,gp:f->gp_a,ocf:f->ocf_ta,ey:f->ey,r5:f->ret_5d,r21:f->mom1m&ticker=in.(${q(us)})`).catch(() => []) : [],
     us.length ? (async () => { const token = await getToken(); const r = await fetch(`${SB_URL}/functions/v1/latest-news`, {method: 'POST', headers: {Authorization: 'Bearer ' + token, apikey: SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({symbols: us.slice(0, 60)})}); const j = await r.json(); return j.news || []; })().catch(() => []) : []]);
   for (const r of [...(st || []), ...(gs || [])]) if (C[r.ticker] && C[r.ticker].low == null && r.from_52w_low != null) C[r.ticker].low = +r.from_52w_low;
   const wk = Date.now() - 7 * 864e5;
   for (const n of nw || []) if (Date.parse(n.at) > wk) for (const s of n.symbols || []) if (C[s]) { C[s].tone = (C[s].tone || 0) + Math.sign(n.tone || 0); C[s].n++; }
   // fundamentals: average percentile of the four measures among today's triggered US stocks
   const F = ['roe', 'gp', 'ocf', 'ey'], P = (pf || []).filter(r => C[r.ticker]);
+  for (const r of P) { C[r.ticker].r5 = r.r5 != null ? +r.r5 : null; C[r.ticker].r21 = r.r21 != null ? +r.r21 : null; }   // 1-week / 1-month return to the last nightly close (Ask Finny)
   for (const k of F) { const v = P.filter(r => r[k] != null && isFinite(+r[k])).sort((a, b) => +a[k] - +b[k]);
     v.forEach((r, i) => { const c = C[r.ticker]; c._f = (c._f || []); c._f.push(v.length > 1 ? i / (v.length - 1) : 0.5); }); }
   for (const t of T) { const c = C[t]; if (c._f?.length) c.f = c._f.reduce((a, b) => a + b, 0) / c._f.length; delete c._f; }
