@@ -9857,18 +9857,21 @@ async function intlGo(sym) {
   const pts = C.map((v, i) => `${(i / Math.max(1, C.length - 1) * W).toFixed(1)},${(H - 4 - (v - lo) / sp * (H - 8)).toFixed(1)}`).join(' '), up = C.length > 1 && C.at(-1) >= C[0];
   const pos = q.high_52w > q.low_52w ? (q.price - q.low_52w) / (q.high_52w - q.low_52w) : null;
   const nm = k => (GT.rows || []).find(x => x.spec_id === k)?.name || k, gt = k => (GT.rows || []).find(x => x.spec_id === k && x.region === reg);
-  const verdict = x => !x ? '' : +x.edge_per_trade > 0 && +x.p_value < 0.01 && +x.sharpe_2021 > 0 ? `<em class="ok">✓ beats random here: ${pc(+x.edge_per_trade * 100)}/trade</em>` : +x.edge_per_trade > 0 && +x.p_value < 0.05 ? `<em>probably an edge here</em>` : `<em class="no">no edge here: untested what-if</em>`;
+  const verdict = x => !x ? '' : +x.edge_per_trade > 0 && +x.p_value < 0.01 && +x.sharpe_2021 > 0 ? `<em class="ok">edge here: ${pc(+x.edge_per_trade * 100)}/trade over random</em>` : `<em>promising here: ${pc(+x.edge_per_trade * 100)}/trade</em>`;
   const line = (k, kind) => `<div class="ig-s"><b>${esc(String(nm(k)).replace(/\s*\(.*$/, ''))}</b><span>${kind}</span>${verdict(gt(k))}</div>`;
-  const buys = row?.buy || [], near = row?.one_rule_away || [];
+  // 2026-11-27 (user: only the promising and edge picks per country's own backtest): keep strategies with an edge / promising record in THIS market
+  const here = k => { const x = gt(k); return !x ? null : +x.edge_per_trade > 0 && +x.p_value < 0.01 && +x.sharpe_2021 > 0 ? 'edge' : +x.edge_per_trade > 0 && +x.p_value < 0.05 && +x.sharpe_2021 > 0 ? 'promising' : null; };
+  const buys = (row?.buy || []).filter(here), near = (row?.one_rule_away || []).filter(here), allowed = [...new Set((GT.rows || []).filter(x => x.region === reg).map(x => x.spec_id))].filter(here);
   el.innerHTML = `<div class="ig"><div class="kente" aria-hidden="true"></div>
     <span class="gt-kick"><i></i>${esc(q.exchange || 'Outside the US')}${q.currency ? ' · ' + esc(q.currency) : ''}</span>
     <div class="ig-h"><div><b>${esc(q.name)}</b><small>${esc(sym)}${row?.sector ? ' · ' + esc(row.sector) : ''}</small></div><div class="ig-p"><b>${(+q.price).toLocaleString(undefined, {maximumFractionDigits: 2})}</b><span class="${(q.change_pct ?? 0) >= 0 ? 'v2-up' : 'v2-dn'}">${pc(q.change_pct)}</span></div></div>
     <svg class="ig-ch" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${up ? 'var(--good)' : 'var(--bad)'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
     <div class="ig-r"><small>52-week range ${(+q.low_52w).toLocaleString(undefined, {maximumFractionDigits: 2})} – ${(+q.high_52w).toLocaleString(undefined, {maximumFractionDigits: 2})}</small>${pos != null ? `<div class="gt-bar"><i style="left:0;width:${(pos * 100).toFixed(0)}%;background:var(--accent)"></i></div>` : ''}</div>
-    <h4 class="ig-t">Our 9 tested strategies${row ? ` at the ${esc(row.day)} close` : ''}</h4>
+    <h4 class="ig-t">Strategies with an edge or a promising record in ${esc(GT_M[reg] || 'this market')}${row ? ` · ${esc(row.day)} close` : ''}</h4>
     ${!row ? `<p class="note">${esc(sym)} is not in our global universe (today's members of the main indices in ${Object.values(GT_M).join(', ')}), so no strategy signals are computed for it.</p>`
-      : (buys.length ? buys.map(k => line(k, 'would buy')).join('') : '<p class="note">None of the 9 strategies would buy it at that close.</p>') + (near.length ? `<p class="ig-sub">One rule away</p>${near.map(k => line(k, '1 rule away')).join('')}` : '')}
-    <p class="gt-note" title="Signals come from the daily global run (after all markets close, today's index members, Yahoo prices). The strategies were developed and validated on US S&P 500 stocks; outside the US only the 'beats random here' ones showed an edge in our global test (Research > Around the world), and even those were tested on today's index members only. Owner only (Yahoo Finance, personal use).">ⓘ Untested for trading outside the US except where marked ✓ · Yahoo Finance, owner only · <a href="#" data-gtgo>the global test</a></p></div>`;
+      : !allowed.length ? `<p class="note">No strategy had an edge or a promising record in ${esc(GT_M[reg] || 'this market')}'s backtest${reg === 'UK' ? ' (the 0.5% stamp duty on buys wipes out every short-term edge)' : ''}, so no signals are shown.</p>`
+      : (buys.length ? buys.map(k => line(k, 'would buy')).join('') : `<p class="note">None of them would buy it at that close (${allowed.length} strateg${allowed.length === 1 ? 'y' : 'ies'} qualify in ${esc(GT_M[reg])}).</p>`) + (near.length ? `<p class="ig-sub">One rule away</p>${near.map(k => line(k, '1 rule away')).join('')}` : '')}
+    <p class="gt-note" title="Signals come from the daily global run (after all markets close, today's index members, Yahoo prices). The strategies were developed and validated on US S&P 500 stocks; outside the US only the 'beats random here' ones showed an edge in our global test (Research > Around the world), and even those were tested on today's index members only. Owner only (Yahoo Finance, personal use).">ⓘ Only strategies with an edge or a promising record in this market's own backtest (global test) · Yahoo Finance, owner only · <a href="#" data-gtgo>the global test</a></p></div>`;
 }
 { const f = odGo; odGo = async function (t) { const sym = String(t || '').toUpperCase().trim().split(/[\s,;]+/)[0];
     if (INTL_SFX.test(sym)) { const box = document.getElementById('od-input'); if (box) box.value = sym; return intlGo(sym); } return f(t); }; }
@@ -11780,14 +11783,12 @@ function trgBlock() {
     <div class="trg-hl"><b>${act}</b> stock${act === 1 ? '' : 's'} ${fresh ? 'triggering now' : `triggered on ${esc(dshort)}`}</div>
     <p class="trg-sub">${TRG.run ? `last check ${tm(TRG.run.at)} · ${TRG.run.stocks} stocks checked` : 'no scan yet'} · the tested entry is at the close</p>
     ${G.length ? G.map(sec).join('') : '<p class="trg-e">Nothing triggering in the US. Checked every 15 minutes while the US market is open.</p>'}
-    ${(() => { if (!GL.length) return '';                        // 2026-11-26: other markets, one compact section each
-      const MK = {}; for (const x of GL) (MK[x.source.split(' live')[0]] ||= []).push(x);
-      return Object.entries(MK).map(([m, L]) => { const edge = L.filter(x => /edge here/.test(x.source)), un = L.filter(x => !/edge here/.test(x.source));
-        const names = [...new Set(un.map(x => String(x.name).replace(/\s*\(.*$/, '')))].slice(0, 2).join(', ');
-        return `<div class="trg-sec trg-gls"><div class="trg-sh"><b>🌍 ${esc(m)} before the close</b><span class="trg-tier prom">${esc(L[0].day)}</span></div>
-          ${edge.length ? `<div class="trg-cs">${edge.map(x => `<button type="button" class="trg-c" data-trg="${esc(x.ticker)}" title="${esc(x.name)}: proven edge in ${esc(m)} (global test)"><b>${esc(x.ticker)}</b><span class="${(x.move ?? 0) >= 0 ? 'up' : 'dn'}">${pc(x.move)}</span><small>${esc(String(x.name).replace(/\s*\(.*$/, '').slice(0, 18))}</small></button>`).join('')}</div>`
-            : `<p class="trg-e">No signal from a strategy with an edge in ${esc(m)}.</p>`}
-          ${un.length ? `<details class="trg-un"><summary>+ ${un.length} untested here (${esc(names)}${un.length > 2 ? '…' : ''})</summary><div class="trg-cs">${un.map(x => `<button type="button" class="trg-c off" data-trg="${esc(x.ticker)}" title="${esc(x.name)}: no edge in ${esc(m)} in our global test"><b>${esc(x.ticker)}</b><span>${pc(x.move)}</span></button>`).join('')}</div></details>` : ''}</div>`; }).join(''); })()}
+    ${(() => { const OK = GL.filter(x => /(edge|promising) here/.test(x.source)); if (!OK.length && !GL.length) return '';   // 2026-11-27: only edge / promising per country's own backtest
+      const MK = {}; for (const x of OK) (MK[x.source.split(' live')[0]] ||= []).push(x);
+      const mk = Object.entries(MK).map(([m, L]) => `<div class="trg-sec trg-gls"><div class="trg-sh"><b>🌍 ${esc(m)} before the close</b><span class="trg-tier prom">${esc(L[0].day)}</span></div>
+          <div class="trg-cs">${[...L].sort((a, b) => (/edge here/.test(b.source) - /edge here/.test(a.source)) || ((a.move ?? 0) - (b.move ?? 0))).map(x => { const e = /edge here/.test(x.source);
+            return `<button type="button" class="trg-c" data-trg="${esc(x.ticker)}" title="${esc(x.name)}: ${e ? 'edge' : 'promising'} in ${esc(m)}'s own backtest (global test)"><b>${esc(x.ticker)}</b><span class="${(x.move ?? 0) >= 0 ? 'up' : 'dn'}">${pc(x.move)}</span><small>${esc(String(x.name).replace(/\s*\(.*$/, '').slice(0, 18))} · ${e ? 'edge' : 'promising'}</small></button>`; }).join('')}</div></div>`).join('');
+      return mk || `<p class="trg-e">🌍 Other markets: no signal today from a strategy with an edge or a promising record in that market's own backtest.</p>`; })()}
     <p class="trg-f" title="The 9 validated strategies at the live price (15 min delayed): stocks one rule away at the last close, today's 20 biggest S&P 500 fallers and this watchlist. Backtest numbers are the strategy's whole record (all S&P 500 stocks), not this stock's. A trigger before the last 15 minutes can still disappear.">ⓘ <i class="trg-u"></i> = outside the S&P 500 (untested) · grey = no longer triggering · % = move since the last close</p></div>`;
 }
 function wlBadges(r) {
