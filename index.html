@@ -4107,6 +4107,19 @@ const SESSION_KEY = 'finny_sb_session';
 let SESSION = null;
 function saveSession(s) { SESSION = s; try { s ? localStorage.setItem(SESSION_KEY, JSON.stringify(s)) : localStorage.removeItem(SESSION_KEY); } catch (e) {} }
 function loadSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { return null; } }
+// 2026-11-27 (user: "we don't want the same limitations and blocks as the previous supabase account"): the full strategies table (~2,500 rows with
+// heavy metrics, ~3.5 MB) was downloaded on EVERY app open (219 times a day = ~750 MB/day of Supabase egress). Now it is kept in the browser's
+// Cache Storage per account and downloaded again only when strategies_version() (row count | last update, a few bytes) changes.
+async function stratRows() {
+  const Q = 'strategies?select=key,label,source,battery,verdict,fw_sig,metrics,color,start_date,sort_order,reg,panic,top_n,notes&order=sort_order';
+  let ver = null; try { const token = await getToken(); const r = await fetch(`${SB_URL}/rest/v1/rpc/strategies_version`, {method: 'POST', headers: {apikey: SB_KEY, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json'}, body: '{}'}); if (r.ok) ver = await r.json(); } catch (e) {}
+  const key = `/finny-cache/strategies?u=${encodeURIComponent(SESSION?.email || '')}`;
+  let cache = null; try { cache = 'caches' in window ? await caches.open('finny-data') : null; } catch (e) {}
+  if (ver && cache) { try { const hit = await cache.match(key); if (hit && hit.headers.get('x-ver') === String(ver)) { const rows = await hit.json(); if (rows?.length) return rows; } } catch (e) {} }
+  const rows = await sb(Q);
+  if (ver && cache && rows?.length) { try { await cache.put(key, new Response(JSON.stringify(rows), {headers: {'Content-Type': 'application/json', 'x-ver': String(ver)}})); } catch (e) {} }
+  return rows;
+}
 async function authPost(path, body, token) {
   const r = await fetch(`${SB_URL}/auth/v1/${path}`, {method: path === 'user' ? 'PUT' : 'POST',
     headers: {apikey: SB_KEY, 'Content-Type': 'application/json', ...(token ? {Authorization: 'Bearer ' + token} : {})},
@@ -4285,7 +4298,7 @@ async function finnyBoot() {
   try { viewInit(); } catch (e) { console.error('views', e); }
   try {
     status.textContent = 'Loading strategy registry from Supabase…';
-    STRATEGY_ROWS = await sb('strategies?select=key,label,source,battery,verdict,fw_sig,metrics,color,start_date,sort_order,reg,panic,top_n,notes&order=sort_order');
+    STRATEGY_ROWS = await stratRows();   // 2026-11-27 egress: cached on the device, downloaded again only when the table changes
     // RLS returns an empty list (not 401) to signed-in accounts that are not allow-listed
     if (!STRATEGY_ROWS.length) throw Object.assign(new Error(`${SESSION.email || 'This account'} is signed in but not allowed to read the dashboard data.`), {auth: true});
     // Live tab first: it needs only the registry (labels), not the backtest curves the Research tab loads next
